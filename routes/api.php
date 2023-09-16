@@ -11,6 +11,7 @@ use App\Http\Controllers\RuleController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ProductStoreController;
 use App\Models\Business;
 use App\Models\BusinessTypes;
 use App\Models\ProductCategory;
@@ -100,3 +101,9 @@ Route::get('/service-show', [ServiceController::class, 'show']);
 Route::post('/service', [ServiceController::class, 'store']);
 Route::put('/service', [ServiceController::class, 'update']);
 Route::post('/service-destroy', [ServiceController::class, 'destroy']);
+
+Route::get('/productstore', [ProductStoreController::class, 'index']);
+Route::get('/productstore-show', [ProductStoreController::class, 'show']);
+Route::post('/productstore', [ProductStoreController::class, 'store']);
+Route::put('/productstore', [ProductStoreController::class, 'update']);
+Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
