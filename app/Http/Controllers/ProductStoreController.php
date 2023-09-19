@@ -39,7 +39,7 @@ class ProductStoreController extends Controller
                 
             $productstore = ProductStore::where('product_id', $data['product_id'])->where
             ('store_id', $data['store_id'])->first();
-            if ($productstore != null) {
+            if ($productstore) {
                 $existencia = $data['product_quantity'] + $productstore['product_exit'];
                 $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$existencia,'number_notification'=>$data['number_notification']]);
             }
@@ -75,7 +75,19 @@ class ProductStoreController extends Controller
         return response()->json(['msg' => "Error al mostrar los productos"], 500);
         }
     }
-
+    public function category_products(Request $request)
+    {
+        try {
+             $data = $request->validate([
+                'id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $result = ProductStore::join('products', 'products.id','=','product_store.product_id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.branch_id',$data['branch_id'])->where('product_categories.id',$data['id'])->get();
+            return response()->json(['category_products' => $result], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
+        }
+    }
     public function update(Request $request)
     {
         Log::info("Actualizar asignacion de Producto a un almacén");
@@ -93,17 +105,15 @@ class ProductStoreController extends Controller
             $productstore = ProductStore::where('product_id', $data['product_id'])->where
             ('store_id', $data['store_id'])->first();
             if ($data['product_quantity']<$productstore['product_quantity']) {
-                $data['product_exit'] = ($productstore['product_quantity']-$data['product_quantity'])+$productstore['product_exit'];
+                $data['product_exit'] = $productstore['product_exit']-($productstore['product_quantity']-$data['product_quantity']);
             }
             if ($data['product_quantity']>$productstore['product_quantity']) {
-                $data['product_exit'] = $productstore['product_exit']-($data['product_quantity']-$productstore['product_quantity']);
-                if ($data['product_exit']<0) {
-                return response()->json(['msg' => 'Error al actualizar el producto a este almacén, la cantidad excede lo existente'], 500);
-                }
-            }   
-            $data['product_exit']=$productstore['product_exit'];       
-            $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_exit'],'number_notification'=>$data['number_notification']]);
-            
+                $data['product_exit'] = $productstore['product_exit']+($data['product_quantity']-$productstore['product_quantity']);
+            }
+            if ($data['product_quantity']==$productstore['product_quantity']) {
+                $data['product_exit'] = $productstore['product_exit'];
+            }
+            $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_exit'],'number_notification'=>$data['number_notification']]);     
             return response()->json(['msg' => 'Producto actualizado correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

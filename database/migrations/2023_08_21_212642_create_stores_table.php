@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('stores', function (Blueprint $table) {
             $table->id();
-            $table->string('refence', 50);
+            $table->string('reference', 50);
             $table->string('address', 50);
             $table->string('description', 50);
+            $table->unsignedBigInteger('branch_id')->nullable();
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -35,7 +35,7 @@ class ProductCategoryController extends Controller
              $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['category_products' => ProductCategory::with('products')->find( $data['id'])], 200);
+            return response()->json(['category_products' => ProductCategory::with('products.stores')->find( $data['id'])], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }
