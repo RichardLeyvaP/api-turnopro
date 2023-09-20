@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Store;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -82,7 +81,7 @@ class ProductStoreController extends Controller
                 'id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $result = ProductStore::join('products', 'products.id','=','product_store.product_id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.branch_id',$data['branch_id'])->where('product_categories.id',$data['id'])->get();
+            $result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.branch_id',$data['branch_id'])->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);
             return response()->json(['category_products' => $result], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
