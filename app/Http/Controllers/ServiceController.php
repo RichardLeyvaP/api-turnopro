@@ -37,7 +37,7 @@ class ServiceController extends Controller
                 'type_service' => 'required',
                 'profit_percentaje' => 'required|numeric',
                 'duration_service' => 'required|numeric',
-                'image_product' => 'nullable',
+                'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
             ]);
             if ($request->hasFile('image_service')) {
@@ -58,7 +58,7 @@ class ServiceController extends Controller
             return response()->json(['msg' => 'Servicio insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => 'Error al insertar el servicio'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al insertar el servicio'], 500);
         }
     }
 

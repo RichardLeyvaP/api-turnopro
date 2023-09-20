@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -29,15 +30,22 @@ class ProductCategoryController extends Controller
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }
     }
-    public function category_products(Request $request)
+    public function category_products1(Request $request)
     {
         try {
              $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
             ]);
+            $products = ProductCategory::with(['products' => function($query)  use ($data){
+                $query->with(['stores' => function($stores)  use ($data){
+                    $stores->where('branch_id', $data['branch_id']);
+                }]);
+            }])->find($data['id']);
+            return response()->json(['category_products' => $products], 200);
             return response()->json(['category_products' => ProductCategory::with('products.stores')->find( $data['id'])], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
         }
     }
     public function store(Request $request)
