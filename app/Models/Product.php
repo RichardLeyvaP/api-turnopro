@@ -13,4 +13,8 @@ class Product extends Model
     {
         return $this->belongsTo(ProductCategory::class, 'product_category_id');
     }
+
+    public function stores(){
+        return $this->belongsToMany(Store::class)->withPivot('product_quantity','product_exit','number_notification')->as('productstores')->withTimestamps();
+    }
 }

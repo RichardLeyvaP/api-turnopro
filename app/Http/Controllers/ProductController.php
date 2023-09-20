@@ -115,7 +115,7 @@ class ProductController extends Controller
             return response()->json(['msg' => 'Producto actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-        return response()->json(['msg' => $th->getMessage()/*'Error al actualizar el producto'*/], 500);
+        return response()->json(['msg' => 'Error al actualizar el producto'], 500);
         }
     }
     public function destroy(Request $request)
