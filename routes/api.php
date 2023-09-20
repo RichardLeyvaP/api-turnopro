@@ -88,7 +88,6 @@ Route::get('/product-category-show', [ProductCategoryController::class, 'show'])
 Route::post('/product-category', [ProductCategoryController::class, 'store']);
 Route::put('/product-category', [ProductCategoryController::class, 'update']);
 Route::post('/product-category-destroy', [ProductCategoryController::class, 'destroy']);
-Route::get('/category_products', [ProductCategoryController::class, 'category_products']);
 
 Route::get('/product', [ProductController::class, 'index']);
 Route::get('/product-show', [ProductController::class, 'show']);
@@ -107,3 +106,4 @@ Route::get('/productstore-show', [ProductStoreController::class, 'show']);
 Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
+Route::get('/category_products', [ProductStoreController::class, 'category_products']);
