@@ -88,6 +88,7 @@ Route::get('/product-category-show', [ProductCategoryController::class, 'show'])
 Route::post('/product-category', [ProductCategoryController::class, 'store']);
 Route::put('/product-category', [ProductCategoryController::class, 'update']);
 Route::post('/product-category-destroy', [ProductCategoryController::class, 'destroy']);
+Route::get('/category_branch', [ProductCategoryController::class, 'category_branch']);
 
 Route::get('/product', [ProductController::class, 'index']);
 Route::get('/product-show', [ProductController::class, 'show']);
