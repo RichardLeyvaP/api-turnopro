@@ -21,4 +21,7 @@ class Branch extends Model
     {
         return $this->hasMany(Store::class);
     }
+    public function branchstores(){
+        return $this->belongsToMany(Store::class)->withTimestamps();
+    }
 }
