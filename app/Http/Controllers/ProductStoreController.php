@@ -151,4 +151,42 @@ class ProductStoreController extends Controller
         return response()->json(['msg' => 'Error al desasociar el producto de este almacén'], 500);
         }
     }
+    public function move_product_store(Request $request){
+        Log::info("Mover productos de Producto de un almacén o otro");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'product_id' => 'required|numeric',
+                'store_id' => 'required|numeric',
+                'product_quantity' => 'required|numeric'
+            ]);
+            $productstore = ProductStore::find($data['id']);
+            $productexist = Product::find($productstore['product_id']);
+            $storeexist = Store::find($productstore['store_id']);
+            
+            if ($productstore['product_exit']<$data['product_quantity']) {
+                return response()->json(['msg' => 'Error al mover el producto a este almacén, la cantidad excede la existente'], 500);
+            }
+            elseif ($productstore['product_exit']==$data['product_quantity']) {
+                $productexist->stores()->detach($storeexist->id); 
+            }
+            else {
+                $productexist->stores()->updateExistingPivot($storeexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$productstore['product_exit']-$data['product_quantity']]);  
+            }
+            $producstorenew = ProductStore::where('product_id', $data['product_id'])->where('store_id', $data['store_id'])->first();
+            $product = Product::find($data['product_id']);
+            $store = Store::find($data['store_id']);
+            
+            if ($producstorenew) {
+            $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']+$producstorenew['product_exit']]);
+            }
+            else {
+                $product->stores()->attach($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
+            }
+            return response()->json(['msg' => 'Producto asignado correctamente al almacén'], 200);
+        } catch (\Throwable $th) {
+        return response()->json(['msg' => $th->getMessage().'Error al mover el producto a este almacén'], 500);
+        } 
+    }
 }
