@@ -17,4 +17,11 @@ class Branch extends Model
     {
         return $this->belongsTo(BusinessTypes::class, 'business_type_id');
     }
+    public function stores()
+    {
+        return $this->hasMany(Store::class);
+    }
+    public function branchstores(){
+        return $this->belongsToMany(Store::class)->withTimestamps();
+    }
 }

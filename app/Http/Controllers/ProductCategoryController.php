@@ -29,6 +29,18 @@ class ProductCategoryController extends Controller
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }
     }
+    public function category_branch(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'branch_id' => 'required|numeric'
+           ]);
+           $result = ProductCategory::join('products', 'products.product_category_id','=','product_categories.id')->join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.branch_id',$data['branch_id'])->get(['product_categories.*']);
+           return response()->json(['category_products' => $result], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+       }
+    }
     public function store(Request $request)
     {
 

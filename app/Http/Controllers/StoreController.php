@@ -39,6 +39,7 @@ class StoreController extends Controller
                 'reference' => 'required|max:50',
                 'description' => 'required|max:50',
                 'address' => 'required|max:50',
+                'branch_id' => 'required|numeric'
               
             ]);
 
@@ -46,6 +47,7 @@ class StoreController extends Controller
             $store->reference = $stores_data['reference'];
             $store->description = $stores_data['description'];
             $store->address = $stores_data['address'];
+            $store->branch_id = $stores_data['branch_id'];
        
             $store->save();
 
@@ -68,6 +70,7 @@ class StoreController extends Controller
                 'reference' => 'required|max:50',
                 'description' => 'required|max:50',
                 'address' => 'required|max:50',
+                'branch_id' => 'nullable|numeric'
               
             ]);
             Log::info($request);
@@ -75,6 +78,7 @@ class StoreController extends Controller
             $store->reference = $stores_data['reference'];
             $store->description = $stores_data['description'];
             $store->address = $stores_data['address'];
+            $store->branch_id = $stores_data['branch_id'];
             $store->save();
 
             return response()->json(['msg' => 'Almacén actualizado correctamente'], 200);
