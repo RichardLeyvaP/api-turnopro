@@ -108,3 +108,9 @@ Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
 Route::get('/category_products', [ProductStoreController::class, 'category_products']);
+
+Route::get('/branchstore', [BranchStoreController::class, 'index']);
+Route::get('/branchstore-show', [BranchStoreController::class, 'show']);
+Route::post('/branchstore', [BranchStoreController::class, 'store']);
+Route::put('/branchstore', [BranchStoreController::class, 'update']);
+Route::post('/branchstore-destroy', [BranchStoreController::class, 'destroy']);
