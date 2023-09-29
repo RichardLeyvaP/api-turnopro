@@ -16,8 +16,6 @@ return new class extends Migration
             $table->string('reference', 50);
             $table->string('address', 50);
             $table->string('description', 50);
-            $table->unsignedBigInteger('branch_id')->nullable();
-            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -11,11 +11,11 @@ class StoreController extends Controller
     {
         try { 
             
-            Log::info( "entra a cliente");
+            Log::info( "entra a almacenes");
             return response()->json(['stores' => Store::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
-            return response()->json(['msg' => "Error al mostrar las personas"], 500);
+            return response()->json(['msg' => "Error al mostrar los almacenes"], 500);
         }
     }
     public function show(Request $request)
@@ -26,7 +26,7 @@ class StoreController extends Controller
             ]);
             return response()->json(['client' => Store::find($stores_data['id'])], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la persona"], 500);
+            return response()->json(['msg' => "Error al mostrar el almacen"], 500);
         }
     }
     public function store(Request $request)
@@ -38,8 +38,7 @@ class StoreController extends Controller
             $stores_data = $request->validate([
                 'reference' => 'required|max:50',
                 'description' => 'required|max:50',
-                'address' => 'required|max:50',
-                'branch_id' => 'required|numeric'
+                'address' => 'required|max:50'
               
             ]);
 
@@ -47,7 +46,6 @@ class StoreController extends Controller
             $store->reference = $stores_data['reference'];
             $store->description = $stores_data['description'];
             $store->address = $stores_data['address'];
-            $store->branch_id = $stores_data['branch_id'];
        
             $store->save();
 
@@ -69,8 +67,7 @@ class StoreController extends Controller
                 'id' => 'required|numeric',
                 'reference' => 'required|max:50',
                 'description' => 'required|max:50',
-                'address' => 'required|max:50',
-                'branch_id' => 'nullable|numeric'
+                'address' => 'required|max:50'
               
             ]);
             Log::info($request);
@@ -78,7 +75,6 @@ class StoreController extends Controller
             $store->reference = $stores_data['reference'];
             $store->description = $stores_data['description'];
             $store->address = $stores_data['address'];
-            $store->branch_id = $stores_data['branch_id'];
             $store->save();
 
             return response()->json(['msg' => 'Almacén actualizado correctamente'], 200);
