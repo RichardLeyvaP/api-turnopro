@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     use HasFactory;
+
+    public function servicebranchees(){
+        return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
 }
