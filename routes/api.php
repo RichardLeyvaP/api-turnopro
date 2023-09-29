@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BranchServiceController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessTypesController;
 use App\Http\Controllers\ChargeController;
@@ -116,3 +117,9 @@ Route::get('/branchstore-show', [BranchStoreController::class, 'show']);
 Route::post('/branchstore', [BranchStoreController::class, 'store']);
 Route::put('/branchstore', [BranchStoreController::class, 'update']);
 Route::post('/branchstore-destroy', [BranchStoreController::class, 'destroy']);
+
+Route::get('/branchservice', [BranchServiceController::class, 'index']);
+Route::get('/branchservice-show', [BranchServiceController::class, 'show']);
+Route::post('/branchservice', [BranchServiceController::class, 'store']);
+Route::put('/branchservice', [BranchServiceController::class, 'update']);
+Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
