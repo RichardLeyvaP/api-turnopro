@@ -7,6 +7,7 @@ use App\Http\Controllers\BusinessTypesController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\PersonServiceController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\RuleController;
 use App\Http\Controllers\ProductCategoryController;
@@ -123,3 +124,9 @@ Route::get('/branchservice-show', [BranchServiceController::class, 'show']);
 Route::post('/branchservice', [BranchServiceController::class, 'store']);
 Route::put('/branchservice', [BranchServiceController::class, 'update']);
 Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
+
+Route::get('/personservice', [PersonServiceController::class, 'index']);
+Route::get('/personservice-show', [PersonServiceController::class, 'show']);
+Route::post('/personservice', [PersonServiceController::class, 'store']);
+Route::put('/personservice', [PersonServiceController::class, 'update']);
+Route::post('/personservice-destroy', [PersonServiceController::class, 'destroy']);
