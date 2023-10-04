@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Client extends Model
+class Car extends Model
 {
     use HasFactory;
 
-    public function clientpersons(){
-        return $this->belongsToMany(Person::class)->withTimestamps();
+    public function clientperson()
+    {
+        return $this->belongsTo(ClientPerson::class, 'client_person_id');
     }
 }
