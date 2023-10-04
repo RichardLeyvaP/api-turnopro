@@ -13,4 +13,8 @@ class Person extends Model
     {
         return $this->hasMany(Business::class, 'person_id');
     }
+
+    public function personclients(){
+        return $this->belongsToMany(Client::class)->withTimestamps();
+    }
 }
