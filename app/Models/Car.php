@@ -13,4 +13,9 @@ class Car extends Model
     {
         return $this->belongsTo(ClientPerson::class, 'client_person_id');
     }
+
+    public function carorder()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

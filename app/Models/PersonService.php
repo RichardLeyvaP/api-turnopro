@@ -9,7 +9,10 @@ class PersonService extends Model
 {
     use HasFactory;
 
-    
+    public function serviceorders()
+    {
+        return $this->hasMany(Order::class, 'service_id');
+    }
     //para decirle a q table debe administrar
     protected $table = "branch_service_person";
 }
