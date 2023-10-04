@@ -136,3 +136,9 @@ Route::get('/clientperson-show', [ClientPersonController::class, 'show']);
 Route::post('/clientperson', [ClientPersonController::class, 'store']);
 Route::put('/clientperson', [ClientPersonController::class, 'update']);
 Route::post('/clientperson-destroy', [ClientPersonController::class, 'destroy']);
+
+Route::get('/car', [CarController::class, 'index']);
+Route::get('/car-show', [CarController::class, 'show']);
+Route::post('/car', [CarController::class, 'store']);
+Route::put('/car', [CarController::class, 'update']);
+Route::post('/car-destroy', [CarController::class, 'destroy']);
