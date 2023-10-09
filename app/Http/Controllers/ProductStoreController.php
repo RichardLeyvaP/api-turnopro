@@ -168,9 +168,6 @@ class ProductStoreController extends Controller
             if ($productstore['product_exit']<$data['product_quantity']) {
                 return response()->json(['msg' => 'Error al mover el producto a este almacén, la cantidad excede la existente'], 500);
             }
-            elseif ($productstore['product_exit']==$data['product_quantity']) {
-                $productexist->stores()->detach($storeexist->id); 
-            }
             else {
                 $productexist->stores()->updateExistingPivot($storeexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$productstore['product_exit']-$data['product_quantity']]);  
             }
@@ -186,7 +183,7 @@ class ProductStoreController extends Controller
             }
             return response()->json(['msg' => 'Producto asignado correctamente al almacén'], 200);
         } catch (\Throwable $th) {
-        return response()->json(['msg' => $th->getMessage().'Error al mover el producto a este almacén'], 500);
+        return response()->json(['msg' => 'Error al mover el producto a este almacén'], 500);
         } 
     }
 }
