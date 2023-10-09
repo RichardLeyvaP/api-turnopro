@@ -26,7 +26,7 @@ class ProductController extends Controller
             $data = $request->validate([
                'branch_id' => 'required|numeric'
            ]);
-           $result = Product::join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.branch_id',$data['branch_id'])->get(['products.*']);
+           $result = Product::join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.id',$data['branch_id'])->get(['products.*']);
            return response()->json(['branch_products' => $result], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar los productos por almacen"], 500);
