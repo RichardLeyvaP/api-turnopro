@@ -10,6 +10,7 @@ use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientPersonController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PersonServiceController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\RuleController;
@@ -145,3 +146,9 @@ Route::get('/car-show', [CarController::class, 'show']);
 Route::post('/car', [CarController::class, 'store']);
 Route::put('/car', [CarController::class, 'update']);
 Route::post('/car-destroy', [CarController::class, 'destroy']);
+
+Route::get('/order', [OrderController::class, 'index']);
+Route::get('/order-show', [OrderController::class, 'show']);
+Route::post('/order', [OrderController::class, 'store']);
+Route::put('/order', [OrderController::class, 'update']);
+Route::post('/order-destroy', [OrderController::class, 'destroy']);
