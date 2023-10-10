@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Person;
 use App\Models\PersonService;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +19,22 @@ class PersonServiceController extends Controller
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
+    public function person_services(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'person_id' => 'required|numeric'
+           ]);
+           $person = Person::find($data['person_id']);
+           
+           $services = $person->branchServices->pluck('service_id');
+           $serviceModels = Service::find($services);
 
+           return response()->json(['person_services' => $serviceModels], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+       }
+    }
     public function store(Request $request)
     {
         try {

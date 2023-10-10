@@ -134,6 +134,7 @@ Route::get('/personservice-show', [PersonServiceController::class, 'show']);
 Route::post('/personservice', [PersonServiceController::class, 'store']);
 Route::put('/personservice', [PersonServiceController::class, 'update']);
 Route::post('/personservice-destroy', [PersonServiceController::class, 'destroy']);
+Route::get('/person_services', [PersonServiceController::class, 'person_services']);
 
 Route::get('/clientperson', [ClientPersonController::class, 'index']);
 Route::get('/clientperson-show', [ClientPersonController::class, 'show']);
