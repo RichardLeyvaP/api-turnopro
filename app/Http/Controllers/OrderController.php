@@ -104,7 +104,7 @@ class OrderController extends Controller
                  $order->request_delete = false;
                  $order->save();
             }//end if service
-             return response()->json(['msg' =>'Empleado asignado correctamente al cliente'], 200);
+             return response()->json(['msg' =>'Empleado asignado correctamente al cliente','order_id' => $order->id], 200);
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
