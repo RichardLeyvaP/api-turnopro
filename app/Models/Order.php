@@ -9,17 +9,17 @@ class Order extends Model
 {
     use HasFactory;
 
-    public function orderservice()
+    public function branchServicePperson()
     {
-        return $this->belongsTo(PersonService::class, 'service_id');
+        return $this->belongsTo(PersonService::class);
     }
 
-    public function orderproduct()
+    public function productStore()
     {
-        return $this->belongsTo(ProductStore::class, 'product_id');
+        return $this->belongsTo(ProductStore::class);
     }
 
-    public function ordercar()
+    public function car()
     {
         return $this->belongsTo(Car::class);
     }

@@ -63,6 +63,7 @@ class OrderController extends Controller
                     $car->client_person_id = $client_person_id;
                     $car->amount = $product[0]['sale_price'];
                     $car->pay = false;
+                    $car->active = false;
                 }
                 $car->save();
                 $car_id = $car->id;
@@ -74,8 +75,8 @@ class OrderController extends Controller
                              
                  $order = new Order();
                  $order->car_id = $car_id;
-                 $order->product_id = $data['product_id'];
-                 $order->service_id = null;
+                 $order->product_store_id = $data['product_id'];
+                 $order->branch_service_person_id = null;
                  $order->is_product = true;
                  $order->price = $product[0]['sale_price'];               
                  $order->request_delete = false;
@@ -92,13 +93,14 @@ class OrderController extends Controller
                     $car->client_person_id = $client_person_id;
                     $car->amount = $service[0]['price_service']+$service[0]['profit_percentaje']/100;
                     $car->pay = false;
+                    $car->active = false;
                 }
                 $car->save();
                 $car_id = $car->id;
                  $order = new Order();
                  $order->car_id = $car_id;
-                 $order->product_id = null;
-                 $order->service_id = $data['service_id'];
+                 $order->product_store_id = null;
+                 $order->branch_service_person_id = $data['service_id'];
                  $order->is_product = false;
                  $order->price = $service[0]['price_service']+$service[0]['profit_percentaje']/100;   
                  $order->request_delete = false;
@@ -118,7 +120,7 @@ class OrderController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_person', 'client_person.id', '=', 'cars.client_person_id')->join('clients', 'clients.id', '=', 'client_person.client_id')->join('people', 'people.id', '=', 'client_person.person_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_person', 'branch_service_person.id', '=', 'orders.service_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_person.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->where('orders.id', $data['id'])->get(['cars.*', 'clients.*', 'people.*', 'products.*', 'services.*','orders.*']);
+            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_person', 'client_person.id', '=', 'cars.client_person_id')->join('clients', 'clients.id', '=', 'client_person.client_id')->join('people', 'people.id', '=', 'client_person.person_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_person', 'branch_service_person.id', '=', 'orders.branch_service_person_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_person.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->where('orders.id', $data['id'])->get(['cars.*', 'clients.*', 'people.*', 'products.*', 'services.*','orders.*']);
             return response()->json(['cars' => $car], 200);
         } catch (\Throwable $th) {  
             Log::error($th);

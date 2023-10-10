@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -43,6 +45,22 @@ class CarController extends Controller
             Log::error($th);
         return response()->json(['msg' => 'Error al insertar el carro'], 500);
         }
+    }
+
+    public function car_oders(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'id' => 'required|numeric'
+           ]);
+           $products = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('product_store', 'product_store.id', '=', 'orders.product_store_id')->join('products', 'products.id', '=', 'product_store.product_id')->where('cars.id', $data['id'])->get(['products.*','orders.*']);
+
+           $services = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('branch_service_person', 'branch_service_person.id', '=', 'orders.branch_service_person_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_person.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('cars.id', $data['id'])->get(['services.*','orders.*']);
+
+           return response()->json(['productscar' => $products, 'servicescar' => $services], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
+       }
     }
 
     public function show(Request $request)

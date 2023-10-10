@@ -9,9 +9,9 @@ class ProductStore extends Model
 {
     use HasFactory;
     
-    public function productorders()
+    public function orders()
     {
-        return $this->hasMany(Order::class, 'product_id');
+        return $this->hasMany(Order::class);
     }
      //para decirle a q table debe administrar
     protected $table = "product_store";
