@@ -17,4 +17,8 @@ class Person extends Model
     public function personclients(){
         return $this->belongsToMany(Client::class)->withTimestamps();
     }
+
+    public function branchServices(){
+        return $this->belongsToMany(BranchService::class, 'branch_service_person')->withTimestamps();
+    }
 }
