@@ -28,18 +28,20 @@ class CarController extends Controller
             $data = $request->validate([
                 'client_person_id' => 'required|numeric',
                 'amount' => 'nullable|numeric',
-                'pay' => 'boolean'
+                'pay' => 'boolean',
+                'active' => 'boolean',
             ]);
             $car = new Car();
             $car->client_person_id = $data['client_person_id'];
             $car->amount = $data['amount'];
             $car->pay = $data['pay'];
+            $car->active = $data['active'];
             $car->save();
 
             return response()->json(['msg' => 'Carro insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage().'Error al insertar el carro'], 500);
+        return response()->json(['msg' => 'Error al insertar el carro'], 500);
         }
     }
 
