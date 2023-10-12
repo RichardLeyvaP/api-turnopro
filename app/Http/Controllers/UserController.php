@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
     public function register(Request $request){
+        try{
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email|unique:users',
@@ -31,9 +32,13 @@ class UserController extends Controller
         return response()->json(['msg' => "Usuario registrado correctamente!!!",
             'user' => $user
         ],201);
+    }catch(\Throwable $th){
+        return response()->json(['msg' => 'Error al registrarse'], 500);
+    }
     }
 
     public function login(Request $request){
+        try{
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required'
@@ -60,19 +65,30 @@ class UserController extends Controller
             "msg" => "Usuario logueado correctamente!!!",
             'token' => $user->createToken('auth_token')->plainTextToken
         ],200);
+    }catch(\Throwable $th){
+        return response()->json(['msg' => 'Error al loguearse'], 500);
+    }
     }
 
     public function userProfile(){
+        try{
         return response()->json([
             "msg" => "Acerca del perfil de usuario",
             "data" => auth()->user()
         ]);
+    }catch(\Throwable $th){
+        return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
+    }
     }
 
     public function logout(){
+        try{
         auth()->user()->tokens()->delete();
         return response()->json([
             "msg" => "Session cerrada correctamente"
         ],200);
+    }catch(\Throwable $th){
+        return response()->json(['msg' => 'Error al cerrar la session'], 500);
+    }
     }
 }
