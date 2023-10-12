@@ -18,6 +18,7 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
+use App\Http\Controllers\UserController;
 use App\Models\Business;
 use App\Models\BusinessTypes;
 use App\Models\ProductCategory;
@@ -34,12 +35,17 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::post('/register', [UserController::class, 'register']);
+Route::post('/login', [UserController::class, 'login']);
 
+Route::group( ['middleware' => ["auth:sanctum"]], function(){
+    Route::get('profile', [UserController::class, 'userProfile']);
+    Route::get('logout', [UserController::class, 'logout']);
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
 
 Route::get('/people', [PersonController::class, 'index']);
 Route::get('/people-show', [PersonController::class, 'show']);
