@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductStore;
 use App\Models\Store;
 use Illuminate\Http\Request;
@@ -77,14 +78,15 @@ class ProductStoreController extends Controller
     public function category_products(Request $request)
     {
         try {
-             $data = $request->validate([
-                'id' => 'required|numeric'
-            ]);
-            $result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);
-            return response()->json(['category_products' => $result], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
-        }
+            $data = $request->validate([
+               'branch_id' => 'required|numeric'
+           ]);
+           $productCategories = collect();
+           $productCategories = ProductCategory::join('products', 'products.product_category_id','=','product_categories.id')->join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->join('branch_store', 'branch_store.store_id', '=', 'stores.id')->where('branch_store.branch_id',$data['branch_id'])->get(['product_categories.*']);
+           return response()->json(['category_products' => $productCategories->unique()], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+       }
     }
     public function update(Request $request)
     {
