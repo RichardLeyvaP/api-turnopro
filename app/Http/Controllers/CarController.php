@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CarController extends Controller
 {
@@ -63,7 +64,7 @@ class CarController extends Controller
        }
     }
 
-    public function car_order_delete(Request $request)
+   /* public function car_order_delete(Request $request)
     {
         try {
             $data = $request->validate([
@@ -75,6 +76,42 @@ class CarController extends Controller
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
        }
+    }*/
+    public function car_order_delete(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+    
+            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')
+                ->join('client_person', 'client_person.id', '=', 'cars.client_person_id')
+                ->join('clients', 'clients.id', '=', 'client_person.client_id')
+                ->join('people', 'people.id', '=', 'client_person.person_id')
+                ->leftJoin('product_store', 'product_store.id', '=', 'orders.product_store_id')
+                ->leftJoin('products', 'products.id', '=', 'product_store.product_id')
+                ->leftJoin('branch_service_person', 'branch_service_person.id', '=', 'orders.branch_service_person_id')
+                ->leftJoin('branch_service', 'branch_service.id', '=', 'branch_service_person.branch_service_id')
+                ->leftJoin('services', 'services.id', '=', 'branch_service.service_id')
+                ->select([
+                    DB::raw('CONCAT(people.name, " ", people.surname) AS nameProfessional'),
+                    DB::raw('CONCAT(clients.name, " ", clients.surname) AS nameClient'),
+                    'products.name as nameProduct',
+                    'services.name as nameService',
+                    'orders.id',
+                    'orders.is_product',
+                    'orders.id',
+                    'orders.updated_at'
+                ])
+                ->where('cars.id', $data['id'])
+                ->where('request_delete', true)
+                ->orderBy('updated_at', 'desc')
+                ->get();
+    
+            return response()->json(['carOrderDelete' => $car], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las ordenes"], 500);
+        }
     }
 
     public function show(Request $request)
