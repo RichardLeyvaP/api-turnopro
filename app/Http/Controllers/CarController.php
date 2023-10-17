@@ -100,7 +100,6 @@ class CarController extends Controller
                     'services.name as nameService',
                     'orders.id',
                     'orders.is_product',
-                    'orders.id',
                     'orders.updated_at'
                 ])
                 ->where('cars.id', $data['id'])
