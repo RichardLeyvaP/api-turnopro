@@ -96,7 +96,7 @@ class CarController extends Controller
                 ->select([
                     DB::raw('CONCAT(people.name, " ", people.surname) AS nameProfessional'),
                     DB::raw('CONCAT(clients.name, " ", clients.surname) AS nameClient'),
-                    DB::raw('DATE_FORMAT(orders.updated_at, "%h:%i %p") as hora'),
+                    DB::raw('DATE_FORMAT(orders.updated_at, "%h:%i:%s %p") as hora'),
                     //DB::raw('TIME(orders.updated_at) as hora'), militar
                     'products.name as nameProduct',
                     'services.name as nameService',
@@ -111,7 +111,7 @@ class CarController extends Controller
     
             return response()->json(['carOrderDelete' => $car], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las ordenes"], 500);
+            return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
     }
 
