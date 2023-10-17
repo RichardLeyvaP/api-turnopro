@@ -154,9 +154,9 @@ class OrderController extends Controller
                 'id' => 'required|numeric'
             ]);
             $order = Order::find($data['id']);
-            $car = Car::whereDate('updated_at', $order->updated_at)->find($order->car_id);
-            if ($order->is_product = true) {
-                $productstore = ProductStore::find($order->product_id);
+            $car = Car::find($order->car_id);
+            if ($order->is_product) {
+                $productstore = ProductStore::find($order->product_store_id);
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
                 $productstore->save();
@@ -170,7 +170,7 @@ class OrderController extends Controller
                 $car->delete();
             }
             
-            return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 500);
+            return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
