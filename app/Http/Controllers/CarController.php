@@ -98,7 +98,6 @@ class CarController extends Controller
                     DB::raw('CONCAT(clients.name, " ", clients.surname) AS nameClient'),
                     'products.name as nameProduct',
                     'services.name as nameService',
-                    'orders.id',
                     'orders.is_product',
                     'orders.id',
                     'orders.updated_at'
