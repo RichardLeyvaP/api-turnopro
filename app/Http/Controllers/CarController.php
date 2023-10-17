@@ -96,6 +96,7 @@ class CarController extends Controller
                 ->select([
                     DB::raw('CONCAT(people.name, " ", people.surname) AS nameProfessional'),
                     DB::raw('CONCAT(clients.name, " ", clients.surname) AS nameClient'),
+                    DB::raw('TIME(orders.updated_at) as hora'),
                     'products.name as nameProduct',
                     'services.name as nameService',
                     'orders.id',
