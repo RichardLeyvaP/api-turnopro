@@ -134,10 +134,11 @@ class OrderController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'request_delete' => 'required|boolean'
             ]);
             $order = Order::find($data['id']);
-            $order->request_delete = true;
+            $order->request_delete = $data['request_delete'];
             $order->save();
             return response()->json(['msg' => 'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
