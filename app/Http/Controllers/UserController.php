@@ -63,7 +63,8 @@ class UserController extends Controller
         }*/
         return response()->json([
             "msg" => "Usuario logueado correctamente!!!",
-            'token' => $user->createToken('auth_token')->plainTextToken
+            'token' => $user->createToken('auth_token')->plainTextToken,
+            'user' => $user
         ],200);
     }catch(\Throwable $th){
         return response()->json(['msg' => 'Error al loguearse'], 500);
