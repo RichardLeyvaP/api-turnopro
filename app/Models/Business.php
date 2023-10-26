@@ -9,9 +9,9 @@ class Business extends Model
 {
     use HasFactory;
 
-    public function person()
+    public function professional()
     {
-        return $this->belongsTo(Person::class, 'person_id');
+        return $this->belongsTo(Professional::class, 'professional_id');
     }
 
     public function branches()

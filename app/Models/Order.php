@@ -9,9 +9,9 @@ class Order extends Model
 {
     use HasFactory;
 
-    public function branchServicePperson()
+    public function branchServiceProfessional()
     {
-        return $this->belongsTo(PersonService::class);
+        return $this->belongsTo(ProfessionalService::class);
     }
 
     public function productStore()

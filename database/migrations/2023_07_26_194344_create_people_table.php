@@ -19,6 +19,8 @@ return new class extends Migration {
             $table->string('phone', 15);
             $table->timestamps();
         });
+
+        Schema::rename('people', 'professionals');
     }
 
     /**
@@ -26,6 +28,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('people');
+        Schema::dropIfExists('professionals');
     }
 };

@@ -9,13 +9,17 @@ class Car extends Model
 {
     use HasFactory;
 
-    public function clientperson()
+    public function clientProfessional()
     {
-        return $this->belongsTo(ClientPerson::class, 'client_person_id');
+        return $this->belongsTo(ClientProfessional::class);
     }
 
     public function orders()
     {
         return $this->hasMany(Order::class);
     }
+
+    protected $casts = [
+        'amount' => 'float'
+    ];
 }

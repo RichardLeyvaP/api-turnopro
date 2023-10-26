@@ -80,8 +80,25 @@ class ProductStoreController extends Controller
              $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);
-            return response()->json(['category_products' => $result], 200);
+            $productstores = ProductStore::with('product')->whereRelation('product', 'product_category_id', '=', $data['id'])->get();
+
+            $productsArray = $productstores->map(function ($productstore){
+                return [
+                    'id' => $productstore->id,
+                    'product_exit' => $productstore->product_exit,
+                    'product_id' => $productstore->product_id,
+                    'name' => $productstore->product->name,
+                    'reference' => $productstore->product->reference,
+                    'code' => $productstore->product->code,
+                    'description' => $productstore->product->description,
+                    'status_product' => $productstore->product->status_product,
+                    'purchase_price' => $productstore->product->purchase_price,
+                    'sale_price' => $productstore->product->sale_price,
+                    'image_product' => $productstore->product->image_product
+                ];
+            });
+            //$result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);
+            return response()->json(['category_products' => $productsArray], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }

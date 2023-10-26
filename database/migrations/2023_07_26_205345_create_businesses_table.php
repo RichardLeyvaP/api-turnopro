@@ -14,10 +14,10 @@ return new class extends Migration {
             $table->id();
             $table->string('name', 50)->unique();
             $table->string('address', 250);
-            $table->unsignedBigInteger('person_id');
+            $table->unsignedBigInteger('professional_id');
             $table->string('email', 50)->unique();
             $table->string('phone', 15);
-            $table->foreign('person_id')->references('id')->on('people')->onDelete('restrict');
+            $table->foreign('professional_id')->references('id')->on('professionals')->onDelete('restrict');
             $table->timestamps();
         });
     }
