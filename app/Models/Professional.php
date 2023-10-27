@@ -19,7 +19,7 @@ class Professional extends Model
     }
 
     public function branchServices(){
-        return $this->belongsToMany(BranchService::class, 'branch_service_professional')->withTimestamps();
+        return $this->belongsToMany(BranchService::class)->with('branch')->withTimestamps();
     }
 
     public function user()

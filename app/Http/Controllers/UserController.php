@@ -49,9 +49,19 @@ class UserController extends Controller
             ],400);
         }
 
-        $user = User::with('professional')->where('email',$request->email)->orWhere('name', $request->email)->first();
+        $user = User::with(['professional' => function ($query){
+            $query->with(['branchServices' => function ($query){
+                $query->with('branch')->get();
+            }])->get();
+        }])->where('email',$request->email)->orWhere('name', $request->email)->first();
         if (isset($user->id) ) {
             if(Hash::check($request->password, $user->password)) {
+                $branch = $user->professional->branchServices->map(function ($branchService){
+                    return[
+                        'branch_id' => $branchService->branch->id,
+                        'nameBranch' => $branchService->branch->name
+                    ];
+                })->first();
                 return response()->json([
                     'id' => $user->id,
                     'userName' => $user->name,
@@ -59,7 +69,9 @@ class UserController extends Controller
                     'charge' => $user->professional->charge->name,
                     'nameProfessional' =>$user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname, 
                     'charge_id' =>$user->professional->charge->id,
-                    'professional_id' =>$user->professional->id,          
+                    'professional_id' =>$user->professional->id,    
+                    'branch_id' =>$branch['branch_id'],
+                    'nameBranch' =>$branch['nameBranch'],           
                     'token' => $user->createToken('auth_token')->plainTextToken
                 ],200);
             }else{

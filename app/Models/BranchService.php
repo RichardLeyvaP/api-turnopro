@@ -19,6 +19,11 @@ class BranchService extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
         //para decirle a q table debe administrar
     protected $table = "branch_service";
 }
