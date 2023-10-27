@@ -53,15 +53,14 @@ class UserController extends Controller
         if (isset($user->id) ) {
             if(Hash::check($request->password, $user->password)) {
                 return response()->json([
-                    'msg' => "Usuario logueado correctamente!!!",
-                    'token' => $user->createToken('auth_token')->plainTextToken,
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'userName' => $user->name,
                     'email' => $user->email,
                     'charge' => $user->professional->charge->name,
+                    'nameProfessional' =>$user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname, 
                     'charge_id' =>$user->professional->charge->id,
-                    'professional_id' =>$user->professional->id,
-                    'nameProfessional' =>$user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname
+                    'professional_id' =>$user->professional->id,          
+                    'token' => $user->createToken('auth_token')->plainTextToken
                 ],200);
             }else{
                 return response()->json([
