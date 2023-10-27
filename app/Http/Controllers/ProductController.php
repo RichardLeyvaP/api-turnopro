@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BranchStore;
 use App\Models\Product;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ class ProductController extends Controller
             $data = $request->validate([
                'branch_id' => 'required|numeric'
            ]);
-            $products = Product::join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.id',$data['branch_id'])->get(['products.*']);
+           $products = Product::join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.id',$data['branch_id'])->get(['products.*']);
            return response()->json(['branch_products' => $products], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos por almacen"], 500);

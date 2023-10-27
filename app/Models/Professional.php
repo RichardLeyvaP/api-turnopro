@@ -22,5 +22,15 @@ class Professional extends Model
         return $this->belongsToMany(BranchService::class, 'branch_service_professional')->withTimestamps();
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function charge()
+    {
+        return $this->belongsTo(Charge::class);
+    }
+
     protected $table = "professionals";
 }
