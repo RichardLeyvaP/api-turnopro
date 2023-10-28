@@ -89,7 +89,7 @@ class UserController extends Controller
             ], 404);
         }
     }catch(\Throwable $th){
-        return response()->json(['msg' => $th->getMessage().'Error al loguearse'], 500);
+        return response()->json(['msg' => 'Error al loguearse'], 500);
     }
     }
 
