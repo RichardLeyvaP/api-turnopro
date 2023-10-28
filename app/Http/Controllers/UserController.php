@@ -62,6 +62,10 @@ class UserController extends Controller
                         'nameBranch' => $branchService->branch->name
                     ];
                 })->first();
+                if(!$branch){
+                    $branch['branch_id'] = null;
+                    $branch['nameBranch'] = null;
+                }
                 return response()->json([
                     'id' => $user->id,
                     'userName' => $user->name,
@@ -85,7 +89,7 @@ class UserController extends Controller
             ], 404);
         }
     }catch(\Throwable $th){
-        return response()->json(['msg' => 'Error al loguearse'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al loguearse'], 500);
     }
     }
 
