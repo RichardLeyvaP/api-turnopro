@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductStore;
 use App\Models\Store;
 use Illuminate\Http\Request;
@@ -78,9 +79,31 @@ class ProductStoreController extends Controller
     {
         try {
              $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
             ]);
-            $productstores = ProductStore::with('product')->whereRelation('product', 'product_category_id', '=', $data['id'])->get();
+            $result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->join('branch_store', 'branch_store.store_id', '=', 'stores.id')->where('products.product_category_id',$data['id'])->where('branch_store.branch_id',$data['branch_id'])->get(['products.*', 'product_store.*']);
+            /*$products = Product::with(['stores.branches', function ($query) use ($data){
+                $query->where('branch_store.branch_id', '=', $data['branch_id']);
+            }])->get();
+            $productsArray = $products->map(function ($product){
+                return [
+                    'id' => $product->id,
+                    'stores' => $product->stores/*,
+                    'product_id' => $productstore->product_id,
+                    'name' => $productstore->product->name,
+                    'reference' => $productstore->product->reference,
+                    'code' => $productstore->product->code,
+                    'description' => $productstore->product->description,
+                    'status_product' => $productstore->product->status_product,
+                    'purchase_price' => $productstore->product->purchase_price,
+                    'sale_price' => $productstore->product->sale_price,
+                    'image_product' => $productstore->product->image_product*/
+                //];
+           // });*/
+            /*return $productstores = ProductStore::with(['store.branches', function ($query) use ($data){
+                $query->with('branches')->get();
+            }])->get();
 
             $productsArray = $productstores->map(function ($productstore){
                 return [
@@ -94,11 +117,12 @@ class ProductStoreController extends Controller
                     'status_product' => $productstore->product->status_product,
                     'purchase_price' => $productstore->product->purchase_price,
                     'sale_price' => $productstore->product->sale_price,
-                    'image_product' => $productstore->product->image_product
+                    'image_product' => $productstore->product->image_product,
+                    'stores'=> $productstore->stores
                 ];
             });
-            //$result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);
-            return response()->json(['category_products' => $productsArray], 200);
+            //$result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);*/
+            return response()->json(['category_products' => $result], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }

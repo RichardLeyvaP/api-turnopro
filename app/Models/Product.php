@@ -11,10 +11,10 @@ class Product extends Model
 
     public function productcategory()
     {
-        return $this->belongsTo(ProductCategory::class, 'product_category_id');
+        return $this->belongsTo(ProductCategory::class);
     }
 
     public function stores(){
-        return $this->belongsToMany(Store::class)->withPivot('product_quantity','product_exit','number_notification')->as('productstores')->withTimestamps();
+        return $this->belongsToMany(Store::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
     }
 }
