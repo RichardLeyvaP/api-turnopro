@@ -82,49 +82,31 @@ class ProductStoreController extends Controller
                 'id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->join('branch_store', 'branch_store.store_id', '=', 'stores.id')->where('products.product_category_id',$data['id'])->where('branch_store.branch_id',$data['branch_id'])->get(['products.*', 'product_store.*']);
-            /*$products = Product::with(['stores.branches', function ($query) use ($data){
-                $query->where('branch_store.branch_id', '=', $data['branch_id']);
-            }])->get();
-            $productsArray = $products->map(function ($product){
+             $productStores = ProductStore::whereHas('product', function ($query) use ($data){
+                $query->where('product_category_id', $data['id']);
+            })->whereHas('store', function ($query) use ($data){
+                $query->whereHas('branches', function ($query) use ($data){
+                    $query->where('branches.id', $data['branch_id']);
+                });
+            })->get();
+            $productsArray = $productStores->map(function ($productStore){
                 return [
-                    'id' => $product->id,
-                    'stores' => $product->stores/*,
-                    'product_id' => $productstore->product_id,
-                    'name' => $productstore->product->name,
-                    'reference' => $productstore->product->reference,
-                    'code' => $productstore->product->code,
-                    'description' => $productstore->product->description,
-                    'status_product' => $productstore->product->status_product,
-                    'purchase_price' => $productstore->product->purchase_price,
-                    'sale_price' => $productstore->product->sale_price,
-                    'image_product' => $productstore->product->image_product*/
-                //];
-           // });*/
-            /*return $productstores = ProductStore::with(['store.branches', function ($query) use ($data){
-                $query->with('branches')->get();
-            }])->get();
-
-            $productsArray = $productstores->map(function ($productstore){
-                return [
-                    'id' => $productstore->id,
-                    'product_exit' => $productstore->product_exit,
-                    'product_id' => $productstore->product_id,
-                    'name' => $productstore->product->name,
-                    'reference' => $productstore->product->reference,
-                    'code' => $productstore->product->code,
-                    'description' => $productstore->product->description,
-                    'status_product' => $productstore->product->status_product,
-                    'purchase_price' => $productstore->product->purchase_price,
-                    'sale_price' => $productstore->product->sale_price,
-                    'image_product' => $productstore->product->image_product,
-                    'stores'=> $productstore->stores
+                    'id' => $productStore->id,
+                    'product_exit' => $productStore->product_exit,
+                    'product_id' => $productStore->product_id,
+                    'name' => $productStore->product->name,
+                    'reference' => $productStore->product->reference,
+                    'code' => $productStore->product->code,
+                    'description' => $productStore->product->description,
+                    'status_product' => $productStore->product->status_product,
+                    'purchase_price' => $productStore->product->purchase_price,
+                    'sale_price' => $productStore->product->sale_price,
+                    'image_product' => $productStore->product->image_product
                 ];
             });
-            //$result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);*/
-            return response()->json(['category_products' => $result], 200);
+            return response()->json(['category_products' => $productsArray], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
         }
     }
     public function update(Request $request)
