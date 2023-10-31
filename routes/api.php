@@ -53,6 +53,7 @@ Route::get('/professional-show', [ProfessionalController::class, 'show']);
 Route::post('/professional', [ProfessionalController::class, 'store']);
 Route::put('/professional', [ProfessionalController::class, 'update']);
 Route::post('/professional-destroy', [ProfessionalController::class, 'destroy']);
+Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Car;
+use App\Models\ClientProfessional;
 use App\Models\Professional;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -27,6 +30,33 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar la persona"], 500);
         }
     }
+
+    public function professionals_branch(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'professional_id' => 'required|numeric',
+               'branch_id' => 'required|numeric'
+           ]);
+           $professionals = Professional::whereHas('branchServices', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+           })->find($data['professional_id']);
+           
+           if ($professionals) {
+                $date = Carbon::now();
+                $dataUser = [];
+                $dataUser['id'] = $professionals->id;
+                $dataUser['usuario'] = $professionals->name;
+                $dataUser['fecha'] = $date->toDateString();
+                $dataUser['hora'] = $date->Format('g:i:s A');
+                return response()->json(['professional_branch' => $dataUser], 200);
+           }
+           return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+       }
+    }
+
     public function store(Request $request)
     {
         try {
@@ -53,7 +83,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Profesional insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' =>  $th->getMessage().'Error al insertar la persona'], 500);
+            return response()->json(['msg' =>  'Error al insertar la persona'], 500);
         }
     }
 
@@ -88,7 +118,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => $th->getMessage().'Error al actualizar la persona'], 500);
+            return response()->json(['msg' => 'Error al actualizar la persona'], 500);
         }
     }
 

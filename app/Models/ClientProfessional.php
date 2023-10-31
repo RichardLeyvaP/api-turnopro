@@ -11,7 +11,7 @@ class ClientProfessional extends Model
 
     public function cars()
     {
-        return $this->hasMany(Car::class, 'client_professional_id');
+        return $this->hasMany(Car::class);
     }
 
     public function client()
