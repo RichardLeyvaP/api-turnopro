@@ -7,6 +7,7 @@ use App\Models\ClientProfessional;
 use App\Models\Professional;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ProfessionalController extends Controller
@@ -54,6 +55,33 @@ class ProfessionalController extends Controller
            return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+       }
+    }
+
+    public function professionals_ganancias(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'professional_id' => 'required|numeric',
+               'startDate' => 'required|date',
+               'endDate' => 'required|date'
+           ]);
+           //$ganancias = [];
+           $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+                $query->where('professional_id', $data['professional_id']);
+           })->selectRaw('DATE(created_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('created_at', [$data['startDate'], $data['endDate']])->groupBy('date')->get();
+           $earningByDay = $cars->map(function ($car){
+            return [
+                'date' => $car->date,
+                'earnings' => $car->earnings,
+            ];
+           });
+           $totalEarnings = $cars->sum('total_earnings');
+           $averageEarnings = $cars->avg('average_earnings');
+           
+          return response()->json(['earningByDay' => $earningByDay, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
        }
     }
 
