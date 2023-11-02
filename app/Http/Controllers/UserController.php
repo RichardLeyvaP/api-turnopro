@@ -13,7 +13,7 @@ class UserController extends Controller
     public function register(Request $request){
         try{
         $validator = Validator::make($request->all(), [
-            'name' => 'required|name|unique:users',
+            'name' => 'required',
             'email' => 'required|email|unique:professionals',
             'password' => 'required|confirmed'
 

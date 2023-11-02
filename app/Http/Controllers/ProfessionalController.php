@@ -66,6 +66,7 @@ class ProfessionalController extends Controller
                'startDate' => 'required|date',
                'endDate' => 'required|date'
            ]);
+           
            $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
                 $query->where('professional_id', $data['professional_id']);
            })->selectRaw('DATE(created_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('created_at', [$data['startDate'], $data['endDate']])->groupBy('date')->get();
