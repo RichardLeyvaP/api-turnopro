@@ -46,7 +46,7 @@ class ProductCategoryController extends Controller
            }
            return response()->json(['category_products' => $Categories->unique()], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
+           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }
     }
     public function store(Request $request)
