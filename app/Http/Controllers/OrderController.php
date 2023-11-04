@@ -29,31 +29,38 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Compra de Productos y servicio prestado");
+        Log::info("REVISAR Compra de Productos y servicio prestado");
         Log::info($request);
         try {
+            Log::info("ES ESTA VALIDACION 1");
             $data = $request->validate([
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
                 'product_id' => 'required|numeric',
-                'service_id' => 'required|numeric'
+                'service_id' => 'required|numeric',
+                'type' => 'required'
 
             ]);
+            Log::info("REVISAR 1");
             $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');/*0;
             $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
+            Log::info("REVISAR 1.1");
             if (!$client_professional_id) {
                 $clientprofessional = new ClientProfessional();
                 $clientprofessional->client_id = $data['client_id'];
                 $clientprofessional->professional_id = $data['professional_id'];
                 $clientprofessional->save();
                 $client_professional_id = $clientprofessional->id;
+                Log::info("REVISAR 1.2");
             }
+            Log::info("REVISAR 2");
             /*else {                
             $client_professional_id = $result[0]['id'];
             }*/
             $productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
-            if ($data['product_id'] != 0) {
+            if ($data['service_id'] == 0 && $data['type'] == 'product') {
+                Log::info("REVISAR 3");
                 //$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
                 $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
@@ -85,7 +92,8 @@ class OrderController extends Controller
                  $order->request_delete = false;
                  $order->save();
              }//end if product
-             if ($data['service_id'] != 0) {
+             if ($data['product_id'] == 0 && $data['type'] == 'service') {             
+                Log::info("REVISAR 4");
                 $branchServicePerson = BranchServiceProfessional::with('branchService.service')->first();
                 $service = $branchServicePerson->branchService->service;
                 /*$service = Service::join('branch_service', 'branch_service.service_id', '=', 'services.id')->join('branch_service_professional', 'branch_service_professional.branch_service_id', '=', 'branch_service.id')->where('branch_service_professional.id', $data['service_id'])->get('services.*');*/
@@ -95,7 +103,7 @@ class OrderController extends Controller
                 }
                 else {
                     $car = new Car();
-                    $car->client_person_id = $client_professional_id;
+                    $car->client_professional_id = $client_professional_id;
                     $car->amount = $service->price_service+$service->profit_percentaje/100;
                     $car->pay = false;
                     $car->active = false;
@@ -111,7 +119,8 @@ class OrderController extends Controller
                  $order->request_delete = false;
                  $order->save();
             }//end if service
-             return response()->json(['msg' =>'Pedido Agregado correctamente'], 200);
+            Log::info("LLEGUE AL FINAL JEJEJEJ");
+             return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' => $order->id], 200);
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
