@@ -53,7 +53,7 @@ class ProfessionalServiceController extends Controller
                     "profit_percentaje"=> $branchService->branchService->service->profit_percentaje,
                     "duration_service"=> $branchService->branchService->service->duration_service,
                     "image_service"=> $branchService->branchService->service->image_service,
-                    "service_comment	"=> $branchService->branchService->service->service_comment	,
+                    "service_comment	"=> $branchService->branchService->service->service_comment
                 ];
            });
            /*$person = Professional::find($data['professional_id']);
