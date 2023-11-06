@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchServiceProfessional;
 use App\Models\Professional;
 use App\Models\ProfessionalService;
 use App\Models\Service;
@@ -41,14 +42,28 @@ class ProfessionalServiceController extends Controller
             $data = $request->validate([
                'professional_id' => 'required|numeric'
            ]);
-           $person = Professional::find($data['professional_id']);
+           $BSProfessional = BranchServiceProfessional::with('branchService.service')->where('professional_id', $data['professional_id'])->get();
+           $serviceModels = $BSProfessional->map(function ($branchService){
+                return[
+                    "id" => $branchService->id,
+                    "name"=> $branchService->branchService->service->name,
+                    "simultaneou"=> $branchService->branchService->service->simultaneou,
+                    "price_service"=> $branchService->branchService->service->price_service,
+                    "type_service"=> $branchService->branchService->service->type_service,
+                    "profit_percentaje"=> $branchService->branchService->service->profit_percentaje,
+                    "duration_service"=> $branchService->branchService->service->duration_service,
+                    "image_service"=> $branchService->branchService->service->image_service,
+                    "service_comment	"=> $branchService->branchService->service->service_comment	,
+                ];
+           });
+           /*$person = Professional::find($data['professional_id']);
            
            $services = $person->branchServices->pluck('service_id');
-           $serviceModels = Service::find($services);
+           $serviceModels = Service::find($services);*/
 
            return response()->json(['professional_services' => $serviceModels], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+           return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
        }
     }
     public function store(Request $request)

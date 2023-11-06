@@ -12,4 +12,8 @@ class Service extends Model
     public function servicebranchees(){
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
+
+    public function branchServices(){
+        return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
 }
