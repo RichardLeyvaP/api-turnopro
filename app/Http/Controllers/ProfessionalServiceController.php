@@ -61,7 +61,6 @@ class ProfessionalServiceController extends Controller
            $services = $person->branchServices->pluck('service_id');
            $serviceModels = Service::find($services);*/
            
-           Log::info($serviceModels);
            return response()->json(['professional_services' => $serviceModels], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
