@@ -48,9 +48,9 @@ class ProfessionalServiceController extends Controller
                     "id" => $branchService->id,
                     "name"=> $branchService->branchService->service->name,
                     "simultaneou"=> $branchService->branchService->service->simultaneou,
-                    "price_service"=> $branchService->branchService->service->price_service,
+                    "price_service"=> (float)$branchService->branchService->service->price_service,
                     "type_service"=> $branchService->branchService->service->type_service,
-                    "profit_percentaje"=> $branchService->branchService->service->profit_percentaje,
+                    "profit_percentaje"=> (float)$branchService->branchService->service->profit_percentaje,
                     "duration_service"=> $branchService->branchService->service->duration_service,
                     "image_service"=> $branchService->branchService->service->image_service,
                     "service_comment	"=> $branchService->branchService->service->service_comment
@@ -60,7 +60,8 @@ class ProfessionalServiceController extends Controller
            
            $services = $person->branchServices->pluck('service_id');
            $serviceModels = Service::find($services);*/
-
+           
+           Log::info($serviceModels);
            return response()->json(['professional_services' => $serviceModels], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
