@@ -23,4 +23,10 @@ class Order extends Model
     {
         return $this->belongsTo(Car::class);
     }
+
+    protected $casts = [
+        'is_product' => 'integer',
+        'price' => 'float',
+        'request_delete' => 'integer'
+    ];
 }

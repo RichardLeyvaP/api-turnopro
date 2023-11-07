@@ -47,11 +47,11 @@ class ProfessionalServiceController extends Controller
                 return[
                     "id" => $branchService->id,
                     "name"=> $branchService->branchService->service->name,
-                    "simultaneou"=> (int)$branchService->branchService->service->simultaneou,
-                    "price_service"=> (float)$branchService->branchService->service->price_service,
+                    "simultaneou"=> $branchService->branchService->service->simultaneou,
+                    "price_service"=> $branchService->branchService->service->price_service,
                     "type_service"=> $branchService->branchService->service->type_service,
-                    "profit_percentaje"=> (float)$branchService->branchService->service->profit_percentaje,
-                    "duration_service"=> (int)$branchService->branchService->service->duration_service,
+                    "profit_percentaje"=> $branchService->branchService->service->profit_percentaje,
+                    "duration_service"=> $branchService->branchService->service->duration_service,
                     "image_service"=> $branchService->branchService->service->image_service,
                     "service_comment"=> $branchService->branchService->service->service_comment
                 ];
