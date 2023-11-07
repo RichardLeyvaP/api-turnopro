@@ -48,7 +48,7 @@ class CarController extends Controller
         }
     }
 
-    public function car_oders(Request $request)
+    public function car_orders(Request $request)
     {
         try {
             $data = $request->validate([
@@ -63,12 +63,12 @@ class CarController extends Controller
                         'code' => $orderData->productStore->product->code,
                         'description' => $orderData->productStore->product->description,
                         'status_product' => $orderData->productStore->product->status_product,
-                        'purchase_price' => $orderData->productStore->product->purchase_price,
-                        'sale_price' => $orderData->productStore->product->sale_price,
+                        'purchase_price' => (float)$orderData->productStore->product->purchase_price,
+                        'sale_price' => (float)$orderData->productStore->product->sale_price,
                         'image_product' => $orderData->productStore->product->image_product,
-                        'is_product' => $orderData->is_product,
-                        'price' => $orderData->price,
-                        'request_delete' => $orderData->request_delete
+                        'is_product' => (int)$orderData->is_product,
+                        'price' => (float)$orderData->price,
+                        'request_delete' => (int)$orderData->request_delete
                     ];
                });
            /*$products = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('product_store', 'product_store.id', '=', 'orders.product_store_id')->join('products', 'products.id', '=', 'product_store.product_id')->where('cars.id', $data['id'])->get(['products.*','orders.*']);
@@ -79,16 +79,16 @@ class CarController extends Controller
               return [
                     'id' => $orderData->id,
                     'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
-                    'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
-                    'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
+                    'simultaneou' => (int)$orderData->branchServiceProfessional->branchService->service->simultaneou,
+                    'price_service' => (float)$orderData->branchServiceProfessional->branchService->service->price_service,
                     'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
-                    'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
-                    'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
+                    'profit_percentaje' => (float)$orderData->branchServiceProfessional->branchService->service->profit_percentaje,
+                    'duration_service' => (int)$orderData->branchServiceProfessional->branchService->service->duration_service,
                     'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
                     'service_comment' => $orderData->branchServiceProfessional->branchService->service->service_comment,
-                    'is_product' => $orderData->is_product,
-                    'price' => $orderData->price,
-                    'request_delete' => $orderData->request_delete
+                    'is_product' => (int)$orderData->is_product,
+                    'price' => (float)$orderData->price,
+                    'request_delete' => (int)$orderData->request_delete
                     ];
                 });
            return response()->json(['productscar' => $products, 'servicescar' => $services], 200);
