@@ -58,7 +58,7 @@ class CarController extends Controller
             $products = $orderProductsDatas->map(function ($orderData){
                     return [
                         'id' => $orderData->id,                   
-                        'name' => $orderData->productStore ->product->name,
+                        'name' => $orderData->productStore->product->name,
                         'reference' => $orderData->productStore->product->reference,
                         'code' => $orderData->productStore->product->code,
                         'description' => $orderData->productStore->product->description,
