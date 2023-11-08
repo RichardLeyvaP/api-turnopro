@@ -88,7 +88,7 @@ class ProductStoreController extends Controller
                 $query->whereHas('branches', function ($query) use ($data){
                     $query->where('branches.id', $data['branch_id']);
                 });
-            })->where('product_exit', '>', 0)->get();
+            })->get();
             $productsArray = $productStores->map(function ($productStore){
                 return [
                     'id' => $productStore->id,
