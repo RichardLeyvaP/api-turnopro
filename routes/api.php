@@ -38,6 +38,7 @@ Route::post('/login', [UserController::class, 'login']);
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
+    Route::get('qrCode', [UserController::class, 'qrCode']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
