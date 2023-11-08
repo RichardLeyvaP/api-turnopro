@@ -56,14 +56,10 @@ class ProfessionalServiceController extends Controller
                     "service_comment"=> $branchService->branchService->service->service_comment
                 ];
            });
-           /*$person = Professional::find($data['professional_id']);
-           
-           $services = $person->branchServices->pluck('service_id');
-           $serviceModels = Service::find($services);*/
            
            return response()->json(['professional_services' => $serviceModels], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => "Error al mostrar las categoría de producto"], 500);
+           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }
     }
     public function store(Request $request)
