@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserController extends Controller
 {
@@ -100,6 +103,22 @@ class UserController extends Controller
             "data" => auth()->user()
         ]);
     }catch(\Throwable $th){
+        return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
+    }
+    }
+
+    public function qrCode(){
+        try{
+            $datos = [
+                'id' => auth()->user()->id,
+                'userName' => auth()->user()->name,
+                'email' => auth()->user()->email,
+                'hora' => Carbon::now()->format('H:i:s')
+            ];
+            $qrCode = QrCode::size(250)->generate(json_encode($datos));            
+            Log::info($qrCode);
+        return response()->json([$qrCode]);
+    }catch(\Throwable $th){ 
         return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
     }
     }
