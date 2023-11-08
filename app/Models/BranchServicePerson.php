@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Service extends Model
+class BranchServicePerson extends Model
 {
     use HasFactory;
 
-    public function servicebranchees(){
-        return $this->belongsToMany(Branch::class)->withTimestamps();
-    }
+    //para decirle a q table debe administrar
+    protected $table = "branch_service_person";
 }

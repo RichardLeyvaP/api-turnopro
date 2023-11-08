@@ -8,9 +8,4 @@ use Illuminate\Database\Eloquent\Model;
 class Charge extends Model
 {
     use HasFactory;
-
-    public function professionals()
-    {
-        return $this->hasMany(Professional::class);
-    }
 }

@@ -58,7 +58,7 @@ class BranchServiceController extends Controller
             
             } catch (\Throwable $th) {  
             Log::error($th);
-        return response()->json(['msg' => "Error al mostrar los servicios"], 500);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los servicios"], 500);
         }
     }
 

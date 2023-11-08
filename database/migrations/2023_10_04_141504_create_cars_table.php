@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('cars', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('client_professional_id');
+            $table->unsignedBigInteger('client_person_id');
             $table->decimal('amount', 8, 2)->nullable();
             $table->boolean('pay')->default(false);
-            $table->foreign('client_professional_id')->references('id')->on('client_professional')->onDelete('cascade');
+            $table->foreign('client_person_id')->references('id')->on('client_person')->onDelete('cascade');
             
             $table->timestamps();
         });

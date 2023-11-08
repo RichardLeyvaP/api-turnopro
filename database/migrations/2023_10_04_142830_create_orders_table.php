@@ -15,14 +15,14 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('car_id');
             $table->unsignedBigInteger('product_store_id')->nullable();
-            $table->unsignedBigInteger('branch_service_professional_id')->nullable();
+            $table->unsignedBigInteger('branch_service_person_id')->nullable();
             $table->boolean('is_product')->unsigned();
             $table->decimal('price', 8, 2);
             $table->boolean('request_delete')->default(false);
 
             $table->foreign('car_id')->references('id')->on('cars')->onDelete('cascade');
             $table->foreign('product_store_id')->references('id')->on('product_store')->onDelete('set null');
-            $table->foreign('branch_service_professional_id')->references('id')->on('branch_service_professional')->onDelete('set null');
+            $table->foreign('branch_service_person_id')->references('id')->on('branch_service_person')->onDelete('set null');
             $table->timestamps();
         });
     }
