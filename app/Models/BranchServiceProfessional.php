@@ -5,14 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ClientPerson extends Model
+class BranchServiceProfessional extends Model
 {
     use HasFactory;
 
-    public function cars()
+    public function branchService()
     {
-        return $this->hasMany(Car::class, 'client_person_id');
+    return $this->belongsTo(BranchService::class);
     }
+
     //para decirle a q table debe administrar
-    protected $table = "client_person";
+    protected $table = "branch_service_professional";
 }

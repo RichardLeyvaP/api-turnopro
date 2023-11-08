@@ -7,21 +7,18 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessTypesController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\ChargeController;
-use App\Http\Controllers\PersonController;
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\ClientPersonController;
+use App\Http\Controllers\ClientProfessionalController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PersonServiceController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\RuleController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
+use App\Http\Controllers\ProfessionalController;
+use App\Http\Controllers\ProfessionalServiceController;
 use App\Http\Controllers\UserController;
-use App\Models\Business;
-use App\Models\BusinessTypes;
-use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,11 +44,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/people', [PersonController::class, 'index']);
-Route::get('/people-show', [PersonController::class, 'show']);
-Route::post('/people', [PersonController::class, 'store']);
-Route::put('/people', [PersonController::class, 'update']);
-Route::post('/people-destroy', [PersonController::class, 'destroy']);
+Route::get('/professional', [ProfessionalController::class, 'index']);
+Route::get('/professional-show', [ProfessionalController::class, 'show']);
+Route::post('/professional', [ProfessionalController::class, 'store']);
+Route::put('/professional', [ProfessionalController::class, 'update']);
+Route::post('/professional-destroy', [ProfessionalController::class, 'destroy']);
+Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
+Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
@@ -135,25 +134,25 @@ Route::post('/branchservice', [BranchServiceController::class, 'store']);
 Route::put('/branchservice', [BranchServiceController::class, 'update']);
 Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
 
-Route::get('/personservice', [PersonServiceController::class, 'index']);
-Route::get('/personservice-show', [PersonServiceController::class, 'show']);
-Route::post('/personservice', [PersonServiceController::class, 'store']);
-Route::put('/personservice', [PersonServiceController::class, 'update']);
-Route::post('/personservice-destroy', [PersonServiceController::class, 'destroy']);
-Route::get('/person_services', [PersonServiceController::class, 'person_services']);
+Route::get('/personservice', [ProfessionalServiceController::class, 'index']);
+Route::get('/personservice-show', [ProfessionalServiceController::class, 'show']);
+Route::post('/personservice', [ProfessionalServiceController::class, 'store']);
+Route::put('/personservice', [ProfessionalServiceController::class, 'update']);
+Route::post('/personservice-destroy', [ProfessionalServiceController::class, 'destroy']);
+Route::get('/person_services', [ProfessionalServiceController::class, 'person_services']);
 
-Route::get('/clientperson', [ClientPersonController::class, 'index']);
-Route::get('/clientperson-show', [ClientPersonController::class, 'show']);
-Route::post('/clientperson', [ClientPersonController::class, 'store']);
-Route::put('/clientperson', [ClientPersonController::class, 'update']);
-Route::post('/clientperson-destroy', [ClientPersonController::class, 'destroy']);
+Route::get('/clientperson', [ClientProfessionalController::class, 'index']);
+Route::get('/clientperson-show', [ClientProfessionalController::class, 'show']);
+Route::post('/clientperson', [ClientProfessionalController::class, 'store']);
+Route::put('/clientperson', [ClientProfessionalController::class, 'update']);
+Route::post('/clientperson-destroy', [ClientProfessionalController::class, 'destroy']);
 
 Route::get('/car', [CarController::class, 'index']);
 Route::get('/car-show', [CarController::class, 'show']);
 Route::post('/car', [CarController::class, 'store']);
 Route::put('/car', [CarController::class, 'update']);
 Route::post('/car-destroy', [CarController::class, 'destroy']);
-Route::get('/car_oders', [CarController::class, 'car_oders']);
+Route::get('/car_orders', [CarController::class, 'car_orders']);
 Route::get('/car_order_delete', [CarController::class, 'car_order_delete']);
 
 Route::get('/order', [OrderController::class, 'index']);

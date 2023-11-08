@@ -24,7 +24,7 @@ class ChargeController extends Controller
             $charge_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['client' => Charge::find($charge_data['id'])], 200);
+            return response()->json(['cargo' => Charge::find($charge_data['id'])], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el cargo"], 500);
         }

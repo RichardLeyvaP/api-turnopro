@@ -14,7 +14,7 @@ class UserController extends Controller
         try{
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|unique:professionals',
             'password' => 'required|confirmed'
 
         ]);
@@ -40,34 +40,54 @@ class UserController extends Controller
     public function login(Request $request){
         try{
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email' => 'required',
             'password' => 'required'
         ]);
-
         if ($validator->fails()) {
             return response()->json([
                 'msg' => $validator->errors()->all()
             ],400);
         }
-        if (!Auth::attempt($request->only('email','password'))) {
+
+        $user = User::with(['professional' => function ($query){
+            $query->with(['branchServices' => function ($query){
+                $query->with('branch')->get();
+            }])->get();
+        }])->where('email',$request->email)->orWhere('name', $request->email)->first();
+        if (isset($user->id) ) {
+            if(Hash::check($request->password, $user->password)) {
+                $branch = $user->professional->branchServices->map(function ($branchService){
+                    return[
+                        'branch_id' => $branchService->branch->id,
+                        'nameBranch' => $branchService->branch->name
+                    ];
+                })->first();
+                if(!$branch){
+                    $branch['branch_id'] = null;
+                    $branch['nameBranch'] = null;
+                }
+                return response()->json([
+                    'id' => $user->id,
+                    'userName' => $user->name,
+                    'email' => $user->email,
+                    'charge' => $user->professional->charge->name,
+                    'nameProfessional' =>$user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname, 
+                    'charge_id' =>$user->professional->charge->id,
+                    'professional_id' =>$user->professional->id,    
+                    'branch_id' =>$branch['branch_id'],
+                    'nameBranch' =>$branch['nameBranch'],           
+                    'token' => $user->createToken('auth_token')->plainTextToken
+                ],200);
+            }else{
+                return response()->json([
+                  "msg" => "Contraseña incorrecta"
+               ], 404);
+           }
+        }else{
             return response()->json([
                 "msg" => "Usuario no registrado"
-            ], 401 );
+            ], 404);
         }
-
-        $user = User::where('email',$request->email)->first();
-        /*if (!$user->email_verified_at) {
-            return response()->json([
-                "msg" => "El correo no ha sido verificado"
-            ], 401 );
-        }*/
-        return response()->json([
-            'msg' => "Usuario logueado correctamente!!!",
-            'token' => $user->createToken('auth_token')->plainTextToken,
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email
-        ],200);
     }catch(\Throwable $th){
         return response()->json(['msg' => 'Error al loguearse'], 500);
     }

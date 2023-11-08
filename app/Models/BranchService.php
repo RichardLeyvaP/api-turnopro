@@ -9,10 +9,20 @@ class BranchService extends Model
 {
     use HasFactory;
 
-    public function people()
-        {
-            return $this->belongsToMany(Person::class, 'branch_service_person');
-        }
+    public function branchServiceProfessional()
+    {
+         return $this->belongsToMany(Professional::class, 'branch_service_professional');
+    }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 
         //para decirle a q table debe administrar
     protected $table = "branch_service";

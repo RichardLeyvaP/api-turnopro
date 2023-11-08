@@ -12,4 +12,15 @@ class Service extends Model
     public function servicebranchees(){
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
+
+    public function branchServices(){
+        return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
+
+    protected $casts = [
+        'simultaneou' => 'integer',
+        'price_service' => 'float',
+        'profit_percentaje' => 'float',
+        'duration_service' => 'integer'
+    ];
 }
