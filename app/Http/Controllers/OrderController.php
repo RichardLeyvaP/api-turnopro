@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Order;
@@ -33,7 +34,7 @@ class OrderController extends Controller
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
-                'person_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
                 'product_id' => 'required|numeric',
                 'service_id' => 'required|numeric'
 
@@ -53,16 +54,17 @@ class OrderController extends Controller
             $productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
             if ($data['product_id'] != 0) {
+                //$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
                 $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
                 if ($productcar) {
                     $car = Car::find($productcar->id);
-                    $car->amount = $productcar->amount + $product[0]['sale_price'];
+                    $car->amount = $productcar->amount + $sale_price;
                 }
                 else {
                     $car = new Car();
-                    $car->client_person_id = $client_person_id;
-                    $car->amount = $product[0]['sale_price'];
+                    $car->client_professional_id = $client_professional_id;
+                    $car->amount = $sale_price;
                     $car->pay = false;
                     $car->active = false;
                 }
@@ -77,9 +79,9 @@ class OrderController extends Controller
                  $order = new Order();
                  $order->car_id = $car_id;
                  $order->product_store_id = $data['product_id'];
-                 $order->branch_service_person_id = null;
+                 $order->branch_service_professional_id = null;
                  $order->is_product = true;
-                 $order->price = $product[0]['sale_price'];               
+                 $order->price = $sale_price;               
                  $order->request_delete = false;
                  $order->save();
              }//end if product
@@ -89,7 +91,7 @@ class OrderController extends Controller
                 /*$service = Service::join('branch_service', 'branch_service.service_id', '=', 'services.id')->join('branch_service_professional', 'branch_service_professional.branch_service_id', '=', 'branch_service.id')->where('branch_service_professional.id', $data['service_id'])->get('services.*');*/
                 if ($productcar) {
                     $car = Car::find($productcar->id);
-                    $car->amount = $productcar->amount + $service[0]['price_service']+$service[0]['profit_percentaje']/100;
+                    $car->amount = $productcar->amount + $service->price_service+$service->profit_percentaje/100;
                 }
                 else {
                     $car = new Car();
@@ -103,13 +105,13 @@ class OrderController extends Controller
                  $order = new Order();
                  $order->car_id = $car_id;
                  $order->product_store_id = null;
-                 $order->branch_service_person_id = $data['service_id'];
+                 $order->branch_service_professional_id = $data['service_id'];
                  $order->is_product = false;
-                 $order->price = $service[0]['price_service']+$service[0]['profit_percentaje']/100;   
+                 $order->price = $service->price_service+$service->profit_percentaje/100;   
                  $order->request_delete = false;
                  $order->save();
             }//end if service
-             return response()->json(['msg' =>'Empleado asignado correctamente al cliente','order_id' => $order->id], 200);
+             return response()->json(['msg' =>'Pedido Agregado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
