@@ -80,8 +80,29 @@ class ProductStoreController extends Controller
              $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $result = Product::join('product_store', 'product_store.product_id','=','products.id')->join('product_categories', 'products.product_category_id','=','product_categories.id')->join('stores','stores.id','=','product_store.store_id')->where('products.product_category_id',$data['id'])->get(['products.*', 'stores.*', 'product_store.*']);
-            return response()->json(['category_products' => $result], 200);
+             $productStores = ProductStore::whereHas('product', function ($query) use ($data){
+                $query->where('product_category_id', $data['id']);
+            })->whereHas('store', function ($query) use ($data){
+                $query->whereHas('branches', function ($query) use ($data){
+                    $query->where('branches.id', $data['branch_id']);
+                });
+            })->get();
+            $productsArray = $productStores->map(function ($productStore){
+                return [
+                    'id' => $productStore->id,
+                    'product_exit' => $productStore->product_exit,
+                    'product_id' => $productStore->product_id,
+                    'name' => $productStore->product->name,
+                    'reference' => $productStore->product->reference,
+                    'code' => $productStore->product->code,
+                    'description' => $productStore->product->description,
+                    'status_product' => $productStore->product->status_product,
+                    'purchase_price' => $productStore->product->purchase_price,
+                    'sale_price' => $productStore->product->sale_price,
+                    'image_product' => $productStore->product->image_product
+                ];
+            });
+            return response()->json(['category_products' => $productsArray], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }

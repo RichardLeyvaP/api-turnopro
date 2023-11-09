@@ -38,22 +38,23 @@ class OrderController extends Controller
                 'service_id' => 'required|numeric'
 
             ]);
-            $client_person_id = 0;
-            $result = ClientPerson::join('clients', 'clients.id', '=', 'client_person.client_id')->join('people', 'people.id', '=', 'client_person.person_id')->where('client_person.client_id',$data['client_id'])->where('client_person.person_id',$data['person_id'])->get('client_person.*');
-            if (!count($result)) {
-                $clientperson = new ClientPerson();
-                $clientperson->client_id = $data['client_id'];
-                $clientperson->person_id = $data['person_id'];
-                $clientperson->save();
-                $client_person_id = $clientperson->id;
+            $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');/*0;
+            $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
+            if (!$client_professional_id) {
+                $clientprofessional = new ClientProfessional();
+                $clientprofessional->client_id = $data['client_id'];
+                $clientprofessional->professional_id = $data['professional_id'];
+                $clientprofessional->save();
+                $client_professional_id = $clientprofessional->id;
             }
-            else {                
-            $client_person_id = $result[0]['id'];
-            }
-            $productcar = Car::where('client_person_id', $client_person_id)->whereDate('updated_at', Carbon::today())->first();
+            /*else {                
+            $client_professional_id = $result[0]['id'];
+            }*/
+            $productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
             if ($data['product_id'] != 0) {
-                $product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
+                $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
+                $sale_price = $productStore->product()->first()->sale_price;
                 if ($productcar) {
                     $car = Car::find($productcar->id);
                     $car->amount = $productcar->amount + $product[0]['sale_price'];
@@ -83,15 +84,17 @@ class OrderController extends Controller
                  $order->save();
              }//end if product
              if ($data['service_id'] != 0) {
-                $service = Service::join('branch_service', 'branch_service.service_id', '=', 'services.id')->join('branch_service_person', 'branch_service_person.branch_service_id', '=', 'branch_service.id')->where('branch_service_person.id', $data['service_id'])->get('services.*');
+                $branchServicePerson = BranchServiceProfessional::with('branchService.service')->first();
+                $service = $branchServicePerson->branchService->service;
+                /*$service = Service::join('branch_service', 'branch_service.service_id', '=', 'services.id')->join('branch_service_professional', 'branch_service_professional.branch_service_id', '=', 'branch_service.id')->where('branch_service_professional.id', $data['service_id'])->get('services.*');*/
                 if ($productcar) {
                     $car = Car::find($productcar->id);
                     $car->amount = $productcar->amount + $service[0]['price_service']+$service[0]['profit_percentaje']/100;
                 }
                 else {
                     $car = new Car();
-                    $car->client_person_id = $client_person_id;
-                    $car->amount = $service[0]['price_service']+$service[0]['profit_percentaje']/100;
+                    $car->client_professional_id = $client_professional_id;
+                    $car->amount = $service->price_service+$service->profit_percentaje/100;
                     $car->pay = false;
                     $car->active = false;
                 }
