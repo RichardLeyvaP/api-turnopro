@@ -115,9 +115,9 @@ class UserController extends Controller
                 'email' => auth()->user()->email,
                 'hora' => Carbon::now()->format('H:i:s')
             ];
-            $qrCode = QrCode::size(250)->generate(json_encode($datos));            
-            Log::info($qrCode);
-        return response()->json([$qrCode]);
+            $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
+            $qrCodeBase64 = base64_encode($qrCode);  
+        return $qrCodeBase64;
     }catch(\Throwable $th){ 
         return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
     }
