@@ -88,7 +88,6 @@ class OrderController extends Controller
              if ($data['service_id'] != 0) {
                 $branchServicePerson = BranchServiceProfessional::with('branchService.service')->first();
                 $service = $branchServicePerson->branchService->service;
-                /*$service = Service::join('branch_service', 'branch_service.service_id', '=', 'services.id')->join('branch_service_professional', 'branch_service_professional.branch_service_id', '=', 'branch_service.id')->where('branch_service_professional.id', $data['service_id'])->get('services.*');*/
                 if ($productcar) {
                     $car = Car::find($productcar->id);
                     $car->amount = $productcar->amount + $service->price_service+$service->profit_percentaje/100;
