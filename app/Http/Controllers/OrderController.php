@@ -36,7 +36,8 @@ class OrderController extends Controller
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
                 'product_id' => 'required|numeric',
-                'service_id' => 'required|numeric'
+                'service_id' => 'required|numeric',
+                'type' => 'required'
 
             ]);
             $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');/*0;
@@ -53,7 +54,7 @@ class OrderController extends Controller
             }*/
             $productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
-            if ($data['product_id'] != 0) {
+            if ($data['product_id'] == 0 && $data['type'] == 'service') {
                 //$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
                 $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
@@ -85,7 +86,7 @@ class OrderController extends Controller
                  $order->request_delete = false;
                  $order->save();
              }//end if product
-             if ($data['service_id'] != 0) {
+             if ($data['product_id'] == 0 && $data['type'] == 'service') {
                 $branchServicePerson = BranchServiceProfessional::with('branchService.service')->first();
                 $service = $branchServicePerson->branchService->service;
                 if ($productcar) {
