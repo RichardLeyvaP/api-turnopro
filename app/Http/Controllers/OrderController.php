@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
-use App\Models\ClientPerson;
+use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
