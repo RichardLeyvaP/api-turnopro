@@ -95,7 +95,7 @@ class OrderController extends Controller
                 }
                 else {
                     $car = new Car();
-                    $car->client_person_id = $client_professional_id;
+                    $car->client_professional_id = $client_professional_id;
                     $car->amount = $service->price_service+$service->profit_percentaje/100;
                     $car->pay = false;
                     $car->active = false;
