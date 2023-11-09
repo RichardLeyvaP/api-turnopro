@@ -9,9 +9,9 @@ class Order extends Model
 {
     use HasFactory;
 
-    public function branchServicePperson()
+    public function branchServiceProfessional()
     {
-        return $this->belongsTo(PersonService::class);
+        return $this->belongsTo(ProfessionalService::class);
     }
 
     public function productStore()
@@ -23,4 +23,10 @@ class Order extends Model
     {
         return $this->belongsTo(Car::class);
     }
+
+    protected $casts = [
+        'is_product' => 'integer',
+        'price' => 'float',
+        'request_delete' => 'integer'
+    ];
 }
