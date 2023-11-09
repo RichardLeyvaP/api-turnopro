@@ -19,7 +19,7 @@ class OrderController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los carros");
-            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_person', 'client_person.id', '=', 'cars.client_person_id')->join('clients', 'clients.id', '=', 'client_person.client_id')->join('people', 'people.id', '=', 'client_person.person_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_person', 'branch_service_person.id', '=', 'orders.branch_service_person_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_person.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->get(['cars.*', 'clients.*', 'people.*', 'products.*', 'services.*','orders.*']);
+            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->get(['cars.*', 'clients.*', 'professionals.*', 'products.*', 'services.*','orders.*']);
             return response()->json(['cars' => $car], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -30,7 +30,6 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         Log::info("Compra de Productos y servicio prestado");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
@@ -40,7 +39,8 @@ class OrderController extends Controller
                 'type' => 'required'
 
             ]);
-            $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');/*0;
+            $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
+            /*0;
             $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
             if (!$client_professional_id) {
                 $clientprofessional = new ClientProfessional();
@@ -54,7 +54,7 @@ class OrderController extends Controller
             }*/
             $productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
-            if ($data['product_id'] == 0 && $data['type'] == 'service') {
+            if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 //$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
                 $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
@@ -85,6 +85,8 @@ class OrderController extends Controller
                  $order->price = $sale_price;               
                  $order->request_delete = false;
                  $order->save();
+                 Log::info($productstore);
+                 Log::info($car);
              }//end if product
              if ($data['product_id'] == 0 && $data['type'] == 'service') {
                 $branchServicePerson = BranchServiceProfessional::with('branchService.service')->first();
