@@ -30,7 +30,6 @@ class ProfessionalServiceController extends Controller
                     'nameProfessional' => $professionalservicesdata->professional->name .' '. $professionalservicesdata->professional->surname .' '. $professionalservicesdata->professional->second_surname
                 ];
             });
-            /*$result = ProfessionalService::join('professionals', 'professionals.id', '=','branch_service_professional.professional_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->get();*/
             return response()->json(['profesionales' => $result], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
