@@ -15,11 +15,11 @@ class CarController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los carros");
-            $car = Car::join('client_person', 'client_person.id', '=', 'cars.client_person_id')->join('clients', 'clients.id', '=', 'client_person.client_id')->join('people', 'people.id', '=', 'client_person.person_id')->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'people.*', 'cars.*']);
+            $car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['cars' => $car], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
+            return response()->json(['msg' => "Error al mostrar los carros"], 500);
         }
     }
 
@@ -29,13 +29,13 @@ class CarController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                'client_person_id' => 'required|numeric',
+                'client_professional_id' => 'required|numeric',
                 'amount' => 'nullable|numeric',
                 'pay' => 'boolean',
                 'active' => 'boolean',
             ]);
             $car = new Car();
-            $car->client_person_id = $data['client_person_id'];
+            $car->client_professional_id = $data['client_professional_id'];
             $car->amount = $data['amount'];
             $car->pay = $data['pay'];
             $car->active = $data['active'];
@@ -48,19 +48,52 @@ class CarController extends Controller
         }
     }
 
-    public function car_oders(Request $request)
+    public function car_orders(Request $request)
     {
         try {
             $data = $request->validate([
                'id' => 'required|numeric'
            ]);
-           $products = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('product_store', 'product_store.id', '=', 'orders.product_store_id')->join('products', 'products.id', '=', 'product_store.product_id')->where('cars.id', $data['id'])->get(['products.*','orders.*']);
+           $orderProductsDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', true)->orderBy('updated_at', 'desc')->get();
+            $products = $orderProductsDatas->map(function ($orderData){
+                    return [
+                        'id' => $orderData->id,                   
+                        'name' => $orderData->productStore->product->name,
+                        'reference' => $orderData->productStore->product->reference,
+                        'code' => $orderData->productStore->product->code,
+                        'description' => $orderData->productStore->product->description,
+                        'status_product' => $orderData->productStore->product->status_product,
+                        'purchase_price' => $orderData->productStore->product->purchase_price,
+                        'sale_price' => $orderData->productStore->product->sale_price,
+                        'image_product' => $orderData->productStore->product->image_product,
+                        'is_product' => $orderData->is_product,
+                        'price' => $orderData->price,
+                        'request_delete' => $orderData->request_delete
+                    ];
+               });
+           /*$products = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('product_store', 'product_store.id', '=', 'orders.product_store_id')->join('products', 'products.id', '=', 'product_store.product_id')->where('cars.id', $data['id'])->get(['products.*','orders.*']);
 
-           $services = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('branch_service_person', 'branch_service_person.id', '=', 'orders.branch_service_person_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_person.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('cars.id', $data['id'])->get(['services.*','orders.*']);
-
+           $services = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('cars.id', $data['id'])->get(['services.*','orders.*']);*/
+           $orderServicesDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', false)->orderBy('updated_at', 'desc')->get();
+           $services = $orderServicesDatas->map(function ($orderData){
+              return [
+                    'id' => $orderData->id,
+                    'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                    'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
+                    'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
+                    'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
+                    'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
+                    'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
+                    'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
+                    'service_comment' => $orderData->branchServiceProfessional->branchService->service->service_comment,
+                    'is_product' => $orderData->is_product,
+                    'price' => $orderData->price,
+                    'request_delete' => $orderData->request_delete
+                    ];
+                });
            return response()->json(['productscar' => $products, 'servicescar' => $services], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
+           return response()->json(['msg' => "Error al mostrar ls ordenes"], 500);
        }
     }
 
@@ -84,7 +117,7 @@ class CarController extends Controller
                 'id' => 'required|numeric'
             ]);
     
-            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')
+            /*$car = Order::join('cars', 'cars.id', '=', 'orders.car_id')
                 ->join('client_person', 'client_person.id', '=', 'cars.client_person_id')
                 ->join('clients', 'clients.id', '=', 'client_person.client_id')
                 ->join('people', 'people.id', '=', 'client_person.person_id')
@@ -107,7 +140,36 @@ class CarController extends Controller
                 ->where('cars.id', $data['id'])
                 ->where('request_delete', true)
                 ->orderBy('updated_at', 'desc')
-                ->get();
+                ->get();*/
+
+                $orderDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('request_delete', true)->orderBy('updated_at', 'desc')->get();
+
+           $car = $orderDatas->map(function ($orderData){
+            if ($orderData->is_product == true) {
+                return [
+                    'id' => $orderData->id,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'hora' => $orderData->updated_at->Format('g:i:s A'),                    
+                    'nameProduct' => $orderData->productStore->product->name,
+                    'nameService' => null,
+                    'is_product' => $orderData->is_product,
+                    'updated_at' => $orderData->updated_at->toDateString()
+                ];
+            }
+            else {
+                return [
+                    'id' => $orderData->id,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'hora' => $orderData->updated_at->Format('g:i:s A'),
+                    'nameProduct' => null,
+                    'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                    'is_product' => (int)$orderData->is_product,
+                    'updated_at' => $orderData->updated_at->toDateString()
+                ];
+            }
+           });
     
             return response()->json(['carOrderDelete' => $car], 200);
         } catch (\Throwable $th) {
@@ -121,7 +183,7 @@ class CarController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $car = Car::join('client_person', 'client_person.id', '=', 'cars.client_person_id')->join('clients', 'clients.id', '=', 'client_person.client_id')->join('people', 'people.id', '=', 'client_person.person_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'people.*', 'cars.*']);
+            $car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['car' => $car], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
