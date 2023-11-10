@@ -71,7 +71,6 @@ class CarController extends Controller
                         'request_delete' => $orderData->request_delete
                     ];
                });
-          $services = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('cars.id', $data['id'])->get(['services.*','orders.*']);*/
            $orderServicesDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', false)->orderBy('updated_at', 'desc')->get();
            $services = $orderServicesDatas->map(function ($orderData){
               return [
