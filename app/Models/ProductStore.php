@@ -23,6 +23,13 @@ class ProductStore extends Model
     {
     return $this->belongsTo(Store::class);
     }
+
+    protected $casts = [
+        'product_quantity' => 'integer',
+        'product_exit' => 'integer',
+        'number_notification' => 'integer'
+    ];
+
      //para decirle a q table debe administrar
     protected $table = "product_store";
 }
