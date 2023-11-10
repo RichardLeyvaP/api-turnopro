@@ -26,7 +26,7 @@ class Order extends Model
 
     protected $casts = [
         'is_product' => 'integer',
-        'price' => 'double',
+        'price' => 'double:8,2',
         'request_delete' => 'integer'
     ];
 }

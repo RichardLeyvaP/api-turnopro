@@ -19,7 +19,7 @@ class Product extends Model
     }
 
     protected $casts = [
-        'purchase_price' => 'double',
-        'sale_price' => 'double'
+        'purchase_price' => 'double:8,2',
+        'sale_price' => 'double:8,2'
     ];
 }
