@@ -19,7 +19,7 @@ class Product extends Model
     }
 
     protected $casts = [
-        'purchase_price' => 'float',
-        'sale_price' => 'float'
+        'purchase_price' => 'double',
+        'sale_price' => 'double'
     ];
 }

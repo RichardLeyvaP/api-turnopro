@@ -19,8 +19,8 @@ class Service extends Model
 
     protected $casts = [
         'simultaneou' => 'integer',
-        'price_service' => 'float',
-        'profit_percentaje' => 'float',
+        'price_service' => 'double',
+        'profit_percentaje' => 'double',
         'duration_service' => 'integer'
     ];
 }
