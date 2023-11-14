@@ -12,4 +12,9 @@ class Client extends Model
     public function clientProfessionals(){
         return $this->belongsToMany(Professional::class)->withTimestamps();
     }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
+    }
 }

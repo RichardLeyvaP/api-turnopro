@@ -18,6 +18,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\ProfessionalServiceController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -161,3 +162,9 @@ Route::get('/order-show', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::put('/order', [OrderController::class, 'update']);
 Route::post('/order-destroy', [OrderController::class, 'destroy']);
+
+Route::get('/reservation', [ReservationController::class, 'index']);
+Route::get('/reservation-show', [ReservationController::class, 'show']);
+Route::post('/reservation', [ReservationController::class, 'store']);
+Route::put('/reservation', [ReservationController::class, 'update']);
+Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
