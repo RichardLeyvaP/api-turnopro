@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -32,10 +33,17 @@ class ProductCategoryController extends Controller
     public function category_branch(Request $request)
     {
         try {
-            $product_category_data = $request->validate([
-               'id' => 'required|numeric'
+            $data = $request->validate([
+               'branch_id' => 'required|numeric'
            ]);
-           return response()->json(['productcategory' => ProductCategory::find( $product_category_data['id'])], 200);
+           $branch = Branch::find($data['branch_id']);
+           $Categories = collect();
+           foreach($branch->stores as $store){
+            foreach ($store->products as $product) {
+                $Categories[] = $product->productCategory;
+            }
+           }
+           return response()->json(['category_products' => $Categories->unique()], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }
