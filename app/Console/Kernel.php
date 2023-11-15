@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('organize_queue')->everyTenSeconds();
+        $schedule->command('app:load_tail')->everyTenSeconds();
+        // $schedule->command('organize_queue')->everyTenSeconds();
         // $schedule->call(function () {
         //     Log::info("Funcion ejecutandose cada 10");
         // })->everyTenSeconds();
