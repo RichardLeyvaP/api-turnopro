@@ -87,7 +87,7 @@ class OrderController extends Controller
                  $order->save();
              }//end if product
              if ($data['product_id'] == 0 && $data['type'] == 'service') {
-                $branchServicePerson = BranchServiceProfessional::with('branchService.service')->first();
+                $branchServicePerson = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
                 $service = $branchServicePerson->branchService->service;
                 if ($productcar) {
                     $car = Car::find($productcar->id);
