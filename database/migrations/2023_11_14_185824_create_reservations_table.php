@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->time('start_time');
             $table->time('final_hour');
+            $table->date('reservation_date');
 
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('branch_service_professional_id');
