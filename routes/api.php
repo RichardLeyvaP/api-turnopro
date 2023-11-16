@@ -168,3 +168,4 @@ Route::get('/reservation-show', [ReservationController::class, 'show']);
 Route::post('/reservation', [ReservationController::class, 'store']);
 Route::put('/reservation', [ReservationController::class, 'update']);
 Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
+Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);

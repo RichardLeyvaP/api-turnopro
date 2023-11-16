@@ -9,14 +9,9 @@ class Reservation extends Model
 {
     use HasFactory;
 
-    public function client ()
+    public function car ()
     {
-        return $this->belongsTo(Client::class);
-    }
-
-    public function branchServiceProfessional ()
-    {
-        return $this->belongsTo(BranchServiceProfessional::class);
+        return $this->belongsTo(Car::class);
     }
 
     // public function tail() {

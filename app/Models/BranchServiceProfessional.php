@@ -19,11 +19,6 @@ class BranchServiceProfessional extends Model
     return $this->belongsTo(Professional::class);
     }
 
-    public function reservations()
-    {
-        return $this->hasMany(Reservation::class);
-    }
-
     //para decirle a q table debe administrar
     protected $table = "branch_service_professional";
 }

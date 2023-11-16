@@ -19,6 +19,11 @@ class Car extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function reservations()
+    {
+        return $this->belongsTo(Reservation::class);
+    }
+
     protected $casts = [
         'amount' => 'double:8,2'
     ];

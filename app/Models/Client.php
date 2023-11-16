@@ -13,8 +13,4 @@ class Client extends Model
         return $this->belongsToMany(Professional::class)->withTimestamps();
     }
 
-    public function reservations()
-    {
-        return $this->hasMany(Reservation::class);
-    }
 }

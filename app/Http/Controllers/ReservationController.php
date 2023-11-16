@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
+use App\Models\Tail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -12,7 +14,7 @@ class ReservationController extends Controller
     {
         try {             
             Log::info( "Entra a buscar las reservaciones");
-            $reservations = Reservation::with('client', 'branchServiceProfessional.professional')->get();
+            $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->get();
             return response()->json(['reservaciones' => $reservations], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -27,20 +29,24 @@ class ReservationController extends Controller
             $data = $request->validate([
                 'start_time' => 'required',
                 'final_hour' => 'required',
-                'client_id' => 'required|numeric',
-                'branch_service_professional_id' => 'required|numeric'
+                'total_time' => 'required',
+                'data' => 'required|date',
+                'from_home' => 'required',
+                'car_id' => 'required'
             ]);
             $reservacion = new Reservation();
             $reservacion->start_time = $data['start_time'];
             $reservacion->final_hour = $data['final_hour'];
-            $reservacion->client_id = $data['client_id'];
-            $reservacion->branch_service_professional_id = $data['branch_service_professional_id'];
+            $reservacion->total_time = $data['total_time'];
+            $reservacion->data = $data['data'];
+            $reservacion->from_home = $data['from_home'];
+            $reservacion->car_id = $data['car_id'];
             $reservacion->save();
 
             return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage().'Error al hacer la reservacion'], 500);
+        return response()->json(['msg' => 'Error al hacer la reservacion'], 500);
         }
     }
 
@@ -52,7 +58,7 @@ class ReservationController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $reservations = Reservation::with('client', 'branchServiceProfessional.professional')->where('id', $data['id'])->get();
+            $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->where('id', $data['id'])->get();
             return response()->json(['reservaciones' => $reservations], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -66,21 +72,42 @@ class ReservationController extends Controller
             $data = $request->validate([
                 'start_time' => 'required',
                 'final_hour' => 'required',
-                'client_id' => 'required|numeric',
-                'branch_service_professional_id' => 'required|numeric',
+                'total_time' => 'required',
+                'data' => 'required|date',
+                'from_home' => 'required',
+                'car_id' => 'required',
                 'id' => 'required'
+
             ]);
             $reservacion = Reservation::find($data['id']);
             $reservacion->start_time = $data['start_time'];
             $reservacion->final_hour = $data['final_hour'];
-            $reservacion->client_id = $data['client_id'];
-            $reservacion->branch_service_professional_id = $data['branch_service_professional_id'];
+            $reservacion->total_time = $data['total_time'];
+            $reservacion->data = $data['data'];
+            $reservacion->from_home = $data['from_home'];
+            $reservacion->car_id = $data['car_id'];
             $reservacion->save();
 
             return response()->json(['msg' => 'Reservacion actualizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage().'Error al actualizar la reservacion'], 500);
+        return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
+        }
+    }
+
+    public function reservation_tail()
+    {
+        log::info('registrar las reservaciones del dia en la cola');
+        try {
+            $reservations = Reservation::whereDate('data', Carbon::today())->orderBy('start_time')->get();
+            foreach($reservations as $reservation){
+                $tail = new Tail();
+                $tail->reservation_id = $reservation->id;
+                $tail->save();
+            }
+            return response()->json(['msg' => 'Cola creada correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al crear la cola'], 500);
         }
     }
 
