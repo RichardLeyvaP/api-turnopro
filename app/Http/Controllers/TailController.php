@@ -55,42 +55,62 @@ class TailController extends Controller
         $reservationIds = $tails->pluck('reservation_id');
         Log::info( " reservationIds : $reservationIds");
 
-// Obtener todas las reservas ordenadas por id
-$reservations = Reservation::whereIn('id', $reservationIds)
-->orderBy('start_time')
-->get();
+        // Obtener todas las reservas ordenadas por id
+        $reservations = Reservation::whereIn('id', $reservationIds)
+        ->orderBy('start_time')
+        ->get();
 
-// Inicializar un array para almacenar las diferencias y los pares de registros
-$differences = [];
-Log::info( "entra a buscar reservations:");
-// Iterar sobre las reservas
-for ($i = 1; $i < count($reservations); $i++) {
-    $currentReservation = $reservations[$i];
-    $previousReservation = $reservations[$i - 1];
+        // Inicializar un array para almacenar las diferencias y los pares de registros
+        $differences = [];
+        Log::info( "entra a buscar reservations:");
+        // Iterar sobre las reservas
+        for ($i = 1; $i < count($reservations); $i++) {
+            $currentReservation = $reservations[$i];
+            $previousReservation = $reservations[$i - 1];
 
-    // Convertir cadenas de tiempo en minutos
-    $startTime = strtotime($currentReservation->start_time);
-    $finalHour = strtotime($previousReservation->final_hour);
+            // Convertir cadenas de tiempo en minutos
+            $startTime = strtotime($currentReservation->start_time);
+            $finalHour = strtotime($previousReservation->final_hour);
 
-    // Calcular la diferencia en minutos
-    $timeDifferenceMinutes = round(($startTime - $finalHour) / 60);//round es para que devuelva en entero, aproxima por exeso
+            // Calcular la diferencia en minutos
+            $timeDifferenceMinutes = round(($startTime - $finalHour) / 60);//round es para que devuelva en entero, aproxima por exeso
 
-    // Almacenar el par de registros y la diferencia en minutos en el array
-    
-    $differences[] = [
-        'time_available_start' => $previousReservation->final_hour,
-        'time_available_final' => $currentReservation->start_time,
-        'service_time_vailable' => $timeDifferenceMinutes,
-    ];
-}
-Log::info( "esta es desde la funtion :");
-Log::info( $differences);
+            // Almacenar el par de registros y la diferencia en minutos en el array
+            
+            $differences[] = [
+                'time_available_start' => $previousReservation->final_hour,
+                'time_available_final' => $currentReservation->start_time,
+                'service_time_vailable' => $timeDifferenceMinutes,
+            ];
+        }
+        Log::info( "esta es desde la funtion :");
+        Log::info( $differences);
 
-return response()->json(['tail_availability' => $differences], 200);
-       
-        } catch (\Throwable $th) {  
-            Log::error($th);
-            return response()->json(['msg' => "Error al mostrar las Tail"], 500);
+        return response()->json(['tail_availability' => $differences], 200);
+            
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => "Error al mostrar las Tail"], 500);
+                }
+    }
+
+    public function update(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            Log::info($request);
+            $data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+
+            $tail = Tail::find($data['id']);
+            $tail->attended = true;
+            $tail->save();
+            return response()->json(['msg' => 'Cliente atendido'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al pasar el cliente a atendido'], 500);
         }
     }
 

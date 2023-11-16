@@ -173,4 +173,5 @@ Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
 Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
 
 Route::get('/tail', [TailController::class, 'index']);
+Route::put('/tail', [TailController::class, 'update']);
 Route::get('/tail_up', [TailController::class, 'tail_up']);
