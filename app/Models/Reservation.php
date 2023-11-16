@@ -19,8 +19,8 @@ class Reservation extends Model
         return $this->belongsTo(BranchServiceProfessional::class);
     }
 
-    public function tail() {
+    // public function tail() {
         
-        return $this->belongsTo(Tail::class);
-    }
+    //     return $this->belongsTo(Tail::class);
+    // }
 }

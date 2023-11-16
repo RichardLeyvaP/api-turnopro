@@ -17,8 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('reservation_id');//insertar en esta tabla ordenado por start_time
             $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
             $table->timestamps();
-            // Reiniciar el valor del ID al reiniciar la tabla
-            DB::statement('ALTER TABLE tails AUTO_INCREMENT = 1');
+            // // Reiniciar el valor del ID al reiniciar la tabla
+            // DB::statement('ALTER TABLE tails AUTO_INCREMENT = 1');
         });
     }
 
