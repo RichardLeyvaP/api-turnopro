@@ -31,7 +31,7 @@ class TailController extends Controller
         try { 
             
             Log::info( "entra a buscar tail_up");
-            return response()->json($this->availability(), 200);
+            return $this->availability();
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las tail_up"], 500);
@@ -81,7 +81,7 @@ for ($i = 1; $i < count($reservations); $i++) {
 Log::info( "esta es desde la funtion :");
 Log::info( $differences);
 
-return $differences;
+return response()->json(['differences' => $differences], 200);
        
         } catch (\Throwable $th) {  
             Log::error($th);
