@@ -9,12 +9,17 @@ class Product extends Model
 {
     use HasFactory;
 
-    public function productcategory()
+    public function productCategory()
     {
-        return $this->belongsTo(ProductCategory::class, 'product_category_id');
+        return $this->belongsTo(ProductCategory::class);
     }
 
     public function stores(){
-        return $this->belongsToMany(Store::class)->withPivot('product_quantity','product_exit','number_notification')->as('productstores')->withTimestamps();
+        return $this->belongsToMany(Store::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
     }
+
+    protected $casts = [
+        'purchase_price' => 'double:8,2',
+        'sale_price' => 'double:8,2'
+    ];
 }

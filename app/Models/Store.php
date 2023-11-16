@@ -9,14 +9,14 @@ class Store extends Model
 {
     use HasFactory;
 
-    public function branches()
-    {
-        return $this->belongsTo(Branch::class);
-    }
     public function products(){
-        return $this->belongsToMany(Product::class)->withPivot('product_quantity','product_exit','number_notification')->as('storeproducts')->withTimestamps();
+        return $this->belongsToMany(Product::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
     }
     public function storebranchees(){
         return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
+
+    public function branches(){
+        return $this->belongsToMany(Branch::class, 'branch_store')->withTimestamps();
     }
 }

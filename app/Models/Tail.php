@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Charge extends Model
+class Tail extends Model
 {
     use HasFactory;
-
-    public function professionals()
-    {
-        return $this->hasMany(Professional::class);
+    
+    public function reservation() {
+        
+        return $this->belongsTo(Reservation::class);
     }
 }

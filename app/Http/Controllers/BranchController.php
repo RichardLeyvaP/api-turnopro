@@ -6,6 +6,8 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+//todo Richard comentario nuevo
+
 class BranchController extends Controller
 {
     public function index()

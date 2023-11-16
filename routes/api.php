@@ -1,20 +1,27 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BranchServiceController;
+use App\Http\Controllers\BranchStoreController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessTypesController;
+use App\Http\Controllers\CarController;
 use App\Http\Controllers\ChargeController;
-use App\Http\Controllers\PersonController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientProfessionalController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\RuleController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
-use App\Models\Business;
-use App\Models\BusinessTypes;
-use App\Models\ProductCategory;
+use App\Http\Controllers\ProfessionalController;
+use App\Http\Controllers\ProfessionalServiceController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\TailController;
+use App\Http\Controllers\UserController;
+use App\Models\Tail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,18 +35,26 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::post('/register', [UserController::class, 'register']);
+Route::post('/login', [UserController::class, 'login']);
 
+Route::group( ['middleware' => ["auth:sanctum"]], function(){
+    Route::get('profile', [UserController::class, 'userProfile']);
+    Route::get('logout', [UserController::class, 'logout']);
+    Route::get('qrCode', [UserController::class, 'qrCode']);
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
-Route::get('/people', [PersonController::class, 'index']);
-Route::get('/people-show', [PersonController::class, 'show']);
-Route::post('/people', [PersonController::class, 'store']);
-Route::put('/people', [PersonController::class, 'update']);
-Route::post('/people-destroy', [PersonController::class, 'destroy']);
+Route::get('/professional', [ProfessionalController::class, 'index']);
+Route::get('/professional-show', [ProfessionalController::class, 'show']);
+Route::post('/professional', [ProfessionalController::class, 'store']);
+Route::put('/professional', [ProfessionalController::class, 'update']);
+Route::post('/professional-destroy', [ProfessionalController::class, 'destroy']);
+Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
+Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
@@ -95,6 +110,7 @@ Route::get('/product-show', [ProductController::class, 'show']);
 Route::post('/product', [ProductController::class, 'store']);
 Route::put('/product', [ProductController::class, 'update']);
 Route::post('/product-destroy', [ProductController::class, 'destroy']);
+Route::get('/product_branch', [ProductController::class, 'product_branch']);
 
 Route::get('/service', [ServiceController::class, 'index']);
 Route::get('/service-show', [ServiceController::class, 'show']);
@@ -108,9 +124,53 @@ Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
 Route::get('/category_products', [ProductStoreController::class, 'category_products']);
+Route::post('/move_product_store', [ProductStoreController::class, 'move_product_store']);
 
 Route::get('/branchstore', [BranchStoreController::class, 'index']);
 Route::get('/branchstore-show', [BranchStoreController::class, 'show']);
 Route::post('/branchstore', [BranchStoreController::class, 'store']);
 Route::put('/branchstore', [BranchStoreController::class, 'update']);
 Route::post('/branchstore-destroy', [BranchStoreController::class, 'destroy']);
+
+Route::get('/branchservice', [BranchServiceController::class, 'index']);
+Route::get('/branchservice-show', [BranchServiceController::class, 'show']);
+Route::post('/branchservice', [BranchServiceController::class, 'store']);
+Route::put('/branchservice', [BranchServiceController::class, 'update']);
+Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
+
+Route::get('/personservice', [ProfessionalServiceController::class, 'index']);
+Route::get('/personservice-show', [ProfessionalServiceController::class, 'show']);
+Route::post('/personservice', [ProfessionalServiceController::class, 'store']);
+Route::put('/personservice', [ProfessionalServiceController::class, 'update']);
+Route::post('/personservice-destroy', [ProfessionalServiceController::class, 'destroy']);
+Route::get('/person_services', [ProfessionalServiceController::class, 'person_services']);
+
+Route::get('/clientperson', [ClientProfessionalController::class, 'index']);
+Route::get('/clientperson-show', [ClientProfessionalController::class, 'show']);
+Route::post('/clientperson', [ClientProfessionalController::class, 'store']);
+Route::put('/clientperson', [ClientProfessionalController::class, 'update']);
+Route::post('/clientperson-destroy', [ClientProfessionalController::class, 'destroy']);
+
+Route::get('/car', [CarController::class, 'index']);
+Route::get('/car-show', [CarController::class, 'show']);
+Route::post('/car', [CarController::class, 'store']);
+Route::put('/car', [CarController::class, 'update']);
+Route::post('/car-destroy', [CarController::class, 'destroy']);
+Route::get('/car_orders', [CarController::class, 'car_orders']);
+Route::get('/car_order_delete', [CarController::class, 'car_order_delete']);
+
+Route::get('/order', [OrderController::class, 'index']);
+Route::get('/order-show', [OrderController::class, 'show']);
+Route::post('/order', [OrderController::class, 'store']);
+Route::put('/order', [OrderController::class, 'update']);
+Route::post('/order-destroy', [OrderController::class, 'destroy']);
+
+Route::get('/reservation', [ReservationController::class, 'index']);
+Route::get('/reservation-show', [ReservationController::class, 'show']);
+Route::post('/reservation', [ReservationController::class, 'store']);
+Route::put('/reservation', [ReservationController::class, 'update']);
+Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
+Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
+
+Route::get('/tail', [TailController::class, 'index']);
+Route::get('/tail_up', [TailController::class, 'tail_up']);
