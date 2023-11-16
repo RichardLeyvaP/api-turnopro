@@ -14,8 +14,8 @@ class Reservation extends Model
         return $this->belongsTo(Car::class);
     }
 
-    // public function tail() {
-        
-    //     return $this->belongsTo(Tail::class);
-    // }
+    public function tail() 
+    {
+        return $this->hasOne(Tail::class);
+     }
 }

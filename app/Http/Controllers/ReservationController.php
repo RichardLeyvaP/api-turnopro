@@ -99,11 +99,11 @@ class ReservationController extends Controller
     {
         log::info('registrar las reservaciones del dia en la cola');
         try {
-            $reservations = Reservation::whereDate('data', Carbon::today())->orderBy('start_time')->get();
+            $reservations = Reservation::whereDate('data', Carbon::today())
+            ->whereDoesntHave('tail')
+            ->orderBy('start_time')->get();
             foreach($reservations as $reservation){
-                $tail = new Tail();
-                $tail->reservation_id = $reservation->id;
-                $tail->save();
+                $cola = $reservation->tail()->create();
             }
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
