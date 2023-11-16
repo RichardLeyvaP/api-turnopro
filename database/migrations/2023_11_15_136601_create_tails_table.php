@@ -14,6 +14,7 @@ return new class extends Migration
     {
         Schema::create('tails', function (Blueprint $table) {
             $table->id();
+            $table->boolean('attended')->default(false);
             $table->unsignedBigInteger('reservation_id');//insertar en esta tabla ordenado por start_time
             $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
             $table->timestamps();
