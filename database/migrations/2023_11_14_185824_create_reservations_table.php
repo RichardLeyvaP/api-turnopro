@@ -14,15 +14,13 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
 
-            $table->time('start_time');
-            $table->time('final_hour');
-
-            $table->unsignedBigInteger('client_id');
-            $table->unsignedBigInteger('branch_service_professional_id');
-
-            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->foreign('branch_service_professional_id')->references('id')->on('branch_service_professional')->onDelete('cascade');
-            
+            $table->date('data');//fecha
+            $table->time('start_time');//cliente escoje la hora inicial que este disponible
+            $table->time('final_hour');//la calcula el sistema con la suma de cada tiempo de cada servicio
+            $table->time('total_time');//la calcula el sistema (final_hour - start_time)
+            $table->boolean('from_home')->default(true);
+            $table->unsignedBigInteger('car_id');
+            $table->foreign('car_id')->references('id')->on('cars')->onDelete('cascade');           
             $table->timestamps();
         });
     }
