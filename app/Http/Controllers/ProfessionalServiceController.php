@@ -35,7 +35,7 @@ class ProfessionalServiceController extends Controller
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
-    public function person_services(Request $request)
+    public function professional_services(Request $request)
     {
         try {
             $data = $request->validate([

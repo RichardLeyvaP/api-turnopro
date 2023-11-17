@@ -11,7 +11,7 @@ class BusinessController extends Controller
     public function index()
     {
         try {
-            return response()->json(['business' => Business::with(['person', 'branches'])->get()], 200);
+            return response()->json(['business' => Business::with(['professional', 'branches'])->get()], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los negocios"], 500);
         }
@@ -22,7 +22,7 @@ class BusinessController extends Controller
             $business_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['business' => Business::with('person')->find($business_data['id'])], 200);
+            return response()->json(['business' => Business::with('professional')->find($business_data['id'])], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
@@ -33,19 +33,19 @@ class BusinessController extends Controller
             $business_data = $request->validate([
                 'name' => 'required|max:50',
                 'address' => 'required|max:50',
-                'person_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
             ]);
 
             $business = new Business();
             $business->name = $business_data['name'];
             $business->address = $business_data['address'];
-            $business->person_id = $business_data['person_id'];
+            $business->professional_id = $business_data['professional_id'];
             $business->save();
 
             return response()->json(['msg' => 'Negocio insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar la persona'], 500);
+            return response()->json(['msg' => 'Error al insertar la professionala'], 500);
         }
     }
 
@@ -57,13 +57,13 @@ class BusinessController extends Controller
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'address' => 'required|max:50',
-                'person_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
             ]);
 
             $business = Business::find($business_data['id']);
             $business->name = $business_data['name'];
             $business->address = $business_data['address'];
-            $business->person_id = $business_data['person_id'];
+            $business->professional_id = $business_data['professional_id'];
             $business->save();
 
             return response()->json(['msg' => 'Negocio actualizado correctamente'], 200);
