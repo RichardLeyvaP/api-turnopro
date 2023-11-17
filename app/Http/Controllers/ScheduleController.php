@@ -35,17 +35,18 @@ class ScheduleController extends Controller
         }
     }
 
-    // public function show_schedule_branch(Request $request)//buscar por id branch
-    // {
-    //     try {
-    //         $SchedSchedule_data = $request->validate([
-    //             'id' => 'required|numeric'//este es el id de la branch
-    //         ]);
-    //         return response()->json(['SchedSchedules' =>Schedule::with(['branch'])->find($SchedSchedule_data['id'])], 200);
-    //     } catch (\Throwable $th) {
-    //         return response()->json(['msg' => "Error al mostrar Horario"], 500);
-    //     }
-    // }
+    public function show_schedule_branch(Request $request)//buscar por id branch
+    {
+         try {
+             $SchedSchedule_data = $request->validate([
+                 'branch_id' => 'required|numeric'//este es el id de la branch
+             ]);
+             $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, DATE_FORMAT(start_time, '%h:%i:%p') as start_time, DATE_FORMAT(closing_time, '%h:%i:%p') as closing_time")->get();
+             return response()->json(['SchedSchedules' => $schules], 200);
+         } catch (\Throwable $th) {
+             return response()->json(['msg' => "Error al mostrar Horario"], 500);
+         }
+    }
 
 
     public function store(Request $request)

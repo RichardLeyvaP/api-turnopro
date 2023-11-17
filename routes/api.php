@@ -192,3 +192,4 @@ Route::get('/schedule-show', [ScheduleController::class, 'show']);
 Route::post('/schedule', [ScheduleController::class, 'store']);
 Route::put('/schedule', [ScheduleController::class, 'update']);
 Route::post('/schedule-destroy', [ScheduleController::class, 'destroy']);
+Route::get('/show_schedule_branch', [ScheduleController::class, 'show_schedule_branch']);
