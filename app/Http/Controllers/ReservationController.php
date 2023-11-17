@@ -50,6 +50,33 @@ class ReservationController extends Controller
         }
     }
 
+    public function professional_reservations(Request $request){
+        try {             
+            Log::info( "Entra a buscar las reservaciones de un professionals en una fecha dada");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'data' => 'required|date'
+            ]);
+            $reservations = Reservation::with(['car' => function ($query) use ($data){
+                $query->with(['clientProfessional' => function ($query) use ($data){
+                    $query->where('professional_id', $data['professional_id']);
+                }]);
+            }])->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
+            $reservaciones = $reservations->map(function ($reservation){
+                return [
+                    'id' => $reservation->id,
+                    'data' => $reservation->data,
+                    'start_time' => $reservation->start_time,
+                    'final_hour' => $reservation->final_hour,
+                    'total_time' => $reservation->total_time
+                ];
+            });
+            return response()->json(['reservaciones' => $reservaciones], 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+        }
+    }
 
     public function show(Request $request)
     {

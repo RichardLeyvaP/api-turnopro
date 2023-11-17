@@ -42,17 +42,17 @@ class ProfessionalServiceController extends Controller
                'professional_id' => 'required|numeric'
            ]);
            $BSProfessional = BranchServiceProfessional::with('branchService.service')->where('professional_id', $data['professional_id'])->get();
-           $serviceModels = $BSProfessional->map(function ($branchService){
+           $serviceModels = $BSProfessional->map(function ($branchServiceProfessional){
                 return[
-                    "id" => $branchService->id,
-                    "name"=> $branchService->branchService->service->name,
-                    "simultaneou"=> $branchService->branchService->service->simultaneou,
-                    "price_service"=> $branchService->branchService->service->price_service,
-                    "type_service"=> $branchService->branchService->service->type_service,
-                    "profit_percentaje"=> $branchService->branchService->service->profit_percentaje,
-                    "duration_service"=> $branchService->branchService->service->duration_service,
-                    "image_service"=> $branchService->branchService->service->image_service,
-                    "service_comment"=> $branchService->branchService->service->service_comment
+                    "id" => $branchServiceProfessional->id,
+                    "name"=> $branchServiceProfessional->branchService->service->name,
+                    "simultaneou"=> $branchServiceProfessional->branchService->service->simultaneou,
+                    "price_service"=> $branchServiceProfessional->branchService->service->price_service,
+                    "type_service"=> $branchServiceProfessional->branchService->service->type_service,
+                    "profit_percentaje"=> $branchServiceProfessional->branchService->service->profit_percentaje,
+                    "duration_service"=> $branchServiceProfessional->branchService->service->duration_service,
+                    "image_service"=> $branchServiceProfessional->branchService->service->image_service,
+                    "service_comment"=> $branchServiceProfessional->branchService->service->service_comment
                 ];
            });
            
