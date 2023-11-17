@@ -21,6 +21,7 @@ use App\Http\Controllers\ProfessionalServiceController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WorkplaceController;
 use App\Models\Tail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -140,18 +141,18 @@ Route::post('/branchservice', [BranchServiceController::class, 'store']);
 Route::put('/branchservice', [BranchServiceController::class, 'update']);
 Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
 
-Route::get('/personservice', [ProfessionalServiceController::class, 'index']);
-Route::get('/personservice-show', [ProfessionalServiceController::class, 'show']);
-Route::post('/personservice', [ProfessionalServiceController::class, 'store']);
-Route::put('/personservice', [ProfessionalServiceController::class, 'update']);
-Route::post('/personservice-destroy', [ProfessionalServiceController::class, 'destroy']);
-Route::get('/person_services', [ProfessionalServiceController::class, 'person_services']);
+Route::get('/professionalservice', [ProfessionalServiceController::class, 'index']);
+Route::get('/professionalservice-show', [ProfessionalServiceController::class, 'show']);
+Route::post('/professionalservice', [ProfessionalServiceController::class, 'store']);
+Route::put('/professionalservice', [ProfessionalServiceController::class, 'update']);
+Route::post('/professionalservice-destroy', [ProfessionalServiceController::class, 'destroy']);
+Route::get('/professional_services', [ProfessionalServiceController::class, 'professional_services']);
 
-Route::get('/clientperson', [ClientProfessionalController::class, 'index']);
-Route::get('/clientperson-show', [ClientProfessionalController::class, 'show']);
-Route::post('/clientperson', [ClientProfessionalController::class, 'store']);
-Route::put('/clientperson', [ClientProfessionalController::class, 'update']);
-Route::post('/clientperson-destroy', [ClientProfessionalController::class, 'destroy']);
+Route::get('/clientprofessional', [ClientProfessionalController::class, 'index']);
+Route::get('/clientprofessional-show', [ClientProfessionalController::class, 'show']);
+Route::post('/clientprofessional', [ClientProfessionalController::class, 'store']);
+Route::put('/clientprofessional', [ClientProfessionalController::class, 'update']);
+Route::post('/clientprofessional-destroy', [ClientProfessionalController::class, 'destroy']);
 
 Route::get('/car', [CarController::class, 'index']);
 Route::get('/car-show', [CarController::class, 'show']);
@@ -178,3 +179,9 @@ Route::get('/professional_reservations', [ReservationController::class, 'profess
 Route::get('/tail', [TailController::class, 'index']);
 Route::put('/tail', [TailController::class, 'update']);
 Route::get('/tail_up', [TailController::class, 'tail_up']);
+
+Route::get('/workplace', [WorkplaceController::class, 'index']);
+Route::get('/workplace-show', [WorkplaceController::class, 'show']);
+Route::post('/workplace', [WorkplaceController::class, 'store']);
+Route::put('/workplace', [WorkplaceController::class, 'update']);
+Route::post('/workplace-destroy', [WorkplaceController::class, 'destroy']);
