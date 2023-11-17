@@ -14,7 +14,7 @@ class ClientProfessionalController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los almacenes por sucursales");
-            return response()->json(['person' => Professional::with('professionalClients')->get()], 200);
+            return response()->json(['professional' => Professional::with('professionalClients')->get()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los clientes atendidos por empleado"], 500);
@@ -31,10 +31,10 @@ class ClientProfessionalController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $client = Client::find($data['client_id']);
-            $person = Professional::find($data['professional_id']);
+            $professional = Professional::find($data['professional_id']);
             $result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
             if (count($result) == 0) {                
-                $person->professionalClients()->attach($client->id);
+                $professional->professionalClients()->attach($client->id);
                 //$result = ClientProfessional::latest('id')->first();
                 }
             return response()->json(['msg' => 'Empleado asignado correctamente al cliente'], 200);

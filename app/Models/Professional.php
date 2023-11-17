@@ -32,5 +32,10 @@ class Professional extends Model
         return $this->belongsTo(Charge::class);
     }
 
+    public function workplaces()
+    {
+        return $this->hasMany(Workplace::class);
+    }
+
     protected $table = "professionals";
 }

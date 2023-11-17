@@ -19,7 +19,7 @@ class ClientController extends Controller
         } catch (\Throwable $th) {  
             Log::error($th);
 
-            return response()->json(['msg' => "Error al mostrar las personas"], 500);
+            return response()->json(['msg' => "Error al mostrar las professionalas"], 500);
         }
     }
     public function show(Request $request)
@@ -30,7 +30,7 @@ class ClientController extends Controller
             ]);
             return response()->json(['client' => Client::find($clients_data['id'])], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la persona"], 500);
+            return response()->json(['msg' => "Error al mostrar la professionala"], 500);
         }
     }
     public function store(Request $request)
@@ -52,10 +52,10 @@ class ClientController extends Controller
             $client->phone = $clients_data['phone'];
             $client->save();
 
-            return response()->json(['msg' => 'Persona insertada correctamente'], 200);
+            return response()->json(['msg' => 'professionala insertada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar la persona'], 500);
+            return response()->json(['msg' => 'Error al insertar la professionala'], 500);
         }
     }
 
@@ -83,10 +83,10 @@ class ClientController extends Controller
             $client->phone = $clients_data['phone'];
             $client->save();
 
-            return response()->json(['msg' => 'Persona actualizada correctamente'], 200);
+            return response()->json(['msg' => 'professionala actualizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => 'Error al actualizar la persona'], 500);
+            return response()->json(['msg' => 'Error al actualizar la professionala'], 500);
         }
     }
 
@@ -99,9 +99,9 @@ class ClientController extends Controller
             ]);
             Client::destroy($clients_data['id']);
 
-            return response()->json(['msg' => 'Persona eliminada correctamente'], 200);
+            return response()->json(['msg' => 'professionala eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al eliminar la persona'], 500);
+            return response()->json(['msg' => 'Error al eliminar la professionala'], 500);
         }
     }
 }

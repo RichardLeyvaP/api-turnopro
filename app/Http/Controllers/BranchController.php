@@ -24,7 +24,7 @@ class BranchController extends Controller
             $branch_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['branch' => Branch::with('person')->find($branch_data['id'])], 200);
+            return response()->json(['branch' => Branch::with('professional')->find($branch_data['id'])], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
