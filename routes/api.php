@@ -19,6 +19,7 @@ use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\ProfessionalServiceController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
@@ -185,3 +186,9 @@ Route::get('/workplace-show', [WorkplaceController::class, 'show']);
 Route::post('/workplace', [WorkplaceController::class, 'store']);
 Route::put('/workplace', [WorkplaceController::class, 'update']);
 Route::post('/workplace-destroy', [WorkplaceController::class, 'destroy']);
+
+Route::get('/schedule', [ScheduleController::class, 'index']);
+Route::get('/schedule-show', [ScheduleController::class, 'show']);
+Route::post('/schedule', [ScheduleController::class, 'store']);
+Route::put('/schedule', [ScheduleController::class, 'update']);
+Route::post('/schedule-destroy', [ScheduleController::class, 'destroy']);

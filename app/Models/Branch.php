@@ -33,4 +33,9 @@ class Branch extends Model
     {
         return $this->hasMany(Workplace::class);
     }
+
+    public function schedule()
+    {
+        return $this->hasOne(Schedule::class);
+    }
 }
