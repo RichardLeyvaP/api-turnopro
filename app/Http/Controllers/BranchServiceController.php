@@ -50,7 +50,7 @@ class BranchServiceController extends Controller
                 'branch_id' => 'nullable|numeric'
             ]);
             if ($data['service_id']) {
-                return response()->json(['service' => Service::with('servicebranchees')->find($data['service_id'])], 200);
+                return response()->json(['service' => Service::with('branchServices')->find($data['service_id'])], 200);
             }
             if ($data['branch_id']) {
                 return response()->json(['branch' => Branch::with('branchservices')->find($data['branch_id'])],200); 
