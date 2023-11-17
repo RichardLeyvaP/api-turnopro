@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Schedule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class ScheduleController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        try {
+            Log::info("mostrar SchedSchedules");
+            return response()->json(['SchedSchedules' =>Schedule::with(['branch'])->get()], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar los Locales de Trabajo"], 500);
+        }
+    }
+
+
+
+    public function show(Request $request)
+    {
+        try {
+            $SchedSchedule_data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+            return response()->json(['SchedSchedules' =>Schedule::with(['branch'])->find($SchedSchedule_data['id'])], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar Horario"], 500);
+        }
+    }
+
+    // public function show_schedule_branch(Request $request)//buscar por id branch
+    // {
+    //     try {
+    //         $SchedSchedule_data = $request->validate([
+    //             'id' => 'required|numeric'//este es el id de la branch
+    //         ]);
+    //         return response()->json(['SchedSchedules' =>Schedule::with(['branch'])->find($SchedSchedule_data['id'])], 200);
+    //     } catch (\Throwable $th) {
+    //         return response()->json(['msg' => "Error al mostrar Horario"], 500);
+    //     }
+    // }
+
+
+    public function store(Request $request)
+    {
+        Log::info("store");
+        Log::info($request);
+        try {
+            $SchedSchedule_data = $request->validate([
+                'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'),   
+                'start_time' => 'nullable',
+                'closing_time' => 'nullable',
+                'branch_id' => 'required|numeric',
+            ]);
+
+            $SchedSchedule = new Schedule();
+            $SchedSchedule->day = $SchedSchedule_data['day'];            
+            $SchedSchedule->start_time = $SchedSchedule_data['start_time'];
+            $SchedSchedule->closing_time = $SchedSchedule_data['closing_time'];
+            $SchedSchedule->branch_id = $SchedSchedule_data['branch_id'];
+            $SchedSchedule->save();
+
+            return response()->json(['msg' => 'Horario insertado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => 'Error al insertar Horario'], 500);
+        }
+    }
+
+    public function update(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            Log::info($request);
+            $SchedSchedule_data = $request->validate([
+                'id' => 'required|numeric',
+                'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'), 
+                'start_time' => 'nullable',
+                'closing_time' => 'nullable',
+                'branch_id' => 'required|numeric',
+            ]);
+
+            $SchedSchedule =Schedule::find($SchedSchedule_data['id']);
+            $SchedSchedule->day = $SchedSchedule_data['day'];
+            
+            $SchedSchedule->start_time = $SchedSchedule_data['start_time'];
+            $SchedSchedule->closing_time = $SchedSchedule_data['closing_time'];
+            $SchedSchedule->branch_id = $SchedSchedule_data['branch_id'];
+            $SchedSchedule->save();
+
+            return response()->json(['msg' => 'Horario actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => 'Error al actualizar Horario'], 500);
+        }
+    }
+
+    public function destroy(Request $request)
+    {
+        try {
+            $SchedSchedule_data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+           Schedule::destroy($SchedSchedule_data['id']);
+
+            return response()->json(['msg' => 'Horario eliminado correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al eliminar Horario'], 500);
+        }
+    }
+
+
+
+}
