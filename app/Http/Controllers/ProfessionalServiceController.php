@@ -15,8 +15,8 @@ class ProfessionalServiceController extends Controller
    public function index()
     {
         try {
-            $professionalservices = ProfessionalService::with('branchService', 'professional')->get();
-            $result= $professionalservices->map(function ($professionalservicesdata){
+            $professionalservices = ProfessionalService::with('branchService.service', 'professional')->get();
+            /*$result= $professionalservices->map(function ($professionalservicesdata){
                 return[
                     'id' => $professionalservicesdata->id,
                     'name' => $professionalservicesdata->branchService->service->name,
@@ -29,8 +29,8 @@ class ProfessionalServiceController extends Controller
                     'service_comment' => $professionalservicesdata->branchService->service->service_comment,
                     'nameProfessional' => $professionalservicesdata->professional->name .' '. $professionalservicesdata->professional->surname .' '. $professionalservicesdata->professional->second_surname
                 ];
-            });
-            return response()->json(['profesionales' => $result], 200);
+            });*/
+            return response()->json(['branchServiceProfesional' => $professionalservices], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
@@ -87,21 +87,11 @@ class ProfessionalServiceController extends Controller
         try {             
             Log::info( "Entra a buscar los productos de un almacén");
             $data = $request->validate([
-                'branch_service_id' => 'nullable|numeric',
-                'professional_id' => 'nullable|numeric'
+                'id' => 'nullable|numeric'
             ]);
-            if ($data['branch_service_id'] && $data['professional_id'] == null) {
-                $result = ProfessionalService::join('professional', 'professional.id', '=','branch_service_professional.professional_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('branch_service_professional.branch_service_id', $data['branch_service_id'])->get();
-            return response()->json(['profesionales' => $result], 200);
-            }
-            if ($data['professional_id'] && $data['branch_service_id'] == null) {
-                $result = ProfessionalService::join('professional', 'professional.id', '=','branch_service_professional.professional_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('rofessional.id', $data['professional_id'])->get();
-                return response()->json(['profesionales' => $result], 200);
-            } else {
-                $result = ProfessionalService::join('professional', 'professional.id', '=','branch_service_professional.professional_id')->join('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->join('services', 'services.id', '=', 'branch_service.service_id')->where('professional.id', $data['professional_id'])->where('branch_service_professional.branch_service_id', $data['branch_service_id'])->get();
-                return response()->json(['profesionales' => $result], 200);
-            }
+            $result = ProfessionalService::with('branchService.service', 'professional')->find($data['id']);
             
+            return response()->json(['branchServiceProfesional' => $result], 200);            
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
