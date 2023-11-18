@@ -114,7 +114,7 @@ Route::get('/product-show', [ProductController::class, 'show']);
 Route::post('/product', [ProductController::class, 'store']);
 Route::put('/product', [ProductController::class, 'update']);
 Route::post('/product-destroy', [ProductController::class, 'destroy']);
-Route::get('/product_branch', [ProductController::class, 'product_branch']);
+//Route::get('/product_branch', [ProductController::class, 'product_branch']);
 
 Route::get('/service', [ServiceController::class, 'index']);
 Route::get('/service-show', [ServiceController::class, 'show']);
