@@ -130,6 +130,7 @@ class ProfessionalController extends Controller
             $professional->phone = $data['phone'];
             $professional->charge_id = $data['charge_id'];
             $professional->user_id = $data['user_id'];
+            $professional->state = 0;
             $professional->save();
 
             return response()->json(['msg' => 'Profesional insertado correctamente'], 200);
@@ -154,7 +155,8 @@ class ProfessionalController extends Controller
                 'email' => 'required|max:50|email',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
-                'user_id' => 'required|numeric'
+                'user_id' => 'required|numeric',
+                'state' => 'required|numeric',
             ]);
             Log::info($request);
             $professional = Professional::find($professionals_data['id']);
@@ -165,6 +167,7 @@ class ProfessionalController extends Controller
             $professional->phone = $professionals_data['phone'];
             $professional->charge_id = $professionals_data['charge_id'];
             $professional->user_id = $professionals_data['user_id'];
+            $professional->state = $professionals_data['state'];
             $professional->save();
 
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);

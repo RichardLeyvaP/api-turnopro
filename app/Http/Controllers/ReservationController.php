@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
 use Carbon\Carbon;
@@ -28,16 +29,21 @@ class ReservationController extends Controller
         try {
             $data = $request->validate([
                 'start_time' => 'required',
-                'final_hour' => 'required',
-                'total_time' => 'required',
+                //'final_hour' => 'required',
+                //'total_time' => 'required',
                 'data' => 'required|date',
                 'from_home' => 'required',
                 'car_id' => 'required'
             ]);
+
+            $orderServicesDatas = Order::with('car')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
+            $sumaDuracion = $orderServicesDatas->sum(function ($orderServicesData){
+                return $orderServicesData->branchServiceProfessional->branchService->service->duration_service;
+            });
             $reservacion = new Reservation();
-            $reservacion->start_time = $data['start_time'];
-            $reservacion->final_hour = $data['final_hour'];
-            $reservacion->total_time = $data['total_time'];
+            $reservacion->start_time = Carbon::parse($data['start_time'])->toTimeString();
+            $reservacion->final_hour = Carbon::parse($data['start_time'])->addMinutes($sumaDuracion)->toTimeString();
+            $reservacion->total_time = sprintf('%02d:%02d:%02d', floor($sumaDuracion/60),$sumaDuracion%60,0);
             $reservacion->data = $data['data'];
             $reservacion->from_home = $data['from_home'];
             $reservacion->car_id = $data['car_id'];
@@ -46,7 +52,7 @@ class ReservationController extends Controller
             return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => 'Error al hacer la reservacion'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al hacer la reservacion'], 500);
         }
     }
 
