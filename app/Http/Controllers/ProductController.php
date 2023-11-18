@@ -20,7 +20,7 @@ class ProductController extends Controller
         }
     }
 
-    public function product_branch(Request $request)
+    /*public function product_branch(Request $request)
     {
         try {
             $data = $request->validate([
@@ -31,7 +31,7 @@ class ProductController extends Controller
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar los productos por almacen"], 500);
        }
-    }
+    }*/
 
     public function store(Request $request)
     {
