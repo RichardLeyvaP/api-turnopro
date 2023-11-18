@@ -88,7 +88,7 @@ class ProfessionalController extends Controller
           $i=0;
            $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
                 $query->where('professional_id', $data['professional_id']);
-           })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('created_at', [$data['startDate'], $data['endDate']])->where('pay', 1)->groupBy('date')->get();
+           })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], $data['endDate']])->where('pay', 1)->groupBy('date')->get();
            for($date = $startDate; $date->lte($endDate);$date->addDay()){
             $machingResult = $cars->firstWhere('date', $date->toDateString());
             $dates[$i]['date'] = $date->toDateString();
