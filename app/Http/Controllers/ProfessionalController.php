@@ -79,6 +79,7 @@ class ProfessionalController extends Controller
         try {
             $data = $request->validate([
                'professional_id' => 'required|numeric',
+               'day' => 'required',
                'startDate' => 'required|date',
                'endDate' => 'required|date'
            ]);
@@ -86,12 +87,19 @@ class ProfessionalController extends Controller
            $endDate = Carbon::parse($data['endDate']);
           $dates = [];
           $i=0;
+          $day = $data['day']-1;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
            $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
                 $query->where('professional_id', $data['professional_id']);
            })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()])->where('pay', 1)->groupBy('date')->get();
            for($date = $startDate; $date->lte($endDate);$date->addDay()){
             $machingResult = $cars->firstWhere('date', $date->toDateString());
             $dates[$i]['date'] = $date->toDateString();
+
+            $day += 1;
+            $dates[$i]['day_week'] = $day;
+            if($day == 7)
+            $day = 0;
+           
             $dates[$i++]['earnings'] = $machingResult ? $machingResult->earnings: 0;
           }
            /*$earningByDay = $cars->map(function ($car){
