@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Service;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -30,6 +31,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         Log::info("Compra de Productos y servicio prestado");
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
@@ -110,10 +112,13 @@ class OrderController extends Controller
                  $order->price = $service->price_service+$service->profit_percentaje/100;   
                  $order->request_delete = false;
                  $order->save();
+
+                 DB::commit();
             }//end if service
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
         } catch (\Throwable $th) {
             Log::error($th);
+            DB::rollback();
         return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
         }
     }
