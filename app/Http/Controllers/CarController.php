@@ -219,8 +219,7 @@ class CarController extends Controller
                       'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
                       'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
                       'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
-                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
-                      'price' => $orderData->price
+                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service
                       ];
                   });
             
