@@ -43,10 +43,10 @@ class OrderController extends Controller
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'//,
-                //'product_id' => 'required|numeric',
-                //'service_id' => 'required|numeric',
-                //'type' => 'required'
+                'professional_id' => 'required|numeric',
+                'product_id' => 'required|numeric',
+                'service_id' => 'required|numeric',
+                'type' => 'required'
 
             ]);
             //$client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');

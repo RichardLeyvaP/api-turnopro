@@ -53,11 +53,11 @@ class ClientProfessionalController extends Controller
             if (!$client_professional_id) {
                 $client = Client::find($data['client_id']);
                 $professional = Professional::find($data['professional_id']);
-                $result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
-                if (count($result) == 0) {                
+                //$result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
+                //if (count($result) == 0) {                
                     $professional->professionalClients()->attach($client->id);
                     $result = ClientProfessional::latest('id')->first();
-                    }
+                    //}
                 $client_professional_id = $result->id;
             }
             return $client_professional_id;
