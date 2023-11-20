@@ -208,6 +208,26 @@ class CarController extends Controller
         return response()->json(['msg' => 'Error al actualizar el carro'], 500);
         }
     }
+   public function give_tips(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            Log::info($request);
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'tip' => 'required'
+            ]);
+
+            $car = Car::find($data['id']);
+            $car->tip = $data['tip'];
+            $car->save();
+            return response()->json(['msg' => 'Se le ha dado propina para el profesional correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al dar propina para el profesional'], 500);
+        }
+    }
 
     public function destroy(Request $request)
     {

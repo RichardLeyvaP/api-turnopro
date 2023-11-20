@@ -162,6 +162,7 @@ Route::put('/car', [CarController::class, 'update']);
 Route::post('/car-destroy', [CarController::class, 'destroy']);
 Route::get('/car_orders', [CarController::class, 'car_orders']);
 Route::get('/car_order_delete', [CarController::class, 'car_order_delete']);
+Route::put('/car-give-tips', [CarController::class, 'give_tips']);
 
 Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-show', [OrderController::class, 'show']);
