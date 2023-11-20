@@ -223,7 +223,7 @@ class CarController extends Controller
                       ];
                   });
             
-            return response()->json(['reservaciones' => $services], 200);
+            return response()->json(['services' => $services], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
