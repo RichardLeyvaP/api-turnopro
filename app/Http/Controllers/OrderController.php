@@ -16,6 +16,14 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+
+    protected $clientProfessionalController;
+
+    public function __construct(ClientProfessionalController $clientProfessionalController)
+    {
+        $this->clientProfessionalController = $clientProfessionalController;
+    }
+
     public function index()
     {
         try {             
@@ -35,22 +43,23 @@ class OrderController extends Controller
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
-                'professional_id' => 'required|numeric',
-                'product_id' => 'required|numeric',
-                'service_id' => 'required|numeric',
-                'type' => 'required'
+                'professional_id' => 'required|numeric'//,
+                //'product_id' => 'required|numeric',
+                //'service_id' => 'required|numeric',
+                //'type' => 'required'
 
             ]);
-            $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
+            //$client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
+            $client_professional_id = $this->clientProfessionalController->client_professional($data);
             /*0;
             $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
-            if (!$client_professional_id) {
+            /*if (!$client_professional_id) {
                 $clientprofessional = new ClientProfessional();
                 $clientprofessional->client_id = $data['client_id'];
                 $clientprofessional->professional_id = $data['professional_id'];
                 $clientprofessional->save();
                 $client_professional_id = $clientprofessional->id;
-            }
+            }*/
             /*else {                
             $client_professional_id = $result[0]['id'];
             }*/

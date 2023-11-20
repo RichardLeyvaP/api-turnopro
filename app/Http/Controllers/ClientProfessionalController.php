@@ -35,7 +35,7 @@ class ClientProfessionalController extends Controller
             $result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
             if (count($result) == 0) {                
                 $professional->professionalClients()->attach($client->id);
-                //$result = ClientProfessional::latest('id')->first();
+                return $result = ClientProfessional::latest('id')->first();
                 }
             return response()->json(['msg' => 'Empleado asignado correctamente al cliente'], 200);
         } catch (\Throwable $th) {
@@ -48,10 +48,22 @@ class ClientProfessionalController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los clientes atendidos por un professional");        
-            return $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
-            } catch (\Throwable $th) {  
+            $client_professional_id = 0;
+            $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
+            if (!$client_professional_id) {
+                $client = Client::find($data['client_id']);
+                $professional = Professional::find($data['professional_id']);
+                $result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
+                if (count($result) == 0) {                
+                    $professional->professionalClients()->attach($client->id);
+                    $result = ClientProfessional::latest('id')->first();
+                    }
+                $client_professional_id = $result->id;
+            }
+            return $client_professional_id;
+        } catch (\Throwable $th) {  
             Log::error($th);
-        return null;
+        return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
     }
 
