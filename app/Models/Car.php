@@ -21,7 +21,7 @@ class Car extends Model
 
     public function reservations()
     {
-        return $this->belongsTo(Reservation::class);
+        return $this->hasOne(Reservation::class);
     }
 
     protected $casts = [

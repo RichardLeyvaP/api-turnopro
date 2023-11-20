@@ -58,7 +58,7 @@ Route::post('/professional-destroy', [ProfessionalController::class, 'destroy'])
 Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 Route::get('/branch_professionals', [ProfessionalController::class, 'branch_professionals']);
-
+Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
@@ -163,6 +163,7 @@ Route::post('/car-destroy', [CarController::class, 'destroy']);
 Route::get('/car_orders', [CarController::class, 'car_orders']);
 Route::get('/car_order_delete', [CarController::class, 'car_order_delete']);
 Route::put('/car-give-tips', [CarController::class, 'give_tips']);
+Route::get('/reservation_services', [CarController::class, 'reservation_services']);
 
 Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-show', [OrderController::class, 'show']);

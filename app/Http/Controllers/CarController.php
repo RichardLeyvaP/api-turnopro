@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -11,6 +12,14 @@ use Illuminate\Support\Facades\DB;
 
 class CarController extends Controller
 {
+
+    protected $clientProfessionalController;
+
+    public function __construct(ClientProfessionalController $clientProfessionalController)
+    {
+        $this->clientProfessionalController = $clientProfessionalController;
+    }
+
     public function index()
     {
         try {             
@@ -186,6 +195,33 @@ class CarController extends Controller
             return response()->json(['car' => $car], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
+        }
+    }
+
+    public function reservation_services(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar las reservaciones y los servicios de un cliente con un profesional");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'client_id' => 'required|numeric'
+            ]);
+            
+            $client_professional_id = $this->clientProfessionalController->client_professional($data);
+            $orders = Order::with(['car.clientProfessional' => function ($query) use ($client_professional_id){
+                $query->where('id', $client_professional_id);
+            }])->where('is_product', false)->get();
+            $services = $orders->map(function ($order){
+                return [
+                    'data_reservation' => $order->car->reservations->data,
+                    'services' => $order->branchServiceProfessional->branchService->service
+                      ];
+                  });
+            return response()->json(['reservaciones' => $services], 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+			
         }
     }
 

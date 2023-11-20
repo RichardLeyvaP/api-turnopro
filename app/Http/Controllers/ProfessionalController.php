@@ -116,7 +116,7 @@ class ProfessionalController extends Controller
            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
        }
     }
-
+    
     public function store(Request $request)
     {
         try {

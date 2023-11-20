@@ -19,6 +19,11 @@ class BranchServiceProfessional extends Model
     return $this->belongsTo(Professional::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     //para decirle a q table debe administrar
     protected $table = "branch_service_professional";
 }

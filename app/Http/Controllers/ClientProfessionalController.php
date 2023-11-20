@@ -44,6 +44,17 @@ class ClientProfessionalController extends Controller
         }
     }
 
+    public function client_professional($data)
+    {
+        try {             
+            Log::info( "Entra a buscar los clientes atendidos por un professional");        
+            return $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return null;
+        }
+    }
+
     public function show(Request $request)
     {
         try {             
