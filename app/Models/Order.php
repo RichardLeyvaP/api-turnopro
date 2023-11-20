@@ -11,7 +11,7 @@ class Order extends Model
 
     public function branchServiceProfessional()
     {
-        return $this->belongsTo(ProfessionalService::class);
+        return $this->belongsTo(BranchServiceProfessional::class);
     }
 
     public function productStore()
