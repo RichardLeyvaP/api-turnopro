@@ -204,20 +204,11 @@ class CarController extends Controller
             Log::info( "Entra a buscar las reservaciones y los servicios de un cliente con un profesional");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
-                'client_id' => 'required|numeric'
+                'client_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
             ]);
             
             $client_professional_id = $this->clientProfessionalController->client_professional($data);
-            /*return $cars = Order::with(['car' => function ($query){
-                $query->Has('reservations')->where('client_professional_id', $client_professional_id);
-            }])->where('is_product', false)->get();*/
-            /*$services = $cars->orders->map(function ($order){
-                return [
-                    'reservation_id' => $order->car->reservations->id,
-                    'data_reservation' => $order->car->reservations->data,
-                    'services' => $order->branchServiceProfessional->branchService->service
-                      ];
-                  });*/
             $orderServicesDatas = Order::whereHas('car.reservations')->whereRelation('car', 'client_professional_id', '=', $client_professional_id)->where('is_product', false)->orderBy('updated_at', 'desc')->get();
             $services = $orderServicesDatas->map(function ($orderData){
                 return [
@@ -229,10 +220,7 @@ class CarController extends Controller
                       'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
                       'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
                       'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
-                      'service_comment' => $orderData->branchServiceProfessional->branchService->service->service_comment,
-                      'is_product' => $orderData->is_product,
-                      'price' => $orderData->price,
-                      'request_delete' => $orderData->request_delete
+                      'price' => $orderData->price
                       ];
                   });
             
