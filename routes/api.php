@@ -17,7 +17,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
-use App\Http\Controllers\ProfessionalServiceController;
+use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TailController;
@@ -142,12 +142,12 @@ Route::post('/branchservice', [BranchServiceController::class, 'store']);
 Route::put('/branchservice', [BranchServiceController::class, 'update']);
 Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
 
-Route::get('/professionalservice', [ProfessionalServiceController::class, 'index']);
-Route::get('/professionalservice-show', [ProfessionalServiceController::class, 'show']);
-Route::post('/professionalservice', [ProfessionalServiceController::class, 'store']);
-Route::put('/professionalservice', [ProfessionalServiceController::class, 'update']);
-Route::post('/professionalservice-destroy', [ProfessionalServiceController::class, 'destroy']);
-Route::get('/professional_services', [ProfessionalServiceController::class, 'professional_services']);
+Route::get('/professionalservice', [BranchServiceProfessionalController::class, 'index']);
+Route::get('/professionalservice-show', [BranchServiceProfessionalController::class, 'show']);
+Route::post('/professionalservice', [BranchServiceProfessionalController::class, 'store']);
+Route::put('/professionalservice', [BranchServiceProfessionalController::class, 'update']);
+Route::post('/professionalservice-destroy', [BranchServiceProfessionalController::class, 'destroy']);
+Route::get('/professional_services', [BranchServiceProfessionalController::class, 'professional_services']);
 
 Route::get('/clientprofessional', [ClientProfessionalController::class, 'index']);
 Route::get('/clientprofessional-show', [ClientProfessionalController::class, 'show']);

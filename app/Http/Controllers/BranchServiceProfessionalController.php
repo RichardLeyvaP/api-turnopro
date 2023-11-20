@@ -4,32 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\BranchServiceProfessional;
-use App\Models\Professional;
-use App\Models\ProfessionalService;
-use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class ProfessionalServiceController extends Controller
+class BranchServiceProfessionalController extends Controller
 {
    public function index()
     {
         try {
-            $professionalservices = ProfessionalService::with('branchService.service', 'professional')->get();
-            /*$result= $professionalservices->map(function ($professionalservicesdata){
-                return[
-                    'id' => $professionalservicesdata->id,
-                    'name' => $professionalservicesdata->branchService->service->name,
-                    'simultaneou' => $professionalservicesdata->branchService->service->simultaneou,
-                    'price_service' => $professionalservicesdata->branchService->service->price_service,
-                    'type_service' => $professionalservicesdata->branchService->service->type_service,
-                    'profit_percentaje' => $professionalservicesdata->branchService->service->profit_percentaje,
-                    'duration_service' => $professionalservicesdata->branchService->service->duration_service,
-                    'image_service' => $professionalservicesdata->branchService->service->image_service,
-                    'service_comment' => $professionalservicesdata->branchService->service->service_comment,
-                    'nameProfessional' => $professionalservicesdata->professional->name .' '. $professionalservicesdata->professional->surname .' '. $professionalservicesdata->professional->second_surname
-                ];
-            });*/
+            $professionalservices = BranchServiceProfessional::with('branchService.service', 'professional')->get();
             return response()->json(['branchServiceProfesional' => $professionalservices], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
@@ -70,7 +53,7 @@ class ProfessionalServiceController extends Controller
             ]);
 
             
-            $psersonservice = new ProfessionalService();
+            $psersonservice = new BranchServiceProfessional();
             $psersonservice->branch_service_id = $data['branch_service_id'];
             $psersonservice->professional_id = $data['professional_id'];
             $psersonservice->save();
@@ -89,7 +72,7 @@ class ProfessionalServiceController extends Controller
             $data = $request->validate([
                 'id' => 'nullable|numeric'
             ]);
-            $result = ProfessionalService::with('branchService.service', 'professional')->find($data['id']);
+            $result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
             
             return response()->json(['branchServiceProfesional' => $result], 200);            
             } catch (\Throwable $th) {  
@@ -108,7 +91,7 @@ class ProfessionalServiceController extends Controller
             ]);
 
             
-            $psersonservice = ProfessionalService::find($data['id']);
+            $psersonservice = BranchServiceProfessional::find($data['id']);
             $psersonservice->branch_service_id = $data['branch_service_id'];
             $psersonservice->professional_id = $data['professional_id'];
             $psersonservice->save();
@@ -127,7 +110,7 @@ class ProfessionalServiceController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            ProfessionalService::destroy($data['id']);
+            BranchServiceProfessional::destroy($data['id']);
 
             return response()->json(['msg' => 'Servicio eliminado correctamente de este trabajador'], 200);
         } catch (\Throwable $th) {
