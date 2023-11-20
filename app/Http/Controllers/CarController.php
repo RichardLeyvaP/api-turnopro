@@ -208,15 +208,34 @@ class CarController extends Controller
             ]);
             
             $client_professional_id = $this->clientProfessionalController->client_professional($data);
-            $orders = Order::with(['car.clientProfessional' => function ($query) use ($client_professional_id){
-                $query->where('id', $client_professional_id);
-            }])->where('is_product', false)->get();
-            $services = $orders->map(function ($order){
+            /*return $cars = Order::with(['car' => function ($query){
+                $query->Has('reservations')->where('client_professional_id', $client_professional_id);
+            }])->where('is_product', false)->get();*/
+            /*$services = $cars->orders->map(function ($order){
                 return [
+                    'reservation_id' => $order->car->reservations->id,
                     'data_reservation' => $order->car->reservations->data,
                     'services' => $order->branchServiceProfessional->branchService->service
                       ];
+                  });*/
+            $orderServicesDatas = Order::whereHas('car.reservations')->whereRelation('car', 'client_professional_id', '=', $client_professional_id)->where('is_product', false)->orderBy('updated_at', 'desc')->get();
+            $services = $orderServicesDatas->map(function ($orderData){
+                return [
+                      'data_reservation' => $orderData->car->reservations->data,
+                      'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                      'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
+                      'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
+                      'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
+                      'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
+                      'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
+                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
+                      'service_comment' => $orderData->branchServiceProfessional->branchService->service->service_comment,
+                      'is_product' => $orderData->is_product,
+                      'price' => $orderData->price,
+                      'request_delete' => $orderData->request_delete
+                      ];
                   });
+            
             return response()->json(['reservaciones' => $services], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
