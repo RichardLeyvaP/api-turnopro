@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Service;
+use App\Models\BranchServiceProfessional;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +42,23 @@ class BranchServiceController extends Controller
         }
     }
 
+    public function show_service_idProfessional(Request $request)//todo modificar aqui
+    {
+        try {             
+            Log::info( "Entra a buscar los servicio q brinda una sucursal o la sucursales donde se brinda determinado servicio");
+            $data = $request->validate([
+                'branch_id' => 'nullable|numeric'
+            ]);
+            $services = BranchServiceProfessional::all();
+                return response()->json(['services' => $services],200); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los servicios"], 500);
+        }
+    }
+
+
     public function show(Request $request)
     {
         try {             
@@ -58,6 +76,7 @@ class BranchServiceController extends Controller
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los servicios"], 500);
         }
     }
+
 
     public function update(Request $request)
     {

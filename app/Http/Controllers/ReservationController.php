@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\Send_mail;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ReservationController extends Controller
 {
@@ -20,6 +22,19 @@ class ReservationController extends Controller
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
+        }
+    }
+
+    public function send_email()
+    {
+        try {             
+            Log::info( "Entra a send_email");
+            Mail::to('richardleyvap1991@gmail.com')->send(new Send_mail);
+  
+            return response()->json(['Response' => "Email enviado correctamente"], 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => "Error al enviar el Email"], 500);
         }
     }
 

@@ -141,6 +141,7 @@ Route::get('/branchservice-show', [BranchServiceController::class, 'show']);
 Route::post('/branchservice', [BranchServiceController::class, 'store']);
 Route::put('/branchservice', [BranchServiceController::class, 'update']);
 Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
+Route::post('/show-service-idProfessional', [BranchServiceController::class, 'show_service_idProfessional']);//nueva
 
 Route::get('/professionalservice', [BranchServiceProfessionalController::class, 'index']);
 Route::get('/professionalservice-show', [BranchServiceProfessionalController::class, 'show']);
@@ -195,3 +196,8 @@ Route::post('/schedule', [ScheduleController::class, 'store']);
 Route::put('/schedule', [ScheduleController::class, 'update']);
 Route::post('/schedule-destroy', [ScheduleController::class, 'destroy']);
 Route::get('/show_schedule_branch', [ScheduleController::class, 'show_schedule_branch']);
+
+
+Route::get('/send_email', [ReservationController::class, 'send_email']);
+
+
