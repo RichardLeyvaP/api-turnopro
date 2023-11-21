@@ -14,8 +14,8 @@ class ScheduleController extends Controller
     public function index()
     {
         try {
-            Log::info("mostrar SchedSchedules");
-            return response()->json(['SchedSchedules' =>Schedule::with(['branch'])->get()], 200);
+            Log::info("mostrar Schedules");
+            return response()->json(['Schedules' =>Schedule::with(['branch'])->selectRaw("branch_id,id, day, DATE_FORMAT(start_time, '%h:%i:%p') as start_time, DATE_FORMAT(closing_time, '%h:%i:%p') as closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')")->get()], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los Locales de Trabajo"], 500);
         }
@@ -29,7 +29,7 @@ class ScheduleController extends Controller
             $SchedSchedule_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['SchedSchedules' =>Schedule::with(['branch'])->find($SchedSchedule_data['id'])], 200);
+            return response()->json(['Schedules' =>Schedule::with(['branch'])->find($SchedSchedule_data['id'])], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar Horario"], 500);
         }
@@ -42,7 +42,7 @@ class ScheduleController extends Controller
                  'branch_id' => 'required|numeric'//este es el id de la branch
              ]);
              $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, DATE_FORMAT(start_time, '%h:%i:%p') as start_time, DATE_FORMAT(closing_time, '%h:%i:%p') as closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')")->get();
-             return response()->json(['SchedSchedules' => $schules], 200);
+             return response()->json(['Schedules' => $schules], 200);
          } catch (\Throwable $th) {
              return response()->json(['msg' => "Error al mostrar Horario"], 500);
          }
