@@ -22,9 +22,12 @@ class BranchServiceProfessionalController extends Controller
     {
         try {
             $data = $request->validate([
-               'professional_id' => 'required|numeric'
+               'professional_id' => 'required|numeric',
+               'branch_id' => 'required|numeric'
            ]);
-           $BSProfessional = BranchServiceProfessional::with('branchService.service')->where('professional_id', $data['professional_id'])->get();
+           $BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+           })->where('professional_id', $data['professional_id'])->get();
            $serviceModels = $BSProfessional->map(function ($branchServiceProfessional){
                 return[
                     "id" => $branchServiceProfessional->id,

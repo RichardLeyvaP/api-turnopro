@@ -60,24 +60,16 @@ class ReservationController extends Controller
         try {             
             Log::info( "Entra a buscar las reservaciones de un professionals en una fecha dada");
             $data = $request->validate([
+                'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-            $reservations = Reservation::with(['car' => function ($query) use ($data){
-                $query->with(['clientProfessional' => function ($query) use ($data){
-                    $query->where('professional_id', $data['professional_id']);
-                }]);
-            }])->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
-            $reservaciones = $reservations->map(function ($reservation){
-                return [
-                    'id' => $reservation->id,
-                    'data' => $reservation->data,
-                    'start_time' => $reservation->start_time,
-                    'final_hour' => $reservation->final_hour,
-                    'total_time' => $reservation->total_time
-                ];
-            });
-            return response()->json(['reservaciones' => $reservaciones], 200);
+            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data){
+                $query->where('professional_id', $data['professional_id']);
+            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
+            return response()->json(['reservaciones' => $reservations], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -141,6 +133,26 @@ class ReservationController extends Controller
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al crear la cola'], 500);
+        }
+    }
+
+    public function professional_reservationDate(Request $request)
+    {
+        log::info('Reservaciones de un professional en una branch y una fecha determinada');
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'data' => 'required|date'
+            ]);
+            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data){
+                $query->where('professional_id', $data['professional_id']);
+            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
+            return response()->json(['reservaciones' => $reservations], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error al mostrar las reservaciones en esa fecha'], 500);
         }
     }
 

@@ -58,7 +58,7 @@ Route::post('/professional-destroy', [ProfessionalController::class, 'destroy'])
 Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 Route::get('/branch_professionals', [ProfessionalController::class, 'branch_professionals']);
-Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
+
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
@@ -178,6 +178,7 @@ Route::put('/reservation', [ReservationController::class, 'update']);
 Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
 Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
 Route::get('/professional_reservations', [ReservationController::class, 'professional_reservations']);
+Route::get('/professional_reservationDate', [ReservationController::class, 'professional_reservationDate']);
 
 Route::get('/tail', [TailController::class, 'index']);
 Route::put('/tail', [TailController::class, 'update']);
