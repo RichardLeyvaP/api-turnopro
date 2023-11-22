@@ -11,9 +11,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
+use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
+
+    protected $clientProfessionalController;
+    protected $branchServiceController;
+    protected $branchServiceProfessionalController;
+    protected $carController;
+    protected $serviceController;
+    protected $orderController;
+
+    public function __construct(ClientProfessionalController $clientProfessionalController, BranchServiceController $branchServiceController, BranchServiceProfessionalController $branchServiceProfessionalController, CarController $carController, ServiceController $serviceController, OrderController $orderController)
+    {
+        $this->clientProfessionalController = $clientProfessionalController;
+        $this->branchServiceController = $branchServiceController;
+        $this->branchServiceProfessionalController = $branchServiceProfessionalController;
+        $this->carController = $carController;
+        $this->serviceController = $serviceController;
+        $this->orderController = $orderController;
+    }
+
     public function index()
     {
         try {             
@@ -68,6 +87,82 @@ class ReservationController extends Controller
             return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
+        return response()->json(['msg' => $th->getMessage().'Error al hacer la reservacion'], 500);
+        }
+    }
+
+    public function reservation_store(Request $request)
+    {
+        Log::info("Guardar Reservacion");
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'start_time' => 'required',
+                'data' => 'required|date',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'client_id' => 'required|numeric'
+            ]);
+            $servs = $request->input('services');
+            $client_professional_id = $this->clientProfessionalController->client_professional($data);
+           $dataCarData = [
+                'data' => $data['data'],
+                'client_professional_id' => $client_professional_id,
+                'pay' => false,
+                'active' => 1
+            ];
+            $car_id = $this->carController->client_professional_reservation_show($dataCarData);
+            //foreach
+            foreach ($servs as $serv) {
+                $service_id = $serv;
+                $dataservice = [
+                    'id' => $service_id
+                ];
+                $service = $this->serviceController->service_show($dataservice);
+                $dataBranchService = [
+                    'service_id' => $service_id,
+                    'branch_id' => $data['branch_id']
+                ];
+            $branch_service_id = $this->branchServiceController->branch_service_show($dataBranchService);
+            $dataBranchServiceProfessional = [
+                'professional_id' => $data['professional_id'],
+                'branch_service_id' => $branch_service_id
+            ];
+            $branch_service_professional_id = $this->branchServiceProfessionalController->branch_service_professional($dataBranchServiceProfessional);
+            
+            $dataOrderService = [
+                'car_id' =>$car_id,
+                'branch_service_professional_id' => $branch_service_professional_id,
+                'product_store_id' => 0,
+                'price' => $service->price_service+$service->profit_percentaje/100
+            ];
+            $order = $this->orderController->order_service_store($dataOrderService);
+            $dataCarAmount = [
+                'id' =>$car_id,
+                'amount' => $order->price
+            ];
+            $this->carController->car_amount_updated($dataCarAmount);
+            $reservation = Reservation::where('car_id', $car_id)->whereDate('data', $data['data'])->first();
+            if (!$reservation) {
+                $reservacion = new Reservation();
+                $reservacion->start_time = Carbon::parse($data['start_time'])->toTimeString();
+                $reservacion->final_hour = Carbon::parse($data['start_time'])->addMinutes($service->duration_service)->toTimeString();
+                $reservacion->total_time = sprintf('%02d:%02d:%02d', floor($service->duration_service/60),$service->duration_service%60,0);
+                $reservacion->data = $data['data'];
+                $reservacion->from_home = 1;
+                $reservacion->car_id = $car_id;
+                $reservacion->save();
+                }else{
+                  $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($service->duration_service)->toTimeString();
+                  $reservation->total_time = Carbon::parse($reservation->total_time)->addMinutes($service->duration_service)->format('H:i:s');
+                  $reservation->save();
+                }
+            } //end foreach
+            DB::commit();
+            return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al hacer la reservacion'], 500);
         }
     }

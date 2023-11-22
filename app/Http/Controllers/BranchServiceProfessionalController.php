@@ -84,6 +84,23 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    public function branch_service_professional($data)
+    {
+        try {             
+            Log::info( "Entra a buscar los productos de un almacén");
+            $branchServiceProfessional = BranchServiceProfessional::where('branch_service_id', $data['branch_service_id'])->where('professional_id', $data['professional_id'])->first();
+            if (!$branchServiceProfessional) {
+                $branchServiceProfessional = new BranchServiceProfessional();
+                $branchServiceProfessional->branch_service_id = $data['branch_service_id'];
+                $branchServiceProfessional->professional_id = $data['professional_id'];
+                $branchServiceProfessional->save();
+            }
+            return $branchServiceProfessional->id;
+            } catch (\Throwable $th) {  
+        return response()->json(['msg' => 'Error al asignar el servicio a al professional'], 500);
+        }
+    }
+
    public function update(Request $request)
     {
         try {

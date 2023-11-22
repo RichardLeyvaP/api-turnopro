@@ -48,19 +48,14 @@ class ClientProfessionalController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los clientes atendidos por un professional");        
-            $client_professional_id = 0;
-            $client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
-            if (!$client_professional_id) {
-                $client = Client::find($data['client_id']);
-                $professional = Professional::find($data['professional_id']);
-                //$result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
-                //if (count($result) == 0) {                
-                    $professional->professionalClients()->attach($client->id);
-                    $result = ClientProfessional::latest('id')->first();
-                    //}
-                $client_professional_id = $result->id;
+            $client_professional = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->first();
+            if (!$client_professional) {
+                $clientprofessional = new ClientProfessional();
+                $clientprofessional->client_id = $data['client_id'];
+                $clientprofessional->professional_id = $data['professional_id'];
+                $clientprofessional->save();
             }
-            return $client_professional_id;
+            return $client_professional->id;
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);

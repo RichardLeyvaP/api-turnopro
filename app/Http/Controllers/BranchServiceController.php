@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchService;
 use App\Models\Service;
 use App\Models\BranchServiceProfessional;
 use Illuminate\Http\Request;
@@ -76,6 +77,24 @@ class BranchServiceController extends Controller
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los servicios"], 500);
+        }
+    }
+
+    public function branch_service_show($data)
+    {
+        try {             
+            Log::info( "Entra a buscar id de la relacion entre una sucursal y un servicio determinado servicio");
+            $branchservice = BranchService::where('branch_id', $data['branch_id'])->where('service_id', $data['service_id'])->first();
+            if (!$branchservice) {
+                $branchservice = new BranchService();
+                $branchservice->branch_id = $data['branch_id'];
+                $branchservice->service_id = $data['service_id'];
+                $branchservice->save();
+            }
+            return $branchservice->id;
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => 'Error al asignar el servicio a la sucursal'], 500);
         }
     }
 

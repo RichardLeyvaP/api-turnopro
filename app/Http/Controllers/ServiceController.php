@@ -74,6 +74,15 @@ class ServiceController extends Controller
         }
     }
 
+    public function service_show($data)
+    {
+        try {
+            return Service::find($data['id']);
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
     public function update(Request $request)
     {
         try{

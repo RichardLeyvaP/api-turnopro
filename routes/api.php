@@ -182,6 +182,7 @@ Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
 Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
 Route::get('/professional_reservations', [ReservationController::class, 'professional_reservations']);
 Route::get('/professional_reservationDate', [ReservationController::class, 'professional_reservationDate']);
+Route::post('/reservation_store', [ReservationController::class, 'reservation_store']);//Hacer una reservation en una fecha dada
 
 Route::get('/tail', [TailController::class, 'index']);
 Route::put('/tail', [TailController::class, 'update']);

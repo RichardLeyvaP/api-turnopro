@@ -97,7 +97,8 @@ class OrderController extends Controller
                  $order->request_delete = false;
                  $order->save();
              }//end if product
-             if ($data['product_id'] == 0 && $data['type'] == 'service') {
+
+            if ($data['product_id'] == 0 && $data['type'] == 'service') {
                 $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
                 $service = $branchServiceprofessional->branchService->service;
                 if ($productcar) {
@@ -125,6 +126,26 @@ class OrderController extends Controller
                  DB::commit();
             }//end if service
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            DB::rollback();
+        return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
+        }
+    }
+
+    public function order_service_store($data)
+    {
+        Log::info("reservacion de servicio prestado");
+        try {
+                 $order = new Order();
+                 $order->car_id = $data['car_id'];
+                 $order->product_store_id = null;
+                 $order->branch_service_professional_id = $data['branch_service_professional_id'];
+                 $order->is_product = false;
+                 $order->price = $data['price'];   
+                 $order->request_delete = false;
+                 $order->save();
+             return $order;
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();

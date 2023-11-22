@@ -6,6 +6,7 @@ use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -184,6 +185,8 @@ class CarController extends Controller
         }
     }
 
+
+
     public function show(Request $request)
     {
         try {
@@ -191,6 +194,36 @@ class CarController extends Controller
                 'id' => 'required|numeric'
             ]);
             $car = Car::with('clientProfessional.client', 'clientProfessional.professional')->find($data['id']);
+            //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
+            return response()->json(['car' => $car], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar el carrito"], 500);
+        }
+    }
+
+    public function client_professional_reservation_show($data)
+    {
+        try {
+            Log::info("Busca el carro si no existe lo crea");
+                $car = new Car();
+                $car->client_professional_id = $data['client_professional_id'];
+                $car->amount = 0;
+                $car->pay = $data['pay'];
+                $car->active = $data['active'];
+                $car->save();
+            return $car->id;
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
+        }
+    }
+    public function car_clientProfessionalDate(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'client_professional_id' => 'required|numeric',
+                'data' => 'required|date'
+            ]);
+            $car = Car::where('client_professional_id', $data['client_professional_id'])->whereDate('created_at', Carbon::parse($data['data']))->find($data['id']);
             //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['car' => $car], 200);
         } catch (\Throwable $th) {
@@ -243,6 +276,20 @@ class CarController extends Controller
 
             $car = Car::find($data['id']);
             $car->pay = true;
+            $car->save();
+            return response()->json(['msg' => 'Carro actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al actualizar el carro'], 500);
+        }
+    }
+    public function car_amount_updated($data)
+    {
+        try {
+
+            Log::info("Editar");
+            $car = Car::find($data['id']);
+            $car->amount = $car->amount + $data['amount'];
             $car->save();
             return response()->json(['msg' => 'Carro actualizado correctamente'], 200);
         } catch (\Throwable $th) {
