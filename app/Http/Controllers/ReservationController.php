@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Mail\Send_mail;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
@@ -10,7 +10,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\Send_mail;
 
 class ReservationController extends Controller
 {
@@ -26,11 +25,24 @@ class ReservationController extends Controller
         }
     }
 
-    public function send_email()
+    public function send_email(Request $request)
     {
-        try {             
+        try {    
+            $data = $request->validate([
+                'email' => 'required',
+            ]);         
             Log::info( "Entra a send_email");
-            Mail::to('richardleyvap1991@gmail.com')->send(new Send_mail);
+            $logoUrl = 'https://image.freepik.com/vector-gratis/plantilla-logotipo-barberia-vintage_441059-26.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+            $icon = 'nada'; // Puedes agregar más datos según sea necesario
+            $template = 'send_mail_registration'; // Puedes agregar más datos según sea necesario
+    
+            // Envía el correo con los datos
+            $mail = new Send_mail($logoUrl, $icon,$template);
+
+Mail::to($data['email'])
+    ->send($mail->from('correo@tuempresa.com', 'Simplify la Empresa de tus sueños')->subject('Bienvenidos!!!'));
+
+          
             Log::info( "Enviado send_email");
             return response()->json(['Response' => "Email enviado correctamente"], 200);
         } catch (\Throwable $th) {  

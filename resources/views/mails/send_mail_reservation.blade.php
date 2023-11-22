@@ -1,0 +1,1 @@
+<p>Ha reservado con Exito en la Barbería <img src="{{ $logoUrl }}" alt="El sueño de tu vida"></p>
