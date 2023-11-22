@@ -59,6 +59,7 @@ Route::get('/professionals_branch', [ProfessionalController::class, 'professiona
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 Route::get('/branch_professionals', [ProfessionalController::class, 'branch_professionals']);
 Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
+Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
@@ -141,7 +142,7 @@ Route::get('/branchservice-show', [BranchServiceController::class, 'show']);
 Route::post('/branchservice', [BranchServiceController::class, 'store']);
 Route::put('/branchservice', [BranchServiceController::class, 'update']);
 Route::post('/branchservice-destroy', [BranchServiceController::class, 'destroy']);
-Route::post('/show-service-idProfessional', [BranchServiceController::class, 'show_service_idProfessional']);//nueva
+Route::get('/show-service-idProfessional', [BranchServiceController::class, 'show_service_idProfessional']);//nueva
 
 Route::get('/professionalservice', [BranchServiceProfessionalController::class, 'index']);
 Route::get('/professionalservice-show', [BranchServiceProfessionalController::class, 'show']);

@@ -74,6 +74,25 @@ class ProfessionalController extends Controller
        }
     }
 
+    public function get_professionals_service(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'service_id' => 'required|numeric',
+               'branch_id' => 'required|numeric'
+
+           ]);
+
+           $professionals = Professional::whereHas('branchServices', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id'])->where('service_id', $data['service_id']);
+        })->select('id', 'name','surname','second_surname')->get();
+           
+           return response()->json(['professionals' => $professionals], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "Professionals"], 500);
+       }
+    }
+
     public function professionals_ganancias(Request $request)
     {
         try {
