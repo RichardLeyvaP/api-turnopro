@@ -1,0 +1,1 @@
+<p>Registro correctamente  <img src="{{ $logoUrl }}" alt="El sueño de tu vida"></p>

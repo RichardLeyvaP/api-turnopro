@@ -12,13 +12,18 @@ use Illuminate\Queue\SerializesModels;
 class Send_mail extends Mailable
 {
     use Queueable, SerializesModels;
+    public $logoUrl;
+    public $icon;
+    public $template;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($logoUrl,$icon,$template)
     {
-        //
+        $this->logoUrl = $logoUrl;
+        $this->icon = $icon;
+        $this->template = $template;
     }
 
     /**
@@ -37,7 +42,14 @@ class Send_mail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mails.send_mail',
+            view: 'mails.' . $this->template,
+           // view: 'mails.send_mail',
+            
+            with:  [
+                'logoUrl' => $this->logoUrl,
+                'otrosDatos' => $this->icon,
+                'template' => $this->template,
+            ]
         );
     }
 
