@@ -226,7 +226,7 @@ $reservations = Reservation::whereHas('car.clientProfessional', function ($query
             // Obtener todas las colas (tails) ordenadas por su ID_reservacion
             $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-            }])->get();
+            }])->where('attended', 0)->get();
             return response()->json(['tail' => $tails], 200);
                 } catch (\Throwable $th) {  
                     Log::error($th);
