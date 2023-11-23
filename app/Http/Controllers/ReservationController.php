@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
 use App\Models\Client;
+use App\Services\ServiceService;
 use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
 
+    private ServiceService $serviceService;
     protected $clientProfessionalController;
     protected $branchServiceController;
     protected $branchServiceProfessionalController;
@@ -24,7 +26,7 @@ class ReservationController extends Controller
     protected $serviceController;
     protected $orderController;
 
-    public function __construct(ClientProfessionalController $clientProfessionalController, BranchServiceController $branchServiceController, BranchServiceProfessionalController $branchServiceProfessionalController, CarController $carController, ServiceController $serviceController, OrderController $orderController)
+    public function __construct(ClientProfessionalController $clientProfessionalController, BranchServiceController $branchServiceController, BranchServiceProfessionalController $branchServiceProfessionalController, CarController $carController, ServiceController $serviceController, OrderController $orderController, ServiceService $serviceService)
     {
         $this->clientProfessionalController = $clientProfessionalController;
         $this->branchServiceController = $branchServiceController;
@@ -32,6 +34,7 @@ class ReservationController extends Controller
         $this->carController = $carController;
         $this->serviceController = $serviceController;
         $this->orderController = $orderController;
+        $this->serviceService = $serviceService;
     }
 
     public function index()
@@ -138,10 +141,10 @@ Mail::to($data['email'])
             //foreach
             foreach ($servs as $serv) {
                 $service_id = $serv;
-                $dataservice = [
+                /*$dataservice = [
                     'id' => $service_id
-                ];
-                $service = $this->serviceController->service_show($dataservice);
+                ];*/
+                $service = $this->serviceService->show($service_id);
                 $dataBranchService = [
                     'service_id' => $service_id,
                     'branch_id' => $data['branch_id']
