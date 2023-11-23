@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
+use App\Models\Client;
 use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
@@ -52,15 +53,24 @@ class ReservationController extends Controller
                 'email' => 'required',
             ]);         
             Log::info( "Entra a send_email");
+            $client = Client::where('id', 5)->select('email')->first();
+
+            if ($client) {
+                $client_email = $client->email;
+            } else {
+                // El cliente con id 5 no fue encontrado
+                $client_email = null; // o manejar de acuerdo a tus necesidades
+            }
+                  Log::info($client_email);
             $logoUrl = 'https://image.freepik.com/vector-gratis/plantilla-logotipo-barberia-vintage_441059-26.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
             $icon = 'nada'; // Puedes agregar más datos según sea necesario
-            $template = 'send_mail_registration'; // Puedes agregar más datos según sea necesario
+            $template = 'send_mail_reservation'; // Puedes agregar más datos según sea necesario
     
             // Envía el correo con los datos
             $mail = new Send_mail($logoUrl, $icon,$template);
 
 Mail::to($data['email'])
-    ->send($mail->from('correo@tuempresa.com', 'Simplify la Empresa de tus sueños')->subject('Bienvenidos!!!'));
+    ->send($mail->from('correo@tuempresa.com', 'Simplify')->subject('Bienvenidos!!!'));
 
           
             Log::info( "Enviado send_email");
@@ -169,6 +179,33 @@ Mail::to($data['email'])
                   $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($service->duration_service)->toTimeString();
                   $reservation->total_time = Carbon::parse($reservation->total_time)->addMinutes($service->duration_service)->format('H:i:s');
                   $reservation->save();
+                 //todo una ves que reserva envia email
+                 $client = Client::where('id', $data['client_id'])->select('email')->first();
+
+                 if ($client) {
+                     $client_email = $client->email;
+                 } else {
+                     // El cliente con id 5 no fue encontrado
+                     $client_email = null; // o manejar de acuerdo a tus necesidades
+                 }
+                       Log::info($client_email);
+                 $logoUrl = 'https://image.freepik.com/vector-gratis/plantilla-logotipo-barberia-vintage_441059-26.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+                 $icon = 'por ahora nada'; // Puedes agregar más datos según sea necesario
+                 $template = 'send_mail_reservation'; // Puedes agregar más datos según sea necesario
+         
+                 // Envía el correo con los datos
+                 $mail = new Send_mail($logoUrl, $icon,$template);
+     
+                Mail::to($data['email'])
+                ->send($mail->from('simplify@tuempresa.com', 'Simplify')->subject('Bienvenidos!!!'));
+     
+               
+                 Log::info( "Enviado send_email");
+                 //todo *******************************
+                  
+
+
+
                 }
             } //end foreach
             DB::commit();
