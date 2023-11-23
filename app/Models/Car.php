@@ -25,6 +25,6 @@ class Car extends Model
     }
 
     protected $casts = [
-        'amount' => 'double:8,2'
+        'amount' => 'double'
     ];
 }
