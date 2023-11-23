@@ -196,7 +196,7 @@ Mail::to($data['email'])
                  // Envía el correo con los datos
                  $mail = new Send_mail($logoUrl, $icon,$template);
      
-                Mail::to($data['email'])
+                Mail::to($client_email)//$data['email']
                 ->send($mail->from('simplify@tuempresa.com', 'Simplify')->subject('Bienvenidos!!!'));
      
                
