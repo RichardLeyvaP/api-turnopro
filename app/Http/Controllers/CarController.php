@@ -44,12 +44,14 @@ class CarController extends Controller
                 'amount' => 'nullable|numeric',
                 'pay' => 'boolean',
                 'active' => 'boolean',
+                'tip' => 'nullable'
             ]);
             $car = new Car();
             $car->client_professional_id = $data['client_professional_id'];
             $car->amount = $data['amount'];
             $car->pay = $data['pay'];
             $car->active = $data['active'];
+            $car->tip = $data['tip'];
             $car->save();
 
             return response()->json(['msg' => 'Carro insertado correctamente'], 200);
