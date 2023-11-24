@@ -225,7 +225,7 @@ $reservations = Reservation::whereHas('car.clientProfessional', function ($query
 
             $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-            }])->orderBy('id', 'desc')->where('attended', 0)->get();
+            }])->orderBy('id')->where('attended', 0)->get();
             $branchTails = $tails->map(function ($tail){
                 return [
                     'reservation_id' => $tail->reservation->id,
