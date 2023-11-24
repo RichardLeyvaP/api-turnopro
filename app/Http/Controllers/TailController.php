@@ -228,7 +228,7 @@ $reservations = Reservation::whereHas('car.clientProfessional', function ($query
             }])->orderBy('id', 'desc')->where('attended', 0)->get();
             $branchTails = $tails->map(function ($tail){
                 return [
-                    'reservation_id' => $tail->id,
+                    'reservation_id' => $tail->reservation->id,
                     'start_time' => $tail->reservation->start_time,
                     'final_hour' => $tail->reservation->final_hour,
                     'total_time' => $tail->reservation->total_time,
