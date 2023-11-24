@@ -13,17 +13,23 @@ class Send_mail extends Mailable
 {
     use Queueable, SerializesModels;
     public $logoUrl;
-    public $icon;
+    public $client_name;
+    public $data;
     public $template;
+    public $start_time;
+    public $branch_name;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($logoUrl,$icon,$template)
+    public function __construct($logoUrl,$client_name,$data,$template,$start_time,$branch_name)
     {
         $this->logoUrl = $logoUrl;
-        $this->icon = $icon;
+        $this->client_name = $client_name;
+        $this->data = $data;
         $this->template = $template;
+        $this->start_time = $start_time;
+        $this->branch_name = $branch_name;
     }
 
     /**
@@ -32,7 +38,7 @@ class Send_mail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Send Mail',
+            subject: $this->subject,
         );
     }
 
@@ -47,8 +53,11 @@ class Send_mail extends Mailable
             
             with:  [
                 'logoUrl' => $this->logoUrl,
-                'otrosDatos' => $this->icon,
+                'client_name' => $this->client_name,
+                'data' => $this->data,
                 'template' => $this->template,
+                'start_time' => $this->start_time,
+                'branch_name' => $this->branch_name,
             ]
         );
     }
