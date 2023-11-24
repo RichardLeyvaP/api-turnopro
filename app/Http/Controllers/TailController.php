@@ -214,5 +214,49 @@ $reservations = Reservation::whereHas('car.clientProfessional', function ($query
         }
     }
 
+    public function cola_branch_data(Request $request)
+    {
+        try { 
+            
+            Log::info( "Mostarr la cola del dia de una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+
+            $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            }])->orderBy('id', 'desc')->where('attended', 0)->get();
+            $branchTails = $tails->map(function ($tail){
+                return [
+                    'reservation_id' => $tail->id,
+                    'start_time' => $tail->reservation->start_time,
+                    'final_hour' => $tail->reservation->final_hour,
+                    'total_time' => $tail->reservation->total_time,
+                    'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
+                    'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
+                    'client_id' => $tail->reservation->car->clientProfessional->client_id,
+                    'professional_id' => $tail->reservation->car->clientProfessional->professional_id
+                ];
+            }) ;
+            return response()->json(['tail' => $branchTails], 200);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => "Error al mostrar las Tail"], 500);
+                } 
+    }
+
+    public function cola_truncate()
+    {
+        try { 
+            
+            Log::info( "Mostarr la cola del dia de una branch");
+            Tail::truncate();
+            return response()->json(['msg' => "Tail eliminada correctamente"], 200);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => "Error al eliminar la Tail"], 500);
+                } 
+    }
+
 
 }

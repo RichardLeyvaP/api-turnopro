@@ -8,6 +8,7 @@ use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
+use App\Models\Reservation;
 use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -201,6 +202,14 @@ class OrderController extends Controller
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
                 $productstore->save();
+            }
+            elseif (!$order->is_product) {
+                $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
+                $service = $branchServiceprofessional->branchService->service;
+                $reservation = Reservation::where('car_id', $order->car_id)->first();
+                $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
+                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
+                $reservation->save();
             }
             $order->delete();
             if($car->amount = $car->amount - $order->price)
