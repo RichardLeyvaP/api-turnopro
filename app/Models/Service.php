@@ -13,6 +13,8 @@ class Service extends Model
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
 
+    protected $guarded = ['id', 'created_at', 'update_at'];
+    
     protected $casts = [
         'simultaneou' => 'integer',
         'price_service' => 'double',

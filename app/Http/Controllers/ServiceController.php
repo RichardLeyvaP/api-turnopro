@@ -22,7 +22,8 @@ class ServiceController extends Controller
     {
         try {             
             Log::info( "Entra a buscar servicios");
-            return response()->json(['services' => Service::all()], 200);
+            $service = $this->serviceService->index();
+            return response()->json(['services' => $service], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios"], 500);
@@ -53,7 +54,7 @@ class ServiceController extends Controller
                 $filename = $request->file('image_service')->storeAs('services',$request->file('image_service')->getClientOriginalName().'.'.$request->file('image_service')->getClientOriginalExtension(),'public');
                 $data['image_service'] = $filename;
             }
-            $service = new Service();
+            /*$service = new Service();
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
             $service->price_service = $data['price_service'];
@@ -62,8 +63,8 @@ class ServiceController extends Controller
             $service->duration_service = $data['duration_service'];
             $service->image_service = $data['image_service'];
             $service->service_comment = $data['service_comment'];
-            $service->save();
-
+            $service->save();*/
+            $service = $this->serviceService->store($data);
             return response()->json(['msg' => 'Servicio insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -110,18 +111,21 @@ class ServiceController extends Controller
                 'service_comment' => 'nullable|min:3'
             ]);
 
-            $service = Service::find($data['id']);
+            /*$service = Service::find($data['id']);
             if ($service->image_service) {
             $destination=public_path("storage\\".$service->image_service);
                 if (File::exists($destination)) {
                     File::delete($destination);
                 }
-            }
+            }*/
+            $this->serviceService->delete_image($data['id']);
             if ($request->hasFile('image_service')) {
                 $filename = $request->file('image_service')->storeAs('services',$request->file('image_service')->getClientOriginalName().'.'.$request->file('image_service')->getClientOriginalExtension(),'public');
                 $data['image_service'] = $filename;
             }
-            $service->name = $data['name'];
+
+            $service = $this->serviceService->update($data);
+            /*$service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
             $service->price_service = $data['price_service'];
             $service->type_service = $data['type_service'];
@@ -129,12 +133,12 @@ class ServiceController extends Controller
             $service->duration_service = $data['duration_service'];
             $service->image_service = $data['image_service'];
             $service->service_comment = $data['service_comment'];
-            $service->save();
+            $service->save();*/
 
             return response()->json(['msg' => 'Servicio actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-        return response()->json(['msg' => 'Error al actualizar el servicio'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al actualizar el servicio'], 500);
         }
     }
 
@@ -144,14 +148,16 @@ class ServiceController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $service = Service::find($data['id']);
+            /*$service = Service::find($data['id']);
             if ($service->image_service) {
             $destination=public_path("storage\\".$service->image_service);
                 if (File::exists($destination)) {
                     File::delete($destination);
                 }
-            }
-            $service->delete();
+            }*/
+            $this->serviceService->delete_image($data['id']);
+            $this->serviceService->delete($data['id']);
+            //$service->delete();
 
             return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
