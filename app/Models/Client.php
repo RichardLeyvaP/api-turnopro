@@ -13,4 +13,9 @@ class Client extends Model
         return $this->belongsToMany(Professional::class)->withTimestamps();
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }
