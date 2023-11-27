@@ -17,7 +17,7 @@ class ProfessionalController extends Controller
         try {
             return response()->json(['profesionales' => Professional::with('user', 'charge')->get()], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar las professionalas"], 500);
+            return response()->json(['msg' => "Error al mostrar las professionales"], 500);
         }
     }
     public function show(Request $request)
@@ -28,7 +28,7 @@ class ProfessionalController extends Controller
             ]);
             return response()->json(['professional' => Professional::with('user', 'charge')->find($professionals_data['id'])], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la professionala"], 500);
+            return response()->json(['msg' => "Error al mostrar el professional"], 500);
         }
     }
 
@@ -163,7 +163,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Profesional insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' =>  'Error al insertar la professionala'], 500);
+            return response()->json(['msg' =>  'Error al insertar el professional'], 500);
         }
     }
 
@@ -200,7 +200,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => 'Error al actualizar la professionala'], 500);
+            return response()->json(['msg' => 'Error al actualizar el professional'], 500);
         }
     }
 
@@ -215,7 +215,7 @@ class ProfessionalController extends Controller
 
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al eliminar la professionala'], 500);
+            return response()->json(['msg' => 'Error al eliminar la professional'], 500);
         }
     }
 }
