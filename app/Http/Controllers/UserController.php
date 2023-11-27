@@ -52,13 +52,10 @@ class UserController extends Controller
                 ],400);
             }
     
-            $user = User::with(['professional' => function ($query){
-                $query->with(['branchServices' => function ($query){
-                    $query->with('branch')->get();
-                }])->get();
-            }])->where('email',$request->email)->orWhere('name', $request->email)->first();
+            $user = User::with('client', 'professional')->has('client')->orHas('professional')->where('email',$request->email)->orWhere('name', $request->email)->first();
             if (isset($user->id) ) {
                 if(Hash::check($request->password, $user->password)) {
+                    if($user->professional){
                     $branch = $user->professional->branchServices->map(function ($branchService){
                         return[
                             'branch_id' => $branchService->branch->id,
@@ -68,15 +65,17 @@ class UserController extends Controller
                     if(!$branch){
                         $branch['branch_id'] = null;
                         $branch['nameBranch'] = null;
-                    }
+                    }}
+                    /*personas.SegundoNombre == null ? (personas.PrimerNombre +" "+ personas.PrimerApellido +" "+ personas.SegundoApellido) : (personas.PrimerNombre + " " + personas.SegundoNombre + " " + personas.PrimerApellido + " " + personas.SegundoApellido),*/
                     return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,
                         'email' => $user->email,
-                        'charge' => $user->professional->charge->name,
-                        'nameProfessional' =>$user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname, 
-                        'charge_id' =>$user->professional->charge->id,
-                        'professional_id' =>$user->professional->id,    
+                        'charge' => $user->professional ? ($user->professional->charge->name .' '. $user->professional->surname .' '. $user->professional->second_surname) : null,
+                        'name' => $user->professional ? ($user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname) : ($user->client->name .' '. $user->client->surname .' '. $user->client->second_surname),//$user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname, 
+                        'charge_id' =>$user->professional ? ($user->professional->charge_id) : 0,
+                        'professional_id' =>$user->professional ? ($user->professional->id) : 0,    
+                        'client_id' =>$user->client ? ($user->client->id) : 0,    
                         'branch_id' =>$branch['branch_id'],
                         'nameBranch' =>$branch['nameBranch'],           
                         'token' => $user->createToken('auth_token')->plainTextToken
@@ -92,7 +91,7 @@ class UserController extends Controller
                 ], 404);
             }
         }catch(\Throwable $th){
-            return response()->json(['msg' => 'Error al loguearse'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al loguearse'], 500);
         }
     }
 
