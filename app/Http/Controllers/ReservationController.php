@@ -19,6 +19,7 @@ use App\Services\CarService;
 use App\Services\ClientProfessionalService;
 use App\Services\OrderService;
 use App\Services\ReservationService;
+use App\Services\SendEmailService;
 use App\Services\ServiceService;
 use Illuminate\Support\Facades\DB;
 
@@ -32,8 +33,9 @@ class ReservationController extends Controller
     private BranchServiceProfessionalService $branchServiceProfessionalService;
     private OrderService $orderService;
     private ReservationService $reservationService;
+    private SendEmailService $sendEmailService;
 
-    public function __construct(BranchServiceProfessionalService $branchServiceProfessionalService, OrderService $orderService, ClientProfessionalService $clientProfessionalService, CarService $carService, ServiceService $serviceService, BranchServiceService $branchServiceService, ReservationService $reservationService)
+    public function __construct(BranchServiceProfessionalService $branchServiceProfessionalService, OrderService $orderService, ClientProfessionalService $clientProfessionalService, CarService $carService, ServiceService $serviceService, BranchServiceService $branchServiceService, ReservationService $reservationService,SendEmailService $sendEmailService )
     {
         $this->branchServiceService = $branchServiceService;
         $this->branchServiceProfessionalService = $branchServiceProfessionalService;
@@ -42,6 +44,7 @@ class ReservationController extends Controller
         $this->carService = $carService;
         $this->serviceService = $serviceService;
         $this->reservationService = $reservationService;
+        $this->sendEmailService = $sendEmailService;
     }
 
     public function index()
@@ -156,12 +159,11 @@ class ReservationController extends Controller
                   $reservation->save();
                 }
             } //end foreach*/
-            DB::commit();
-            //todo envio el correo
-            $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
-            $template = 'send_mail_reservation';
-            $this->send_email($data['data'],$data['start_time'],$data['client_id'],$data['branch_id'],$template,$logoUrl);
-            //todo ***************
+            DB::commit();            
+           
+           //todo *************** llamando al servicio de envio de email *******************
+            $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$data['client_id'],$data['branch_id']);
+            
             return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

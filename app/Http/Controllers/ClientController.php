@@ -40,7 +40,7 @@ class ClientController extends Controller
                 'name' => 'required|max:50',
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:people',
+                'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15'
             ]);
 
@@ -52,10 +52,10 @@ class ClientController extends Controller
             $client->phone = $clients_data['phone'];
             $client->save();
 
-            return response()->json(['msg' => 'professionala insertada correctamente'], 200);
+            return response()->json(['msg' => 'Cliente insertad0 correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar la professionala'], 500);
+            return response()->json(['msg' => 'Error al insertar al Cliente'], 500);
         }
     }
 
