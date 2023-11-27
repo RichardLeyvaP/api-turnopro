@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Reservation;
 use App\Models\Service;
+use App\Services\ClientProfessionalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -18,11 +19,11 @@ use Illuminate\Support\Facades\Log;
 class OrderController extends Controller
 {
 
-    protected $clientProfessionalController;
+    private $clientProfessionalService;
 
-    public function __construct(ClientProfessionalController $clientProfessionalController)
+    public function __construct(ClientProfessionalService $clientProfessionalService)
     {
-        $this->clientProfessionalController = $clientProfessionalController;
+        $this->clientProfessionalService = $clientProfessionalService;
     }
 
     public function index()
@@ -51,7 +52,7 @@ class OrderController extends Controller
 
             ]);
             //$client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
-            $client_professional_id = $this->clientProfessionalController->client_professional($data);
+            $client_professional_id = $this->clientProfessionalService->client_professional($data['client_id'], $data['professional_id']);
             /*0;
             $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
             /*if (!$client_professional_id) {
@@ -134,7 +135,7 @@ class OrderController extends Controller
         }
     }
 
-    public function order_service_store($data)
+    /*public function order_service_store($data)
     {
         Log::info("reservacion de servicio prestado");
         try {
@@ -152,7 +153,7 @@ class OrderController extends Controller
             DB::rollback();
         return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
         }
-    }
+    }*/
 
     public function show(Request $request)
     {

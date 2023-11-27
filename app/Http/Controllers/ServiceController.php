@@ -3,12 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Services\ServiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
+    private $serviceService;
+
+    public function __construct(ServiceService $serviceService)
+    {
+        $this->serviceService = $serviceService;
+    }
     public function index()
     {
         try {             
@@ -68,20 +75,21 @@ class ServiceController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['service' => Service::find($data['id'])], 200);
+            $service = $this->serviceService->show($data['id']);
+            return response()->json(['service' => $service], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }
     }
 
-    public function service_show($data)
+    /*public function service_show($data)
     {
         try {
             return Service::find($data['id']);
         } catch (\Throwable $th) {
             return null;
         }
-    }
+    }*/
 
     public function update(Request $request)
     {

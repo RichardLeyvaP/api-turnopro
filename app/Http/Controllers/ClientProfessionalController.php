@@ -44,7 +44,7 @@ class ClientProfessionalController extends Controller
         }
     }
 
-    public function client_professional($data)
+    /*public function client_professional($data)
     {
         try {             
             Log::info( "Entra a buscar los clientes atendidos por un professional");        
@@ -60,7 +60,7 @@ class ClientProfessionalController extends Controller
             Log::error($th);
         return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
-    }
+    }*/
 
     public function show(Request $request)
     {

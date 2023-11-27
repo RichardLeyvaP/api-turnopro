@@ -4,12 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Tail;
 use App\Models\Reservation;
+use App\Services\TailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class TailController extends Controller
 {
+    private TailService $tailService;
+
+    public function __construct(TailService $tailService)
+    {
+        $this->tailService = $tailService;
+
+    }
+
     public function index()
     {
         try { 
@@ -40,18 +49,18 @@ class TailController extends Controller
             Log::info( $idP);
 
 
-            //todo funcionandooooooo Obtener todas las colas (tails) ordenadas por su ID_reservacion 
-//             $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($idP) {
-//     $query->where('professional_id', $idP);
-// })->whereDate('data', $data['data'])->get();
+                        //todo funcionandooooooo Obtener todas las colas (tails) ordenadas por su ID_reservacion 
+            //             $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($idP) {
+            //     $query->where('professional_id', $idP);
+            // })->whereDate('data', $data['data'])->get();
 
-$reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($idP, $id_branch) {
-    $query->whereHas('professional', function ($query) use ($idP) {
-        $query->where('id', $idP);
-    })->whereHas('professional.branchServices', function ($query) use ($id_branch) {
-        $query->where('branch_id', $id_branch);
-    });
-})->whereDate('data', $data['data'])->get();
+        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($idP, $id_branch) {
+            $query->whereHas('professional', function ($query) use ($idP) {
+            $query->where('id', $idP);
+            })->whereHas('professional.branchServices', function ($query) use ($id_branch) {
+            $query->where('branch_id', $id_branch);
+        });
+        })->whereDate('data', $data['data'])->get();
 
             Log::info( $reservations);
             Log::info( 'sisiisisis este es el resultado');
@@ -223,25 +232,11 @@ $reservations = Reservation::whereHas('car.clientProfessional', function ($query
                 'branch_id' => 'required|numeric'
             ]);
 
-            $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            }])->orderBy('id')->where('attended', 0)->get();
-            $branchTails = $tails->map(function ($tail){
-                return [
-                    'reservation_id' => $tail->reservation->id,
-                    'start_time' => $tail->reservation->start_time,
-                    'final_hour' => $tail->reservation->final_hour,
-                    'total_time' => $tail->reservation->total_time,
-                    'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
-                    'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
-                    'client_id' => $tail->reservation->car->clientProfessional->client_id,
-                    'professional_id' => $tail->reservation->car->clientProfessional->professional_id
-                ];
-            }) ;
-            return response()->json(['tail' => $branchTails], 200);
+            
+            return response()->json(['tail' => $this->tailService->cola_branch_data($data['branch_id'])], 200);
                 } catch (\Throwable $th) {  
                     Log::error($th);
-                    return response()->json(['msg' => "Error al mostrar las Tail"], 500);
+                    return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);
                 } 
     }
 

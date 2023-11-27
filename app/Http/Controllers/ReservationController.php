@@ -13,26 +13,35 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
 use App\Models\Branch;
 use App\Models\Client;
+use App\Services\BranchServiceProfessionalService;
+use App\Services\BranchServiceService;
+use App\Services\CarService;
+use App\Services\ClientProfessionalService;
+use App\Services\OrderService;
+use App\Services\ReservationService;
+use App\Services\ServiceService;
 use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
 
-    protected $clientProfessionalController;
-    protected $branchServiceController;
-    protected $branchServiceProfessionalController;
-    protected $carController;
-    protected $serviceController;
-    protected $orderController;
+    private ClientProfessionalService $clientProfessionalService;
+    private CarService $carService;
+    private ServiceService $serviceService;
+    private BranchServiceService $branchServiceService;
+    private BranchServiceProfessionalService $branchServiceProfessionalService;
+    private OrderService $orderService;
+    private ReservationService $reservationService;
 
-    public function __construct(ClientProfessionalController $clientProfessionalController, BranchServiceController $branchServiceController, BranchServiceProfessionalController $branchServiceProfessionalController, CarController $carController, ServiceController $serviceController, OrderController $orderController)
+    public function __construct(BranchServiceProfessionalService $branchServiceProfessionalService, OrderService $orderService, ClientProfessionalService $clientProfessionalService, CarService $carService, ServiceService $serviceService, BranchServiceService $branchServiceService, ReservationService $reservationService)
     {
-        $this->clientProfessionalController = $clientProfessionalController;
-        $this->branchServiceController = $branchServiceController;
-        $this->branchServiceProfessionalController = $branchServiceProfessionalController;
-        $this->carController = $carController;
-        $this->serviceController = $serviceController;
-        $this->orderController = $orderController;
+        $this->branchServiceService = $branchServiceService;
+        $this->branchServiceProfessionalService = $branchServiceProfessionalService;
+        $this->orderService = $orderService;
+        $this->clientProfessionalService = $clientProfessionalService;
+        $this->carService = $carService;
+        $this->serviceService = $serviceService;
+        $this->reservationService = $reservationService;
     }
 
     public function index()
@@ -95,31 +104,29 @@ class ReservationController extends Controller
                 'client_id' => 'required|numeric'
             ]);
             $servs = $request->input('services');
-            $client_professional_id = $this->clientProfessionalController->client_professional($data);
+            /*$client_professional_id = $this->clientProfessionalService->client_professional($data['client_id'], $data['professional_id']);
            $dataCarData = [
-                'data' => $data['data'],
+                'amount' => 0.0,
                 'client_professional_id' => $client_professional_id,
                 'pay' => false,
-                'active' => 1
+                'active' => 1,
+                'tip' => 0.0
             ];
-            $car_id = $this->carController->client_professional_reservation_show($dataCarData);
+            $car_id = $this->carService->store($dataCarData);
             //foreach
             foreach ($servs as $serv) {
                 $service_id = $serv;
-                $dataservice = [
-                    'id' => $service_id
-                ];
-                $service = $this->serviceController->service_show($dataservice);
-                $dataBranchService = [
+                $service = $this->serviceService->show($service_id);
+                /*$dataBranchService = [
                     'service_id' => $service_id,
                     'branch_id' => $data['branch_id']
-                ];
-            $branch_service_id = $this->branchServiceController->branch_service_show($dataBranchService);
-            $dataBranchServiceProfessional = [
+                ];*/
+            /*$branch_service_id = $this->branchServiceService->branch_service_show($service_id, $data['branch_id']);
+            /*$dataBranchServiceProfessional = [
                 'professional_id' => $data['professional_id'],
                 'branch_service_id' => $branch_service_id
-            ];
-            $branch_service_professional_id = $this->branchServiceProfessionalController->branch_service_professional($dataBranchServiceProfessional);
+            ];*/
+            /*$branch_service_professional_id = $this->branchServiceProfessionalService->branch_service_professional($branch_service_id, $data['professional_id']);
             
             $dataOrderService = [
                 'car_id' =>$car_id,
@@ -127,28 +134,28 @@ class ReservationController extends Controller
                 'product_store_id' => 0,
                 'price' => $service->price_service+$service->profit_percentaje/100
             ];
-            $order = $this->orderController->order_service_store($dataOrderService);
-            $dataCarAmount = [
+            $order = $this->orderService->order_service_store($dataOrderService);
+            /*$dataCarAmount = [
                 'id' =>$car_id,
                 'amount' => $order->price
             ];
-            $this->carController->car_amount_updated($dataCarAmount);
-            $reservation = Reservation::where('car_id', $car_id)->whereDate('data', $data['data'])->first();
-            if (!$reservation) {
-                $reservacion = new Reservation();
-                $reservacion->start_time = Carbon::parse($data['start_time'])->toTimeString();
-                $reservacion->final_hour = Carbon::parse($data['start_time'])->addMinutes($service->duration_service)->toTimeString();
-                $reservacion->total_time = sprintf('%02d:%02d:%02d', floor($service->duration_service/60),$service->duration_service%60,0);
-                $reservacion->data = $data['data'];
-                $reservacion->from_home = 1;
-                $reservacion->car_id = $car_id;
-                $reservacion->save();
+            $this->carService->car_amount_updated($car_id, $order->price);*/
+            $reservation = $this->reservationService->store($data, $servs);
+            /*if (!$reservation) {
+                $reservation = new Reservation();
+                $reservation->start_time = Carbon::parse($data['start_time'])->toTimeString();
+                $reservation->final_hour = Carbon::parse($data['start_time'])->addMinutes($service->duration_service)->toTimeString();
+                $reservation->total_time = sprintf('%02d:%02d:%02d', floor($service->duration_service/60),$service->duration_service%60,0);
+                $reservation->data = $data['data'];
+                $reservation->from_home = 1;
+                $reservation->car_id = $car_id;
+                $reservation->save();
                 }else{
                   $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($service->duration_service)->toTimeString();
                   $reservation->total_time = Carbon::parse($reservation->total_time)->addMinutes($service->duration_service)->format('H:i:s');
                   $reservation->save();
                 }
-            } //end foreach
+            } //end foreach*/
             DB::commit();
             //todo envio el correo
             $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
