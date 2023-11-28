@@ -146,13 +146,13 @@ class ProfessionalController extends Controller
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:professionals',
                 'phone' => 'required|max:15',
-                'charge_id' => 'required|number',
-                'user_id' => 'required|number',
+                'charge_id' => 'required|numeric',
+                'user_id' => 'required|numeric',
                 'image_url' => 'nullable'
             ]);
             if ($request->hasFile('image_url')) {
-                $filename = $request->file('image_url')->storeAs('professionals',$request->code.'.'.$request->file('image_url')->getClientOriginalExtension(),'public');
-                $product_data['image_url'] = $filename;
+                $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                $data['image_url'] = $filename;
             }
             $professional = new Professional();
             $professional->name = $data['name'];
@@ -169,7 +169,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Profesional insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' =>  'Error al insertar el professional'], 500);
+            return response()->json(['msg' =>  $th->getMessage().'Error al insertar el professional'], 500);
         }
     }
 
@@ -201,7 +201,7 @@ class ProfessionalController extends Controller
                     }
                 }
                 if ($request->hasFile('image_url')) {
-                    $filename = $request->file('image_url')->storeAs('professionals',$request->code.'.'.$request->file('image_url')->getClientOriginalExtension(),'public');
+                    $filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                     $professionals_data['image_url'] = $filename;
                 }
             $professional->name = $professionals_data['name'];
