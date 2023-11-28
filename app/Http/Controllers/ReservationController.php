@@ -26,23 +26,11 @@ use Illuminate\Support\Facades\DB;
 class ReservationController extends Controller
 {
 
-    private ClientProfessionalService $clientProfessionalService;
-    private CarService $carService;
-    private ServiceService $serviceService;
-    private BranchServiceService $branchServiceService;
-    private BranchServiceProfessionalService $branchServiceProfessionalService;
-    private OrderService $orderService;
     private ReservationService $reservationService;
     private SendEmailService $sendEmailService;
 
-    public function __construct(BranchServiceProfessionalService $branchServiceProfessionalService, OrderService $orderService, ClientProfessionalService $clientProfessionalService, CarService $carService, ServiceService $serviceService, BranchServiceService $branchServiceService, ReservationService $reservationService,SendEmailService $sendEmailService )
+    public function __construct(ReservationService $reservationService,SendEmailService $sendEmailService )
     {
-        $this->branchServiceService = $branchServiceService;
-        $this->branchServiceProfessionalService = $branchServiceProfessionalService;
-        $this->orderService = $orderService;
-        $this->clientProfessionalService = $clientProfessionalService;
-        $this->carService = $carService;
-        $this->serviceService = $serviceService;
         $this->reservationService = $reservationService;
         $this->sendEmailService = $sendEmailService;
     }

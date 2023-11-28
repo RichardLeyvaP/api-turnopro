@@ -8,6 +8,7 @@ use App\Models\Professional;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class ProfessionalController extends Controller
@@ -146,9 +147,13 @@ class ProfessionalController extends Controller
                 'email' => 'required|max:50|email|unique:professionals',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|number',
-                'user_id' => 'required|number'
+                'user_id' => 'required|number',
+                'image_url' => 'nullable'
             ]);
-
+            if ($request->hasFile('image_url')) {
+                $filename = $request->file('image_url')->storeAs('professionals',$request->code.'.'.$request->file('image_url')->getClientOriginalExtension(),'public');
+                $product_data['image_url'] = $filename;
+            }
             $professional = new Professional();
             $professional->name = $data['name'];
             $professional->surname = $data['surname'];
@@ -157,6 +162,7 @@ class ProfessionalController extends Controller
             $professional->phone = $data['phone'];
             $professional->charge_id = $data['charge_id'];
             $professional->user_id = $data['user_id'];
+            $professional->image_url = $data['image_url'];
             $professional->state = 0;
             $professional->save();
 
@@ -184,9 +190,20 @@ class ProfessionalController extends Controller
                 'charge_id' => 'required|numeric',
                 'user_id' => 'required|numeric',
                 'state' => 'required|numeric',
+                'image_url' => 'nullable'
             ]);
             Log::info($request);
             $professional = Professional::find($professionals_data['id']);
+            if ($professional->image_url) {
+                $destination=public_path("storage\\".$professional->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
+                if ($request->hasFile('image_url')) {
+                    $filename = $request->file('image_url')->storeAs('professionals',$request->code.'.'.$request->file('image_url')->getClientOriginalExtension(),'public');
+                    $professionals_data['image_url'] = $filename;
+                }
             $professional->name = $professionals_data['name'];
             $professional->surname = $professionals_data['surname'];
             $professional->second_surname = $professionals_data['second_surname'];
@@ -195,6 +212,7 @@ class ProfessionalController extends Controller
             $professional->charge_id = $professionals_data['charge_id'];
             $professional->user_id = $professionals_data['user_id'];
             $professional->state = $professionals_data['state'];
+            $professional->image_url = $professionals_data['image_url'];
             $professional->save();
 
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
@@ -211,8 +229,14 @@ class ProfessionalController extends Controller
             $professionals_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
+            $professional = Professional::find($professionals_data['id']);
+            if ($professional->image_url) {
+                $destination=public_path("storage\\".$professional->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
             Professional::destroy($professionals_data['id']);
-
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar la professional'], 500);
