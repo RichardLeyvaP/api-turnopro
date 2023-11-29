@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Professional;
+use App\Services\ImageService;
+use App\Services\ProfessionalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +15,17 @@ use Illuminate\Support\Facades\Log;
 
 class ProfessionalController extends Controller
 {
+
+    private ImageService $imageService;
+    private ProfessionalService $professionalService;
+
+    public function __construct(ProfessionalService $professionalService, ImageService $imageService )
+    {
+        $this->professionalService = $professionalService;
+        $this->imageService = $imageService;
+    }
+
+
     public function index()
     {
         try {
@@ -40,7 +53,8 @@ class ProfessionalController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-           $professionals = Professional::whereHas('branchServices', function ($query) use ($data){
+           $professional = $this->professionalService->professionals_branch($data['branch_id'], $data['professional_id']);
+           /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->find($data['professional_id']);
            
@@ -52,10 +66,10 @@ class ProfessionalController extends Controller
                 $dataUser['fecha'] = $date->toDateString();
                 $dataUser['hora'] = $date->Format('g:i:s A');
                 return response()->json(['professional_branch' => $dataUser], 200);
-           }
-           return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+           }*/
+           return response()->json(['professional_branch' => $professional], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+           return response()->json(['msg' => $th->getMessage()."Professionals no pertenece a esta Sucursal"], 500);
        }
     }
 
@@ -65,10 +79,11 @@ class ProfessionalController extends Controller
             $data = $request->validate([
                'branch_id' => 'required|numeric'
            ]);
-           $professionals = Professional::whereHas('branchServices', function ($query) use ($data){
+           $professionals = $this->professionalService->branch_professionals($data['branch_id']);
+           /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->get();
-           
+           */
            return response()->json(['professionals' => $professionals], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
@@ -83,10 +98,10 @@ class ProfessionalController extends Controller
                'branch_id' => 'required|numeric'
 
            ]);
-
-           $professionals = Professional::whereHas('branchServices', function ($query) use ($data) {
+           $professionals =$this->professionalService->get_professionals_service($data);
+           /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id'])->where('service_id', $data['service_id']);
-        })->select('id', 'name','surname','second_surname')->get();
+        })->select('id', 'name','surname','second_surname')->get();*/
            
            return response()->json(['professionals' => $professionals], 200);
        } catch (\Throwable $th) {
@@ -151,7 +166,8 @@ class ProfessionalController extends Controller
                 'image_url' => 'nullable'
             ]);
             if ($request->hasFile('image_url')) {
-                $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
+                //$filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                 $data['image_url'] = $filename;
             }
             $professional = new Professional();
@@ -195,13 +211,15 @@ class ProfessionalController extends Controller
             Log::info($request);
             $professional = Professional::find($professionals_data['id']);
             if ($professional->image_url) {
-                $destination=public_path("storage\\".$professional->image_url);
+                $this->imageService->destroyImagen($professional->image_url);
+                /*$destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }
+                    }*/
                 }
                 if ($request->hasFile('image_url')) {
-                    $filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
+                    //$filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                     $professionals_data['image_url'] = $filename;
                 }
             $professional->name = $professionals_data['name'];
@@ -231,10 +249,11 @@ class ProfessionalController extends Controller
             ]);
             $professional = Professional::find($professionals_data['id']);
             if ($professional->image_url) {
-                $destination=public_path("storage\\".$professional->image_url);
+                $this->imageService->destroyImagen($professional->image_url);
+                /*$destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }
+                    }*/
                 }
             Professional::destroy($professionals_data['id']);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
