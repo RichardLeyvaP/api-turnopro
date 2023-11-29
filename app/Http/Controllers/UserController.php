@@ -104,7 +104,7 @@ class UserController extends Controller
         }
         $professional = $this->professionalService->store($datos);
 
-        return response()->json(['msg' => "Client registrado correctamente!!!",
+        return response()->json(['msg' => "Professional registrado correctamente!!!",
             'user' => $user
         ],201);
     }catch(\Throwable $th){
