@@ -9,9 +9,25 @@ class ProfessionalService
 
     private CarService $carService;
 
-    public function __construct(CarService $carService )
+    public function __construct(CarService $carService)
     {
         $this->carService = $carService;
+    }
+
+    public function store($data)
+    {
+        $professional = new Professional();
+        $professional->name = $data['name'];
+        $professional->surname = $data['surname'];
+        $professional->second_surname = $data['second_surname'];
+        $professional->email = $data['email'];
+        $professional->phone = $data['phone'];
+        $professional->charge_id = $data['charge_id'];
+        $professional->user_id = $data['user_id'];
+        $professional->image_url = $data['image_url'];
+        $professional->state = 0;
+        $professional->save();
+        return $professional;
     }
 
     public function professionals_branch($branch_id, $professional_id)

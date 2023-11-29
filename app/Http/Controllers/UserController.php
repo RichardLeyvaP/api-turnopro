@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\ClientService;
+use App\Services\ImageService;
+use App\Services\ProfessionalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,17 +17,21 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class UserController extends Controller
 {
     private ClientService $clientService;
+    private ImageService $imageService;
+    private ProfessionalService $professionalService;
 
-    public function __construct(ClientService $clientService )
+    public function __construct(ClientService $clientService, ImageService $imageService, ProfessionalService $professionalService)
     {
         $this->clientService = $clientService;
+        $this->imageService = $imageService;
+        $this->professionalService = $professionalService;
     }
     public function register_client(Request $request){
         try{
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'user' => 'required',
-            'password' => 'required',
+            'password' => 'required|confirmed',
             'surname' => 'required|max:50',
             'second_surname' => 'required|max:50',
             'email' => 'required|max:50|email|unique:clients',
@@ -50,6 +56,53 @@ class UserController extends Controller
             'phone' => $request->phone
             ];
         $client = $this->clientService->store($datos);
+
+        return response()->json(['msg' => "Client registrado correctamente!!!",
+            'user' => $user
+        ],201);
+    }catch(\Throwable $th){
+        return response()->json(['msg' => $th->getMessage().'Error al registrarse'], 500);
+    }
+    }
+
+    public function register_professional(Request $request){
+        try{
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'user' => 'required',
+            'password' => 'required|confirmed',
+            'surname' => 'required|max:50',
+            'second_surname' => 'required|max:50',
+            'email' => 'required|max:50|email|unique:professionals',
+            'phone' => 'required|max:15',
+            'charge_id' => 'required|numeric',
+            'image_url' => 'nullable'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['msg' => $validator->errors()->all()
+            ],400);
+        }
+        $user = User::create([
+            'name' => $request->user,
+            'email' => $request->email,
+            'password' => Hash::make($request->password)
+        ]);
+        $datos = [
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'surname' => $request->surname,
+            'second_surname' => $request->second_surname,
+            'phone' => $request->phone,
+            'charge_id' => $request->charge_id,
+            'image_url' => $request->image_url
+            ];
+        if ($request->hasFile('image_url')) {
+            $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
+            //$filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+            $datos['image_url'] = $filename;
+        }
+        $professional = $this->professionalService->store($datos);
 
         return response()->json(['msg' => "Client registrado correctamente!!!",
             'user' => $user
