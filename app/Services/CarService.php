@@ -39,6 +39,6 @@ class CarService {
     {
         return $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-       })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()])->where('pay', 0)->groupBy('date')->get();
+       })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()])->where('pay', 1)->groupBy('date')->get();
     }
 }
