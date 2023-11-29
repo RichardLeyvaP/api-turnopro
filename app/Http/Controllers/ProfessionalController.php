@@ -118,7 +118,8 @@ class ProfessionalController extends Controller
                'startDate' => 'required|date',
                'endDate' => 'required|date'
            ]);
-           $startDate = Carbon::parse($data['startDate']);
+           $ganancias = $this->professionalService->professionals_ganancias($data);
+           /*$startDate = Carbon::parse($data['startDate']);
            $endDate = Carbon::parse($data['endDate']);
           $dates = [];
           $i=0;
@@ -143,10 +144,10 @@ class ProfessionalController extends Controller
                 'earnings' => $car->earnings,
             ];
            });*/
-           $totalEarnings = $cars->sum('total_earnings');
+           /*$totalEarnings = $cars->sum('total_earnings');
            $averageEarnings = $cars->avg('average_earnings');
-           
-          return response()->json(['earningByDay' => $dates, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings], 200);
+           */
+          return response()->json(['earningByDay' => $ganancias], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
        }

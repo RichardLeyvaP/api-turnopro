@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ClientService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,30 +14,48 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserController extends Controller
 {
-    public function register(Request $request){
+    private ClientService $clientService;
+
+    public function __construct(ClientService $clientService )
+    {
+        $this->clientService = $clientService;
+    }
+    public function register_client(Request $request){
         try{
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed'
-
+            'user' => 'required',
+            'password' => 'required',
+            'surname' => 'required|max:50',
+            'second_surname' => 'required|max:50',
+            'email' => 'required|max:50|email|unique:clients',
+            'phone' => 'required|max:15'
         ]);
-
         if ($validator->fails()) {
             return response()->json(['msg' => $validator->errors()->all()
             ],400);
         }
         $user = User::create([
-            'name' => $request->name,
+            'name' => $request->user,
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
 
-        return response()->json(['msg' => "Usuario registrado correctamente!!!",
+        $datos = [
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'surname' => $request->surname,
+            'second_surname' => $request->second_surname,
+            'phone' => $request->phone
+            ];
+        $client = $this->clientService->store($datos);
+
+        return response()->json(['msg' => "Client registrado correctamente!!!",
             'user' => $user
         ],201);
     }catch(\Throwable $th){
-        return response()->json(['msg' => 'Error al registrarse'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al registrarse'], 500);
     }
     }
 
