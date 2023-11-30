@@ -36,6 +36,8 @@ class TailService {
             $query->where('branch_id', $branch_id);
         }])->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
+        })->whereHas('reservation.car.orders', function ($query){
+            $query->where('is_product', false);
         })->where('attended', '<>',1)->get();
         $branchTails = $tails->map(function ($tail){
             return [
