@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
 
@@ -46,14 +47,19 @@ class TailService {
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
-                'attended' => $tail->attended
+                'attended' => $tail->attended, 
+                'services' => $tail->reservation->car->orders->map(function ($orderData){
+                    return [
+                          $orderData->branchServiceProfessional
+                          ];
+                      })
             ];
         })->sortBy('start_time')->values();
 
         return $branchTails;
     }
 
-    public function tail_attended($reservation_id, $attended){
+        public function tail_attended($reservation_id, $attended){
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         $tail->attended = $attended;
         $tail->save();

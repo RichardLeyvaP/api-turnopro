@@ -113,29 +113,29 @@ class ReservationController extends Controller
            } 
            else {
                  Log::info( "3");
-    // Crear Usuario
-    $user = User::create([
-        'name' => $data['name_client'],
-        'email' => $data['email_client'],
-        'password' => Hash::make($data['email_client'])
-    ]);
-    Log::info( "4");
+            // Crear Usuario
+            $user = User::create([
+                'name' => $data['name_client'],
+                'email' => $data['email_client'],
+                'password' => Hash::make($data['email_client'])
+            ]);
+            Log::info( "4");
 
-    $client = new Client();
-    $client->name = $data['name_client'];
-    $client->surname = $data['surname_client'];
-    $client->second_surname = $data['second_surname'];
-    $client->email = $data['email_client'];
-    $client->phone = $data['phone_client'];
-    $client->user_id = $user->id;
-    $client->save();
-$id_client = $client->id;
+            $client = new Client();
+            $client->name = $data['name_client'];
+            $client->surname = $data['surname_client'];
+            $client->second_surname = $data['second_surname'];
+            $client->email = $data['email_client'];
+            $client->phone = $data['phone_client'];
+            $client->user_id = $user->id;
+            $client->save();
+        $id_client = $client->id;
 
-Log::info( "5");
-Log::info($id_client);
-    $this->reservationService->store($data, $servs,$id_client);
+        Log::info( "5");
+        Log::info($id_client);
+            $this->reservationService->store($data, $servs,$id_client);
 
-}
+        }
                                
             DB::commit();            
            

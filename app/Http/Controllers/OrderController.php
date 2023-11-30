@@ -19,13 +19,6 @@ use Illuminate\Support\Facades\Log;
 class OrderController extends Controller
 {
 
-    private $clientProfessionalService;
-
-    public function __construct(ClientProfessionalService $clientProfessionalService)
-    {
-        $this->clientProfessionalService = $clientProfessionalService;
-    }
-
     public function index()
     {
         try {             
@@ -51,9 +44,7 @@ class OrderController extends Controller
                 'type' => 'required'
 
             ]);
-            //$client_professional_id = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->value('id');
-            $client_professional_id = $this->clientProfessionalService->client_professional($data['client_id'], $data['professional_id']);
-            /*0;
+            $client_professional_id = ClientProfessional::where('professional_id', $data['professional_id'])->where('client_id', $data['client_id'])->value('id');/*0;
             $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
             /*if (!$client_professional_id) {
                 $clientprofessional = new ClientProfessional();
