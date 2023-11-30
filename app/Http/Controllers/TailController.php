@@ -258,6 +258,24 @@ class TailController extends Controller
                 } 
     }
 
+    public function tail_attended(Request $request)
+    {
+        try { 
+            
+            Log::info( "Modificar estado de la tail");
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
+                'attended' => 'required|numeric'
+            ]);
+            $this->tailService->tail_attended($data['reservation_id'], $data['attended']);
+            
+            return response()->json(['msg' => "Tail modificado correctamente"], 200);
+            } catch (\Throwable $th) {  
+                Log::error($th);
+                    return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);
+            } 
+    }
+
     public function cola_truncate()
     {
         try { 

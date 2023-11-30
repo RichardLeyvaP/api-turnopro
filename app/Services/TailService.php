@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Services;
+
+use App\Models\Reservation;
 use App\Models\Tail;
 
 class TailService {
@@ -45,6 +47,12 @@ class TailService {
         })->sortBy('start_time')->values();
 
         return $branchTails;
+    }
+
+    public function tail_attended($reservation_id, $attended){
+        $tail = Tail::where('reservation_id', $reservation_id)->first();
+        $tail->attended = $attended;
+        $tail->save();
     }
 
 }
