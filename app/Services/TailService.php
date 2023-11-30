@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
+use Carbon\Carbon;
 
 class TailService {
 
@@ -16,8 +17,8 @@ class TailService {
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
-                'start_time' => $tail->reservation->start_time,
-                'final_hour' => $tail->reservation->final_hour,
+                'start_time' => $tail->reservation->start_time->format('H:i:s'),
+                'final_hour' => $tail->reservation->final_hour->format('H:i:s'),
                 'total_time' => $tail->reservation->total_time,
                 'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
@@ -40,19 +41,15 @@ class TailService {
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
-                'start_time' => $tail->reservation->start_time,
-                'final_hour' => $tail->reservation->final_hour,
+                'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
+                'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
                 'total_time' => $tail->reservation->total_time,
                 'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
                 'attended' => $tail->attended, 
-                'services' => $tail->reservation->car->orders->map(function ($orderData){
-                    return [
-                          $orderData->branchServiceProfessional
-                          ];
-                      })
+                'total_services' => count($tail->reservation->car->orders)
             ];
         })->sortBy('start_time')->values();
 
