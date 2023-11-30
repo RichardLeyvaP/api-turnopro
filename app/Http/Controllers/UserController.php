@@ -111,7 +111,10 @@ class UserController extends Controller
                     'msg' => $validator->errors()->all()
                 ],400);
             }
-    
+            $branch = [
+                'branch_id' => null,
+                'nameBranch' => null
+            ];
             $user = User::with('client', 'professional')->has('client')->orHas('professional')->where('email',$request->email)->orWhere('name', $request->email)->first();
             if (isset($user->id) ) {
                 if(Hash::check($request->password, $user->password)) {
@@ -121,11 +124,7 @@ class UserController extends Controller
                             'branch_id' => $branchService->branch->id,
                             'nameBranch' => $branchService->branch->name
                         ];
-                    })->first();
-                    if(!$branch){
-                        $branch['branch_id'] = null;
-                        $branch['nameBranch'] = null;
-                    }}
+                    })->first();}
                    return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,

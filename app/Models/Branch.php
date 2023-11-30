@@ -29,6 +29,10 @@ class Branch extends Model
         return $this->belongsToMany(Service::class)->withTimestamps();
     }
 
+    public function services(){
+        return $this->belongsToMany(Service::class)->withTimestamps();
+    }
+
     public function workplaces()
     {
         return $this->hasMany(Workplace::class);

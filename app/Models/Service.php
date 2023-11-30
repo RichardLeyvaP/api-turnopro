@@ -13,6 +13,10 @@ class Service extends Model
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
 
+    public function branches(){
+        return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
+
     protected $casts = [
         'simultaneou' => 'integer',
         'price_service' => 'double',
