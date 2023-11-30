@@ -14,14 +14,8 @@ use App\Mail\Send_mail;
 use App\Models\Branch;
 use App\Models\Client;
 use App\Models\User;
-use App\Services\BranchServiceProfessionalService;
-use App\Services\BranchServiceService;
-use App\Services\CarService;
-use App\Services\ClientProfessionalService;
-use App\Services\OrderService;
 use App\Services\ReservationService;
 use App\Services\SendEmailService;
-use App\Services\ServiceService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -114,7 +108,7 @@ class ReservationController extends Controller
             {
                   Log::info( "2");
                 $id_client = $client->id;
-                $this->reservationService->store($data, $servs,$id_client);
+                return $this->reservationService->store($data, $servs,$id_client);
             }
            } 
            else {
