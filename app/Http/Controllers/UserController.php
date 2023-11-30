@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
+use App\Models\Professional;
 use App\Models\User;
-use App\Services\ClientService;
-use App\Services\ImageService;
-use App\Services\ProfessionalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,16 +15,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserController extends Controller
 {
-    private ClientService $clientService;
-    private ImageService $imageService;
-    private ProfessionalService $professionalService;
-
-    public function __construct(ClientService $clientService, ImageService $imageService, ProfessionalService $professionalService)
-    {
-        $this->clientService = $clientService;
-        $this->imageService = $imageService;
-        $this->professionalService = $professionalService;
-    }
+ 
     public function register_client(Request $request){
         try{
         $validator = Validator::make($request->all(), [
@@ -46,16 +36,15 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-
-        $datos = [
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'email' => $request->email,
-            'surname' => $request->surname,
-            'second_surname' => $request->second_surname,
-            'phone' => $request->phone
-            ];
-        $client = $this->clientService->store($datos);
+        
+        $client = new Client();
+        $client->name = $validator['name'];
+        $client->surname = $validator['surname'];
+        $client->second_surname = $validator['second_surname'];
+        $client->email = $validator['email'];
+        $client->phone = $validator['phone'];
+        $client->user_id = $user->id;
+        $client->save();
 
         return response()->json(['msg' => "Client registrado correctamente!!!",
             'user' => $user
@@ -87,22 +76,21 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-        $datos = [
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'email' => $request->email,
-            'surname' => $request->surname,
-            'second_surname' => $request->second_surname,
-            'phone' => $request->phone,
-            'charge_id' => $request->charge_id,
-            'image_url' => $request->image_url
-            ];
+        
         if ($request->hasFile('image_url')) {
-            $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
-            //$filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
-            $datos['image_url'] = $filename;
+            $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
         }
-        $professional = $this->professionalService->store($datos);
+        $professional = new Professional();
+        $professional->name = $request['name'];
+        $professional->surname = $request['surname'];
+        $professional->second_surname = $request['second_surname'];
+        $professional->email = $request['email'];
+        $professional->phone = $request['phone'];
+        $professional->charge_id = $request['charge_id'];
+        $professional->user_id = $user->id;
+        $professional->image_url = $filename;
+        $professional->state = 0;
+        $professional->save();
 
         return response()->json(['msg' => "Professional registrado correctamente!!!",
             'user' => $user
