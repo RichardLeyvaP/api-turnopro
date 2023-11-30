@@ -108,7 +108,7 @@ class ReservationController extends Controller
             {
                   Log::info( "2");
                 $id_client = $client->id;
-                return $this->reservationService->store($data, $servs,$id_client);
+                $this->reservationService->store($data, $servs,$id_client);
             }
            } 
            else {
