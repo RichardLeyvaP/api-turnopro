@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
 use App\Models\Branch;
 use App\Models\Client;
+use App\Models\User;
 use App\Services\BranchServiceProfessionalService;
 use App\Services\BranchServiceService;
 use App\Services\CarService;
@@ -22,6 +23,7 @@ use App\Services\ReservationService;
 use App\Services\SendEmailService;
 use App\Services\ServiceService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class ReservationController extends Controller
 {
@@ -85,6 +87,7 @@ class ReservationController extends Controller
     public function reservation_store(Request $request)
     {
         Log::info("Guardar Reservacion");
+       
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -92,67 +95,60 @@ class ReservationController extends Controller
                 'data' => 'required|date',
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'client_id' => 'required|numeric'
+                'email_client' => 'required',
+                'phone_client' => 'required',
+                'name_client' => 'required',
+                'surname_client' => 'required',
+                'second_surname' => 'required',
             ]);
-            $servs = $request->input('services');
-            /*$client_professional_id = $this->clientProfessionalService->client_professional($data['client_id'], $data['professional_id']);
-           $dataCarData = [
-                'amount' => 0.0,
-                'client_professional_id' => $client_professional_id,
-                'pay' => false,
-                'active' => 1,
-                'tip' => 0.0
-            ];
-            $car_id = $this->carService->store($dataCarData);
-            //foreach
-            foreach ($servs as $serv) {
-                $service_id = $serv;
-                $service = $this->serviceService->show($service_id);
-                /*$dataBranchService = [
-                    'service_id' => $service_id,
-                    'branch_id' => $data['branch_id']
-                ];*/
-            /*$branch_service_id = $this->branchServiceService->branch_service_show($service_id, $data['branch_id']);
-            /*$dataBranchServiceProfessional = [
-                'professional_id' => $data['professional_id'],
-                'branch_service_id' => $branch_service_id
-            ];*/
-            /*$branch_service_professional_id = $this->branchServiceProfessionalService->branch_service_professional($branch_service_id, $data['professional_id']);
-            
-            $dataOrderService = [
-                'car_id' =>$car_id,
-                'branch_service_professional_id' => $branch_service_professional_id,
-                'product_store_id' => 0,
-                'price' => $service->price_service+$service->profit_percentaje/100
-            ];
-            $order = $this->orderService->order_service_store($dataOrderService);
-            /*$dataCarAmount = [
-                'id' =>$car_id,
-                'amount' => $order->price
-            ];
-            $this->carService->car_amount_updated($car_id, $order->price);*/
-            $reservation = $this->reservationService->store($data, $servs);
-            /*if (!$reservation) {
-                $reservation = new Reservation();
-                $reservation->start_time = Carbon::parse($data['start_time'])->toTimeString();
-                $reservation->final_hour = Carbon::parse($data['start_time'])->addMinutes($service->duration_service)->toTimeString();
-                $reservation->total_time = sprintf('%02d:%02d:%02d', floor($service->duration_service/60),$service->duration_service%60,0);
-                $reservation->data = $data['data'];
-                $reservation->from_home = 1;
-                $reservation->car_id = $car_id;
-                $reservation->save();
-                }else{
-                  $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($service->duration_service)->toTimeString();
-                  $reservation->total_time = Carbon::parse($reservation->total_time)->addMinutes($service->duration_service)->format('H:i:s');
-                  $reservation->save();
-                }
-            } //end foreach*/
+            $servs = $request->input('services');  
+            $id_client=0;
+            //1-Verificar que el usuario no este registrado
+            $user = User::where('email', $data['email_client'])->first();
+             // Verificar si se encontró un usuario
+            if ($user) {
+                Log::info( "1");
+            // Buscar el cliente
+            $client = Client::where('email', $data['email_client'])->first();
+            if($client)
+            {
+                  Log::info( "2");
+                $id_client = $client->id;
+                $this->reservationService->store($data, $servs,$id_client);
+            }
+           } 
+           else {
+                 Log::info( "3");
+    // Crear Usuario
+    $user = User::create([
+        'name' => $data['name_client'],
+        'email' => $data['email_client'],
+        'password' => Hash::make($data['email_client'])
+    ]);
+    Log::info( "4");
+
+    $client = new Client();
+    $client->name = $data['name_client'];
+    $client->surname = $data['surname_client'];
+    $client->second_surname = $data['second_surname'];
+    $client->email = $data['email_client'];
+    $client->phone = $data['phone_client'];
+    $client->user_id = $user->id;
+    $client->save();
+$id_client = $client->id;
+
+Log::info( "5");
+Log::info($id_client);
+    $this->reservationService->store($data, $servs,$id_client);
+
+}
+                               
             DB::commit();            
            
            //todo *************** llamando al servicio de envio de email *******************
-            $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$data['client_id'],$data['branch_id']);
+            $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id']);
             
-            return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
+            return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();
@@ -305,8 +301,8 @@ class ReservationController extends Controller
                                // Envía el correo con los datos
                                $mail = new Send_mail($logoUrl, $client_name,$data_reservation,$template,$start_time,$branch_name);//falta mandar dinamicamente la sucursal
                                Mail::to($client_email)
-                               ->send($mail->from('simplify@tuempresa.com', 'Simplify')
-                                           ->subject('Confirmación de Reserva en Simplify(NEW)'));       
+                               ->send($mail->from('reservas@simplifies.cl', 'simplifies')
+                                           ->subject('Confirmación de Reserva en simplifies'));       
                              
                                Log::info( "Enviado send_email");
            

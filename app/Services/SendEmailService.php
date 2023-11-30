@@ -39,8 +39,8 @@ class SendEmailService {
 
     public function sendEmail($client_email,$mail){
           Mail::to($client_email)
-        ->send($mail->from('simplify@barberia.com', 'Simplify')
-                    ->subject('Confirmación de Reserva en Simplify'));       
+        ->send($mail->from('reservas@simplifies.cl', 'Simplifies')
+                    ->subject('Confirmación de Reserva en Simplifies'));       
       
         Log::info( "Enviado send_email");
     }

@@ -25,11 +25,11 @@ class ReservationService {
         $this->serviceService = $serviceService;
     }
 
-    public function store($data, $servs)
+    public function store($data, $servs,$client_id)
     {
         Log::info("Guardar Reservacion");
         DB::beginTransaction();
-            $client_professional_id = $this->clientProfessionalService->client_professional($data['client_id'], $data['professional_id']);
+            $client_professional_id = $this->clientProfessionalService->client_professional($client_id, $data['professional_id']);
            $dataCarData = [
                 'amount' => 0.0,
                 'client_professional_id' => $client_professional_id,
@@ -37,6 +37,7 @@ class ReservationService {
                 'active' => 1,
                 'tip' => 0.0
             ];
+            Log::info('7');
             $car = $this->carService->store($dataCarData);
             //foreach del arreglo de services
             foreach ($servs as $serv) {
@@ -69,7 +70,9 @@ class ReservationService {
                   $reservation->save();
                 }
             } //end foreach
+            Log::info('8');
             DB::commit();
+            Log::info($reservation);
         return $reservation;
     }
 

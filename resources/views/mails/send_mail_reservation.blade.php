@@ -9,7 +9,7 @@
 <h2 style="color: #F18254;">Hola {{$client_name}} &#x1F44B;,</h2>
 
     <p style="color: #333;">
-    &#x1F64F; ¡Gracias por elegir Simplify! Estamos encantados de confirmar tu reserva para el siguiente servicio:
+    &#x1F64F; ¡Gracias por elegir Simplifies! Estamos encantados de confirmar tu reserva para el siguiente servicio:
     </p>
     <img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: auto; width: auto;">
 
@@ -33,9 +33,9 @@
 
     <p style="color: #555;">
         Atentamente,<br>
-        El equipo de <strong> Simplify </strong><br>
-        Teléfono: (55) 319986712
-        Correo: simplify@gamail.com
+        El equipo de <strong> Simplifies </strong><br>
+        Teléfono: (+56) 920202023
+        Correo: reservas@simplifies.cl
     </p>
 
 </body>
