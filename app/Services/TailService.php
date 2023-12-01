@@ -12,7 +12,7 @@ class TailService {
     public function cola_branch_data($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->where('attended', '<>',1)->get();
+        }])->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -38,7 +38,7 @@ class TailService {
             $query->where('professional_id', $professional_id);
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
-        })->where('attended', '<>',1)->get();
+        })->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
