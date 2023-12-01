@@ -240,6 +240,22 @@ class TailController extends Controller
                 } 
     }
 
+    public function cola_branch_delete(Request $request)
+    {
+        try { 
+            
+            Log::info( "Mostarr la cola del dia de una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $this->tailService->cola_branch_delete($data['branch_id']);
+            return response()->json(['tail' => "Tails eliminada correctamente"], 200);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => "Error al eiliminra las Tail"], 500);
+                } 
+    }
+
     public function cola_branch_professional(Request $request)
     {
         try { 
