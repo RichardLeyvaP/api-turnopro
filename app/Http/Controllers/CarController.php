@@ -269,7 +269,7 @@ class CarController extends Controller
             $orderServicesDatas = Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
             $services = $orderServicesDatas->map(function ($orderData){
                 return [
-                     'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                     'name' => $orderData->branchServiceProfessional->branchService->service->name,
                       'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
                       'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
                       'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
