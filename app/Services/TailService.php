@@ -12,7 +12,7 @@ class TailService {
     public function cola_branch_data($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->where('attended', '<>',1)->get();
+        }])->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -36,7 +36,9 @@ class TailService {
             $query->where('branch_id', $branch_id);
         }])->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
-        })->where('attended', '<>',1)->get();
+        })->whereHas('reservation.car.orders', function ($query){
+            $query->where('is_product', false);
+        })->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -49,7 +51,18 @@ class TailService {
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
                 'attended' => $tail->attended, 
-                'total_services' => count($tail->reservation->car->orders)
+                'total_services' => count($tail->reservation->car->orders->map(function ($orderData){
+                    return [
+                         'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                          'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
+                          'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
+                          'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
+                          'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
+                          'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
+                          'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service
+                          ];
+                      }))
+                //'total_services' => count($tail->reservation->car->orders)
             ];
         })->sortBy('start_time')->values();
 
