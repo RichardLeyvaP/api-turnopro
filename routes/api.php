@@ -192,7 +192,7 @@ Route::get('/tail_up', [TailController::class, 'tail_up']);
 Route::get('/cola_branch_data', [TailController::class, 'cola_branch_data']); //dado un branch_id devolver la cola de esa branch
 Route::get('/cola_branch_professional', [TailController::class, 'cola_branch_professional']); //dado un branch_id  y un professional_id devolver la cola de esa branch
 Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar la cola
-Route::get('/tail_attended', [TailController::class, 'tail_attended']); //vaciar la cola
+Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado
 
 Route::get('/workplace', [WorkplaceController::class, 'index']);
 Route::get('/workplace-show', [WorkplaceController::class, 'show']);
