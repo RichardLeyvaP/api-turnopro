@@ -137,7 +137,25 @@ class ReservationController extends Controller
 
         }
                                
-            DB::commit();            
+            DB::commit(); 
+
+              // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
+              Log::info( "5.comparando fechas");
+              
+
+              $fechaHoy = Carbon::today();
+// Obtener la fecha formateada como 'YYYY-MM-DD'
+$fechaFormateada = $fechaHoy->toDateString();
+Log::info( $data['data']);
+              Log::info( $fechaFormateada);
+
+              if(($data['data'] == $fechaFormateada ))
+              {
+                Log::info( "5.las fechas son iguales");
+                $this->reservation_tail();
+                Log::info( "5.actualice la cola");
+              }
+                     
            
            //todo *************** llamando al servicio de envio de email *******************
             $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id']);

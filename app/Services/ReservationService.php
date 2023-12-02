@@ -69,25 +69,7 @@ class ReservationService {
                 $order->request_delete = false;
                 $order->save();
                 $total_amount = $total_amount + $order->price;
-                $total_time = $total_time + $service->duration_service;
-                //$car = Car::find($car->id);
-                //$car->amount = $car->amount + $order->price;
-                //$car->save();
-                /*$reservation= Reservation::where('car_id', $car->id)->whereDate('data', $data)->first();
-                if (!$reservation) {
-                $reservation = new Reservation();
-                $reservation->start_time = Carbon::parse($data['start_time'])->toTimeString();
-                $reservation->final_hour = Carbon::parse($data['start_time'])->addMinutes($service->duration_service)->toTimeString();
-                $reservation->total_time = sprintf('%02d:%02d:%02d', floor($service->duration_service/60),$service->duration_service%60,0);
-                $reservation->data = $data['data'];
-                $reservation->from_home = 1;
-                $reservation->car_id = $car->id;
-                $reservation->save();
-                }else{
-                  $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($service->duration_service)->toTimeString();
-                  $reservation->total_time = Carbon::parse($reservation->total_time)->addMinutes($service->duration_service)->format('H:i:s');
-                  $reservation->save();
-                }*/
+                $total_time = $total_time + $service->duration_service;                
             } //end foreach
 
             
