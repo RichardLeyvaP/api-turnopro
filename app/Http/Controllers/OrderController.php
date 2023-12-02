@@ -9,8 +9,6 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Reservation;
-use App\Models\Service;
-use App\Services\ClientProfessionalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
