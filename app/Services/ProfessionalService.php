@@ -1,19 +1,13 @@
 <?php
 
 namespace App\Services;
+
+use App\Models\Car;
 use App\Models\Professional;
 use Carbon\Carbon;
 
 class ProfessionalService
 {
-
-    private CarService $carService;
-
-    public function __construct(CarService $carService)
-    {
-        $this->carService = $carService;
-    }
-
     public function store($data)
     {
         $professional = new Professional();
@@ -70,7 +64,9 @@ class ProfessionalService
           $i=0;
           $day = $data['day']-1;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
 
-        $cars = $this->carService->professionals_ganancias_periodo($data);
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
+       })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()])->where('pay', 1)->groupBy('date')->get();
 
         for($date = $startDate; $date->lte($endDate);$date->addDay()){
             $machingResult = $cars->firstWhere('date', $date->toDateString());
