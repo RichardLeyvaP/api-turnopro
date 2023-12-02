@@ -10,12 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
-    private $serviceService;
-
-    public function __construct(ServiceService $serviceService)
-    {
-        $this->serviceService = $serviceService;
-    }
     public function index()
     {
         try {             
@@ -75,7 +69,7 @@ class ServiceController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $service = $this->serviceService->show($data['id']);
+            $service = Service::find($data['id']);
             return response()->json(['service' => $service], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
