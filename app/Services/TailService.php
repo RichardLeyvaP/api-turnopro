@@ -31,6 +31,12 @@ class TailService {
         return $branchTails;
     }
 
+    public function cola_branch_delete($branch_id){
+        $tails = Tail::whereHas('reservation.car.clientProfessional.professional.branchServices', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })->delete();
+    }
+
     public function cola_branch_professional($branch_id, $professional_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
