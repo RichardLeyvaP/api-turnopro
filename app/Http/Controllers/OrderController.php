@@ -22,9 +22,10 @@ class OrderController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar los carros");
-            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->get(['cars.*', 'clients.*', 'professionals.*', 'products.*', 'services.*','orders.*']);
-            return response()->json(['cars' => $car], 200);
+            Log::info( "Entra a buscar las orders");
+            $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->has('productStore.product')->orHas('branchServiceProfessional.branchService.service')->get();
+            /*$car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->get(['cars.*', 'clients.*', 'professionals.*', 'products.*', 'services.*','orders.*']);*/
+            return response()->json(['orders' => $orders], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
@@ -153,11 +154,12 @@ class OrderController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->where('orders.id', $data['id'])->get(['cars.*', 'clients.*', 'professionals.*', 'products.*', 'services.*','orders.*']);
-            return response()->json(['cars' => $car], 200);
+            /*$car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->where('orders.id', $data['id'])->get(['cars.*', 'clients.*', 'professionals.*', 'products.*', 'services.*','orders.*']);*/
+            $order = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->has('productStore.product')->orHas('branchServiceProfessional.branchService.service')->get();
+            return response()->json(['order' => $order], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
-            return response()->json(['msg' => "Error al mostrar los carros"], 500);
+            return response()->json(['msg' => "Error al mostrar las orders"], 500);
         }
     }
 
