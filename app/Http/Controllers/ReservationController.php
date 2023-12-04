@@ -129,13 +129,13 @@ class ReservationController extends Controller
             $client->phone = $data['phone_client'];
             $client->user_id = $user->id;
             $client->save();
-        $id_client = $client->id;
+            $id_client = $client->id;
 
-        Log::info( "5");
-        Log::info($id_client);
-            $this->reservationService->store($data, $servs,$id_client);
+            Log::info( "5");
+            Log::info($id_client);
+                $this->reservationService->store($data, $servs,$id_client);
 
-        }
+            }
                                
             DB::commit(); 
 
@@ -144,10 +144,10 @@ class ReservationController extends Controller
               
 
               $fechaHoy = Carbon::today();
-// Obtener la fecha formateada como 'YYYY-MM-DD'
-$fechaFormateada = $fechaHoy->toDateString();
-Log::info( $data['data']);
-              Log::info( $fechaFormateada);
+            // Obtener la fecha formateada como 'YYYY-MM-DD'
+            $fechaFormateada = $fechaHoy->toDateString();
+            Log::info( $data['data']);
+                        Log::info( $fechaFormateada);
 
               if(($data['data'] == $fechaFormateada ))
               {
@@ -157,9 +157,9 @@ Log::info( $data['data']);
               }
                      
            
-           //todo *************** llamando al servicio de envio de email *******************
-            $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id']);
-            
+            //todo *************** llamando al servicio de envio de email *******************
+                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id']);
+                
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

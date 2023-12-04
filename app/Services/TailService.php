@@ -75,10 +75,35 @@ class TailService {
         return $branchTails;
     }
 
-        public function tail_attended($reservation_id, $attended){
+    public function tail_attended($reservation_id, $attended){
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         $tail->attended = $attended;
         $tail->save();
+    }
+
+    public function type_of_service($branch_id, $professional_id){
+        $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        }])->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
+            $query->where('professional_id', $professional_id);
+        })->whereHas('reservation.car.orders', function ($query){
+            $query->where('is_product', false);
+        })->where('attended', 1)->get();
+        if (count($tails) > 1) {
+            return false;
+        }elseif (count($tails) < 1) {
+            return true;
+        }
+        else {
+            foreach ($tails as $tail) {            
+            foreach ($tail->reservation->car->orders as $orderData) {
+                if ($orderData->branchServiceProfessional->branchService->service->simultaneou == 1) {
+                    return true;
+                }
+            }
+        }
+        }
+        return false;
     }
 
 }
