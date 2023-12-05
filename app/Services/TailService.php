@@ -88,8 +88,6 @@ class TailService {
             $query->where('professional_id', $professional_id);
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
-        })->whereHas('reservation', function ($query){
-            $query->orderBy('start_time');
         })->where('attended', 1)->get();
         if (count($tails) > 1) {
             return false;
