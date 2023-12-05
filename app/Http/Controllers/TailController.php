@@ -232,9 +232,9 @@ class TailController extends Controller
     {
         try {
             $data = $request->validate([
-                'reservatio_id' => 'required|numeric'
+                'reservation_id' => 'required|numeric'
             ]);
-            $attended = Tail::where('reservation_id', $data['reservatio_id'])->get()->value('attended');
+            $attended = Tail::where('reservation_id', $data['reservation_id'])->get()->value('attended');
             if (!$attended) {
                 $attended = 0;
             }
