@@ -8,7 +8,9 @@ use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
+use App\Models\Professional;
 use App\Models\Reservation;
+use App\Services\OrderService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -16,6 +18,12 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+    private OrderService $orderService;
+
+    public function __construct(OrderService $orderService)
+    {
+        $this->orderService = $orderService;
+    }
 
     public function index()
     {
@@ -43,8 +51,7 @@ class OrderController extends Controller
                 'type' => 'required'
 
             ]);
-            $client_professional_id = ClientProfessional::where('professional_id', $data['professional_id'])->where('client_id', $data['client_id'])->value('id');/*0;
-            $result = ClientProfessional::join('clients', 'clients.id', '=', 'client_professional.client_id')->join('rofessional', 'rofessional.id', '=', 'client_professional.professional_id')->where('client_professional.client_id',$data['client_id'])->where('client_rofessional.professional_id',$data['professional_id'])->get('client_professional.*');*/
+            //$client_professional_id = ClientProfessional::where('professional_id', $data['professional_id'])->where('client_id', $data['client_id'])->value('id');
             /*if (!$client_professional_id) {
                 $clientprofessional = new ClientProfessional();
                 $clientprofessional->client_id = $data['client_id'];
@@ -55,10 +62,11 @@ class OrderController extends Controller
             /*else {                
             $client_professional_id = $result[0]['id'];
             }*/
-            $productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
+            //$productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
-                //$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
+                return $order = $this->orderService->product_order_store($data);
+                /*//$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
                 $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
                 if ($productcar) {
@@ -87,11 +95,12 @@ class OrderController extends Controller
                  $order->is_product = true;
                  $order->price = $sale_price;               
                  $order->request_delete = false;
-                 $order->save();
+                 $order->save();*/
              }//end if product
 
             if ($data['product_id'] == 0 && $data['type'] == 'service') {
-                $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
+                $order = $this->orderService->service_order_store($data);
+                /*$branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
                 $service = $branchServiceprofessional->branchService->service;
                 if ($productcar) {
                     $car = Car::find($productcar->id);
@@ -113,10 +122,9 @@ class OrderController extends Controller
                  $order->is_product = false;
                  $order->price = $service->price_service+$service->profit_percentaje/100;   
                  $order->request_delete = false;
-                 $order->save();
-
-                 DB::commit();
+                 $order->save();*/                
             }//end if service
+            DB::commit();
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -124,26 +132,6 @@ class OrderController extends Controller
         return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
         }
     }
-
-    /*public function order_service_store($data)
-    {
-        Log::info("reservacion de servicio prestado");
-        try {
-                 $order = new Order();
-                 $order->car_id = $data['car_id'];
-                 $order->product_store_id = null;
-                 $order->branch_service_professional_id = $data['branch_service_professional_id'];
-                 $order->is_product = false;
-                 $order->price = $data['price'];   
-                 $order->request_delete = false;
-                 $order->save();
-             return $order;
-        } catch (\Throwable $th) {
-            Log::error($th);
-            DB::rollback();
-        return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
-        }
-    }*/
 
     public function show(Request $request)
     {
