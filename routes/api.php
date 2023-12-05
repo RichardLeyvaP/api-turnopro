@@ -195,6 +195,7 @@ Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar
 Route::get('/cola_branch_delete', [TailController::class, 'cola_branch_delete']); //vaciar la cola de una branch_id
 Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado
 Route::get('/type_of_service', [TailController::class, 'type_of_service']); //Saber si dentro del cliente q esta atendido uno de los servicios es simutaneu
+Route::get('/return_client_status', [TailController::class, 'return_client_status']);//devuelve el estado de la reservacion
 
 Route::get('/workplace', [WorkplaceController::class, 'index']);
 Route::get('/workplace-show', [WorkplaceController::class, 'show']);

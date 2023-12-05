@@ -44,8 +44,9 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validate([
-                'client_id' => 'required|numeric',
-                'professional_id' => 'required|numeric',
+                //'client_id' => 'required|numeric',
+                //'professional_id' => 'required|numeric',
+                'car_id' => 'required|numeric',
                 'product_id' => 'required|numeric',
                 'service_id' => 'required|numeric',
                 'type' => 'required'

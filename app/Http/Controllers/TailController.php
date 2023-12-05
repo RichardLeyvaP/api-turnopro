@@ -228,6 +228,23 @@ class TailController extends Controller
             } 
     }
 
+    public function return_client_status(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'reservatio_id' => 'required|numeric'
+            ]);
+            $attended = Tail::where('reservation_id', $data['reservatio_id'])->get()->value('attended');
+            if (!$attended) {
+                $attended = 0;
+            }
+
+            return response()->json([$attended], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error al mostrar el estado de la reservacion'], 500);
+        }
+    }
+
     public function cola_truncate()
     {
         try { 
