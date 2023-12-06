@@ -66,7 +66,7 @@ class OrderController extends Controller
             //$productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
             
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
-                return $order = $this->orderService->product_order_store($data);
+                $order = $this->orderService->product_order_store($data);
                 /*//$product = Product::join('product_store', 'product_store.product_id', '=', 'products.id')->where('product_store.id', $data['product_id'])->get(['products.*']);
                 $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
