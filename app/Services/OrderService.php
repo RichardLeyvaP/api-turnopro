@@ -53,7 +53,9 @@ class OrderService {
     }
 
     public function sales_periodo_branch($data){
-        
-    return $order;
-}
+        $products = Order::whereHas('productStore', function ($query) {
+
+        });
+    return $products;
+    }
 }

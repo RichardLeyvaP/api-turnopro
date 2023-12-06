@@ -57,7 +57,7 @@ class TailService {
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
                 'attended' => $tail->attended, 
-                'total_services' => count($tail->reservation->car->orders->map(function ($orderData){
+                /*'total_services' => count($tail->reservation->car->orders->map(function ($orderData){
                     return [
                          'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
                           'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
@@ -67,8 +67,8 @@ class TailService {
                           'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
                           'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service
                           ];
-                      }))
-                //'total_services' => count($tail->reservation->car->orders)
+                      }))*/
+                'total_services' => count($tail->reservation->car->orders)
             ];
         })->sortBy('start_time')->values();
 
