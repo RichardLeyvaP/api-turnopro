@@ -51,4 +51,9 @@ class OrderService {
                  $order->save();
         return $order;
     }
+
+    public function sales_periodo_branch($data){
+        
+    return $order;
+}
 }

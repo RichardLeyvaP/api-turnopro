@@ -65,6 +65,25 @@ class OrderController extends Controller
         }
     }
 
+    public function sales_periodo_branch(Request $request)
+    {
+        Log::info("Ventas de Productos y servicios prestados en un periodo");
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date'
+
+            ]);
+                $order = $this->orderService->sales_periodo_branch($data);    
+             return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            DB::rollback();
+        return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
+        }
+    }
+
     public function show(Request $request)
     {
         try {             
