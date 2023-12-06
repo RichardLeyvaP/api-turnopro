@@ -119,34 +119,6 @@ class ProfessionalController extends Controller
                'endDate' => 'required|date'
            ]);
            $ganancias = $this->professionalService->professionals_ganancias($data);
-           /*$startDate = Carbon::parse($data['startDate']);
-           $endDate = Carbon::parse($data['endDate']);
-          $dates = [];
-          $i=0;
-          $day = $data['day']-1;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
-           $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
-                $query->where('professional_id', $data['professional_id']);
-           })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()])->where('pay', 1)->groupBy('date')->get();
-           for($date = $startDate; $date->lte($endDate);$date->addDay()){
-            $machingResult = $cars->firstWhere('date', $date->toDateString());
-            $dates[$i]['date'] = $date->toDateString();
-
-            $day += 1;
-            $dates[$i]['day_week'] = $day;
-            if($day == 7)
-            $day = 0;
-           
-            $dates[$i++]['earnings'] = $machingResult ? $machingResult->earnings: 0;
-          }
-           /*$earningByDay = $cars->map(function ($car){
-            return [
-                'date' => $car->date,
-                'earnings' => $car->earnings,
-            ];
-           });*/
-           /*$totalEarnings = $cars->sum('total_earnings');
-           $averageEarnings = $cars->avg('average_earnings');
-           */
           return response()->json(['earningByDay' => $ganancias], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
