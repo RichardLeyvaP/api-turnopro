@@ -79,9 +79,10 @@ class OrderService {
     }
 
     public function sales_periodo_service($data){
+        Log::info('services');
         $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
-        })->get()
+        })->whereBetween('data', [$data['startDate'], $data['endDate']])->get()
         /*$services = Service::whereHas('branches', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
         })->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
