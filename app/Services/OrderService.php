@@ -66,9 +66,9 @@ class OrderService {
             $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
             $query->select('price');
         })->get()
-        ->map(function ($product) {
+        ->map(function ($product) use ($data){
             foreach ($product->productStores as $productStore) {
-                $total = $productStore->orders->sum('price');
+                $total = $productStore->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->sum('price');
             }
             return [
                 'nameProduct' => $product->name,
@@ -90,19 +90,14 @@ class OrderService {
             $query->select('price');
         })->get()->map(function ($service) use ($data){
             Log::info($service);
-            $total = $service->branchServices->map(function ($branchService) use ($data){
-
-            });
-            /*foreach ($service->branchServices as $branchService) {
-                Log::info($branchService);
+           foreach ($service->branchServices as $branchService) {
                 foreach($branchService->branchServiceProfessionals as $branchServiceProfessional){
-                Log::info($branchServiceProfessional);
-                $totalService = $branchServiceProfessional->orders->sum('price');
+                $totalService = $branchServiceProfessional->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->sum('price');
                 }
-            }*/
+            }
             return [
                 'nameService' => $service->name,
-                'total_sale' => $total,
+                'total_sale' => $totalService,
             ];
         });
         /*Log::info('services');
