@@ -79,29 +79,29 @@ class OrderService {
     }
 
     public function sales_periodo_service($data){
-        Log::info('services');
-        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
+        /*Log::info('services');
+        /*$orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
-        })->whereBetween('data', [$data['startDate'], $data['endDate']])->get()
-        /*$services = Service::whereHas('branches', function ($query) use ($data){
+        })->whereBetween('data', [$data['startDate'], $data['endDate']])->get()*/
+        $services = Service::whereHas('branches', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
         })->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
             $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
-            $query->select('id');
-        })->get()/*->map(function ($service) {
+            $query->select('price');
+        })->get()->map(function ($service) {
             Log::info($service);
-            /*foreach ($service->branchServices as $branchService) {
+            foreach ($service->branchServices as $branchService) {
                 Log::info($branchService);
                 foreach($branchService->branchServiceProfessionals as $branchServiceProfessional){
                 Log::info($branchServiceProfessional);
-                $totalService = $branchServiceProfessional->orders->total;
+                $totalService = $branchServiceProfessional->orders->sum('price');
                 }
-            }*/
-            /*return [
+            }
+            return [
                 'nameService' => $service->name,
-                'total_sale' => $service->branchServices,
+                'total_sale' => $totalService,
             ];
-        })*/;
+        });
         /*Log::info('services');
         Log::info($services);
         foreach($services as $service)
@@ -115,6 +115,6 @@ class OrderService {
                 'total_sale' => $totalService,
             ];
         }*/
-        return $orders;
+        return $services;
     }
 }
