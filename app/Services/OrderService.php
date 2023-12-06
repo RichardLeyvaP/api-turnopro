@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Branch;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ProductStore;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class OrderService {
     public function product_order_store($data){
@@ -53,9 +56,15 @@ class OrderService {
     }
 
     public function sales_periodo_branch($data){
-        $products = Order::whereHas('productStore', function ($query) {
-
-        });
-    return $products;
+      $branch = Branch::findOrFail($data['branch_id']);
+       $orders = Order::with('productStore.product')->whereHas('productStore', function ($query) use ($data){
+            $query->whereHas('store.branches', function ($query) use ($data) {
+                $query->where('branches.id', $data['branch_id']);
+            });
+        })
+        ->selectRaw('sum(price) as total')
+        ->whereBetween('data', [$data['startDate'], $data['endDate']])
+        ->get();
+    return $orders;
     }
 }

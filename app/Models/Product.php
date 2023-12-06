@@ -18,6 +18,10 @@ class Product extends Model
         return $this->belongsToMany(Store::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
     }
 
+    public function productStores(){
+        return $this->hasMany(ProductStore::class);
+    }
+    
     protected $casts = [
         'purchase_price' => 'double',
         'sale_price' => 'double'

@@ -12,6 +12,9 @@ class Store extends Model
     public function products(){
         return $this->belongsToMany(Product::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
     }
+    public function productStores(){
+        return $this->hasMany(ProductStore::class);
+    }
     public function storebranchees(){
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }

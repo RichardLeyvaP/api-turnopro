@@ -76,11 +76,11 @@ class OrderController extends Controller
 
             ]);
                 $order = $this->orderService->sales_periodo_branch($data);    
-             return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
+             return response()->json(['ProductSales' =>$order], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();
-        return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
         }
     }
 

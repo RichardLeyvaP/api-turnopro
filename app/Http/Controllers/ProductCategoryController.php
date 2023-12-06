@@ -36,14 +36,17 @@ class ProductCategoryController extends Controller
             $data = $request->validate([
                'branch_id' => 'required|numeric'
            ]);
-           $branch = Branch::find($data['branch_id']);
+           $Categories = ProductCategory::whereHas('products.stores.branches', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+           })->get();
+           /*$branch = Branch::find($data['branch_id']);
            $Categories = collect();
            foreach($branch->stores as $store){
             foreach ($store->products as $product) {
                 $Categories[] = $product->productCategory;
             }
-           }
-           return response()->json(['category_products' => $Categories->unique()], 200);
+           }*/
+           return response()->json(['category_products' => $Categories], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }

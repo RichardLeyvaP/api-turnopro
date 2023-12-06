@@ -175,6 +175,7 @@ Route::get('/order-show', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::put('/order', [OrderController::class, 'update']);
 Route::post('/order-destroy', [OrderController::class, 'destroy']);
+Route::get('/sales_periodo_branch', [OrderController::class, 'sales_periodo_branch']);
 
 Route::get('/reservation', [ReservationController::class, 'index']);
 Route::get('/reservation-show', [ReservationController::class, 'show']);
