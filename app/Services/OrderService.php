@@ -88,18 +88,21 @@ class OrderService {
         })->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
             $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
             $query->select('price');
-        })->get()->map(function ($service) {
+        })->get()->map(function ($service) use ($data){
             Log::info($service);
-            foreach ($service->branchServices as $branchService) {
+            $total = $service->branchServices->map(function ($branchService) use ($data){
+
+            });
+            /*foreach ($service->branchServices as $branchService) {
                 Log::info($branchService);
                 foreach($branchService->branchServiceProfessionals as $branchServiceProfessional){
                 Log::info($branchServiceProfessional);
                 $totalService = $branchServiceProfessional->orders->sum('price');
                 }
-            }
+            }*/
             return [
                 'nameService' => $service->name,
-                'total_sale' => $totalService,
+                'total_sale' => $total,
             ];
         });
         /*Log::info('services');
