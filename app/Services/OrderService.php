@@ -60,7 +60,8 @@ class OrderService {
             }
             $client_professional_id = $clientprofessional->id;*/
             //$productcar = Car::where('client_professional_id', $client_professional_id)->whereDate('updated_at', Carbon::today())->first();
-            $car = Car::find($data['car_id'])->firts();
+            //$car = Car::find($data['car_id'])->firts();
+            $car = Car::findOrFail($data['car_id']);
             $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
                 $service = $branchServiceprofessional->branchService->service;
                 //if ($productcar) {
