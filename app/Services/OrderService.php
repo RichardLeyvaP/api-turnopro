@@ -6,6 +6,7 @@ use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Order;
 use App\Models\ProductStore;
+use Carbon\Carbon;
 
 class OrderService {
     public function product_order_store($data){
@@ -45,6 +46,7 @@ class OrderService {
                  $order->car_id = $car_id;
                  $order->product_store_id = $data['product_id'];
                  $order->branch_service_professional_id = null;
+                 $order->data = Carbon::now();
                  $order->is_product = true;
                  $order->price = $sale_price;               
                  $order->request_delete = false;
@@ -82,6 +84,7 @@ class OrderService {
                  $order->car_id = $car_id;
                  $order->product_store_id = null;
                  $order->branch_service_professional_id = $data['service_id'];
+                 $order->data = Carbon::now();
                  $order->is_product = false;
                  $order->price = $service->price_service+$service->profit_percentaje/100;   
                  $order->request_delete = false;

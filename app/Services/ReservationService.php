@@ -64,6 +64,7 @@ class ReservationService {
                 $order->car_id = $car->id;
                 $order->product_store_id = null;
                 $order->branch_service_professional_id = $branch_service_professional_id;
+                $order->data = Carbon::now();
                 $order->is_product = false;
                 $order->price = $service->price_service+$service->profit_percentaje/100;   
                 $order->request_delete = false;
