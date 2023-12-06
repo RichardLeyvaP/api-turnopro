@@ -9,10 +9,6 @@ class Client extends Model
 {
     use HasFactory;
 
-    public function clientProfessionals(){
-        return $this->belongsToMany(Professional::class)->withTimestamps();
-    }
-
     public function professionals(){
         return $this->belongsToMany(Professional::class)->withTimestamps();
     }

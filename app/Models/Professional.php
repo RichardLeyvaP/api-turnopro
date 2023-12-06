@@ -14,10 +14,6 @@ class Professional extends Model
         return $this->hasMany(Business::class, 'professional_id');
     }
 
-    public function professionalClients(){
-        return $this->belongsToMany(Client::class)->withTimestamps();
-    }
-
     public function clients(){
         return $this->belongsToMany(Client::class)->withTimestamps();
     }

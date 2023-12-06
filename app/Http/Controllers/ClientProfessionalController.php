@@ -72,10 +72,10 @@ class ClientProfessionalController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             if ($data['client_id']) {
-                return response()->json(['cliente' => Client::with('clientProfessionals')->find($data['client_id'])], 200);
+                return response()->json(['cliente' => Client::with('professionals')->find($data['client_id'])], 200);
             }
             if ($data['professional_id']) {
-                return response()->json(['professional' => Professional::with('professionalClients')->find($data['professional_id'])],200); 
+                return response()->json(['professional' => Professional::with('clients')->find($data['professional_id'])],200); 
             }
             
             } catch (\Throwable $th) {  
@@ -93,7 +93,7 @@ class ClientProfessionalController extends Controller
             ]);
             $client = Client::find($data['client_id']);
             $professional = Professional::find($data['professional_id']);
-            $professional->professionalClients()->updateExistingPivot($client->id);
+            $professional->clients()->updateExistingPivot($client->id);
             return response()->json(['msg' => 'Cliente reasignado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al actualizar el cliente a es empleado'], 500);
@@ -109,7 +109,7 @@ class ClientProfessionalController extends Controller
             ]);
             $client = Client::find($data['client_id']);
             $professional = Professional::find($data['professional_id']);
-            $professional->professionalClients()->destroy($client->id);
+            $professional->clients()->destroy($client->id);
             return response()->json(['msg' => 'Cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar el cliente a es empleado'], 500);
