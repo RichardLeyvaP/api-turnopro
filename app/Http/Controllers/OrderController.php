@@ -75,8 +75,9 @@ class OrderController extends Controller
                 'endDate' => 'required|date'
 
             ]);
-                $order = $this->orderService->sales_periodo_branch($data);    
-             return response()->json(['ProductSales' =>$order], 200);
+                $productSales = $this->orderService->sales_periodo_product($data);
+                $serviceSales = $this->orderService->sales_periodo_service($data);      
+             return response()->json(['ProductSales' =>$productSales, 'ServiceSales' => $serviceSales], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();

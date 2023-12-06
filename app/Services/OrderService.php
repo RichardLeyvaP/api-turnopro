@@ -8,8 +8,10 @@ use App\Models\Car;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderService {
     public function product_order_store($data){
@@ -55,16 +57,63 @@ class OrderService {
         return $order;
     }
 
-    public function sales_periodo_branch($data){
-      $branch = Branch::findOrFail($data['branch_id']);
-       $orders = Order::with('productStore.product')->whereHas('productStore', function ($query) use ($data){
-            $query->whereHas('store.branches', function ($query) use ($data) {
-                $query->where('branches.id', $data['branch_id']);
-            });
+    public function sales_periodo_product($data){
+        Log::info("optener los productos");
+        $products = Product::whereHas('stores.branches', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
         })
-        ->selectRaw('sum(price) as total')
-        ->whereBetween('data', [$data['startDate'], $data['endDate']])
-        ->get();
-    return $orders;
+        ->whereHas('productStores.orders', function ($query) use ($data){
+            $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
+            $query->select('price');
+        })->get()
+        ->map(function ($product) {
+            foreach ($product->productStores as $productStore) {
+                $total = $productStore->orders->sum('price');
+            }
+            return [
+                'nameProduct' => $product->name,
+                'total_sale' => $total,
+            ];
+        });
+    return $products;
+    }
+
+    public function sales_periodo_service($data){
+        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->get()
+        /*$services = Service::whereHas('branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
+            $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
+            $query->select('id');
+        })->get()/*->map(function ($service) {
+            Log::info($service);
+            /*foreach ($service->branchServices as $branchService) {
+                Log::info($branchService);
+                foreach($branchService->branchServiceProfessionals as $branchServiceProfessional){
+                Log::info($branchServiceProfessional);
+                $totalService = $branchServiceProfessional->orders->total;
+                }
+            }*/
+            /*return [
+                'nameService' => $service->name,
+                'total_sale' => $service->branchServices,
+            ];
+        })*/;
+        /*Log::info('services');
+        Log::info($services);
+        foreach($services as $service)
+        foreach ($service->branchServices as $branchService) {
+            $totalService = $branchService->branchServiceProfessionals->flatMap(function ($branchServiceProfessional) use ($data){
+                $branchServiceProfessional->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->pluck('price');
+            })->sum();
+
+            $result [] = [
+                'nameService' => $branchService->service->name,
+                'total_sale' => $totalService,
+            ];
+        }*/
+        return $orders;
     }
 }

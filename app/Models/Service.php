@@ -10,7 +10,7 @@ class Service extends Model
     use HasFactory;
 
     public function branchServices(){
-        return $this->belongsToMany(Branch::class)->withTimestamps();
+        return $this->hasMany(BranchService::class);
     }
 
     public function branches(){

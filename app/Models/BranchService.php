@@ -14,6 +14,11 @@ class BranchService extends Model
          return $this->belongsToMany(Professional::class, 'branch_service_professional');
     }
 
+    public function branchServiceProfessionals()
+    {
+         return $this->hasMany(BranchServiceProfessional::class);
+    }
+
     public function service()
     {
         return $this->belongsTo(Service::class);
