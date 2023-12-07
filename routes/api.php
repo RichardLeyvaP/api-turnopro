@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BranchRuleController;
 use App\Http\Controllers\BranchServiceController;
 use App\Http\Controllers\BranchStoreController;
 use App\Http\Controllers\BusinessController;
@@ -117,7 +118,6 @@ Route::get('/product-show', [ProductController::class, 'show']);
 Route::post('/product', [ProductController::class, 'store']);
 Route::put('/product', [ProductController::class, 'update']);
 Route::post('/product-destroy', [ProductController::class, 'destroy']);
-//Route::get('/product_branch', [ProductController::class, 'product_branch']);
 
 Route::get('/service', [ServiceController::class, 'index']);
 Route::get('/service-show', [ServiceController::class, 'show']);
@@ -211,6 +211,11 @@ Route::put('/schedule', [ScheduleController::class, 'update']);
 Route::post('/schedule-destroy', [ScheduleController::class, 'destroy']);
 Route::get('/show_schedule_branch', [ScheduleController::class, 'show_schedule_branch']);
 
+Route::get('/branchrule', [BranchRuleController::class, 'index']);
+Route::get('/branchrule-show', [BranchRuleController::class, 'show']);
+Route::post('/branchrule', [BranchRuleController::class, 'store']);
+Route::put('/branchrule', [BranchRuleController::class, 'update']);
+Route::post('/branchrule-destroy', [BranchRuleController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

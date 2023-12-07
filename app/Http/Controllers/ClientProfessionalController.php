@@ -13,7 +13,7 @@ class ClientProfessionalController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar los almacenes por sucursales");
+            Log::info( "Devuelve los profrofessionales con susrespectivos cientes");
             return response()->json(['professional' => Professional::with('clients')->get()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -34,7 +34,7 @@ class ClientProfessionalController extends Controller
             $professional = Professional::find($data['professional_id']);
             $client_professional = $client->professionals()->where('professional_id', $data['professional_id'])->exists();
             //$result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
-            if ($client_professional) {                
+            if (!$client_professional) {                
                 $professional->clients()->attach($client->id);
                 return $result = ClientProfessional::latest('id')->first();
                 }
@@ -84,7 +84,7 @@ class ClientProfessionalController extends Controller
         }
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
         try {
             $data = $request->validate([

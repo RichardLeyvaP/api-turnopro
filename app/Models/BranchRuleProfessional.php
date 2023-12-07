@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Rule extends Model
+class BranchRuleProfessional extends Model
 {
     use HasFactory;
 
-    public function branches(){
-        return $this->belongsToMany(Branch::class)->withTimestamps();
-    }
+    //para decirle a q table debe administrar
+    protected $table = "branch_rule_professional";
 }

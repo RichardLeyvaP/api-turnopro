@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Branch;
+use App\Models\Rule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class BranchRuleController extends Controller
+{
+    public function index()
+    {
+        try {             
+            Log::info( "Devuelve las branches y sus reglas");
+            return response()->json(['branch' => Branch::with('rules')->get()], 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => "Error al mostrar las rules por branch"], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        Log::info("Asignar empleado a atender cliente");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'rule_id' => 'required|numeric'
+            ]);
+            $branch = Branch::find($data['branch_id']);
+            $rule = Rule::find($data['rule_id']);
+            $branchrule = $branch->rules()->where('rule_id', $rule->id)->exists();
+            if (!$branchrule) {                
+                $branch->rules()->attach($rule->id);
+                }
+            return response()->json(['msg' => 'Rule asignada correctamente a la branch'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => 'Error al asignar la rule a la branch'], 500);
+        }
+    }
+
+    public function show(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar las rules de una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $branch = Branch::find($data['branch_id']);
+            return response()->json(['rules' => $branch->rules],200); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => "Error al mostrar los clientes"], 500);
+        }
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'rule_id' => 'required|numeric'
+            ]);
+            $branch = Branch::find($data['branch_id']);
+            $rule = Rule::find($data['rule_id']);
+            $branch->rules()->updateExistingPivot($rule->id);
+            return response()->json(['msg' => 'rule reasignada correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al actualizar la rule de esa branch'], 500);
+        }
+    }
+
+    public function destroy(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'rule_id' => 'required|numeric'
+            ]);
+            $branch = Branch::find($data['branch_id']);
+            $rule = Rule::find($data['rule_id']);
+            $branch->rules()->destroy($rule->id);
+            return response()->json(['msg' => 'Rule eliminada correctamente de la branch'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al eliminar la rule de esta branch'], 500);
+        }
+    }
+}

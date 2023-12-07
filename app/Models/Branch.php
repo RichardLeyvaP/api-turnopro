@@ -42,4 +42,8 @@ class Branch extends Model
     {
         return $this->hasOne(Schedule::class);
     }
+
+    public function rules(){
+        return $this->belongsToMany(Rule::class, 'branch_rule')->withTimestamps();
+    }
 }
