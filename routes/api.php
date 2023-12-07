@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\BranchRuleController;
+use App\Http\Controllers\BranchRuleProfessionalController;
 use App\Http\Controllers\BranchServiceController;
 use App\Http\Controllers\BranchStoreController;
 use App\Http\Controllers\BusinessController;
@@ -216,6 +217,12 @@ Route::get('/branchrule-show', [BranchRuleController::class, 'show']);
 Route::post('/branchrule', [BranchRuleController::class, 'store']);
 Route::put('/branchrule', [BranchRuleController::class, 'update']);
 Route::post('/branchrule-destroy', [BranchRuleController::class, 'destroy']);
+
+Route::get('/branchruleprofessional', [BranchRuleProfessionalController::class, 'index']);
+Route::get('/branchruleprofessional-show', [BranchRuleProfessionalController::class, 'show']);
+Route::post('/branchruleprofessional', [BranchRuleProfessionalController::class, 'store']);
+Route::put('/branchruleprofessional', [BranchRuleProfessionalController::class, 'update']);
+Route::post('/branchruleprofessional-destroy', [BranchRuleProfessionalController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
