@@ -44,6 +44,6 @@ class Branch extends Model
     }
 
     public function rules(){
-        return $this->belongsToMany(Rule::class, 'branch_rule')->withTimestamps();
+        return $this->belongsToMany(Rule::class, 'branch_rule')->withPivot('id')->withTimestamps();
     }
 }

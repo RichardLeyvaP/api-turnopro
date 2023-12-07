@@ -10,6 +10,6 @@ class Rule extends Model
     use HasFactory;
 
     public function branches(){
-        return $this->belongsToMany(Branch::class)->withTimestamps();
+        return $this->belongsToMany(Branch::class, 'branch_rule')->withPivot('id')->withTimestamps();
     }
 }

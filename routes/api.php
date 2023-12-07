@@ -217,6 +217,7 @@ Route::get('/branchrule-show', [BranchRuleController::class, 'show']);
 Route::post('/branchrule', [BranchRuleController::class, 'store']);
 Route::put('/branchrule', [BranchRuleController::class, 'update']);
 Route::post('/branchrule-destroy', [BranchRuleController::class, 'destroy']);
+Route::get('/branch_rules', [BranchRuleController::class, 'branch_rules']);//dado una branch, devuelve las rules definidas
 
 Route::get('/branchruleprofessional', [BranchRuleProfessionalController::class, 'index']);
 Route::get('/branchruleprofessional-show', [BranchRuleProfessionalController::class, 'show']);

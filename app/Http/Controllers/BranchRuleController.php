@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchRule;
 use App\Models\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -50,11 +51,38 @@ class BranchRuleController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $branch = Branch::find($data['branch_id']);
-            return response()->json(['rules' => $branch->rules],200); 
+            /*$rules = $branch->map(function ($branch) {
+                return [
+                    'id' => $branch->rules
+                ];
+            });*/
+            return response()->json(['rules' => $branch->rules->withPivot('id')->get()],200); 
             
             } catch (\Throwable $th) {  
             Log::error($th);
-        return response()->json(['msg' => "Error al mostrar los clientes"], 500);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
+        }
+    }
+
+    public function branch_rules(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar las rules de una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $branchrules = BranchRule::where('branch_id', $data['branch_id'])->get()->map(function ($branchrule) {
+                return [
+                    'id' => $branchrule->id,
+                    'name' => $branchrule->rule->name,
+                    'description' => $branchrule->rule->description
+                ];
+            });
+            return response()->json(['rules' => $branchrules],200); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
 
