@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Car;
 use App\Models\Professional;
+use App\Models\Service;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ProfessionalService
 {
@@ -85,6 +87,36 @@ class ProfessionalService
             'dates' => $dates,
             'totalEarnings' => $totalEarnings,
             'averageEarnings' => $averageEarnings
+          ];
+           return $result;
+    }
+
+    public function professionals_ganancias_branch($data)
+    {
+        Log::info('Obtener los cars');
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
+       })->whereHas('clientProfessional.professional.branchServices', function ($query) use ($data){
+        $query->where('branch_id', $data['branch_id']);
+       })->whereHas('orders', function ($query) use ($data){
+            $query->whereBetWeen('data', [Carbon::parse($data['startDate']), Carbon::parse($data['endDate'])]);
+       })->get();
+       $services =0;
+       $totalEspecial =0;
+       $totalClients =0;
+        foreach ($cars as $car) {
+            $services = $services + count($car->orders->where('is_product', 0));
+            $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
+                $query->where('id', $car->id);
+            })->where('type_service', 'Especial')->count();
+            $totalClients = $car->clientProfessional->count();  
+        }
+          $result = [
+            'totalEarnings' => $cars->sum('amount'),
+            'totalServices' => $services,
+            'serviceEspecial' => $totalEspecial,
+            'serviceRegular' => $services - $totalEspecial,
+            'clientAtendidos' => $totalClients
           ];
            return $result;
 

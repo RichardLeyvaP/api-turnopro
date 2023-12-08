@@ -124,6 +124,23 @@ class ProfessionalController extends Controller
            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
        }
     }
+
+    public function professionals_ganancias_branch(Request $request)
+    {
+        try {
+            $data = $request->validate([
+
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date'
+           ]);
+           $total_ganancias = $this->professionalService->professionals_ganancias_branch($data);
+          return response()->json(['earningPeriodo' => $total_ganancias], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."Profssional no obtuvo ganancias en este período"], 500);
+       }
+    }
     
     public function store(Request $request)
     {

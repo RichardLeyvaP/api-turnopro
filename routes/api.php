@@ -61,6 +61,7 @@ Route::post('/professional-destroy', [ProfessionalController::class, 'destroy'])
 Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 Route::get('/branch_professionals', [ProfessionalController::class, 'branch_professionals']);
+Route::get('/professionals_ganancias_branch', [ProfessionalController::class, 'professionals_ganancias_branch']); //Obtener Monto total de un professionals en una branch y un periodo dado
 
 Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
@@ -224,6 +225,7 @@ Route::get('/branchruleprofessional-show', [BranchRuleProfessionalController::cl
 Route::post('/branchruleprofessional', [BranchRuleProfessionalController::class, 'store']);
 Route::put('/branchruleprofessional', [BranchRuleProfessionalController::class, 'update']);
 Route::post('/branchruleprofessional-destroy', [BranchRuleProfessionalController::class, 'destroy']);
+Route::post('/storeByType', [BranchRuleProfessionalController::class, 'storeByType']);//registrar convivencia x el tipo de rule
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

@@ -40,6 +40,29 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    public function storeByType(Request $request)
+    {
+        Log::info("Asignar cumplimiento de rule a un professional");
+        try {
+            $data = $request->validate([
+                'type' => 'required|string',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'estado' => 'required|boolean'
+            ]); 
+            $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
+                $query->where('type', $data['type']);
+            })->where('branch_id', $data['branch_id'])->get();
+
+            $professional = Professional::find($data['professional_id']);
+             $professional->branchRules()->attach($branchrule->id,['data'=>Carbon::now(), 'estado'=>$data['estado']]);
+            return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => 'Error al asignar el estado de la rule a este professional'], 500);
+        }
+    }
+
     public function show(Request $request)
     {
         try {             
