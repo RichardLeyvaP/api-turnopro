@@ -111,12 +111,13 @@ class ProfessionalService
             $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
                 $query->where('id', $car->id);
             })->where('type_service', 'Especial')->count();
-            $monto = Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
+            $montoEspecial = $montoEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
                 $query->where('id', $car->id);
             })
-            ->selectRaw('SUM(price_service * (profit_percentaje / 100)) as suma')
-            ->where('type_service', 'Especial')->get();
-            $montoEspecial = $montoEspecial + $monto->sum('suma');
+            //->selectRaw('SUM(price_service * (profit_percentaje / 100)) as suma')
+            ->where('type_service', 'Especial')->sum('price_service');
+            //$montoEspecial = $montoEspecial + $monto->sum('suma');
+            //$montoEspecial = $montoEspecial + $monto->sum('price_service');
             $totalClients = $car->clientProfessional->count(); 
             
         }
@@ -128,10 +129,10 @@ class ProfessionalService
             'Servicios Realizados:' => $services,            
             'Servicios Regulares:' => $services - $totalEspecial,
             'Servicios Especiales' => $totalEspecial,
-            'Monto Especial:' => $montoEspecial,
+            'Monto Especial:' => round($montoEspecial, 2),
             'Ganancia Barbero:' => round($cars->sum('amount')*0.45, 2),
             'Ganancia Total Barbero:' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
-            'clientAtendidos' => $totalClients
+            'Clientes Atendidos' => $totalClients
           ];
            return $result;
 
