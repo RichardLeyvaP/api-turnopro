@@ -113,6 +113,8 @@ class ProfessionalService
         }
           $result = [
             'totalEarnings' => $cars->sum('amount'),
+            'propina' => $cars->sum('tip'),
+            'propina:80%' => $cars->sum('tip')*0.8,
             'totalServices' => $services,
             'serviceEspecial' => $totalEspecial,
             'serviceRegular' => $services - $totalEspecial,
