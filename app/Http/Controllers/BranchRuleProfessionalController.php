@@ -48,7 +48,7 @@ class BranchRuleProfessionalController extends Controller
                 'type' => 'required|string',
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'estado' => 'required|boolean'
+                'estado' => 'required|int'
             ]); 
             $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
                 $query->where('type', $data['type']);
