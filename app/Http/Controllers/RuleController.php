@@ -38,13 +38,13 @@ class RuleController extends Controller
              $rule_data = $request->validate([
                 'name' => 'required|max:50',
                 'description' => 'required|max:220',
-               
-              
+                'type' => 'required|max:50',      
             ]);
 
             $rule = new Rule();
             $rule->name =  $rule_data['name'];
             $rule->description =  $rule_data['description'];
+            $rule->type =  $rule_data['type'];
        
        
             $rule->save();
@@ -65,13 +65,13 @@ class RuleController extends Controller
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'description' => 'required|max:220',
-              
-              
+                'type' => 'required|max:50', 
             ]);
             Log::info($request);
             $rule = Rule::find( $rule_data['id']);
             $rule->name =  $rule_data['name'];
             $rule->description =  $rule_data['description'];
+            $rule->type =  $rule_data['type'];
           
             $rule->save();
 
