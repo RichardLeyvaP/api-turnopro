@@ -52,14 +52,14 @@ class BranchRuleProfessionalController extends Controller
             ]); 
             $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
                 $query->where('type', $data['type']);
-            })->where('branch_id', $data['branch_id'])->get();
+            })->where('branch_id', $data['branch_id'])->first();
 
             $professional = Professional::find($data['professional_id']);
              $professional->branchRules()->attach($branchrule->id,['data'=>Carbon::now(), 'estado'=>$data['estado']]);
             return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => 'Error al asignar el estado de la rule a este professional'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al asignar el estado de la rule a este professional'], 500);
         }
     }
 
