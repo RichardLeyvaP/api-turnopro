@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Car;
+use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Service;
 use Carbon\Carbon;
@@ -104,20 +105,32 @@ class ProfessionalService
        $services =0;
        $totalEspecial =0;
        $totalClients =0;
+       $montoEspecial = 0;
         foreach ($cars as $car) {
             $services = $services + count($car->orders->where('is_product', 0));
             $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
                 $query->where('id', $car->id);
             })->where('type_service', 'Especial')->count();
-            $totalClients = $car->clientProfessional->count();  
+            $monto = Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
+                $query->where('id', $car->id);
+            })
+            ->selectRaw('SUM(price_service * (profit_percentaje / 100)) as suma')
+            ->where('type_service', 'Especial')->get();
+            $montoEspecial = $montoEspecial + $monto->sum('suma');
+            $totalClients = $car->clientProfessional->count(); 
+            
         }
           $result = [
-            'totalEarnings' => $cars->sum('amount'),
-            'propina' => $cars->sum('tip'),
-            'propina:80%' => $cars->sum('tip')*0.8,
-            'totalServices' => $services,
-            'serviceEspecial' => $totalEspecial,
-            'serviceRegular' => $services - $totalEspecial,
+            'Monto Generado:' => $cars->sum('amount'),
+            'Propina:' => round($cars->sum('tip'), 2),
+            'Propina 80%:' => round($cars->sum('tip')*0.8, 2),
+            'Procentaje de Ganancia:' =>45,
+            'Servicios Realizados:' => $services,            
+            'Servicios Regulares:' => $services - $totalEspecial,
+            'Servicios Especiales' => $totalEspecial,
+            'Monto Especial:' => $montoEspecial,
+            'Ganancia Barbero:' => round($cars->sum('amount')*0.45, 2),
+            'Ganancia Total Barbero:' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
             'clientAtendidos' => $totalClients
           ];
            return $result;
