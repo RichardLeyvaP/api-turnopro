@@ -42,7 +42,7 @@ class OrderService {
             $car = Car::findOrFail($data['car_id']);
             $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
                 $service = $branchServiceprofessional->branchService->service;
-                    $car->amount = $car->amount + $service->price_service+$service->profit_percentaje/100;
+                    $car->amount = $car->amount + $service->price_service;
                 $car->save();
                 $car_id = $car->id;
                  $order = new Order();
@@ -51,7 +51,7 @@ class OrderService {
                  $order->branch_service_professional_id = $data['service_id'];
                  $order->data = Carbon::now();
                  $order->is_product = false;
-                 $order->price = $service->price_service+$service->profit_percentaje/100;   
+                 $order->price = $service->price_service;   
                  $order->request_delete = false;
                  $order->save();
         return $order;
