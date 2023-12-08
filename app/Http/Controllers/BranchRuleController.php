@@ -51,11 +51,6 @@ class BranchRuleController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $branch = Branch::find($data['branch_id']);
-            /*$rules = $branch->map(function ($branch) {
-                return [
-                    'id' => $branch->rules
-                ];
-            });*/
             return response()->json(['rules' => $branch->rules->first()],200); 
             
             } catch (\Throwable $th) {  
