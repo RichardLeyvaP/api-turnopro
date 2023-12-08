@@ -56,7 +56,7 @@ class BranchRuleController extends Controller
                     'id' => $branch->rules
                 ];
             });*/
-            return response()->json(['rules' => $branch->rules->withPivot('id')->get()],200); 
+            return response()->json(['rules' => $branch->rules->first()],200); 
             
             } catch (\Throwable $th) {  
             Log::error($th);
