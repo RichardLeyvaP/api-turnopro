@@ -116,6 +116,7 @@ class ProfessionalController extends Controller
                'professional_id' => 'required|numeric',
                'day' => 'required',
                'startDate' => 'required|date',
+               'branch_id' => 'required|numeric',
                'endDate' => 'required|date'
            ]);
            $ganancias = $this->professionalService->professionals_ganancias($data);

@@ -9,6 +9,8 @@ use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
+use function PHPSTORM_META\map;
+
 class ProfessionalService
 {
     public function store($data)
@@ -66,13 +68,21 @@ class ProfessionalService
           $dates = [];
           $i=0;
           $day = $data['day']-1;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
-
-        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+        
+          $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-       })->selectRaw('DATE(updated_at) as date, SUM(amount) as earnings, SUM(amount) as total_earnings, AVG(amount) as average_earnings')->whereBetween('updated_at', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()])->where('pay', 1)->groupBy('date')->get();
-
-        for($date = $startDate; $date->lte($endDate);$date->addDay()){
-            $machingResult = $cars->firstWhere('date', $date->toDateString());
+            })->whereHas('clientProfessional.professional.branchServices', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('orders', function ($query) use ($data){
+                $query->whereBetween('data', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()]);
+            })->with('orders')->get()->map(function ($car){
+                return [
+                    'date' => $car->orders->value('data'),
+                    'earnings' => $car->amount
+                ];
+            });
+            for($date = $startDate; $date->lte($endDate);$date->addDay()){
+            $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
             $dates[$i]['date'] = $date->toDateString();
 
             $day += 1;
@@ -80,14 +90,12 @@ class ProfessionalService
             if($day == 7)
             $day = 0;
            
-            $dates[$i++]['earnings'] = $machingResult ? $machingResult->earnings: 0;
+            $dates[$i++]['earnings'] = $machingResult ? $machingResult: 0;
           }
-           $totalEarnings = $cars->sum('total_earnings');
-           $averageEarnings = $cars->avg('average_earnings');
           $result = [
             'dates' => $dates,
-            'totalEarnings' => $totalEarnings,
-            'averageEarnings' => $averageEarnings
+            'totalEarnings' => $cars->sum('earnings'),
+            'averageEarnings' => $cars->avg('earnings')
           ];
            return $result;
     }
