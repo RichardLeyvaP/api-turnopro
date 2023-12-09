@@ -64,12 +64,12 @@ class ReservationService {
                 $order->car_id = $car->id;
                 $order->product_store_id = null;
                 $order->branch_service_professional_id = $branch_service_professional_id;
-                $order->data = Carbon::now();
+                $order->data = $data['data'];
                 $order->is_product = false;
                 $order->price = $service->price_service;   
                 $order->request_delete = false;
                 $order->save();
-                $total_amount = $total_amount + $order->price;
+                $total_amount = $total_amount + $service->price_service;
                 $total_time = $total_time + $service->duration_service;                
             } //end foreach
 
