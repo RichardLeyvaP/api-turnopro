@@ -23,6 +23,10 @@ class BranchRule extends Model
     return $this->belongsTo(Branch::class);
     }
 
+    protected $casts = [
+        'select_professional' => 'integer'
+    ];
+    
     //para decirle a q table debe administrar
     protected $table = "branch_rule";
 }
