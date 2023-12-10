@@ -130,17 +130,19 @@ class ProfessionalService
             
         }
           $result = [
-            'Monto Generado:' => $cars->sum('amount'),
-            'Propina:' => round($cars->sum('tip'), 2),
-            'Propina 80%:' => round($cars->sum('tip')*0.8, 2),
-            'Procentaje de Ganancia:' =>45,
-            'Servicios Realizados:' => $services,            
-            'Servicios Regulares:' => $services - $totalEspecial,
+            'Monto Generado' => $cars->sum('amount'),
+            'Propina' => round($cars->sum('tip'), 2),
+            'Propina 80%' => round($cars->sum('tip')*0.8, 2),
+            'Procentaje de Ganancia' =>45,
+            'Servicios Realizados' => $services,            
+            'Servicios Regulares' => $services - $totalEspecial,
             'Servicios Especiales' => $totalEspecial,
-            'Monto Especial:' => round($montoEspecial, 2),
-            'Ganancia Barbero:' => round($cars->sum('amount')*0.45, 2),
-            'Ganancia Total Barbero:' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
-            'Clientes Atendidos' => $totalClients
+            'Monto Especial' => round($montoEspecial, 2),
+            'Ganancia Barbero' => round($cars->sum('amount')*0.45, 2),
+            'Ganancia Total Barbero' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
+            'Clientes Atendidos' => $totalClients,
+            'Seleccionado' => $cars->sum('select_professional'),
+            'Aleatorio' => $totalClients - $cars->sum('select_professional')
           ];
            return $result;
 
