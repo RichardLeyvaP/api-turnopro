@@ -71,10 +71,12 @@ class ProfessionalService
         
           $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-            })->whereHas('clientProfessional.professional.branchServices', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
             })->whereHas('orders', function ($query) use ($data){
                 $query->whereBetween('data', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()]);
+            })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->orWhereHas('orders.productStore.store.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
             })->with('orders')->get()->map(function ($car){
                 return [
                     'date' => $car->orders->value('data'),
