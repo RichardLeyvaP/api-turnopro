@@ -35,6 +35,7 @@ class ReservationService {
             $car->amount = 0.0;
             $car->pay = false;
             $car->active = 1;
+            $car->select_professional = $data['select_professional'];
             $car->tip = 0.0;
             $car->save();
             $total_amount = 0;

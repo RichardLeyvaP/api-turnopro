@@ -95,6 +95,12 @@ class ReservationController extends Controller
                 'surname_client' => 'required',
                 'second_surname' => 'required',
             ]);
+            if ($request->has('select_professional')) {
+                $data['select_professional'] = $request->select_professional;
+            }
+            else {
+                $data['select_professional'] = 1;
+            }
             $servs = $request->input('services');  
             $id_client=0;
             //1-Verificar que el usuario no este registrado
