@@ -40,11 +40,13 @@ class BranchController extends Controller
                 'Date' => 'required|date'
            ]);
            Log::info('Obtener los cars');
-        $cars = Car::whereHas('clientProfessional.professional.branchServices', function ($query) use ($data){
-        $query->where('branch_id', $data['branch_id']);
-       })->whereHas('orders', function ($query) use ($data){
+        $cars = Car::whereHas('orders', function ($query) use ($data){
             $query->whereDate('data', Carbon::parse($data['Date']));
-       })->get();
+                })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->orWhereHas('orders.productStore.store.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->get();
        $totalClients =0;
        foreach ($cars as $car) {
             $totalClients = $car->clientProfessional->count();             
@@ -62,7 +64,7 @@ class BranchController extends Controller
           ];
           return response()->json($result, 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => "La branch no obtuvo ganancias en este dia"], 500);
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
     }
     public function store(Request $request)

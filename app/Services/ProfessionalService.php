@@ -105,11 +105,13 @@ class ProfessionalService
         Log::info('Obtener los cars');
         $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-       })->whereHas('clientProfessional.professional.branchServices', function ($query) use ($data){
-        $query->where('branch_id', $data['branch_id']);
-       })->whereHas('orders', function ($query) use ($data){
+        })->whereHas('orders', function ($query) use ($data){
             $query->whereBetWeen('data', [Carbon::parse($data['startDate']), Carbon::parse($data['endDate'])]);
-       })->get();
+        })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->orWhereHas('orders.productStore.store.branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->get();
        $services =0;
        $totalEspecial =0;
        $totalClients =0;
