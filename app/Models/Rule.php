@@ -12,4 +12,8 @@ class Rule extends Model
     public function branches(){
         return $this->belongsToMany(Branch::class, 'branch_rule')->withPivot('id')->withTimestamps();
     }
+
+    public function branchRules(){
+        return $this->hasMany(BranchRule::class);
+    }
 }

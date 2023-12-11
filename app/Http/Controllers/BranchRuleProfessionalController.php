@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BranchRule;
 use App\Models\BranchRuleProfessional;
 use App\Models\Professional;
+use App\Models\Rule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -97,16 +98,22 @@ class BranchRuleProfessionalController extends Controller
             else {
                 $data['data'] = Carbon::now()->toDateString();
             }
-            $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
+            $result = [];
+            $i = 0;
+            $rules = Rule::whereHas('branchRules', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-            })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->get()->map(function ($branchRuleProfessional){
-                return [
-                    'name' => $branchRuleProfessional->branchRule->rule->name,
-                    'description' => $branchRuleProfessional->branchRule->rule->description,
-                    'state' => $branchRuleProfessional->estado,
-                ];
-            });
-            return response()->json(['branchRuleProfessional' => $branchRuleProfessionals], 200);            
+            })->get();
+
+            foreach ($rules as $rule) {                 
+                $result[$i]['id'] = $rule->id;
+                $result[$i]['name'] = $rule->name;
+                $result[$i]['description'] = $rule->description;           
+                $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data, $rule){
+                    $query->where('branch_id', $data['branch_id'])->where('rule_id', $rule->id);
+                })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->first();
+                $result[$i++]['state'] = $branchRuleProfessionals ? $branchRuleProfessionals->estado : 1;
+                }
+            return response()->json(['rules' => $result], 200);            
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar el estado de las rules de un  professional"], 500);

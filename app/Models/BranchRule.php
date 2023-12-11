@@ -13,6 +13,10 @@ class BranchRule extends Model
         return $this->belongsToMany(Professional::class, 'branch_rule_professional')->withPivot('data','estado')->withTimestamps();
     }
 
+    public function branchRuleProfessionals(){
+        return $this->hasMany(BranchRuleProfessional::class);
+    }
+
     public function rule()
     {
     return $this->belongsTo(Rule::class);
