@@ -114,7 +114,15 @@ class ProfessionalService
        $totalEspecial =0;
        $totalClients =0;
        $montoEspecial = 0;
+       $seleccionado = 0;
+       $aleatorio = 0;
         foreach ($cars as $car) {
+            if ($car->select_professional) {
+                $seleccionado++;
+            }
+            else{
+                $aleatorio++;
+            }
             $services = $services + count($car->orders->where('is_product', 0));
             $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
                 $query->where('id', $car->id);
@@ -141,8 +149,8 @@ class ProfessionalService
             'Ganancia Barbero' => round($cars->sum('amount')*0.45, 2),
             'Ganancia Total Barbero' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
             'Clientes Atendidos' => $totalClients,
-            'Seleccionado' => $cars->sum('select_professional'),
-            'Aleatorio' => $totalClients - $cars->sum('select_professional')
+            'Seleccionado' => $seleccionado,
+            'Aleatorio' => $aleatorio
           ];
            return $result;
 
