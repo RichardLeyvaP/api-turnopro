@@ -102,8 +102,8 @@ class BranchRuleProfessionalController extends Controller
             })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->get()->map(function ($branchRuleProfessional){
                 return [
                     'name' => $branchRuleProfessional->branchRule->rule->name,
-                    'descripcion' => $branchRuleProfessional->branchRule->rule->description,
-                    'estado' => $branchRuleProfessional->estado,
+                    'description' => $branchRuleProfessional->branchRule->rule->description,
+                    'state' => $branchRuleProfessional->estado,
                 ];
             });
             return response()->json(['branchRuleProfessional' => $branchRuleProfessionals], 200);            
