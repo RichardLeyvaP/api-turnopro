@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Car;
+use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -28,6 +31,39 @@ class BranchController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
+    }
+    public function branch_winner_date(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'Date' => 'required|date'
+           ]);
+           Log::info('Obtener los cars');
+        $cars = Car::whereHas('clientProfessional.professional.branchServices', function ($query) use ($data){
+        $query->where('branch_id', $data['branch_id']);
+       })->whereHas('orders', function ($query) use ($data){
+            $query->whereDate('data', Carbon::parse($data['Date']));
+       })->get();
+       $totalClients =0;
+       foreach ($cars as $car) {
+            $totalClients = $car->clientProfessional->count();             
+        }
+        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
+                $query->whereDate('data', Carbon::parse($data['Date']));
+            })->whereHas('productStores.store.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->orderByDesc('orders_count')->first();
+          $result = [
+            'Monto Generado' => round($cars->sum('amount'),2),
+            'Producto mas Vendido' => $products->name,
+            'Cantidad del Producto' => $products->orders_count,
+            'Clientes Atendidos' => $totalClients
+          ];
+          return response()->json($result, 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => "La branch no obtuvo ganancias en este dia"], 500);
+       }
     }
     public function store(Request $request)
     {

@@ -18,6 +18,10 @@ class Product extends Model
         return $this->belongsToMany(Store::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
     }
 
+    public function orders(){
+        return $this->hasManyThrough(Order::class, ProductStore::class);
+    }
+
     public function productStores(){
         return $this->hasMany(ProductStore::class);
     }
