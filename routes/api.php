@@ -226,6 +226,7 @@ Route::post('/branchruleprofessional', [BranchRuleProfessionalController::class,
 Route::put('/branchruleprofessional', [BranchRuleProfessionalController::class, 'update']);
 Route::post('/branchruleprofessional-destroy', [BranchRuleProfessionalController::class, 'destroy']);
 Route::post('/storeByType', [BranchRuleProfessionalController::class, 'storeByType']);//registrar convivencia x el tipo de rule
+Route::get('/rules_professional', [BranchRuleProfessionalController::class, 'rules_professional']);//ver el estado de las rules de un professional en una branch de una fecha dada o del dia actual
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

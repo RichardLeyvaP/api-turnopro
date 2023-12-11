@@ -83,6 +83,36 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    public function rules_professional(Request $request)
+    {
+        try {             
+            Log::info("Entra a buscar el estado de las rules de un  professional");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric', 
+                'branch_id'  => 'required|numeric'
+            ]);
+            if ($request->has('data')) {
+                $data['data'] = $request->data;
+            }
+            else {
+                $data['data'] = Carbon::now()->toDateString();
+            }
+            $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->get()->map(function ($branchRuleProfessional){
+                return [
+                    'name' => $branchRuleProfessional->branchRule->rule->name,
+                    'descripcion' => $branchRuleProfessional->branchRule->rule->description,
+                    'estado' => $branchRuleProfessional->estado,
+                ];
+            });
+            return response()->json(['branchRuleProfessional' => $branchRuleProfessionals], 200);            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar el estado de las rules de un  professional"], 500);
+        }
+    }
+
     public function update(Request $request)
     {
         Log::info("actualizar estado del cumplimiento de rule a un professional");
