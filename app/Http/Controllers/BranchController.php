@@ -32,6 +32,7 @@ class BranchController extends Controller
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
     }
+    
     public function branch_winner_date(Request $request)
     {
         try {
@@ -63,6 +64,42 @@ class BranchController extends Controller
             'Clientes Atendidos' => $totalClients
           ];
           return response()->json($result, 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
+    }
+
+    public function company_winner_date(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'Date' => 'required|date'
+           ]);
+           Log::info('Obtener los cars');
+           $branches = Branch::all();
+           $result = [];
+           $i = 0;
+           $total_company = 0;
+           foreach ($branches as $branch) {
+            $cars = Car::whereHas('orders', function ($query) use ($data){
+            $query->whereDate('data', Carbon::parse($data['Date']));
+                })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($branch){
+                    $query->where('branch_id', $branch->id);
+                })->orWhereHas('orders.productStore.store.branches', function ($query) use ($branch){
+                    $query->where('branch_id', $branch->id);
+                })->get()->map(function ($car){
+                    return [
+                        'earnings' => $car->amount
+                    ];
+                });
+                $result[$i]['name'] = $branch->name;
+                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('earnings'),2);
+            }//foreach
+          return response()->json([
+            'branches' => $result,
+            'totalEarnings' => $total_company
+          ], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }

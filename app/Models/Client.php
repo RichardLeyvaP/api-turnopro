@@ -13,6 +13,10 @@ class Client extends Model
         return $this->belongsToMany(Professional::class)->withTimestamps();
     }
 
+    public function clientProfessionals(){
+        return $this->hasMany(ClientProfessional::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

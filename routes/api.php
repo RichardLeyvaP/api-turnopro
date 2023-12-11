@@ -71,6 +71,7 @@ Route::get('/client-show', [ClientController::class, 'show']);
 Route::post('/client', [ClientController::class, 'store']);
 Route::put('/client', [ClientController::class, 'update']);
 Route::post('/client-destroy', [ClientController::class, 'destroy']);
+Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
 
 Route::get('/business', [BusinessController::class, 'index']);
 Route::get('/business-show', [BusinessController::class, 'show']);
@@ -91,6 +92,7 @@ Route::put('/branch', [BranchController::class, 'update']);
 Route::post('/branch-destroy', [BranchController::class, 'destroy']);
 Route::get('/branch_winner_date', [BranchController::class, 'branch_winner_date']);
 Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
+Route::get('/company_winner_date', [BranchController::class, 'company_winner_date']);
 
 Route::get('/store', [StoreController::class, 'index']);
 Route::get('/store-show', [StoreController::class, 'show']);
@@ -122,6 +124,7 @@ Route::get('/product-show', [ProductController::class, 'show']);
 Route::post('/product', [ProductController::class, 'store']);
 Route::put('/product', [ProductController::class, 'update']);
 Route::post('/product-destroy', [ProductController::class, 'destroy']);
+Route::get('/product_mostSold_date', [ProductController::class, 'product_mostSold_date']);
 
 Route::get('/service', [ServiceController::class, 'index']);
 Route::get('/service-show', [ServiceController::class, 'show']);

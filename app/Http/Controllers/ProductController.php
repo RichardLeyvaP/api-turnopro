@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -70,6 +72,41 @@ class ProductController extends Controller
             Log::error($th);
         return response()->json(['msg' => 'Error al insertar el producto'], 500);
         }
+    }
+
+    public function product_mostSold_date(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'Date' => 'required|date'
+           ]);
+           Log::info('Obtener los cars');
+           $branches = Branch::all();
+           $result = [];
+           $i = 0;
+           $total_company = 0;
+           foreach ($branches as $branch) {
+            $product = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
+                $query->whereDate('data', Carbon::parse($data['Date']));
+            })->whereHas('productStores.store.branches', function ($query) use ($branch){
+                $query->where('branch_id', $branch->id);
+            })->orderByDesc('orders_count')->first();
+                $result[$i]['nameBranch'] = $branch->name;
+                $result[$i]['nameProduct'] = $product ? $product->name : null;
+                $result[$i++]['cantProduct'] = $product ? $product->orders_count : 0;
+                //$total_company += round($cars->sum('earnings'),2);
+            }//foreach
+            $productcompany = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
+                $query->whereDate('data', Carbon::parse($data['Date']));
+            })->orderByDesc('orders_count')->first();
+          return response()->json([
+            'branches' => $result,
+            'Product' => $productcompany->name,
+            'cantProduct' => $productcompany->orders_count
+          ], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
     }
 
     public function show(Request $request)

@@ -1,7 +1,10 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Car;
 use App\Models\Client;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -33,6 +36,40 @@ class ClientController extends Controller
             return response()->json(['msg' => "Error al mostrar la professionala"], 500);
         }
     }
+
+    public function client_attended_date(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'Date' => 'required|date'
+           ]);
+           Log::info('Obtener los cars');
+           $branches = Branch::all();
+           $result = [];
+           $i = 0;
+           $total_company = 0;
+           foreach ($branches as $branch) {
+            $clients = Car::whereHas('orders', function ($query) use ($data, $branch){
+                $query->whereDate('data', Carbon::parse($data['Date']))
+                      ->whereHas('branchServiceProfessional.branchService', function ($query) use ($branch){
+                        $query->where('branch_id', $branch->id);})
+                      ->orWhereHas('productStore.store.branches', function ($query) use ($branch){
+                        $query->where('branch_id', $branch->id);
+                    });
+            })->count();
+                $result[$i]['nameBranch'] = $branch->name;
+                $result[$i++]['attended'] = $clients;
+                $total_company += round($clients,2);
+            }//foreach
+          return response()->json([
+            'branches' => $result,
+            'companyAttended' => $total_company
+          ], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
+    }
+
     public function store(Request $request)
     {
         try {
