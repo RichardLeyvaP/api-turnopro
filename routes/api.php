@@ -90,6 +90,7 @@ Route::post('/branch', [BranchController::class, 'store']);
 Route::put('/branch', [BranchController::class, 'update']);
 Route::post('/branch-destroy', [BranchController::class, 'destroy']);
 Route::get('/branch_winner_date', [BranchController::class, 'branch_winner_date']);
+Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
 
 Route::get('/store', [StoreController::class, 'index']);
 Route::get('/store-show', [StoreController::class, 'show']);

@@ -67,6 +67,21 @@ class BranchController extends Controller
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
     }
+
+    public function branches_professional(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric'
+            ]);
+            return response()->json(['branches' => Branch::whereHas('branchServices.branchServiceProfessional', function ($query) use ($data){
+                $query->where('professional_id', $data['professional_id']);
+            })->get()], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar las branch"], 500);
+        }
+    }    
+
     public function store(Request $request)
     {
         Log::info("Guardar");
