@@ -95,9 +95,35 @@ class UserController extends Controller
         return response()->json(['msg' => "Professional registrado correctamente!!!",
             'user' => $user
         ],201);
-    }catch(\Throwable $th){
+        }catch(\Throwable $th){
         return response()->json(['msg' => $th->getMessage().'Error al registrarse'], 500);
+        }
     }
+
+    public function change_password(Request $request){
+        try{
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|numeric',
+            'old_password' => 'required',
+            'password' => 'required|confirmed'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['msg' => $validator->errors()->all()
+            ],400);
+        }
+        $user = User::find($request['id']);
+        if(Hash::check($request->old_password, $user->password))
+        {
+            $user->password = Hash::make($request->password);
+            $user->save();            
+            return response()->json(['msg' => "Password modificada correctamente!!!"],201);
+        }
+        else{
+            return response()->json(['msg' => "Password anterior incorrect0!!!"],400);
+        }
+        }catch(\Throwable $th){
+        return response()->json(['msg' => 'Error al modificar la password'], 500);
+        }
     }
 
     public function login(Request $request){

@@ -47,6 +47,7 @@ Route::post('/login', [UserController::class, 'login']);
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
+    Route::post('change_password', [UserController::class, 'change_password']);
     Route::get('qrCode', [UserController::class, 'qrCode']);
 });
 
