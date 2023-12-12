@@ -66,8 +66,8 @@ class BranchProfessionalController extends Controller
             ]);
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            $branch->professionals()->updateExistingPivot($professional->id);
-            return response()->json(['msg' => 'Professionals reasignada correctamente'], 200);
+            $branch->professionals()->sync($professional->id);
+            return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
         }
