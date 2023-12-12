@@ -122,11 +122,11 @@ class UserController extends Controller
                 if(Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
                     if($user->professional){
-                        Log::info("Esprofessional");
-                    $branch = $user->professional->branchServices->map(function ($branchService){
+                        Log::info("Es professional");
+                    $branch = $user->professional->branches->map(function ($branch){
                         return[
-                            'branch_id' => $branchService->branch->id,
-                            'nameBranch' => $branchService->branch->name
+                            'branch_id' => $branch->id,
+                            'nameBranch' => $branch->name
                         ];
                     })->first();}
                     Log::info($branch);
