@@ -115,16 +115,21 @@ class UserController extends Controller
                 'branch_id' => null,
                 'nameBranch' => null
             ];
+            Log::info("obtener el usuario");
             $user = User::with('client', 'professional')->has('client')->orHas('professional')->where('email',$request->email)->orWhere('name', $request->email)->first();
+            Log::info($user);
             if (isset($user->id) ) {
                 if(Hash::check($request->password, $user->password)) {
+                    Log::info("Pass correct");
                     if($user->professional){
+                        Log::info("Esprofessional");
                     $branch = $user->professional->branchServices->map(function ($branchService){
                         return[
                             'branch_id' => $branchService->branch->id,
                             'nameBranch' => $branchService->branch->name
                         ];
                     })->first();}
+                    Log::info($branch);
                    return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,
@@ -134,8 +139,8 @@ class UserController extends Controller
                         'charge_id' =>$user->professional ? ($user->professional->charge_id) : 0,
                         'professional_id' =>$user->professional ? ($user->professional->id) : 0,    
                         'client_id' =>$user->client ? ($user->client->id) : 0,    
-                        'branch_id' =>$branch['branch_id'],
-                        'nameBranch' =>$branch['nameBranch'],           
+                        'branch_id' =>$branch ? $branch['branch_id']: null,
+                        'nameBranch' =>$branch ? $branch['nameBranch'] : null,           
                         'token' => $user->createToken('auth_token')->plainTextToken
                     ],200);
                 }else{
