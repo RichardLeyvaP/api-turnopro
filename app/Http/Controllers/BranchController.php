@@ -41,12 +41,12 @@ class BranchController extends Controller
                 'Date' => 'required|date'
            ]);
            Log::info('Obtener los cars');
-        $cars = Car::whereHas('orders', function ($query) use ($data){
-            $query->whereDate('data', Carbon::parse($data['Date']));
-                })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                })->orWhereHas('orders.productStore.store.branches', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+            $query->whereHas('professional.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            });
+        })->whereHas('orders', function ($query) use ($data){
+            $query->whereDate('data', $data['Date']);
                 })->get();
        $totalClients =0;
        foreach ($cars as $car) {
@@ -59,8 +59,8 @@ class BranchController extends Controller
             })->orderByDesc('orders_count')->first();
           $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
-            'Producto mas Vendido' => $products->name,
-            'Cantidad del Producto' => $products->orders_count,
+            'Producto mas Vendido' => $products ? $products->name : null,
+            'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Clientes Atendidos' => $totalClients
           ];
           return response()->json($result, 200);
@@ -81,12 +81,12 @@ class BranchController extends Controller
            $i = 0;
            $total_company = 0;
            foreach ($branches as $branch) {
-            $cars = Car::whereHas('orders', function ($query) use ($data){
-            $query->whereDate('data', Carbon::parse($data['Date']));
-                })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($branch){
-                    $query->where('branch_id', $branch->id);
-                })->orWhereHas('orders.productStore.store.branches', function ($query) use ($branch){
-                    $query->where('branch_id', $branch->id);
+            $cars = Car::whereHas('clientProfessional', function ($query) use ($branch){
+                $query->whereHas('professional.branches', function ($query) use ($branch){
+                    $query->where('branch_id', $branch);
+                });
+            })->whereHas('orders', function ($query) use ($data){
+                $query->whereDate('data', $data['Date']);
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount
@@ -111,7 +111,7 @@ class BranchController extends Controller
             $data = $request->validate([
                 'professional_id' => 'required|numeric'
             ]);
-            return response()->json(['branches' => Branch::whereHas('branchServices.branchServiceProfessional', function ($query) use ($data){
+            return response()->json(['branches' => Branch::whereHas('professionals', function ($query) use ($data){
                 $query->where('professional_id', $data['professional_id']);
             })->get()], 200);
         } catch (\Throwable $th) {

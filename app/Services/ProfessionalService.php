@@ -31,7 +31,7 @@ class ProfessionalService
 
     public function professionals_branch($branch_id, $professional_id)
     {
-        $professionals = Professional::whereHas('branchServices', function ($query) use ($branch_id){
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
            })->find($professional_id);
                       
@@ -49,7 +49,7 @@ class ProfessionalService
 
     public function branch_professionals($branch_id)
     {
-        return $professionals = Professional::whereHas('branchServices', function ($query) use ($branch_id){
+        return $professionals = Professional::whereHas('branches', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
            })->get();
     }
@@ -70,13 +70,11 @@ class ProfessionalService
           $day = $data['day']-1;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
         
           $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
-            $query->where('professional_id', $data['professional_id']);
+            $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            });
             })->whereHas('orders', function ($query) use ($data){
                 $query->whereBetween('data', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()]);
-            })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->orWhereHas('orders.productStore.store.branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
             })->with('orders')->get()->map(function ($car){
                 return [
                     'date' => $car->orders->value('data'),
