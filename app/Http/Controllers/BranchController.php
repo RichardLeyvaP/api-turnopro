@@ -83,7 +83,7 @@ class BranchController extends Controller
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional', function ($query) use ($branch){
                 $query->whereHas('professional.branches', function ($query) use ($branch){
-                    $query->where('branch_id', $branch);
+                    $query->where('branch_id', $branch->id);
                 });
             })->whereHas('orders', function ($query) use ($data){
                 $query->whereDate('data', $data['Date']);
