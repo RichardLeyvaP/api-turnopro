@@ -139,8 +139,8 @@ class UserController extends Controller
                         'charge_id' =>$user->professional ? ($user->professional->charge_id) : 0,
                         'professional_id' =>$user->professional ? ($user->professional->id) : 0,    
                         'client_id' =>$user->client ? ($user->client->id) : 0,    
-                        'branch_id' =>$branch ? $branch['branch_id']: null,
-                        'nameBranch' =>$branch ? $branch['nameBranch'] : null,           
+                        'branch_id' =>$branch ? $branch['branch_id']: 0,
+                        'nameBranch' =>$branch ? $branch['nameBranch'] : "",           
                         'token' => $user->createToken('auth_token')->plainTextToken
                     ],200);
                 }else{
