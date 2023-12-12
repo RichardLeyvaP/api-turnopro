@@ -41,6 +41,10 @@ class Professional extends Model
         return $this->hasMany(Workplace::class);
     }
 
+    public function branches(){
+        return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
+
     public function branchRules(){
         return $this->belongsToMany(BranchRule::class, 'branch_rule_professional')->withPivot('data','estado')->withTimestamps();
     }

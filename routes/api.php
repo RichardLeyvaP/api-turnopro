@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BranchProfessionalController;
 use App\Http\Controllers\BranchRuleController;
 use App\Http\Controllers\BranchRuleProfessionalController;
 use App\Http\Controllers\BranchServiceController;
@@ -232,6 +233,12 @@ Route::put('/branchruleprofessional', [BranchRuleProfessionalController::class, 
 Route::post('/branchruleprofessional-destroy', [BranchRuleProfessionalController::class, 'destroy']);
 Route::post('/storeByType', [BranchRuleProfessionalController::class, 'storeByType']);//registrar convivencia x el tipo de rule
 Route::get('/rules_professional', [BranchRuleProfessionalController::class, 'rules_professional']);//ver el estado de las rules de un professional en una branch de una fecha dada o del dia actual
+
+Route::get('/branchprofessional', [BranchProfessionalController::class, 'index']);
+Route::get('/branchprofessional-show', [BranchProfessionalController::class, 'show']);
+Route::post('/branchprofessional', [BranchProfessionalController::class, 'store']);
+Route::put('/branchprofessional', [BranchProfessionalController::class, 'update']);
+Route::post('/branchprofessional-destroy', [BranchProfessionalController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
