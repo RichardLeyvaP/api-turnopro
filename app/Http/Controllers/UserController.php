@@ -142,7 +142,7 @@ class UserController extends Controller
                 'nameBranch' => null
             ];
             Log::info("obtener el usuario");
-            $user = User::with('client', 'professional')->has('client')->orHas('professional')->where('email',$request->email)->orWhere('name', $request->email)->first();
+            $user = User::whereHas('client')->orWhereHas('professional')->where('email',$request->email)->orWhere('name', $request->email)->first();
             Log::info($user);
             if (isset($user->id) ) {
                 if(Hash::check($request->password, $user->password)) {
