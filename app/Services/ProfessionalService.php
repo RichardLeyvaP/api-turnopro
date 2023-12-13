@@ -133,10 +133,9 @@ class ProfessionalService
             //->selectRaw('SUM(price_service * (profit_percentaje / 100)) as suma')
             ->where('type_service', 'Especial')->sum('price_service');
             //$montoEspecial = $montoEspecial + $monto->sum('suma');
-            //$montoEspecial = $montoEspecial + $monto->sum('price_service');
-            $totalClients = $seleccionado + $aleatorio; 
-            
+            //$montoEspecial = $montoEspecial + $monto->sum('price_service');           
         }
+        $totalClients = $cars->count();
           $result = [
             'Monto Generado' => $cars->sum('amount'),
             'Propina' => round($cars->sum('tip'), 2),
