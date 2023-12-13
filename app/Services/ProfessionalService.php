@@ -117,7 +117,7 @@ class ProfessionalService
        $seleccionado = 0;
        $aleatorio = 0;
         foreach ($cars as $car) {
-            if ($car->select_professional) {
+            if ($car->select_professional == 1) {
                 $seleccionado++;
             }
             else{
@@ -134,7 +134,7 @@ class ProfessionalService
             ->where('type_service', 'Especial')->sum('price_service');
             //$montoEspecial = $montoEspecial + $monto->sum('suma');
             //$montoEspecial = $montoEspecial + $monto->sum('price_service');
-            $totalClients = $car->clientProfessional->count(); 
+            $totalClients = $seleccionado + $aleatorio; 
             
         }
           $result = [
