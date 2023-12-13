@@ -17,8 +17,8 @@ class TailService {
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
-                'start_time' => $tail->reservation->start_time->format('H:i:s'),
-                'final_hour' => $tail->reservation->final_hour->format('H:i:s'),
+                'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
+                'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
                 'total_time' => $tail->reservation->total_time,
                 'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
