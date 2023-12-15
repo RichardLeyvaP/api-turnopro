@@ -81,7 +81,7 @@ class TailService {
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
         })->where('attended', 1)->get();
-        if (count($tails) > 1) {
+        if (count($tails) > 4) {
             return false;
         }elseif (count($tails) < 1) {
             return true;
