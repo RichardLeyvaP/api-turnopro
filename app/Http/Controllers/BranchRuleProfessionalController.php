@@ -108,6 +108,7 @@ class BranchRuleProfessionalController extends Controller
                 $result[$i]['id'] = $rule->id;
                 $result[$i]['name'] = $rule->name;
                 $result[$i]['description'] = $rule->description;           
+                $result[$i]['type'] = $rule->type;           
                 $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data, $rule){
                     $query->where('branch_id', $data['branch_id'])->where('rule_id', $rule->id);
                 })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->first();
