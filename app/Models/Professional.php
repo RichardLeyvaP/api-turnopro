@@ -48,6 +48,11 @@ class Professional extends Model
     public function branchRules(){
         return $this->belongsToMany(BranchRule::class, 'branch_rule_professional')->withPivot('data','estado')->withTimestamps();
     }
+    
+    public function branchRuleProfessionals()
+    {
+        return $this->hasMany(branchRuleProfessional::class);
+    }
 
     protected $table = "professionals";
 }

@@ -51,18 +51,17 @@ class BranchRuleProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'estado' => 'required|int'
             ]); 
-            
             $professional = Professional::find($data['professional_id']);
             $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
                 $query->where('type', $data['type']);
             })->where('branch_id', $data['branch_id'])->first();
-            $existencia = Professional::whereHas('branchRules', function ($query){
-                $query->whereDate('data', Carbon::now());
+           $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule){
+                $query->whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id);
             })->exists();
             if ($existencia) {
-                return response()->json(['msg' => 'Estado de la rule asignado al professional ya existe'], 200);
+                $professional->branchrules()->updateExistingPivot($branchrule->id,['estado'=>$data['estado']]);     
+            return response()->json(['msg' => 'Estado actualizado correctamente de una rule del professional'], 200);
             }
-             $professional->branchRules()->attach($branchrule->id,['data'=>Carbon::now(), 'estado'=>$data['estado']]);
             return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
