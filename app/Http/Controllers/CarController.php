@@ -118,13 +118,12 @@ class CarController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'data' => 'required|date'
+                'branch_id' => 'required|numeric'
             ]);
     
                 $orderDatas = Order::whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
-                })->where('request_delete', true)->whereDate('data', $data['data'])->orderBy('updated_at', 'desc')->get();
+                })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
 
            $car = $orderDatas->map(function ($orderData){
             if ($orderData->is_product == true) {
