@@ -33,7 +33,7 @@ class BranchRuleProfessionalController extends Controller
             ]); 
             $branchrule = BranchRule::find($data['branch_rule_id']);
             $professional = Professional::find($data['professional_id']);
-             $professional->branchRules()->attach($branchrule->id,['data'=>Carbon::now(), 'estado'=>$data['estado']]);
+            $professional->branchRules()->attach($branchrule->id,['data'=>Carbon::now(), 'estado'=>$data['estado']]);
             return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -99,11 +99,18 @@ class BranchRuleProfessionalController extends Controller
             }
             $result = [];
             $i = 0;
-
-            $rules = Rule::whereHas('branchRules', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->get();
-            return $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
+            $professional = Professional::find($data['professional_id']);
+            $branchrules = BranchRule::where('branch_id', $data['branch_id'])->get();
+            foreach ($branchrules as $branchrule) {
+                $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule, $data){
+                    $query->whereDate('data', $data['data'])->where('branch_rule_id', $branchrule->id);
+                })->exists();
+                if (!$existencia) {
+                    $professional->branchRules()->attach($branchrule->id,['data'=>$data['data'], 'estado'=>3]);
+                }
+            }
+           
+            $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->get()->map(function ($branchRuleProfessional){
                 return [
@@ -114,7 +121,7 @@ class BranchRuleProfessionalController extends Controller
                     'state' => $branchRuleProfessional->estado
                 ];
             });
-            return response()->json(['rules' => $result], 200);            
+            return response()->json(['rules' => $branchRuleProfessionals], 200);            
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar el estado de las rules de un  professional"], 500);
