@@ -118,35 +118,13 @@ class CarController extends Controller
     {
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'branch_id' => 'required|numeric',
+                'data' => 'required|date'
             ]);
     
-            /*$car = Order::join('cars', 'cars.id', '=', 'orders.car_id')
-                ->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')
-                ->join('clients', 'clients.id', '=', 'client_professional.client_id')
-                ->join('people', 'people.id', '=', 'client_professional.professional_id')
-                ->leftJoin('product_store', 'product_store.id', '=', 'orders.product_store_id')
-                ->leftJoin('products', 'products.id', '=', 'product_store.product_id')
-                ->leftJoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')
-                ->leftJoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')
-                ->leftJoin('services', 'services.id', '=', 'branch_service.service_id')
-                ->select([
-                    DB::raw('CONCAT(people.name, " ", people.surname) AS nameProfessional'),
-                    DB::raw('CONCAT(clients.name, " ", clients.surname) AS nameClient'),
-                    DB::raw('DATE_FORMAT(orders.updated_at, "%h:%i:%s %p") as hora'),
-                    //DB::raw('TIME(orders.updated_at) as hora'), militar
-                    'products.name as nameProduct',
-                    'services.name as nameService',
-                    'orders.id',
-                    'orders.is_product',
-                    'orders.updated_at'
-                ])
-                ->where('cars.id', $data['id'])
-                ->where('request_delete', true)
-                ->orderBy('updated_at', 'desc')
-                ->get();*/
-
-                $orderDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('request_delete', true)->orderBy('updated_at', 'desc')->get();
+                $orderDatas = Order::whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('request_delete', true)->whereDate('data', $data['data'])->orderBy('updated_at', 'desc')->get();
 
            $car = $orderDatas->map(function ($orderData){
             if ($orderData->is_product == true) {
