@@ -114,7 +114,8 @@ class CarController extends Controller
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
        }
     }*/
-    public function car_order_delete(Request $request)
+
+    public function car_order_delete_responsable(Request $request)
     {
         try {
             $data = $request->validate([
@@ -124,6 +125,47 @@ class CarController extends Controller
                 $orderDatas = Order::whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                 })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
+
+           $car = $orderDatas->map(function ($orderData){
+            if ($orderData->is_product == true) {
+                return [
+                    'id' => $orderData->id,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'hora' => $orderData->updated_at->Format('g:i:s A'),                    
+                    'nameProduct' => $orderData->productStore->product->name,
+                    'nameService' => null,
+                    'is_product' => $orderData->is_product,
+                    'updated_at' => $orderData->updated_at->toDateString()
+                ];
+            }
+            else {
+                return [
+                    'id' => $orderData->id,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'hora' => $orderData->updated_at->Format('g:i:s A'),
+                    'nameProduct' => null,
+                    'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                    'is_product' => (int)$orderData->is_product,
+                    'updated_at' => $orderData->updated_at->toDateString()
+                ];
+            }
+           });
+    
+            return response()->json(['carOrderDelete' => $car], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
+        }
+    }
+
+    public function car_order_delete(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+                $orderDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('request_delete', true)->orderBy('updated_at', 'desc')->get();
 
            $car = $orderDatas->map(function ($orderData){
             if ($orderData->is_product == true) {

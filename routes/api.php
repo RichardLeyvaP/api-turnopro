@@ -175,6 +175,7 @@ Route::put('/car', [CarController::class, 'update']);
 Route::post('/car-destroy', [CarController::class, 'destroy']);
 Route::get('/car_orders', [CarController::class, 'car_orders']);
 Route::get('/car_order_delete', [CarController::class, 'car_order_delete']);
+Route::get('/car_order_delete_responsable', [CarController::class, 'car_order_delete_responsable']);//dado una branch devolver las ordenes solicitadas a eliminar en la fecha actual
 Route::put('/car-give-tips', [CarController::class, 'give_tips']);
 Route::get('/reservation_services', [CarController::class, 'reservation_services']);
 Route::get('/car_services', [CarController::class, 'car_services']); //dado una reservations devolver los servicios
