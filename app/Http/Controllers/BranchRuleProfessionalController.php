@@ -99,20 +99,21 @@ class BranchRuleProfessionalController extends Controller
             }
             $result = [];
             $i = 0;
+
             $rules = Rule::whereHas('branchRules', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->get();
-
-            foreach ($rules as $rule) {                 
-                $result[$i]['id'] = $rule->id;
-                $result[$i]['name'] = $rule->name;
-                $result[$i]['description'] = $rule->description;           
-                $result[$i]['type'] = $rule->type;           
-                $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data, $rule){
-                    $query->where('branch_id', $data['branch_id'])->where('rule_id', $rule->id);
-                })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->first();
-                $result[$i++]['state'] = $branchRuleProfessionals ? $branchRuleProfessionals->estado : 1;
-                }
+            return $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->get()->map(function ($branchRuleProfessional){
+                return [
+                    'id' => $branchRuleProfessional->id,
+                    'name' => $branchRuleProfessional->branchRule->rule->name,
+                    'description' => $branchRuleProfessional->branchRule->rule->description,
+                    'type' => $branchRuleProfessional->branchRule->rule->type,
+                    'state' => $branchRuleProfessional->estado
+                ];
+            });
             return response()->json(['rules' => $result], 200);            
             } catch (\Throwable $th) {  
             Log::error($th);
