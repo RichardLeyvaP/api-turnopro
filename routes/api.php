@@ -98,6 +98,8 @@ Route::get('/branch_winner_month', [BranchController::class, 'branch_winner_mont
 Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
 Route::get('/company_winner_date', [BranchController::class, 'company_winner_date']);//devuelve las ganancias de la compañia en una fecha dada
 Route::get('/company_winner_periodo', [BranchController::class, 'company_winner_periodo']);//devuelve las ganancias de la compañia en un periodo dado
+Route::get('/company_winner_month', [BranchController::class, 'company_winner_month']);//devuelve las ganancias de la compañia en un mes dado
+
 
 Route::get('/store', [StoreController::class, 'index']);
 Route::get('/store-show', [StoreController::class, 'show']);
