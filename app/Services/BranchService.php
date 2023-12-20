@@ -18,10 +18,10 @@ class BranchService
                 })->get();
        $totalClients =0;
        $totalClients = $cars->count();
-        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($month){
+        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($branch_id, $month){
                 $query->whereMonth('data', $month);
-            })->whereHas('productStores.store.branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
+                $query->where('branch_id', $$branch_id);
             })->orderByDesc('orders_count')->first();
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
