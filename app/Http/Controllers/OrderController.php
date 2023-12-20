@@ -113,7 +113,7 @@ class OrderController extends Controller
             $order = Order::find($data['id']);
             $order->request_delete = $data['request_delete'];
             $order->save();
-            return response()->json(['msg' => 'Solicitud de eliminar la orden hecha correctamente'], 200);
+            return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
