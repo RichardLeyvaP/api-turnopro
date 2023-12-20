@@ -92,9 +92,11 @@ Route::get('/branch-show', [BranchController::class, 'show']);
 Route::post('/branch', [BranchController::class, 'store']);
 Route::put('/branch', [BranchController::class, 'update']);
 Route::post('/branch-destroy', [BranchController::class, 'destroy']);
-Route::get('/branch_winner_date', [BranchController::class, 'branch_winner_date']);
+Route::get('/branch_winner_date', [BranchController::class, 'branch_winner_date']);//devuelve las ganancias de una branch en una fecha dada
+Route::get('/branch_winner_periodo', [BranchController::class, 'branch_winner_periodo']);//devuelve las ganancias de una branch en un periodo dado
 Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
-Route::get('/company_winner_date', [BranchController::class, 'company_winner_date']);
+Route::get('/company_winner_date', [BranchController::class, 'company_winner_date']);//devuelve las ganancias de la compañia en una fecha dada
+Route::get('/periodo', [BranchController::class, 'company_winner_date']);//devuelve las ganancias de la compañia en un periodo dado
 
 Route::get('/store', [StoreController::class, 'index']);
 Route::get('/store-show', [StoreController::class, 'show']);
