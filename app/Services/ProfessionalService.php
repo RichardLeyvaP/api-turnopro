@@ -111,6 +111,7 @@ class ProfessionalService
             $query->whereBetWeen('data', [$data['startDate'], $data['endDate']]);
         })->get();
        $services =0;
+       $products =0;
        $totalEspecial =0;
        $totalClients =0;
        $montoEspecial = 0;
@@ -124,6 +125,7 @@ class ProfessionalService
                 $aleatorio++;
             }
             $services = $services + count($car->orders->where('is_product', 0));
+            $products = $products + count($car->orders->where('is_product', 1));
             $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
                 $query->where('id', $car->id);
             })->where('type_service', 'Especial')->count();
@@ -141,7 +143,8 @@ class ProfessionalService
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => round($cars->sum('tip')*0.8, 2),
             'Procentaje de Ganancia' =>45,
-            'Servicios Realizados' => $services,            
+            'Servicios Realizados' => $services,  
+            'Productos Vendidos' => $products,           
             'Servicios Regulares' => $services - $totalEspecial,
             'Servicios Especiales' => $totalEspecial,
             'Monto Especial' => round($montoEspecial, 2),
