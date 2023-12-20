@@ -37,16 +37,21 @@ class BranchController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'Date' => 'required|date'
+                'branch_id' => 'required|numeric'
            ]);
+           if ($request->has('data')) {
+            $data['data'] = $request->data;
+            }
+          else {
+                $data['data'] = Carbon::now()->toDateString();
+            }
            Log::info('Obtener los cars');
         $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             });
         })->whereHas('orders', function ($query) use ($data){
-            $query->whereDate('data', $data['Date']);
+            $query->whereDate('data', $data['data']);
                 })->get();
        $totalClients =0;
        $totalClients = $cars->count();
@@ -54,7 +59,7 @@ class BranchController extends Controller
             $totalClients = $car->count();             
         }*/
         $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
-                $query->whereDate('data', Carbon::parse($data['Date']));
+                $query->whereDate('data', $data['data']);
             })->whereHas('productStores.store.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->orderByDesc('orders_count')->first();
