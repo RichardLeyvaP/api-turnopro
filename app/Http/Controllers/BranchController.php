@@ -75,6 +75,48 @@ class BranchController extends Controller
        }
     }
 
+    public function branch_winner_month(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+           ]);
+           if ($request->has('data')) {
+            $data['data'] = $request->data;
+            }
+          else {
+                $data['data'] = Carbon::now()->toDateString();
+            }
+           Log::info('Obtener los cars');
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+            $query->whereHas('professional.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            });
+        })->whereHas('orders', function ($query) use ($data){
+            $query->whereMonth('data', Carbon::parse($data['data'])->month);
+                })->get();
+       $totalClients =0;
+       $totalClients = $cars->count();
+       /*foreach ($cars as $car) {
+            $totalClients = $car->count();             
+        }*/
+        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
+                $query->whereMonth('data', Carbon::parse($data['data'])->month);
+            })->whereHas('productStores.store.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->orderByDesc('orders_count')->first();
+          $result = [
+            'Monto Generado' => round($cars->sum('amount'),2),
+            'Producto mas Vendido' => $products ? $products->name : null,
+            'Cantidad del Producto' => $products ? $products->orders_count : 0,
+            'Clientes Atendidos' => $totalClients
+          ];
+          return response()->json($result, 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
+    }
+
     public function branch_winner_periodo(Request $request)
     {
         try {
