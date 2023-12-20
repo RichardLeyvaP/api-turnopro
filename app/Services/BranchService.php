@@ -58,5 +58,60 @@ class BranchService
           ];
     }
 
+    public function company_winner_month($month)
+    {
+           $branches = Branch::all();
+           $result = [];
+           $i = 0;
+           $total_company = 0;
+           foreach ($branches as $branch) {
+            $cars = Car::whereHas('clientProfessional', function ($query) use ($branch){
+                $query->whereHas('professional.branches', function ($query) use ($branch){
+                    $query->where('branch_id', $branch->id);
+                });
+            })->whereHas('orders', function ($query) use ($month){
+                $query->whereMonth('data', $month);
+                })->get()->map(function ($car){
+                    return [
+                        'earnings' => $car->amount
+                    ];
+                });
+                $result[$i]['name'] = $branch->name;
+                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('earnings'),2);
+            }//foreach
+          return [
+            'branches' => $result,
+            'totalEarnings' => $total_company
+          ];
+    }
+
+    public function company_winner_periodo($startDate ,$endDate)
+    {
+           $branches = Branch::all();
+           $result = [];
+           $i = 0;
+           $total_company = 0;
+           foreach ($branches as $branch) {
+            $cars = Car::whereHas('clientProfessional', function ($query) use ($branch){
+                $query->whereHas('professional.branches', function ($query) use ($branch){
+                    $query->where('branch_id', $branch->id);
+                });
+            })->whereHas('orders', function ($query) use ($startDate ,$endDate){
+                $query->whereBetWeen('data', [$startDate ,$endDate]);
+                })->get()->map(function ($car){
+                    return [
+                        'earnings' => $car->amount
+                    ];
+                });
+                $result[$i]['name'] = $branch->name;
+                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('earnings'),2);
+            }//foreach
+          return [
+            'branches' => $result,
+            'totalEarnings' => $total_company
+          ];
+    }
 
 }
