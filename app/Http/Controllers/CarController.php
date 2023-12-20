@@ -115,7 +115,7 @@ class CarController extends Controller
        }
     }*/
 
-    public function car_order_delete_responsable(Request $request)
+    public function car_order_delete_branch(Request $request)
     {
         try {
             $data = $request->validate([
@@ -159,13 +159,18 @@ class CarController extends Controller
         }
     }
 
-    public function car_order_delete(Request $request)
+    public function car_order_delete_professional(Request $request)
     {
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
             ]);
-                $orderDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('request_delete', true)->orderBy('updated_at', 'desc')->get();
+                $orderDatas = Order::whereHas('car.clientProfessional', function ($query) use ($data){
+                    $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                    });
+                })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
 
            $car = $orderDatas->map(function ($orderData){
             if ($orderData->is_product == true) {
