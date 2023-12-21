@@ -50,7 +50,7 @@ class BranchController extends Controller
            ]);
 
            if ($request->has('mes')) {
-            $result = $this->branchService->branch_winner_month($data['branch_id'], $request->mes);
+                $result = $this->branchService->branch_winner_month($data['branch_id'], $request->mes);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
                 $result = $this->branchService->branch_winner_periodo($data['branch_id'], $request->startDate, $request->endDate);

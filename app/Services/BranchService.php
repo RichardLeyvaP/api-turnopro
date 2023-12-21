@@ -27,7 +27,7 @@ class BranchService
             $aleatorio = 0;
             $totalClients =0;
             $totalClients = $cars->count();
-        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
+        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query){
                 $query->whereDate('data', Carbon::now());
             })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
@@ -69,18 +69,17 @@ class BranchService
         })->whereHas('orders', function ($query) use ($month){
             $query->whereMonth('data', $month);
         })->get();
-
             $totalservices =0;
             $totalproducts =0;
             $seleccionado = 0;
             $aleatorio = 0;
             $totalClients =0;
        $totalClients = $cars->count();
-        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($branch_id, $month){
-                $query->whereMonth('data', $month);
-            })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
-            })->orderByDesc('orders_count')->first();
+        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($month){
+            $query->whereMonth('data', $month);
+        })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
                 if ($car->select_professional == 1) {
                     $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
@@ -101,7 +100,7 @@ class BranchService
             'Servicios Aleatorios' => $aleatorio,
             'Clientes Atendidos' => $totalClients
           ];
-      
+      Log::info($result);
     }
 
     public function branch_winner_periodo($branch_id, $startDate, $endDate)
