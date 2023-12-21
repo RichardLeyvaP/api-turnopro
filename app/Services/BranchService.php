@@ -3,11 +3,38 @@
 namespace App\Services;
 use App\Models\Branch;
 use App\Models\Car;
+use Carbon\Carbon;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
 
 class BranchService
 {
+
+    public function branch_winner_date($branch_id)
+    {
+        $data= Carbon::now()->toDateString();
+
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($branch_id){
+            $query->whereHas('professional.branches', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            });
+        })->whereHas('orders', function ($query){
+            $query->whereDate('data', Carbon::now());
+                })->get();
+       $totalClients =0;
+       $totalClients = $cars->count();
+        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($data){
+                $query->whereDate('data', Carbon::now());
+            })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            })->orderByDesc('orders_count')->first();
+          return $result = [
+            'Monto Generado' => round($cars->sum('amount'),2),
+            'Producto mas Vendido' => $products ? $products->name : null,
+            'Cantidad del Producto' => $products ? $products->orders_count : 0,
+            'Clientes Atendidos' => $totalClients
+          ];
+    }
 
     public function branch_winner_month($branch_id, $month)
     {
@@ -99,6 +126,35 @@ class BranchService
                 });
             })->whereHas('orders', function ($query) use ($startDate ,$endDate){
                 $query->whereBetWeen('data', [$startDate ,$endDate]);
+                })->get()->map(function ($car){
+                    return [
+                        'earnings' => $car->amount
+                    ];
+                });
+                $result[$i]['name'] = $branch->name;
+                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('earnings'),2);
+            }//foreach
+          return [
+            'branches' => $result,
+            'totalEarnings' => $total_company
+          ];
+    }
+
+    public function company_winner_date()
+    {
+           $branches = Branch::all();
+           $result = [];
+           $i = 0;
+           $total_company = 0;
+           $data= Carbon::now()->toDateString();
+           foreach ($branches as $branch) {
+            $cars = Car::whereHas('clientProfessional', function ($query) use ($branch){
+                $query->whereHas('professional.branches', function ($query) use ($branch){
+                    $query->where('branch_id', $branch->id);
+                });
+            })->whereHas('orders', function ($query) use ($data){
+                $query->whereDate('data', $data);
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount

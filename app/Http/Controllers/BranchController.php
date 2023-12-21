@@ -55,6 +55,9 @@ class BranchController extends Controller
             if ($request->has('startDate') && $request->has('endDate')) {
                 $result = $this->branchService->branch_winner_periodo($data['branch_id'], $request->startDate, $request->endDate);
             }
+            else {
+                $result = $this->branchService->branch_winner_date($data['branch_id']);
+            }
           return response()->json($result, 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
@@ -73,6 +76,9 @@ class BranchController extends Controller
             }
             if ($request->has('startDate') && $request->has('endDate')) {
                 $result = $this->branchService->company_winner_periodo($request->startDate, $request->endDate);
+            }            
+            else {
+                $result = $this->branchService->company_winner_date();
             }
           return response()->json($result, 200);
        } catch (\Throwable $th) {
