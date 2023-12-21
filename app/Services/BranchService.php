@@ -58,6 +58,7 @@ class BranchService
             }
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
+            'Propina' => round($cars->sum('tip'), 2),
             'Producto mas Vendido' => $products ? $products->name : null,
             'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Total de Productos Vendidos' => $totalproducts,
@@ -112,6 +113,7 @@ class BranchService
             }
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
+            'Propina' => round($cars->sum('tip'), 2),
             'Producto mas Vendido' => $products ? $products->name : null,
             'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Total de Productos Vendidos' => $totalproducts,
@@ -172,6 +174,7 @@ class BranchService
             //Log::info($services);
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
+            'Propina' => round($cars->sum('tip'), 2),
             'Producto mas Vendido' => $products ? $products->name : null,
             'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Total de Productos Vendidos' => $totalproducts,
