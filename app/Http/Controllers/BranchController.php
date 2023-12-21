@@ -42,7 +42,7 @@ class BranchController extends Controller
         }
     }
     
-    public function branch_winner_products(Request $request)
+    public function branch_winner(Request $request)
     {
         try {
             $data = $request->validate([

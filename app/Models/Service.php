@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Service extends Model
 {
     use HasFactory;
@@ -16,6 +16,10 @@ class Service extends Model
     public function branches(){
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
+
+    /*public function orders(){
+        return $this->hasManyDeep(Order::class, [BranchService::class, BranchServiceProfessional::class]);
+    }*/
 
     protected $casts = [
         'simultaneou' => 'integer',
