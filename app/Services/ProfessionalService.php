@@ -112,9 +112,7 @@ class ProfessionalService
         })->get();
        $services =0;
        $products =0;
-       $totalEspecial =0;
        $totalClients =0;
-       $montoEspecial = 0;
        $seleccionado = 0;
        $aleatorio = 0;
         foreach ($cars as $car) {
