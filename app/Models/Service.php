@@ -8,6 +8,7 @@ use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Service extends Model
 {
     use HasFactory;
+    use HasRelationships;
 
     public function branchServices(){
         return $this->hasMany(BranchService::class);
@@ -17,9 +18,9 @@ class Service extends Model
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
 
-    /*public function orders(){
+    public function orders(){
         return $this->hasManyDeep(Order::class, [BranchService::class, BranchServiceProfessional::class]);
-    }*/
+    }
 
     protected $casts = [
         'simultaneou' => 'integer',

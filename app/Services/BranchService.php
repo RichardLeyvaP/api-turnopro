@@ -34,11 +34,11 @@ class BranchService
             })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
-            /*$services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
+            $services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query){
                 $query->whereDate('data', Carbon::now());
             })->whereHas('branchServices', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
-            })->orderByDesc('orders_count')->first();*/
+            })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
                 if ($car->select_professional == 1) {
                     $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
@@ -62,12 +62,13 @@ class BranchService
             'Producto mas Vendido' => $products ? $products->name : null,
             'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Total de Productos Vendidos' => $totalproducts,
+            'Servicio mas Brindado' => $services ? $services->name : null,
+            'Cantidad del Servicio' => $services ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
             'Servicios Seleccionados' => $seleccionado,
             'Servicios Aleatorios' => $aleatorio,
             'Servicios Especiales' => $totalEspecial,
             'Monto Servicios Especiales' => round($montoEspecial, 2),
-            //'Servicio mas Brindado' => $services ? $services->name : null,
             'Clientes Atendidos' => $totalClients
           ];
     }
@@ -94,6 +95,11 @@ class BranchService
         })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })->orderByDesc('orders_count')->first();
+        $services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($month){
+                $query->whereMonth('data', $month);
+            })->whereHas('branchServices', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
                 if ($car->select_professional == 1) {
                     $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
@@ -117,6 +123,8 @@ class BranchService
             'Producto mas Vendido' => $products ? $products->name : null,
             'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Total de Productos Vendidos' => $totalproducts,
+            'Servicio mas Brindado' => $services ? $services->name : null,
+            'Cantidad del Servicio' => $services ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
             'Servicios Seleccionados' => $seleccionado,
             'Servicios Aleatorios' => $aleatorio,
@@ -149,11 +157,11 @@ class BranchService
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
             Log::info("obtener los servicios");
-            /*$services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($startDate, $endDate){
+            $services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($startDate, $endDate){
                 $query->whereBetWeen('data', [$startDate, $endDate]);
             })->whereHas('branchServices', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
-            })->orderByDesc('orders_count')->first();*/
+            })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
                 if ($car->select_professional == 1) {
                     $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
@@ -178,12 +186,13 @@ class BranchService
             'Producto mas Vendido' => $products ? $products->name : null,
             'Cantidad del Producto' => $products ? $products->orders_count : 0,
             'Total de Productos Vendidos' => $totalproducts,
+            'Servicio mas Brindado' => $services ? $services->name : null,
+            'Cantidad del Servicio' => $services ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
             'Servicios Seleccionados' => $seleccionado,
             'Servicios Aleatorios' => $aleatorio,
             'Servicios Especiales' => $totalEspecial,
             'Monto Servicios Especiales' => round($montoEspecial, 2),
-            //'Servicio mas Brindado' => $services ? $services->name : 0,
             'Clientes Atendidos' => $totalClients
           ];
     }
