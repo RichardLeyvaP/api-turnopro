@@ -125,18 +125,13 @@ class ProfessionalService
                 $aleatorio++;
             }
             $services = $services + count($car->orders->where('is_product', 0));
-            $products = $products + count($car->orders->where('is_product', 1));
-            $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                $query->where('id', $car->id);
-            })->where('type_service', 'Especial')->count();
-            $montoEspecial = $montoEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                $query->where('id', $car->id);
-            })
-            //->selectRaw('SUM(price_service * (profit_percentaje / 100)) as suma')
-            ->where('type_service', 'Especial')->sum('price_service');
-            //$montoEspecial = $montoEspecial + $monto->sum('suma');
-            //$montoEspecial = $montoEspecial + $monto->sum('price_service');           
+            $products = $products + count($car->orders->where('is_product', 1));         
         }
+        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
+            $query->whereHas('service', function ($query){
+                $query->where('type_service', 'Especial');
+            })->where('branch_id', $data['branch_id']);
+        })->whereBetWeen('data', [$data['startDate'], $data['endDate']])->get();
         $totalClients = $cars->count();
           $result = [
             'Monto Generado' => $cars->sum('amount'),
@@ -145,9 +140,9 @@ class ProfessionalService
             'Procentaje de Ganancia' =>45,
             'Servicios Realizados' => $services,  
             'Productos Vendidos' => $products,           
-            'Servicios Regulares' => $services - $totalEspecial,
-            'Servicios Especiales' => $totalEspecial,
-            'Monto Especial' => round($montoEspecial, 2),
+            'Servicios Regulares' => $services - $orders->count(),
+            'Servicios Especiales' => $orders->count(),
+            'Monto Especial' => round($orders->sum('price'), 2),
             'Ganancia Barbero' => round($cars->sum('amount')*0.45, 2),
             'Ganancia Total Barbero' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
             'Clientes Atendidos' => $totalClients,
