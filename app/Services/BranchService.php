@@ -29,14 +29,14 @@ class BranchService
             $montoEspecial = 0;
             $totalClients =0;
             $totalClients = $cars->count();
-        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query){
+        $products = Product::withCount(['orders' => function ($query){
                 $query->whereDate('data', Carbon::now());
-            })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
+            }])->whereHas('productStores.store.branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
-            $services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query){
+            $services = Service::withCount(['orders' => function ($query){
                 $query->whereDate('data', Carbon::now());
-            })->whereHas('branchServices', function ($query) use ($branch_id){
+            }])->whereHas('branchServices', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
@@ -90,14 +90,14 @@ class BranchService
             $montoEspecial = 0;
             $totalClients =0;
        $totalClients = $cars->count();
-        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($month){
+        $products = Product::withCount(['orders' => function ($query) use ($month){
             $query->whereMonth('data', $month);
-        })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
+        }])->whereHas('productStores.store.branches', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })->orderByDesc('orders_count')->first();
-        $services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($month){
-                $query->whereMonth('data', $month);
-            })->whereHas('branchServices', function ($query) use ($branch_id){
+        $services = Service::withCount(['orders' => function ($query) use ($month){
+            $query->whereMonth('data', $month);
+        }])->whereHas('branchServices', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
@@ -151,15 +151,15 @@ class BranchService
             $totalEspecial =0;
             $montoEspecial = 0;
        $totalClients = $cars->count();
-        $products = Product::withCount('orders')->whereHas('productStores.orders', function ($query) use ($startDate, $endDate){
+        $products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate){
                 $query->whereBetWeen('data', [$startDate, $endDate]);
-            })->whereHas('productStores.store.branches', function ($query) use ($branch_id){
+            }])->whereHas('productStores.store.branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
             Log::info("obtener los servicios");
-            $services = Service::withCount('orders')->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($startDate, $endDate){
+            $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate){
                 $query->whereBetWeen('data', [$startDate, $endDate]);
-            })->whereHas('branchServices', function ($query) use ($branch_id){
+            }])->whereHas('branchServices', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->orderByDesc('orders_count')->first();
             foreach ($cars as $car) {   
