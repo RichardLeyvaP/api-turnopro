@@ -25,8 +25,6 @@ class BranchService
             $totalproducts =0;
             $seleccionado = 0;
             $aleatorio = 0;
-            $totalEspecial =0;
-            $montoEspecial = 0;
             $totalClients =0;
             $totalClients = $cars->count();
         $products = Product::withCount(['orders' => function ($query){
@@ -48,14 +46,12 @@ class BranchService
                 }
                 $totalservices = $totalservices + count($car->orders->where('is_product', 0));
                 $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
-
-                $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                    $query->where('id', $car->id);
-                })->where('type_service', 'Especial')->count();
-                $montoEspecial = $montoEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                    $query->where('id', $car->id);
-                })->where('type_service', 'Especial')->sum('price_service'); 
             }
+            $serviceEspecial = Service::whereHas('orders', function ($query) {
+                $query->whereDate('data', Carbon::now());
+            })->whereHas('branchServices', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            })->where('type_service', 'Especial')->get();
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
             'Propina' => round($cars->sum('tip'), 2),
@@ -67,8 +63,8 @@ class BranchService
             'Total de Servicios Brindados' => $totalservices,
             'Servicios Seleccionados' => $seleccionado,
             'Servicios Aleatorios' => $aleatorio,
-            'Servicios Especiales' => $totalEspecial,
-            'Monto Servicios Especiales' => round($montoEspecial, 2),
+            'Servicios Especiales' => $serviceEspecial->count(),
+            'Monto Servicios Especiales' => round($serviceEspecial->sum('price_service'), 2),
             'Clientes Atendidos' => $totalClients
           ];
     }
@@ -86,8 +82,6 @@ class BranchService
             $totalproducts =0;
             $seleccionado = 0;
             $aleatorio = 0;
-            $totalEspecial =0;
-            $montoEspecial = 0;
             $totalClients =0;
        $totalClients = $cars->count();
         $products = Product::withCount(['orders' => function ($query) use ($month){
@@ -109,14 +103,14 @@ class BranchService
                 }
                 $totalservices = $totalservices + count($car->orders->where('is_product', 0));
                 $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
-
-                $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                    $query->where('id', $car->id);
-                })->where('type_service', 'Especial')->count();
-                $montoEspecial = $montoEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                    $query->where('id', $car->id);
-                })->where('type_service', 'Especial')->sum('price_service'); 
             }
+
+            $serviceEspecial = Service::whereHas('orders', function ($query) use ($month){
+                $query->whereMonth('data', $month);
+            })->whereHas('branchServices', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            })->where('type_service', 'Especial')->get();
+
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
             'Propina' => round($cars->sum('tip'), 2),
@@ -128,8 +122,8 @@ class BranchService
             'Total de Servicios Brindados' => $totalservices,
             'Servicios Seleccionados' => $seleccionado,
             'Servicios Aleatorios' => $aleatorio,
-            'Servicios Especiales' => $totalEspecial,
-            'Monto Servicios Especiales' => round($montoEspecial, 2),
+            'Servicios Especiales' => $serviceEspecial->count(),
+            'Monto Servicios Especiales' => round($serviceEspecial->sum('price_service'), 2),
             'Clientes Atendidos' => $totalClients
           ];
     }
@@ -148,8 +142,6 @@ class BranchService
             $totalproducts =0;
             $seleccionado = 0;
             $aleatorio = 0;
-            $totalEspecial =0;
-            $montoEspecial = 0;
        $totalClients = $cars->count();
         $products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate){
                 $query->whereBetWeen('data', [$startDate, $endDate]);
@@ -171,15 +163,12 @@ class BranchService
                 }
                 $totalservices = $totalservices + count($car->orders->where('is_product', 0));
                 $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
-
-                $totalEspecial = $totalEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                    $query->where('id', $car->id);
-                })->where('type_service', 'Especial')->count();
-                $montoEspecial = $montoEspecial + Service::whereHas('branchServices.branchServiceProfessionals.orders.car', function ($query) use ($car){
-                    $query->where('id', $car->id);
-                })->where('type_service', 'Especial')->sum('price_service'); 
             }
-            //Log::info($services);
+            $serviceEspecial = Service::whereHas('orders', function ($query)  use ($startDate, $endDate){
+                $query->whereBetWeen('data', [$startDate, $endDate]);
+            })->whereHas('branchServices', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            })->where('type_service', 'Especial')->get();
           return $result = [
             'Monto Generado' => round($cars->sum('amount'),2),
             'Propina' => round($cars->sum('tip'), 2),
@@ -191,8 +180,8 @@ class BranchService
             'Total de Servicios Brindados' => $totalservices,
             'Servicios Seleccionados' => $seleccionado,
             'Servicios Aleatorios' => $aleatorio,
-            'Servicios Especiales' => $totalEspecial,
-            'Monto Servicios Especiales' => round($montoEspecial, 2),
+            'Servicios Especiales' => $serviceEspecial->count(),
+            'Monto Servicios Especiales' => round($serviceEspecial->sum('price_service'), 2),
             'Clientes Atendidos' => $totalClients
           ];
     }
