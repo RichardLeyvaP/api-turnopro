@@ -126,7 +126,7 @@ class ProfessionalService
         })->whereDate('data', Carbon::now())->get();
         $totalClients = $cars->count();
           return $result = [
-            'Monto Generado' => $cars->sum('amount'),
+            'Monto Generado' => round($cars->sum('amount'), 2),
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => round($cars->sum('tip')*0.8, 2),
             'Procentaje de Ganancia' =>45,
@@ -166,10 +166,10 @@ class ProfessionalService
                     $query->where('type_service', 'Especial');
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
-        })->whereBetWeen('data', [$data['startDate'], $data['endDate']])->get();
+        })->whereBetWeen('data', [$startDate, $endDate])->get();
         $totalClients = $cars->count();
           return $result = [
-            'Monto Generado' => $cars->sum('amount'),
+            'Monto Generado' => round($cars->sum('amount'), 2),
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => round($cars->sum('tip')*0.8, 2),
             'Procentaje de Ganancia' =>45,
@@ -210,9 +210,10 @@ class ProfessionalService
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
         })->whereMonth('data', $mes)->get();
+        Log::info($orders);
         $totalClients = $cars->count();
           return $result = [
-            'Monto Generado' => $cars->sum('amount'),
+            'Monto Generado' => round($cars->sum('amount'), 2),
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => round($cars->sum('tip')*0.8, 2),
             'Procentaje de Ganancia' =>45,

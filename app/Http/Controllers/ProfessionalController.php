@@ -135,7 +135,7 @@ class ProfessionalController extends Controller
                 'professional_id' => 'required|numeric'
            ]);
            if ($request->has('mes')) {
-            return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_month($data['branch_id'], $request->mes)], 200);
+            return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_month($data, $request->mes)], 200);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
                 return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_Periodo($data, $request->startDate, $request->endDate)], 200);
