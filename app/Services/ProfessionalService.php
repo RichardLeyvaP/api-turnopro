@@ -113,15 +113,7 @@ class ProfessionalService
        $services =0;
        $products =0;
        $totalClients =0;
-       $seleccionado = 0;
-       $aleatorio = 0;
         foreach ($cars as $car) {
-            if ($car->select_professional == 1) {
-                $seleccionado++;
-            }
-            else{
-                $aleatorio++;
-            }
             $services = $services + count($car->orders->where('is_product', 0));
             $products = $products + count($car->orders->where('is_product', 1));         
         }
@@ -144,8 +136,8 @@ class ProfessionalService
             'Ganancia Barbero' => round($cars->sum('amount')*0.45, 2),
             'Ganancia Total Barbero' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
             'Clientes Atendidos' => $totalClients,
-            'Seleccionado' => $seleccionado,
-            'Aleatorio' => $aleatorio
+            'Seleccionado' => $cars->where('select_professional', 1)->count(),
+            'Aleatorio' => $cars->where('select_professional', 0)->count()
           ];
            return $result;
 
