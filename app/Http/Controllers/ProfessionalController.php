@@ -132,12 +132,17 @@ class ProfessionalController extends Controller
             $data = $request->validate([
 
                 'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric',
-                'startDate' => 'required|date',
-                'endDate' => 'required|date'
+                'professional_id' => 'required|numeric'
            ]);
-           $total_ganancias = $this->professionalService->professionals_ganancias_branch($data);
-          return response()->json(['earningPeriodo' => $total_ganancias], 200);
+           if ($request->has('mes')) {
+            return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_month($data['branch_id'], $request->mes)], 200);
+            }
+            if ($request->has('startDate') && $request->has('endDate')) {
+                return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_Periodo($data, $request->startDate, $request->endDate)], 200);
+            }
+            else {
+                return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_date($data)], 200);
+            }
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Profssional no obtuvo ganancias en este período"], 500);
        }

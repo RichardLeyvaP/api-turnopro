@@ -100,15 +100,15 @@ class ProfessionalService
            return $result;
     }
 
-    public function professionals_ganancias_branch($data)
+    public function professionals_ganancias_branch_date($data)
     {
         Log::info('Obtener los cars');
         $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             });
-        })->whereHas('orders', function ($query) use ($data){
-            $query->whereBetWeen('data', [$data['startDate'], $data['endDate']]);
+        })->whereHas('orders', function ($query){
+            $query->whereDate('data', Carbon::now());
         })->get();
        $services =0;
        $products =0;
@@ -117,13 +117,15 @@ class ProfessionalService
             $services = $services + count($car->orders->where('is_product', 0));
             $products = $products + count($car->orders->where('is_product', 1));         
         }
-        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
-            $query->whereHas('service', function ($query){
-                $query->where('type_service', 'Especial');
-            })->where('branch_id', $data['branch_id']);
-        })->whereBetWeen('data', [$data['startDate'], $data['endDate']])->get();
+        $orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data){
+            $query->whereHas('branchService', function ($query) use ($data){
+                $query->WhereHas('service', function ($query){
+                    $query->where('type_service', 'Especial');
+                })->where('branch_id', $data['branch_id']);
+            })->where('professional_id', $data['professional_id']);
+        })->whereDate('data', Carbon::now())->get();
         $totalClients = $cars->count();
-          $result = [
+          return $result = [
             'Monto Generado' => $cars->sum('amount'),
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => round($cars->sum('tip')*0.8, 2),
@@ -139,8 +141,92 @@ class ProfessionalService
             'Seleccionado' => $cars->where('select_professional', 1)->count(),
             'Aleatorio' => $cars->where('select_professional', 0)->count()
           ];
-           return $result;
+    }
 
+    public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
+    {
+        Log::info('Obtener los cars');
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            });
+        })->whereHas('orders', function ($query) use ($startDate, $endDate){
+            $query->whereBetWeen('data', [$startDate, $endDate]);
+        })->get();
+       $services =0;
+       $products =0;
+       $totalClients =0;
+        foreach ($cars as $car) {
+            $services = $services + count($car->orders->where('is_product', 0));
+            $products = $products + count($car->orders->where('is_product', 1));         
+        }
+        $orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data){
+            $query->whereHas('branchService', function ($query) use ($data){
+                $query->WhereHas('service', function ($query){
+                    $query->where('type_service', 'Especial');
+                })->where('branch_id', $data['branch_id']);
+            })->where('professional_id', $data['professional_id']);
+        })->whereBetWeen('data', [$data['startDate'], $data['endDate']])->get();
+        $totalClients = $cars->count();
+          return $result = [
+            'Monto Generado' => $cars->sum('amount'),
+            'Propina' => round($cars->sum('tip'), 2),
+            'Propina 80%' => round($cars->sum('tip')*0.8, 2),
+            'Procentaje de Ganancia' =>45,
+            'Servicios Realizados' => $services,  
+            'Productos Vendidos' => $products,           
+            'Servicios Regulares' => $services - $orders->count(),
+            'Servicios Especiales' => $orders->count(),
+            'Monto Especial' => round($orders->sum('price'), 2),
+            'Ganancia Barbero' => round($cars->sum('amount')*0.45, 2),
+            'Ganancia Total Barbero' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
+            'Clientes Atendidos' => $totalClients,
+            'Seleccionado' => $cars->where('select_professional', 1)->count(),
+            'Aleatorio' => $cars->where('select_professional', 0)->count()
+          ];
+    }
+
+    public function professionals_ganancias_branch_month($data, $mes)
+    {
+        Log::info('Obtener los cars');
+        $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            });
+        })->whereHas('orders', function ($query) use ($mes){
+            $query->whereMonth('data', $mes);
+        })->get();
+       $services =0;
+       $products =0;
+       $totalClients =0;
+        foreach ($cars as $car) {
+            $services = $services + count($car->orders->where('is_product', 0));
+            $products = $products + count($car->orders->where('is_product', 1));         
+        }
+        $orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data){
+            $query->whereHas('branchService', function ($query) use ($data){
+                $query->WhereHas('service', function ($query){
+                    $query->where('type_service', 'Especial');
+                })->where('branch_id', $data['branch_id']);
+            })->where('professional_id', $data['professional_id']);
+        })->whereMonth('data', $mes)->get();
+        $totalClients = $cars->count();
+          return $result = [
+            'Monto Generado' => $cars->sum('amount'),
+            'Propina' => round($cars->sum('tip'), 2),
+            'Propina 80%' => round($cars->sum('tip')*0.8, 2),
+            'Procentaje de Ganancia' =>45,
+            'Servicios Realizados' => $services,  
+            'Productos Vendidos' => $products,           
+            'Servicios Regulares' => $services - $orders->count(),
+            'Servicios Especiales' => $orders->count(),
+            'Monto Especial' => round($orders->sum('price'), 2),
+            'Ganancia Barbero' => round($cars->sum('amount')*0.45, 2),
+            'Ganancia Total Barbero' => round($cars->sum('amount')*0.45 + $cars->sum('tip')*0.8, 2),
+            'Clientes Atendidos' => $totalClients,
+            'Seleccionado' => $cars->where('select_professional', 1)->count(),
+            'Aleatorio' => $cars->where('select_professional', 0)->count()
+          ];
     }
 
 }
