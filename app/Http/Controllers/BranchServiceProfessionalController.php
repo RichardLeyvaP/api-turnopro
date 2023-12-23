@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Service;
 use App\Models\BranchServiceProfessional;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,24 @@ class BranchServiceProfessionalController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-           $BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data){
+           $serviceModels = Service::whereHas('branchServices', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+           })->whereHas('professionals', function ($query) use ($data){
+                $query->where('professional_id', $data['professional_id']);
+           })->get()->map(function ($service){
+                return [
+                    "id" => $service->professionals->pluck('id')->first(),
+                    "name"=> $service->name,
+                    "simultaneou"=> $service->simultaneou,
+                    "price_service"=> $service->price_service,
+                    "type_service"=> $service->type_service,
+                    "profit_percentaje"=> $service->profit_percentaje,
+                    "duration_service"=> $service->duration_service,
+                    "image_service"=> $service->image_service,
+                    "service_comment"=> $service->service_comment
+                ];
+           });
+           /*$BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
            })->where('professional_id', $data['professional_id'])->get();
            $serviceModels = $BSProfessional->map(function ($branchServiceProfessional){
@@ -40,11 +58,11 @@ class BranchServiceProfessionalController extends Controller
                     "image_service"=> $branchServiceProfessional->branchService->service->image_service,
                     "service_comment"=> $branchServiceProfessional->branchService->service->service_comment
                 ];
-           });
+           });*/
            
            return response()->json(['professional_services' => $serviceModels], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+           return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
        }
     }
     public function store(Request $request)

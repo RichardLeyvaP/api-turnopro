@@ -22,6 +22,11 @@ class Service extends Model
         return $this->hasManyDeep(Order::class, [BranchService::class, BranchServiceProfessional::class]);
     }
 
+    public function professionals()
+    {
+        return $this->hasManyThrough(BranchServiceProfessional::class, BranchService::class);
+    }
+
     protected $casts = [
         'simultaneou' => 'integer',
         'price_service' => 'double',
