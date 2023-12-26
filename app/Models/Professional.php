@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Professional extends Model
 {
     use HasFactory;
+    use HasRelationships;
 
     public function business()
     {
@@ -51,7 +53,16 @@ class Professional extends Model
     
     public function branchRuleProfessionals()
     {
-        return $this->hasMany(branchRuleProfessional::class);
+        return $this->hasMany(BranchRuleProfessional::class);
+    }
+
+    public function clientProfessionals()
+    {
+        return $this->hasMany(ClientProfessional::class);
+    }
+
+    public function orders(){
+        return $this->hasManyDeep(Order::class, [ClientProfessional::class, Car::class]);
     }
 
     protected $table = "professionals";
