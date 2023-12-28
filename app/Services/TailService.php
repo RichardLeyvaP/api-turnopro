@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Branch;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
@@ -10,7 +11,7 @@ use Carbon\Carbon;
 class TailService {
 
     public function cola_branch_data($branch_id){
-        $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($branch_id){
+        $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         }])->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
@@ -24,6 +25,7 @@ class TailService {
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
+                'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
                 'attended' => $tail->attended
             ];
         })->sortBy('start_time')->values();

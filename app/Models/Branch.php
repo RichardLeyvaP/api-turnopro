@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Branch extends Model
 {
     use HasFactory;
+    use HasRelationships;
 
     public function business()
     {
@@ -49,5 +51,9 @@ class Branch extends Model
 
     public function rules(){
         return $this->belongsToMany(Rule::class, 'branch_rule')->withPivot('id')->withTimestamps();
+    }
+
+    public function tails(){
+        return $this->hasManyDeep(Tail::class, ['branch_professional' ,Professional::class, ClientProfessional::class, Car::class, Reservation::class]);
     }
 }
