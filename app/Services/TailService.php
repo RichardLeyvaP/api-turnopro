@@ -28,7 +28,7 @@ class TailService {
                 'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
                 'attended' => $tail->attended
             ];
-        })->sortBy('start_time')->values();
+        })->sortByDesc('professional_state')->sortBy('start_time')->values();
 
         return $branchTails;
     }
