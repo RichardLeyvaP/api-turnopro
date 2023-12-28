@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use GuzzleHttp;
 
 class UserController extends Controller
 {
@@ -49,9 +50,9 @@ class UserController extends Controller
         return response()->json(['msg' => "Client registrado correctamente!!!",
             'user' => $user
         ],201);
-    }catch(\Throwable $th){
-        return response()->json(['msg' => $th->getMessage().'Error al registrarse'], 500);
-    }
+        }catch(\Throwable $th){
+            return response()->json(['msg' => $th->getMessage().'Error al registrarse'], 500);
+        }
     }
 
     public function register_professional(Request $request){
@@ -206,9 +207,9 @@ class UserController extends Controller
             $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
             $qrCodeBase64 = base64_encode($qrCode);  
         return $qrCodeBase64;
-    }catch(\Throwable $th){ 
-        return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
-    }
+        }catch(\Throwable $th){ 
+            return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
+        }
     }
 
     public function logout(){
@@ -217,8 +218,8 @@ class UserController extends Controller
         return response()->json([
             "msg" => "Session cerrada correctamente"
         ],200);
-    }catch(\Throwable $th){
-        return response()->json(['msg' => 'Error al cerrar la session'], 500);
-    }
+        }catch(\Throwable $th){
+            return response()->json(['msg' => 'Error al cerrar la session'], 500);
+        }
     }
 }
