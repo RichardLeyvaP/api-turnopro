@@ -58,8 +58,9 @@ class BranchController extends Controller
             else {
                 return response()->json($this->branchService->branch_winner_date($data['branch_id']), 200);
             }
+            
        } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+           return response()->json(['msg' => $th->getMessage()], 500);
        }
     }
 
