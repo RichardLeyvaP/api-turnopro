@@ -10,10 +10,33 @@ use Carbon\Carbon;
 
 class TailService {
 
+    public function cola_branch_capilar($branch_id){
+        $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        }])->where('attended', 4)->get();
+        $branchTails = $tails->map(function ($tail){
+            return [
+                'reservation_id' => $tail->reservation->id,
+                'car_id' => $tail->reservation->car_id,
+                'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
+                'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
+                'total_time' => $tail->reservation->total_time,
+                'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
+                'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
+                'client_id' => $tail->reservation->car->clientProfessional->client_id,
+                'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
+                'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
+                'attended' => $tail->attended
+            ];
+        })->sortByDesc('professional_state')->sortBy('start_time')->values();
+
+        return $branchTails;
+    }
+
     public function cola_branch_data($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->whereIn('attended', [0,3])->get();
+        }])->whereIn('attended', [0,3,4,11])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -46,7 +69,7 @@ class TailService {
             $query->where('professional_id', $professional_id);
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
-        })->whereIn('attended', [0,1,3])->get();
+        })->whereIn('attended', [0,1,3,4,11])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
