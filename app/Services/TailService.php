@@ -13,7 +13,7 @@ class TailService {
     public function cola_branch_capilar($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->where('attended', 4)->get();
+        }])->orderBy('updated_at')->where('attended', 4)->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -26,10 +26,9 @@ class TailService {
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
                 'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
-                'attended' => $tail->attended,
-                'updated_at' => $tail->updated_at
+                'attended' => $tail->attended
             ];
-        })->sortBy('updated_at')->values();
+        })->values();
 
         return $branchTails;
     }
