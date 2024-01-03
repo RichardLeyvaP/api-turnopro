@@ -13,7 +13,7 @@ class TailService {
     public function cola_branch_capilar($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->orderBy('updated_at')->where('attended', 4)->get();
+        }])->orderBy('updated_at')->whereIn('attended', [4,5])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -36,7 +36,7 @@ class TailService {
     public function cola_branch_data($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->whereIn('attended', [0,3,4,5,11])->get();
+        }])->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -69,7 +69,7 @@ class TailService {
             $query->where('professional_id', $professional_id);
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
-        })->whereIn('attended', [0,1,3,4,5,11])->get();
+        })->whereNotIn('attended', [2])->get();
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
