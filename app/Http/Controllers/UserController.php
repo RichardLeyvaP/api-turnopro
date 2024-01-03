@@ -77,10 +77,9 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
+        $filename = "defect.png";
         if ($request->hasFile('image_url')) {
-            //$filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
             $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
-            $data['image_url'] = $filename;
         }
         $professional = new Professional();
         $professional->name = $request['name'];
@@ -90,7 +89,7 @@ class UserController extends Controller
         $professional->phone = $request['phone'];
         $professional->charge_id = $request['charge_id'];
         $professional->user_id = $user->id;
-        $professional->image_url = $data['image_url'];
+        $professional->image_url = $filename;
         $professional->state = 0;
         $professional->save();
 
