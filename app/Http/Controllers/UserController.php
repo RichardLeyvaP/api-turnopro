@@ -77,7 +77,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-        $filename = "defect.png";
+        $filename = "image/default.png";
         if ($request->hasFile('image_url')) {
             $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
         }
