@@ -161,10 +161,11 @@ class ProfessionalController extends Controller
                 'user_id' => 'required|numeric',
                 'image_url' => 'nullable'
             ]);
+            $filename = "image/default.png";
             if ($request->hasFile('image_url')) {
                 $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
                 //$filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
-                $data['image_url'] = $filename;
+                //$data['image_url'] = $filename;
             }
             $professional = new Professional();
             $professional->name = $data['name'];
@@ -174,7 +175,7 @@ class ProfessionalController extends Controller
             $professional->phone = $data['phone'];
             $professional->charge_id = $data['charge_id'];
             $professional->user_id = $data['user_id'];
-            $professional->image_url = $data['image_url'];
+            $professional->image_url = $filename;
             $professional->state = 0;
             $professional->save();
 
