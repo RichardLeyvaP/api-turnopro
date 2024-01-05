@@ -60,5 +60,9 @@ class Professional extends Model
         return $this->hasManyDeep(Order::class, [ClientProfessional::class, Car::class]);
     }
 
+    public function workplaces(){
+        return $this->belongsToMany(Workplace::class, 'professional_workplace')->withPivot('data')->withTimestamps();
+    }
+
     protected $table = "professionals";
 }

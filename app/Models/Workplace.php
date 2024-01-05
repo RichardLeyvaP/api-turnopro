@@ -13,4 +13,8 @@ class Workplace extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function professionals(){
+        return $this->belongsToMany(Professional::class, 'professional_workplace')->withPivot('data')->withTimestamps();
+    }
 }

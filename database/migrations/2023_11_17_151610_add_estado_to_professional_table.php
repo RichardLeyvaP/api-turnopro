@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('professionals', function (Blueprint $table) {
-            Schema::table('professionals', function (Blueprint $table) {
                 $table->boolean('state')->default(false);
-            });
         });
     }
 
@@ -23,10 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('professionals', function (Blueprint $table) {
             Schema::table('professionals', function (Blueprint $table) {
                 $table->dropColumn('state');
             });
-        });
     }
 };

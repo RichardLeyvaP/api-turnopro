@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::table('workplaces', function (Blueprint $table) {            
             $table->dropForeign('workplaces_branche_id_foreign');
             $table->dropColumn('branche_id');
-            $table->unsignedBigInteger('branch_id');
+            $table->unsignedBigInteger('branch_id')->after('created_at');
             $table->foreign('branch_id')->references('id')->on('branches');
             $table->dropForeign('workplaces_professional_id_foreign');
             $table->dropColumn('professional_id');
+            $table->boolean('select')->default(false)->after('created_at');
         });
     }
 
