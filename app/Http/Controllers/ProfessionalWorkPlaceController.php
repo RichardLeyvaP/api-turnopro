@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Branch;
+use App\Models\Professional;
+use App\Models\Workplace;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class ProfessionalWorkPlaceController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        try {             
+            Log::info( "Entra a buscar los puestos de trabajos por branches");
+            return response()->json(['workplaces' => Branch::with('professionals')->get()], 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => "Error al mostrar los productos"], 500);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        Log::info("Asignar Productos a un almacen");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'workplace_id' => 'required|numeric',
+                'places' => 'nullable'
+            ]);            
+            $places = $data['places'];
+            $professional = Professional::find($data['professional_id']);
+            $workplace = Workplace::find($data['workplace_id']);
+            $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)]);
+            if($places)
+            Workplace::whereIn('id', $places)->update(['select'=> 1]);
+            return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' =>$th->getMessage().'Error al seleccionar el puesto de trabajo'], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar los puestos de trabajo de un professionals");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric'
+            ]);
+            $professional = Professional::find($data['professional_id']);
+            return response()->json(['professionals' => $professional->workplaces->get()],200); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+}

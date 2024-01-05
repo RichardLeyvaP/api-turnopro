@@ -274,5 +274,42 @@ class TailController extends Controller
                 } 
     }
 
+    public function set_clock(Request $request)
+    {
+        try {
+
+            Log::info("Modificar estado del relock");
+            Log::info($request);
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'clock' => 'required|numeric'
+            ]);
+
+            $tail = Tail::find($data['id']);
+            $tail->clock = $data['clock'];
+            $tail->save();
+            return response()->json(['msg' => 'Estado del reloj modificado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al modificar el estado del reloj'], 500);
+        }
+    }
+
+    public function get_clock(Request $request)
+    {
+        try {
+
+            Log::info("Modificar estado del relock");
+            Log::info($request);
+            $data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+
+            return response()->json(Tail::where('id',$data['id'])->value('clock'), 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al modificar el estado del reloj'], 500);
+        }
+    }
 
 }

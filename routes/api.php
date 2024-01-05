@@ -21,12 +21,12 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
+use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
-use App\Models\Tail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -208,6 +208,8 @@ Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambia
 Route::get('/type_of_service', [TailController::class, 'type_of_service']); //Saber si dentro del cliente q esta atendido uno de los servicios es simutaneu
 Route::get('/return_client_status', [TailController::class, 'return_client_status']);//devuelve el estado de la reservacion
 Route::get('/cola_branch_capilar', [TailController::class, 'cola_branch_capilar']); //dado un branch_id devolver la cola a atencion capilar de esa branch
+Route::get('/set_clock', [TailController::class, 'set_clock']); //dado una id de la cola modificar el estado del clock
+Route::get('/get_clock', [TailController::class, 'get_clock']); //dado una id de la cola devolver el estado del clock
 
 Route::get('/workplace', [WorkplaceController::class, 'index']);
 Route::get('/workplace-show', [WorkplaceController::class, 'show']);
@@ -242,6 +244,12 @@ Route::get('/branchprofessional-show', [BranchProfessionalController::class, 'sh
 Route::post('/branchprofessional', [BranchProfessionalController::class, 'store']);
 Route::put('/branchprofessional', [BranchProfessionalController::class, 'update']);
 Route::post('/branchprofessional-destroy', [BranchProfessionalController::class, 'destroy']);
+
+Route::get('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'index']);
+Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::class, 'show']);
+Route::post('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'store']);
+Route::put('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'update']);
+Route::post('/professionalworkplace-destroy', [ProfessionalWorkPlaceController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('professional_workplace', function (Blueprint $table) {
             $table->id();
             $table->date('data');
+            $table->string('places')->nullable();
 
             $table->unsignedBigInteger('professional_id');
             $table->unsignedBigInteger('workplace_id');
