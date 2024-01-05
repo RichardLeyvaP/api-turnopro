@@ -38,11 +38,6 @@ class Professional extends Model
         return $this->belongsTo(Charge::class);
     }
 
-    public function workplaces()
-    {
-        return $this->hasMany(Workplace::class);
-    }
-
     public function branches(){
         return $this->belongsToMany(Branch::class)->withTimestamps();
     }
