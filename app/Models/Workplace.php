@@ -13,8 +13,4 @@ class Workplace extends Model
     {
         return $this->belongsTo(Branch::class);
     }
-    public function professional()
-    {
-        return $this->belongsTo(Professional::class);
-    }
 }
