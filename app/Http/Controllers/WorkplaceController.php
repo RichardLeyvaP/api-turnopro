@@ -44,13 +44,13 @@ class WorkplaceController extends Controller
             $workplace_data = $request->validate([
                 'name' => 'required|max:100|unique:workplaces',
                 'busy' => 'required',
-                'branche_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
             ]);
 
             $workplace = new Workplace();
             $workplace->name = $workplace_data['name'];
             $workplace->busy = $workplace_data['busy'];
-            $workplace->branche_id = $workplace_data['branche_id'];
+            $workplace->branch_id = $workplace_data['branch_id'];
             $workplace->save();
 
             return response()->json(['msg' => 'Local de Trabajo insertado correctamente'], 200);
@@ -70,13 +70,13 @@ class WorkplaceController extends Controller
                 'id' => 'required|numeric',
                 'name' => 'required|max:100',
                 'busy' => 'required',
-                'branche_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
             ]);
 
             $workplace = Workplace::find($workplace_data['id']);
             $workplace->name = $workplace_data['name'];
             $workplace->busy = $workplace_data['busy'];
-            $workplace->branche_id = $workplace_data['branche_id'];
+            $workplace->branch_id = $workplace_data['branch_id'];
             $workplace->save();
 
             return response()->json(['msg' => 'Local de Trabajo actualizado correctamente'], 200);
