@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Professional;
+use App\Models\ProfessionalWorkPlace;
 use App\Models\Workplace;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class ProfessionalWorkPlaceController extends Controller
                 'places' => 'nullable'
             ]);            
             $places = $data['places'];
+            //return json_decode($places);
             $professional = Professional::find($data['professional_id']);
             $workplace = Workplace::find($data['workplace_id']);
             $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)]);
@@ -73,9 +75,32 @@ class ProfessionalWorkPlaceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        //
+        Log::info("Actualizar Productos a un almacen");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'workplace_id' => 'required|numeric',
+                'places' => 'nullable'
+            ]);            
+            $places = $data['places'];
+            //$temp = implode(',', $data['places']);
+            //return explode(',', $temp);
+            $professional = Professional::find($data['professional_id']);
+            $workplace = Workplace::find($data['workplace_id']);
+            $professionalworkplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->where('workplace_id', $data['workplace_id'])->whereDate('data', Carbon::now())->selectRaw('*, CAST(places AS CHAR) AS places_decodificado')->first();
+            Workplace::whereIn('id', json_decode($professionalworkplace->places_decodificado, true))->update(['select'=> 0]);
+            //$places = json_decode($professionalworkplace->places_decodificado, true);
+            $professional->workplaces()->updateExistingPivot($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)])->whereDate('data', Carbon::now());
+            //if($places)
+            //Workplace::whereIn('id', $places)->update(['select'=> 0]);
+            return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' =>$th->getMessage().'Error al seleccionar el puesto de trabajo'], 500);
+        }
     }
 
     /**
