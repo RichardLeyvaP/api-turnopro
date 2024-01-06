@@ -86,16 +86,15 @@ class ProfessionalWorkPlaceController extends Controller
                 'places' => 'nullable'
             ]);            
             $places = $data['places'];
-            //$temp = implode(',', $data['places']);
-            //return explode(',', $temp);
+
             $professional = Professional::find($data['professional_id']);
             $workplace = Workplace::find($data['workplace_id']);
             $professionalworkplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->where('workplace_id', $data['workplace_id'])->whereDate('data', Carbon::now())->selectRaw('*, CAST(places AS CHAR) AS places_decodificado')->first();
             Workplace::whereIn('id', json_decode($professionalworkplace->places_decodificado, true))->update(['select'=> 0]);
-            //$places = json_decode($professionalworkplace->places_decodificado, true);
-            $professional->workplaces()->updateExistingPivot($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)])->whereDate('data', Carbon::now());
-            //if($places)
-            //Workplace::whereIn('id', $places)->update(['select'=> 0]);
+
+            $professional->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->updateExistingPivot($workplace->id,['data'=>Carbon::now(), 'places'=>json_encode($places)]);
+            if($places)
+            Workplace::whereIn('id', $places)->update(['select'=> 1]);
             return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -106,8 +105,26 @@ class ProfessionalWorkPlaceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        //
+        Log::info("Actualizar Productos a un almacen");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'workplace_id' => 'required|numeric'
+            ]);            
+            $professional = Professional::find($data['professional_id']);
+            $workplace = Workplace::find($data['workplace_id']);
+            //return $professional->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->withPivot('id', 'places')->get()->map->pivot;
+            $professionalworkplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->where('workplace_id', $data['workplace_id'])->whereDate('data', Carbon::now())->selectRaw('*, CAST(places AS CHAR) AS places_decodificado')->first();
+            Workplace::whereIn('id', json_decode($professionalworkplace->places_decodificado, true))->update(['select'=> 0]);
+
+            $professional->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->detach($workplace->id);
+            return response()->json(['msg' => 'Puesto de trabajo liberado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' =>$th->getMessage().'Error al liberar el puesto de trabajo'], 500);
+        }
     }
 }
