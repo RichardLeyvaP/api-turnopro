@@ -44,6 +44,8 @@ class ProfessionalWorkPlaceController extends Controller
             $professional = Professional::find($data['professional_id']);
             $workplace = Workplace::find($data['workplace_id']);
             $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)]);
+            $workplace->busy = 1;
+            $workplace->save();
             if($places)
             Workplace::whereIn('id', $places)->update(['select'=> 1]);
             return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
@@ -91,7 +93,6 @@ class ProfessionalWorkPlaceController extends Controller
             $workplace = Workplace::find($data['workplace_id']);
             $professionalworkplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->where('workplace_id', $data['workplace_id'])->whereDate('data', Carbon::now())->selectRaw('*, CAST(places AS CHAR) AS places_decodificado')->first();
             Workplace::whereIn('id', json_decode($professionalworkplace->places_decodificado, true))->update(['select'=> 0]);
-
             $professional->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->updateExistingPivot($workplace->id,['data'=>Carbon::now(), 'places'=>json_encode($places)]);
             if($places)
             Workplace::whereIn('id', $places)->update(['select'=> 1]);

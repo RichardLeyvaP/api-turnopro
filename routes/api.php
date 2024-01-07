@@ -216,6 +216,8 @@ Route::get('/workplace-show', [WorkplaceController::class, 'show']);
 Route::post('/workplace', [WorkplaceController::class, 'store']);
 Route::put('/workplace', [WorkplaceController::class, 'update']);
 Route::post('/workplace-destroy', [WorkplaceController::class, 'destroy']);
+Route::get('/branch_workplaces_busy', [WorkplaceController::class, 'branch_workplaces_busy']);//mostrar los pestos de trabajo disponibles al trabajador
+Route::get('/branch_workplaces_select', [WorkplaceController::class, 'branch_workplaces_select']);//mostrar los pestos de trabajo disponibles para atender al tecnico
 
 Route::get('/schedule', [ScheduleController::class, 'index']);
 Route::get('/schedule-show', [ScheduleController::class, 'show']);
