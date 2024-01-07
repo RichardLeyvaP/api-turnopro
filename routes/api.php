@@ -208,6 +208,7 @@ Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambia
 Route::get('/type_of_service', [TailController::class, 'type_of_service']); //Saber si dentro del cliente q esta atendido uno de los servicios es simutaneu
 Route::get('/return_client_status', [TailController::class, 'return_client_status']);//devuelve el estado de la reservacion
 Route::get('/cola_branch_capilar', [TailController::class, 'cola_branch_capilar']); //dado un branch_id devolver la cola a atencion capilar de esa branch
+Route::get('/cola_branch_tecnico', [TailController::class, 'cola_branch_tecnico']); //dado un branch_id devolver la cola a atencion capilar de un tecnico
 Route::get('/set_clock', [TailController::class, 'set_clock']); //dado una id de la cola modificar el estado del clock
 Route::get('/get_clock', [TailController::class, 'get_clock']); //dado una id de la cola devolver el estado del clock
 

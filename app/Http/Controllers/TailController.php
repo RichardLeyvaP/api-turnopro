@@ -174,6 +174,23 @@ class TailController extends Controller
                 } 
     }
 
+    public function cola_branch_tecnico(Request $request)
+    {
+        try { 
+            
+            Log::info( "Mostarr la cola de servicio capilar del dia de un tecnico");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+            ]);
+            
+            return response()->json(['tail' => $this->tailService->cola_branch_tecnico($data['branch_id'], $data['professional_id'])], 200);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => $th->getMessage()], 500);
+                } 
+    }
+
     public function cola_branch_delete(Request $request)
     {
         try { 
