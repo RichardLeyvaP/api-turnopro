@@ -209,8 +209,9 @@ Route::get('/type_of_service', [TailController::class, 'type_of_service']); //Sa
 Route::get('/return_client_status', [TailController::class, 'return_client_status']);//devuelve el estado de la reservacion
 Route::get('/cola_branch_capilar', [TailController::class, 'cola_branch_capilar']); //dado un branch_id devolver la cola a atencion capilar de esa branch
 Route::get('/cola_branch_tecnico', [TailController::class, 'cola_branch_tecnico']); //dado un branch_id devolver la cola a atencion capilar de un tecnico
-Route::get('/set_clock', [TailController::class, 'set_clock']); //dado una id de la cola modificar el estado del clock
-Route::get('/get_clock', [TailController::class, 'get_clock']); //dado una id de la cola devolver el estado del clock
+Route::get('/set_clock', [TailController::class, 'set_clock']); //dado una id de la reservacion modificar el estado del clock
+Route::get('/get_clock', [TailController::class, 'get_clock']); //dado una id de la reservacion devolver el estado del clock
+Route::get('/set_timeClock', [TailController::class, 'set_timeClock']); //dado una id de la reservacion guardar el tiempo del reloj y el estado
 
 Route::get('/workplace', [WorkplaceController::class, 'index']);
 Route::get('/workplace-show', [WorkplaceController::class, 'show']);
