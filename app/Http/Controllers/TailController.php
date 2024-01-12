@@ -313,6 +313,30 @@ class TailController extends Controller
         }
     }
 
+    public function set_timeClock(Request $request)
+    {
+        try {
+
+            Log::info("Modificar estado del relock");
+            Log::info($request);
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
+                'timeClock' => 'required|numeric',
+                'detached' => 'required|boolean'
+            ]);
+
+            $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
+
+            $tail->timeClock = $data['timeClock'];
+            $tail->detached = $data['detached'];
+            $tail->save();
+            return response()->json(['msg' => 'Estado del tiempo del reloj y estado modificado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al modificar el tiempo del reloj y el estado'], 500);
+        }
+    }
+
     public function get_clock(Request $request)
     {
         try {
@@ -323,7 +347,7 @@ class TailController extends Controller
                 'reservation_id' => 'required|numeric'
             ]);
 
-            return response()->json(Tail::where('reservation_id',$data['reservation_id'])->value('clock'), 200);
+            return response()->json(Tail::where('reservation_id',$data['reservation_id'])->get(), 200);
         } catch (\Throwable $th) {
             Log::info($th);
         return response()->json(['msg' => 'Error al modificar el estado del reloj'], 500);
