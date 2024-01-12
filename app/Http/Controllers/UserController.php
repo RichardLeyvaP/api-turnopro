@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Professional;
 use App\Models\User;
@@ -157,6 +158,15 @@ class UserController extends Controller
                         ];
                     })->first();}
                     Log::info($branch);
+                    if ($user->professional) {
+                        $branchRules = Branch::find($branch['branch_id']);
+                        $professional = Professional::find($user->professional->id)->first();
+                        $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now()->toDateString())->get();
+                        if (!count($professionalRules)) {
+                            $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id') ;
+                            $professional->branchRules()->attach($branchRulesId,['data'=>Carbon::now()->toDateString(), 'estado'=>3]);
+                        }
+                    }
                    return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,
