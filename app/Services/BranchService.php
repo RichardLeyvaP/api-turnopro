@@ -16,10 +16,8 @@ class BranchService
     public function branch_winner_date($branch_id)
     {
 
-        $cars = Car::whereHas('clientProfessional', function ($query) use ($branch_id){
-            $query->whereHas('professional.branches', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
-            });
+        $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
         })->whereHas('orders', function ($query){
             $query->whereDate('data', Carbon::now());
                 })->get();
