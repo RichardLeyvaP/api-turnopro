@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tails', function (Blueprint $table) {
-            $table->tinyInteger('timeClock')->default(0)->after('clock');
+            $table->integer('timeClock')->default(0)->after('clock');
             $table->tinyInteger('detached')->default(0)->after('timeClock');
         });
     }
