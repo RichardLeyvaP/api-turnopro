@@ -322,13 +322,15 @@ class TailController extends Controller
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'timeClock' => 'required|numeric',
-                'detached' => 'required|numeric'
+                'detached' => 'required|numeric',
+                'clock' => 'required|numeric'
             ]);
 
             $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
 
             $tail->timeClock = $data['timeClock'];
             $tail->detached = $data['detached'];
+            $tail->clock = $data['clock'];
             $tail->save();
             return response()->json(['msg' => 'Estado del tiempo del reloj y estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
