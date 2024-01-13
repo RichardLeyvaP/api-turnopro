@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('tails', function (Blueprint $table) {
             $table->tinyInteger('timeClock')->default(0)->after('clock');
-            $table->boolean('detached')->default(false)->after('timeClock');
+            $table->tinyInteger('detached')->default(0)->after('timeClock');
         });
     }
 
@@ -23,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tails', function (Blueprint $table) {
-            //
+            $table->dropColumn('timeClock');
+            $table->dropColumn('detached');
         });
     }
 };
