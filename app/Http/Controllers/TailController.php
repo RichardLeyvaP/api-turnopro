@@ -322,7 +322,7 @@ class TailController extends Controller
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'timeClock' => 'required|numeric',
-                'detached' => 'required|boolean'
+                'detached' => 'required|numeric'
             ]);
 
             $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
