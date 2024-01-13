@@ -346,8 +346,9 @@ class TailController extends Controller
             $data = $request->validate([
                 'reservation_id' => 'required|numeric'
             ]);
-
-            return response()->json(Tail::where('reservation_id',$data['reservation_id'])->get(), 200);
+// return response()->json(Tail::where('reservation_id',$data['reservation_id'])->get(), 200); //ESTE ERA EL QUE ESTABA
+            $result = Tail::where('reservation_id', $data['reservation_id'])->pluck('clock')->first();
+return response()->json($result, 200);
         } catch (\Throwable $th) {
             Log::info($th);
         return response()->json(['msg' => 'Error al modificar el estado del reloj'], 500);

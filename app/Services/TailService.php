@@ -60,6 +60,9 @@ class TailService {
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
                 'attended' => $tail->attended, 
+                'updated_at' => $tail->updated_at, 
+                'clock' => $tail->clock, 
+                'timeClock' => $tail->timeClock, 
                 'total_services' => Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()/*$tail->reservation->car->orders->map(function ($orderData){
                     $orderData->where('is_product', false);
                       })*/
