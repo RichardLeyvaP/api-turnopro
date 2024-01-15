@@ -17,6 +17,17 @@ use GuzzleHttp;
 
 class UserController extends Controller
 {
+    public function index()
+    {
+        try { 
+            
+            Log::info( "entra a buscar los usuarios");
+            return response()->json(['stores' => User::all()], 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar los usuarios"], 500);
+        }
+    }
  
     public function register_client(Request $request){
         try{

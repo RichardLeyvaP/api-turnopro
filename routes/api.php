@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register_client', [UserController::class, 'register_client']);
 Route::post('/register_professional', [UserController::class, 'register_professional']);
 Route::post('/login', [UserController::class, 'login']);
+Route::get('/usuario', [UserController::class, 'index']);
 
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
