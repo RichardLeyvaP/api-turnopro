@@ -12,7 +12,7 @@ class ChargeController extends Controller
         try { 
             
             Log::info( "entra a buscar cargos");
-            return response()->json(['stores' => Charge::all()], 200);
+            return response()->json(['charges' => Charge::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los cargos"], 500);
