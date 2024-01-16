@@ -22,7 +22,7 @@ class UserController extends Controller
         try { 
             
             Log::info( "entra a buscar los usuarios");
-            return response()->json(['stores' => User::all()], 200);
+            return response()->json(['users' => User::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los usuarios"], 500);
