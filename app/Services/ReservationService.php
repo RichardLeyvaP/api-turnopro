@@ -8,6 +8,7 @@ use App\Models\Car;
 use App\Models\Client;
 use App\Models\ClientProfessional;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\Professional;
 use App\Models\Reservation;
 use App\Models\Service;
@@ -90,6 +91,48 @@ class ReservationService {
             DB::commit();
             Log::info($reservation);
         return $reservation;
+    }
+
+    public function clientHistory($data){
+        $client = Client::find($data['client_id']);
+       $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
+            $query->whereHas('professional.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('client_id', $data['client_id']);
+        })->count();
+
+        $services = Service::withCount(['orders'=> function ($query) use ($data){
+            $query->whereHas('car.clientProfessional', function ($query) use ($data){
+                $query->whereHas('professional.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('client_id', $data['client_id']);
+            })->where('is_product', 0);
+        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
+        $products = Product::withCount(['orders' => function ($query) use ($data){
+            $query->whereHas('car.clientProfessional', function ($query) use ($data){
+                $query->whereHas('professional.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('client_id', $data['client_id']);
+            })->where('is_product', 1);
+        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);;
+        $result = [
+            'clientName' => $client->name." ".$client->surname." ".$client->second_surname,            
+            'cant_visit' => $reservations,
+            'services' => $services->map(function ($service){
+                return [
+                    'name' => $service->name,
+                    'cant' => $service->orders_count
+                ];
+            }),
+            'products' => $products->map(function ($product){
+                return [
+                    'name' => $product->name,
+                    'cant' => $product->orders_count
+                ];
+            })
+          ];
+           return $result;
+
     }
 
 }

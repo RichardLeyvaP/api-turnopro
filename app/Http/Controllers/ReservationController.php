@@ -289,6 +289,19 @@ class ReservationController extends Controller
         }
     }
 
+    public function clientHistory(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'client_id' => 'required|numeric'
+            ]);
+            $history = $this->reservationService->clientHistory($data);
+            return response()->json(['clientHistory' => $history], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error al mostrar la history'], 500);
+        }
+    }
     //metodos privados
     public function send_email($data_reservation,$start_time,$client_id,$branch_id,$template,$logoUrl)
     {
