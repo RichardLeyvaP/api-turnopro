@@ -29,7 +29,7 @@ class ProfessionalController extends Controller
     public function index()
     {
         try {
-            return response()->json(['profesionales' => Professional::with('user', 'charge')->get()], 200);
+            return response()->json(['professionals' => Professional::with('user', 'charge')->get()], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las professionales"], 500);
         }
@@ -158,8 +158,7 @@ class ProfessionalController extends Controller
                 'email' => 'required|max:50|email|unique:professionals',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
-                'user_id' => 'required|numeric',
-                'image_url' => 'nullable'
+                'user_id' => 'required|numeric'
             ]);
             $filename = "image/default.png";
             if ($request->hasFile('image_url')) {
