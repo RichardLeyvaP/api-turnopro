@@ -6,6 +6,7 @@ use App\Models\Car;
 use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class ClientController extends Controller
@@ -81,7 +82,10 @@ class ClientController extends Controller
                 'phone' => 'required|max:15',
                 'user_id' => 'nullable|number'
             ]);
-
+            $filename = "image/default.png";
+            if ($request->hasFile('client_image')) {
+               $filename = $request->file('client_image')->storeAs('clients',$request->file('client_image')->getClientOriginalName(),'public');
+            }
             $client = new Client();
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];
@@ -89,6 +93,7 @@ class ClientController extends Controller
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
             $client->user_id = $clients_data['user_id'];
+            $client->client_image = $filename;
             $client->save();
 
             return response()->json(['msg' => 'Cliente insertado correctamente'], 200);
@@ -114,6 +119,16 @@ class ClientController extends Controller
                 'phone' => 'required|max:15',
                 'user_id' => 'required|number'
             ]);
+            $client = Client::find($clients_data['id']);
+            if ($client->client_image) {
+                $destination=public_path("storage\\".$client->client_image);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
+                if ($request->hasFile('client_image')) {
+                   $filename =$request->file('client_image')->storeAs('clients',$request->file('client_image')->getClientOriginalName(),'public');
+                }
             Log::info($request);
             $client = Client::find($clients_data['id']);
             $client->name = $clients_data['name'];
@@ -122,6 +137,7 @@ class ClientController extends Controller
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
             $client->user_id = $clients_data['user_id'];
+            $client->client_image = $filename;
             $client->save();
 
             return response()->json(['msg' => 'Cliente actualizado correctamente'], 200);
@@ -138,7 +154,14 @@ class ClientController extends Controller
             $clients_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            Client::destroy($clients_data['id']);
+            $client = Client::find($clients_data['id']);
+            if ($client->client_image) {
+                $destination=public_path("storage\\".$client->client_image);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
+            $client->destroy();
 
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
