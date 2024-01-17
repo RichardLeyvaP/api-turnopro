@@ -116,7 +116,8 @@ class ReservationService {
             })->where('is_product', 1);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);;
         $result = [
-            'clientName' => $client->name." ".$client->surname." ".$client->second_surname,            
+            'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
+            'clientImage' => $client->image,             
             'cant_visit' => $reservations,
             'services' => $services->map(function ($service){
                 return [
