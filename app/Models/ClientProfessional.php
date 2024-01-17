@@ -14,6 +14,11 @@ class ClientProfessional extends Model
         return $this->hasMany(Car::class);
     }
 
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);

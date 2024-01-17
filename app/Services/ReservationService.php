@@ -114,11 +114,13 @@ class ReservationService {
                     $query->where('branch_id', $data['branch_id']);
                 })->where('client_id', $data['client_id']);
             })->where('is_product', 1);
-        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);;
+        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
+        $comment = $client->comments->sortByDesc('data')->sortByDesc('updated_at')->first();
         $result = [
             'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
             'clientImage' => $client->image,             
-            'cant_visit' => $reservations,
+            'cantVisit' => $reservations,
+            'endLook' => $comment->look,
             'services' => $services->map(function ($service){
                 return [
                     'name' => $service->name,

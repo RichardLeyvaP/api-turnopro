@@ -21,6 +21,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
@@ -257,6 +258,13 @@ Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::clas
 Route::post('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'store']);
 Route::put('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'update']);
 Route::post('/professionalworkplace-destroy', [ProfessionalWorkPlaceController::class, 'destroy']);
+
+Route::get('/comment', [CommentController::class, 'index']);
+Route::get('/comment-show', [CommentController::class, 'show']);
+Route::post('/comment', [CommentController::class, 'store']);
+Route::put('/comment', [CommentController::class, 'update']);
+Route::post('/comment-destroy', [CommentController::class, 'destroy']);
+Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
