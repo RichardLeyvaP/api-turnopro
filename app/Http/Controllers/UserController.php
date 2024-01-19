@@ -171,7 +171,7 @@ class UserController extends Controller
                     Log::info($branch);
                     if ($user->professional) {
                         $branchRules = Branch::find($branch['branch_id']);
-                        $professional = Professional::find($user->professional->id)->first();
+                        $professional = Professional::find($user->professional->id);
                         $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now()->toDateString())->get();
                         if (!count($professionalRules)) {
                             $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id') ;

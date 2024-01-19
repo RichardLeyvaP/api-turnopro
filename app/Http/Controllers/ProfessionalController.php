@@ -16,13 +16,13 @@ use Illuminate\Support\Facades\Log;
 class ProfessionalController extends Controller
 {
 
-    private ImageService $imageService;
+    //private ImageService $imageService;
     private ProfessionalService $professionalService;
 
-    public function __construct(ProfessionalService $professionalService, ImageService $imageService )
+    public function __construct(ProfessionalService $professionalService/*, ImageService $imageService*/ )
     {
         $this->professionalService = $professionalService;
-        $this->imageService = $imageService;
+        //$this->imageService = $imageService;
     }
 
 
@@ -162,8 +162,8 @@ class ProfessionalController extends Controller
             ]);
             $filename = "image/default.png";
             if ($request->hasFile('image_url')) {
-                $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
-                //$filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                //$filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
+                $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                 //$data['image_url'] = $filename;
             }
             $professional = new Professional();
@@ -207,15 +207,15 @@ class ProfessionalController extends Controller
             Log::info($request);
             $professional = Professional::find($professionals_data['id']);
             if ($professional->image_url) {
-                $this->imageService->destroyImagen($professional->image_url);
-                /*$destination=public_path("storage\\".$professional->image_url);
+                //$this->imageService->destroyImagen($professional->image_url);
+                $destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }*/
+                    }
                 }
                 if ($request->hasFile('image_url')) {
-                    $filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
-                    //$filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    //$filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
+                    $filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                     $professionals_data['image_url'] = $filename;
                 }
             $professional->name = $professionals_data['name'];
@@ -232,7 +232,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => 'Error al actualizar el professional'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al actualizar el professional'], 500);
         }
     }
 
@@ -245,11 +245,11 @@ class ProfessionalController extends Controller
             ]);
             $professional = Professional::find($professionals_data['id']);
             if ($professional->image_url) {
-                $this->imageService->destroyImagen($professional->image_url);
-                /*$destination=public_path("storage\\".$professional->image_url);
+                //$this->imageService->destroyImagen($professional->image_url);
+                $destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }*/
+                    }
                 }
             Professional::destroy($professionals_data['id']);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
