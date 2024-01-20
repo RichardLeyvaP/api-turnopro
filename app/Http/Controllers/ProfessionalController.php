@@ -16,13 +16,11 @@ use Illuminate\Support\Facades\Log;
 class ProfessionalController extends Controller
 {
 
-    //private ImageService $imageService;
     private ProfessionalService $professionalService;
 
-    public function __construct(ProfessionalService $professionalService/*, ImageService $imageService*/ )
+    public function __construct(ProfessionalService $professionalService)
     {
         $this->professionalService = $professionalService;
-        //$this->imageService = $imageService;
     }
 
 
