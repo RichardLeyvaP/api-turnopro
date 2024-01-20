@@ -9,6 +9,7 @@ use App\Models\Professional;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
@@ -35,6 +36,10 @@ class CommentController extends Controller
                 'professional_id' => 'required|numeric',
                 'look' => 'required'
             ]); 
+            $filename = "image/default.png";
+            if ($request->hasFile('image_look')) {
+                $filename = $request->file('image_url')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
+             }
             $client = Client::find($data['client_id']);
             $professional = Professional::find($data['professional_id']);
             $client_professional_id = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first()->pivot->id;
@@ -42,6 +47,7 @@ class CommentController extends Controller
             $comment->client_professional_id = $client_professional_id;
             $comment->data = Carbon::now();
             $comment->look = $data['look'];
+            $comment->image_look = $filename;
             $comment->save();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
@@ -58,12 +64,17 @@ class CommentController extends Controller
                 'reservation_id' => 'required|numeric',
                 'look' => 'required'
             ]); 
+            $filename = "image/default.png";
+            if ($request->hasFile('image_look')) {
+               $filename = $request->file('image_url')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
+            }
             $reservation = Reservation::find($data['reservation_id']);
             $client_professional_id = $reservation->car->clientProfessional->id;
             $comment = new Comment();
             $comment->client_professional_id = $client_professional_id;
             $comment->data = Carbon::now();
             $comment->look = $data['look'];
+            $comment->image_look = $filename;
             $comment->save();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
@@ -93,7 +104,17 @@ class CommentController extends Controller
                 'look' => 'required'
             ]); 
             $comment = Comment::find($data['id']);
+            if ($comment->image_look) {
+                $destination=public_path("storage\\".$comment->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
+                if ($request->hasFile('image_look')) {
+                    $filename =$request->file('image_url')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
+                }
             $comment->look = $data['look'];
+            $comment->image_look = $filename;
             $comment->save();
             return response()->json(['msg' => 'Comment actualizado correctamente'], 200);
         } catch (\Throwable $th) {
@@ -109,7 +130,14 @@ class CommentController extends Controller
             $data = $request->validate([
                 'id' => 'required'
             ]); 
-            Comment::destroy($data['id']);
+            $comment = Comment::find($data['id']);
+            if ($comment->image_look) {
+                $destination=public_path("storage\\".$comment->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
+                $comment->destroy();
             return response()->json(['msg' => 'Comment eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

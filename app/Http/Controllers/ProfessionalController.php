@@ -190,8 +190,6 @@ class ProfessionalController extends Controller
         try {
 
             Log::info("entra a actualizar");
-
-
             $professionals_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
@@ -205,6 +203,7 @@ class ProfessionalController extends Controller
                 'image_url' => 'nullable'
             ]);
             Log::info($request);
+            $filename = "image/default.png";
             $professional = Professional::find($professionals_data['id']);
             if ($professional->image_url) {
                 //$this->imageService->destroyImagen($professional->image_url);
@@ -214,9 +213,7 @@ class ProfessionalController extends Controller
                     }
                 }
                 if ($request->hasFile('image_url')) {
-                    //$filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
                     $filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
-                    $professionals_data['image_url'] = $filename;
                 }
             $professional->name = $professionals_data['name'];
             $professional->surname = $professionals_data['surname'];
@@ -226,7 +223,7 @@ class ProfessionalController extends Controller
             $professional->charge_id = $professionals_data['charge_id'];
             $professional->user_id = $professionals_data['user_id'];
             $professional->state = $professionals_data['state'];
-            $professional->image_url = $professionals_data['image_url'];
+            $professional->image_url = $filename;
             $professional->save();
 
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
@@ -251,7 +248,7 @@ class ProfessionalController extends Controller
                         File::delete($destination);
                     }
                 }
-            Professional::destroy($professionals_data['id']);
+            $professional->destroy();
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar la professional'], 500);
