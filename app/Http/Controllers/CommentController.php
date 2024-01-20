@@ -19,7 +19,6 @@ class CommentController extends Controller
         try {             
             Log::info( "Entra a buscar los carros");
             $comments = Comment::with('clientProfessional.client', 'clientProfessional.professional')->get();
-            //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['comments' => $comments], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
