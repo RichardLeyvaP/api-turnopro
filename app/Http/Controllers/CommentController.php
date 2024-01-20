@@ -136,7 +136,7 @@ class CommentController extends Controller
                         File::delete($destination);
                     }
                 }
-                $comment->destroy();
+                Comment::destroy($data['id']);
             return response()->json(['msg' => 'Comment eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

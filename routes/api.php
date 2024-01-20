@@ -270,8 +270,8 @@ Route::post('/storeByReservationId', [CommentController::class, 'storeByReservat
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
-Route::get('/images/{folder}/{filename}', function ($folder, $filename) {
-    $path = storage_path("app/public/{$folder}/{$filename}");
+Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
+    $path = storage_path("app/public/{$foldername}/{$filename}");
 
     if (!File::exists($path)) {
         abort(404);

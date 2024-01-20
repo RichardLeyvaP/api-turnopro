@@ -246,7 +246,7 @@ class ProfessionalController extends Controller
                         File::delete($destination);
                     }
                 }
-            $professional->destroy();
+            Professional::destroy($professionals_data['id']);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar la professional'], 500);
