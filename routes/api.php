@@ -30,6 +30,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\File;
 
 /*
 |--------------------------------------------------------------------------
@@ -267,5 +269,22 @@ Route::post('/comment-destroy', [CommentController::class, 'destroy']);
 Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
+
+Route::get('/images/{folder}/{filename}', function ($folder, $filename) {
+    $path = storage_path("app/public/{$folder}/{$filename}");
+
+    if (!File::exists($path)) {
+        abort(404);
+    }
+
+    $file = File::get($path);
+    $type = File::mimeType($path);
+
+    $response = new Response($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+})->where(['folder' => 'profesional|cliente', 'filename' => '.*']);
+
 
 
