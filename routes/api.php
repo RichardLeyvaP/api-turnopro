@@ -62,7 +62,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/professional', [ProfessionalController::class, 'index']);
 Route::get('/professional-show', [ProfessionalController::class, 'show']);
 Route::post('/professional', [ProfessionalController::class, 'store']);
-Route::put('/professional', [ProfessionalController::class, 'update']);
+Route::post('/professional-update', [ProfessionalController::class, 'update']);
 Route::post('/professional-destroy', [ProfessionalController::class, 'destroy']);
 Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);

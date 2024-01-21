@@ -188,7 +188,7 @@ class ProfessionalController extends Controller
         try {
 
             Log::info("entra a actualizar");
-            $professionals_data = $request->validate([
+           $professionals_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'surname' => 'required|max:50',
