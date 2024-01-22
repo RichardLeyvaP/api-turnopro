@@ -103,23 +103,21 @@ class ServiceController extends Controller
             ]);
 
             $service = Service::find($data['id']);
-            if ($service->image_service) {
-            $destination=public_path("storage\\".$service->image_service);
-                if (File::exists($destination)) {
-                    File::delete($destination);
+            if($service->image_url != $request['image_url'])
+                {
+                    $destination=public_path("storage\\".$service->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }                    
+                    $service->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                 }
-            }
-            if ($request->hasFile('image_service')) {
-                $filename = $request->file('image_service')->storeAs('services',$request->file('image_service')->getClientOriginalName().'.'.$request->file('image_service')->getClientOriginalExtension(),'public');
-                $data['image_service'] = $filename;
-            }
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
             $service->price_service = $data['price_service'];
             $service->type_service = $data['type_service'];
             $service->profit_percentaje = $data['profit_percentaje'];
             $service->duration_service = $data['duration_service'];
-            $service->image_service = $data['image_service'];
+            //$service->image_service = $data['image_service'];
             $service->service_comment = $data['service_comment'];
             $service->save();
 
