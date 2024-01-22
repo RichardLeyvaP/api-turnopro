@@ -120,14 +120,13 @@ class ClientController extends Controller
                 'user_id' => 'required|number'
             ]);
             $client = Client::find($clients_data['id']);
-            if ($client->client_image) {
-                $destination=public_path("storage\\".$client->client_image);
+            if($client->image_url != $request['image_url'])
+                {
+                    $destination=public_path("storage\\".$client->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }
-                }
-                if ($request->hasFile('client_image')) {
-                   $filename =$request->file('client_image')->storeAs('clients',$request->file('client_image')->getClientOriginalName(),'public');
+                    }                    
+                    $client->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                 }
             Log::info($request);
             $client = Client::find($clients_data['id']);
@@ -137,7 +136,7 @@ class ClientController extends Controller
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
             $client->user_id = $clients_data['user_id'];
-            $client->client_image = $filename;
+            //$client->client_image = $filename;
             $client->save();
 
             return response()->json(['msg' => 'Cliente actualizado correctamente'], 200);
