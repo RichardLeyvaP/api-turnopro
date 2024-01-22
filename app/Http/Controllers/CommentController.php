@@ -130,7 +130,7 @@ class CommentController extends Controller
                 'id' => 'required'
             ]); 
             $comment = Comment::find($data['id']);
-            if ($comment->image_look) {
+            if ($comment->image_look != "image/default.png") {
                 $destination=public_path("storage\\".$comment->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
