@@ -154,7 +154,7 @@ class ClientController extends Controller
                 'id' => 'required|numeric'
             ]);
             $client = Client::find($clients_data['id']);
-            if ($client->client_image) {
+            if ($client->client_image != "image/default.png") {
                 $destination=public_path("storage\\".$client->client_image);
                     if (File::exists($destination)) {
                         File::delete($destination);
