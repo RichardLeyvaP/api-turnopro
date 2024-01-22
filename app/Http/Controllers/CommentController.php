@@ -65,7 +65,7 @@ class CommentController extends Controller
             ]); 
             $filename = "image/default.png";
             if ($request->hasFile('image_look')) {
-               $filename = $request->file('image_url')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
+               $filename = $request->file('image_look')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
             }
             $reservation = Reservation::find($data['reservation_id']);
             $client_professional_id = $reservation->car->clientProfessional->id;
