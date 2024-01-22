@@ -236,7 +236,7 @@ class ProfessionalController extends Controller
                 'id' => 'required|numeric'
             ]);
             $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url) {
+            if ($professional->image_url != "image/default.png") {
                 //$this->imageService->destroyImagen($professional->image_url);
                 $destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
