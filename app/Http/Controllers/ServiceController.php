@@ -135,7 +135,7 @@ class ServiceController extends Controller
                 'id' => 'required|numeric'
             ]);
             $service = Service::find($data['id']);
-            if ($service->image_service) {
+            if ($service->image_service != "image/default.png") {
             $destination=public_path("storage\\".$service->image_service);
                 if (File::exists($destination)) {
                     File::delete($destination);
