@@ -201,17 +201,14 @@ class ProfessionalController extends Controller
                 'image_url' => 'nullable'
             ]);
             Log::info($request);
-            $filename = "image/default.png";
             $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url) {
-                //$this->imageService->destroyImagen($professional->image_url);
-                $destination=public_path("storage\\".$professional->image_url);
+            if($professional->image_url != $request['image_url'])
+                {
+                    $destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }
-                }
-                if ($request->hasFile('image_url')) {
-                    $filename =$request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    }                    
+                    $professional->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                 }
             $professional->name = $professionals_data['name'];
             $professional->surname = $professionals_data['surname'];
@@ -221,7 +218,7 @@ class ProfessionalController extends Controller
             $professional->charge_id = $professionals_data['charge_id'];
             $professional->user_id = $professionals_data['user_id'];
             $professional->state = $professionals_data['state'];
-            $professional->image_url = $filename;
+            //$professional->image_url = $filename;
             $professional->save();
 
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
