@@ -173,7 +173,7 @@ class ProductController extends Controller
                 'id' => 'required|numeric'
             ]);
             $product = Product::find($product_data['id']);
-            if ($product->image_product) {
+            if ($product->image_product != "image/default.png") {
             $destination=public_path("storage\\".$product->image_product);
                 if (File::exists($destination)) {
                     File::delete($destination);
