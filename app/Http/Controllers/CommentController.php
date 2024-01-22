@@ -110,7 +110,7 @@ class CommentController extends Controller
                     }
                 }
                 if ($request->hasFile('image_look')) {
-                    $filename =$request->file('image_url')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
+                    $filename =$request->file('image_look')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
                 }
             $comment->look = $data['look'];
             $comment->image_look = $filename;
