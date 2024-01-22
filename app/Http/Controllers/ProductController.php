@@ -141,16 +141,14 @@ class ProductController extends Controller
             ]);
 
             $product = Product::find($product_data['id']);
-            if ($product->image_product) {
-            $destination=public_path("storage\\".$product->image_product);
-                if (File::exists($destination)) {
-                    File::delete($destination);
+            if($product->image_url != $request['image_url'])
+                {
+                    $destination=public_path("storage\\".$product->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }                    
+                    $product->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
                 }
-            }
-            if ($request->hasFile('image_product')) {
-                $filename = $request->file('image_product')->storeAs('products',$request->code.'.'.$request->file('image_product')->getClientOriginalExtension(),'public');
-                $product_data['image_product'] = $filename;
-            }
             $product->name = $product_data['name'];
             $product->reference = $product_data['reference'];
             $product->code = $product_data['code'];
@@ -158,7 +156,7 @@ class ProductController extends Controller
             $product->status_product = $product_data['status_product'];
             $product->purchase_price = $product_data['purchase_price'];
             $product->sale_price = $product_data['sale_price'];
-            $product->image_product = $product_data['image_product'];
+            //$product->image_product = $product_data['image_product'];
             $product->product_category_id = $product_data['product_category_id'];
             $product->save();
 
