@@ -7,6 +7,7 @@ use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Client;
 use App\Models\ClientProfessional;
+use App\Models\Comment;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Professional;
@@ -109,7 +110,7 @@ class ReservationService {
                 })->where('client_id', $data['client_id']);
             })->whereYear('data', Carbon::now()->year)->count();
         }
-        elseif($reservations->count()>= 3 || $reservations->count()< 12){
+        elseif($reservations->count()>= 3){
             $frecuencia = "Frecuente";
         }
         else{
@@ -136,12 +137,14 @@ class ReservationService {
                 })->where('client_id', $data['client_id']);
             })->whereIn('car_id', $reservationids)->where('is_product', 1);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-        $comment = $client->comments->sortByDesc('data')->sortByDesc('updated_at')->first();
+        $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
+            $query->where('client_id', $client->id);
+        })->orderByDesc('data')->orderByDesc('updated_at')->first();
         $result = [
             'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
-            'imageLook' => $comment->image,             
+            'imageLook' => $comment ? $comment->client_look : null,             
             'cantVisit' => $reservations->count(),
-            'endLook' => $comment->look,
+            'endLook' => $comment ? $comment->look : null,
             'frecuencia' => $fiel ? $fiel : $frecuencia,
             'services' => $services->map(function ($service){
                 return [
