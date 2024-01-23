@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\Car;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Reservation;
 use App\Models\Tail;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class TailService {
 
@@ -101,6 +103,15 @@ class TailService {
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         $tail->attended = $attended;
         $tail->save();
+        if ($attended == 5) {
+            $car = Car::whereHas('reservations', function ($query) use ($reservation_id){
+                $query->where('id', $reservation_id);
+            })->first();
+            $car->technical_assistance = $car->technical_assistance + 1;
+            $car->save();
+            
+            Log::info($car);
+        }
     }
 
     public function type_of_service($branch_id, $professional_id){
