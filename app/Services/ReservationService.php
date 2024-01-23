@@ -94,33 +94,55 @@ class ReservationService {
     }
 
     public function clientHistory($data){
+        $fiel = null;
+        $frecuencia =null;
         $client = Client::find($data['client_id']);
        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
             $query->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('client_id', $data['client_id']);
-        })->count();
+        })->get();
+        if ($reservations->count()>=12) {
+            $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
+                $query->whereHas('professional.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('client_id', $data['client_id']);
+            })->whereYear('data', Carbon::now()->year)->count();
+        }
+        elseif($reservations->count()>= 3 || $reservations->count()< 12){
+            $frecuencia = "Frecuente";
+        }
+        else{
+            $frecuencia = "No Frecuente";
+        }
+        //$client = Client::find($data['client_id']);
+       $reservationids = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
+        $query->whereHas('professional.branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->where('client_id', $data['client_id']);
+        })->orderByDesc('data')->take(3)->get()->pluck('car_id');
 
-        $services = Service::withCount(['orders'=> function ($query) use ($data){
+        $services = Service::withCount(['orders'=> function ($query) use ($data, $reservationids){
             $query->whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->whereHas('professional.branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                 })->where('client_id', $data['client_id']);
-            })->where('is_product', 0);
+            })->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-        $products = Product::withCount(['orders' => function ($query) use ($data){
+        $products = Product::withCount(['orders' => function ($query) use ($data, $reservationids){
             $query->whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->whereHas('professional.branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                 })->where('client_id', $data['client_id']);
-            })->where('is_product', 1);
+            })->whereIn('car_id', $reservationids)->where('is_product', 1);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
         $comment = $client->comments->sortByDesc('data')->sortByDesc('updated_at')->first();
         $result = [
             'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
-            'clientImage' => $client->image,             
-            'cantVisit' => $reservations,
+            'imageLook' => $comment->image,             
+            'cantVisit' => $reservations->count(),
             'endLook' => $comment->look,
+            'frecuencia' => $fiel ? $fiel : $frecuencia,
             'services' => $services->map(function ($service){
                 return [
                     'name' => $service->name,
