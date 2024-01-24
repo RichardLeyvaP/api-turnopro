@@ -157,14 +157,15 @@ class ProfessionalController extends Controller
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
                 'user_id' => 'required|numeric'
-            ]);
+            ]);            
+            $professional = new Professional();
+            Log::info($professional->id);
             $filename = "image/default.png";
             if ($request->hasFile('image_url')) {
                 //$filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
-                $filename = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
                 //$data['image_url'] = $filename;
             }
-            $professional = new Professional();
             $professional->name = $data['name'];
             $professional->surname = $data['surname'];
             $professional->second_surname = $data['second_surname'];
@@ -208,7 +209,7 @@ class ProfessionalController extends Controller
                     if (File::exists($destination)) {
                         File::delete($destination);
                     }                    
-                    $professional->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    $professional->image_url = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
                 }
             $professional->name = $professionals_data['name'];
             $professional->surname = $professionals_data['surname'];

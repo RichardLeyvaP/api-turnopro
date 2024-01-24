@@ -35,10 +35,10 @@ class CommentController extends Controller
                 'professional_id' => 'required|numeric',
                 'look' => 'required'
             ]); 
-            $comment = new Comment();
             $filename = "image/default.png";
+            $comment = new Comment();
             if ($request->hasFile('image_look')) {
-                $filename = $request->file('image_look')->storeAs('comments',$comment->id.$request->file('image_look')->extension(),'public');
+                $filename = $request->file('image_look')->storeAs('comments',$comment->id.'.'.$request->file('image_look')->extension(),'public');
              }
             $client = Client::find($data['client_id']);
             $professional = Professional::find($data['professional_id']);
@@ -65,12 +65,13 @@ class CommentController extends Controller
                 'look' => 'required'
             ]); 
             $filename = "image/default.png";
-            if ($request->hasFile('client_look')) {
-               $filename = $request->file('client_look')->storeAs('comments',$request->file('client_look')->getClientOriginalName(),'public');
+            
+            $comment = new Comment();
+            if ($request->hasFile('c')) {
+               $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
             }
             $reservation = Reservation::find($data['reservation_id']);
             $client_professional_id = $reservation->car->clientProfessional->id;
-            $comment = new Comment();
             $comment->client_professional_id = $client_professional_id;
             $comment->data = Carbon::now();
             $comment->look = $data['look'];
@@ -111,7 +112,7 @@ class CommentController extends Controller
                     }
                 }
                 if ($request->hasFile('client_look')) {
-                    $filename =$request->file('client_look')->storeAs('comments',$request->file('client_look')->getClientOriginalName(),'public');
+                    $filename =$request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
                 }
             $comment->look = $data['look'];
             $comment->client_look = $filename;

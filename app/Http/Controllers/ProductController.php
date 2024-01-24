@@ -51,11 +51,12 @@ class ProductController extends Controller
                 'image_product' => 'nullable',
                 'product_category_id' => 'required|numeric'
             ]);
+            
+            $product = new Product();
             if ($request->hasFile('image_product')) {
-                $filename = $request->file('image_product')->storeAs('products',$request->code.'.'.$request->file('image_product')->getClientOriginalExtension(),'public');
+                $filename = $request->file('image_product')->storeAs('products',$product->id.'.'.$request->file('image_product')->extension(),'public');
                 $product_data['image_product'] = $filename;
             }
-            $product = new Product();
             $product->name = $product_data['name'];
             $product->reference = $product_data['reference'];
             $product->code = $product_data['code'];
@@ -141,13 +142,13 @@ class ProductController extends Controller
             ]);
 
             $product = Product::find($product_data['id']);
-            if($product->image_url != $request['image_url'])
+            if($product->image_product != $request['image_product'])
                 {
-                    $destination=public_path("storage\\".$product->image_url);
+                    $destination=public_path("storage\\".$product->image_product);
                     if (File::exists($destination)) {
                         File::delete($destination);
                     }                    
-                    $product->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    $product->image_product = $request->file('image_product')->storeAs('products',$product->id.'.'.$request->file('image_product')->extension(),'public');
                 }
             $product->name = $product_data['name'];
             $product->reference = $product_data['reference'];

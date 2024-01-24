@@ -21,11 +21,6 @@ class ServiceController extends Controller
         }
     }
 
-    public function create()
-    {
-        //
-    }
-
     public function store(Request $request)
     {
         Log::info("Guardar Servicio");
@@ -40,12 +35,12 @@ class ServiceController extends Controller
                 'duration_service' => 'required|numeric',
                 'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
-            ]);
+            ]);            
+            $service = new Service();
             if ($request->hasFile('image_service')) {
-                $filename = $request->file('image_service')->storeAs('services',$request->file('image_service')->getClientOriginalName().'.'.$request->file('image_service')->getClientOriginalExtension(),'public');
+                $filename = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
                 $data['image_service'] = $filename;
             }
-            $service = new Service();
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
             $service->price_service = $data['price_service'];
@@ -98,18 +93,18 @@ class ServiceController extends Controller
                 'type_service' => 'required',
                 'profit_percentaje' => 'required|numeric',
                 'duration_service' => 'required|numeric',
-                'image_product' => 'nullable',
+                'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
             ]);
 
             $service = Service::find($data['id']);
-            if($service->image_url != $request['image_url'])
+            if($service->image_service != $request['image_service'])
                 {
-                    $destination=public_path("storage\\".$service->image_url);
+                    $destination=public_path("storage\\".$service->image_service);
                     if (File::exists($destination)) {
                         File::delete($destination);
                     }                    
-                    $service->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    $service->image_url = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
                 }
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];

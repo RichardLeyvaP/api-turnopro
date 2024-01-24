@@ -82,11 +82,11 @@ class ClientController extends Controller
                 'phone' => 'required|max:15',
                 'user_id' => 'nullable|number'
             ]);
-            $filename = "image/default.png";
-            if ($request->hasFile('client_image')) {
-               $filename = $request->file('client_image')->storeAs('clients',$request->file('client_image')->getClientOriginalName(),'public');
-            }
+            $filename = "image/default.png";            
             $client = new Client();
+            if ($request->hasFile('client_image')) {
+               $filename = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
+            }
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];
             $client->second_surname = $clients_data['second_surname'];
@@ -120,13 +120,13 @@ class ClientController extends Controller
                 'user_id' => 'required|number'
             ]);
             $client = Client::find($clients_data['id']);
-            if($client->image_url != $request['image_url'])
+            if($client->client_image != $request['client_image'])
                 {
-                    $destination=public_path("storage\\".$client->image_url);
+                    $destination=public_path("storage\\".$client->client_image);
                     if (File::exists($destination)) {
                         File::delete($destination);
                     }                    
-                    $client->image_url = $request->file('image_url')->storeAs('professionals',$request->file('image_url')->getClientOriginalName(),'public');
+                    $client->client_image = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
                 }
             Log::info($request);
             $client = Client::find($clients_data['id']);
