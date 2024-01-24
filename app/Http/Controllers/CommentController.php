@@ -35,14 +35,15 @@ class CommentController extends Controller
                 'professional_id' => 'required|numeric',
                 'look' => 'required'
             ]); 
+            $comment = new Comment();
             $filename = "image/default.png";
             if ($request->hasFile('image_look')) {
-                $filename = $request->file('image_look')->storeAs('comments',$request->file('image_look')->getClientOriginalName(),'public');
+                $filename = $request->file('image_look')->storeAs('comments',$comment->id.$request->file('image_look')->extension(),'public');
              }
             $client = Client::find($data['client_id']);
             $professional = Professional::find($data['professional_id']);
             $client_professional_id = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first()->pivot->id;
-            $comment = new Comment();
+            
             $comment->client_professional_id = $client_professional_id;
             $comment->data = Carbon::now();
             $comment->look = $data['look'];
