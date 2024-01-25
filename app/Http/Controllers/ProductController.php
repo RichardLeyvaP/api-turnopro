@@ -53,10 +53,7 @@ class ProductController extends Controller
             ]);
             
             $product = new Product();
-            if ($request->hasFile('image_product')) {
-                $filename = $request->file('image_product')->storeAs('products',$product->id.'.'.$request->file('image_product')->extension(),'public');
-                $product_data['image_product'] = $filename;
-            }
+            
             $product->name = $product_data['name'];
             $product->reference = $product_data['reference'];
             $product->code = $product_data['code'];
@@ -64,8 +61,14 @@ class ProductController extends Controller
             $product->status_product = $product_data['status_product'];
             $product->purchase_price = $product_data['purchase_price'];
             $product->sale_price = $product_data['sale_price'];
-            $product->image_product = $product_data['image_product'];
             $product->product_category_id = $product_data['product_category_id'];
+            $product->save();
+
+            $filename = "image/default.png";
+            if ($request->hasFile('image_product')) {
+                $filename = $request->file('image_product')->storeAs('products',$product->id.'.'.$request->file('image_product')->extension(),'public');
+            }
+            $product->image_product = $filename;
             $product->save();
 
             return response()->json(['msg' => 'Producto insertado correctamente'], 200);
@@ -157,7 +160,6 @@ class ProductController extends Controller
             $product->status_product = $product_data['status_product'];
             $product->purchase_price = $product_data['purchase_price'];
             $product->sale_price = $product_data['sale_price'];
-            //$product->image_product = $product_data['image_product'];
             $product->product_category_id = $product_data['product_category_id'];
             $product->save();
 

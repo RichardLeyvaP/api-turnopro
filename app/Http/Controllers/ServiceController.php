@@ -37,18 +37,20 @@ class ServiceController extends Controller
                 'service_comment' => 'nullable|min:3'
             ]);            
             $service = new Service();
-            if ($request->hasFile('image_service')) {
-                $filename = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
-                $data['image_service'] = $filename;
-            }
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
             $service->price_service = $data['price_service'];
             $service->type_service = $data['type_service'];
             $service->profit_percentaje = $data['profit_percentaje'];
             $service->duration_service = $data['duration_service'];
-            $service->image_service = $data['image_service'];
             $service->service_comment = $data['service_comment'];
+            $service->save();
+
+            $filename = "image/default.png";
+            if ($request->hasFile('image_service')) {
+                $filename = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
+            }
+            $service->image_service = $filename;
             $service->save();
 
             return response()->json(['msg' => 'Servicio insertado correctamente'], 200);
@@ -104,7 +106,7 @@ class ServiceController extends Controller
                     if (File::exists($destination)) {
                         File::delete($destination);
                     }                    
-                    $service->image_url = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
+                    $service->image_service = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
                 }
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
@@ -112,7 +114,6 @@ class ServiceController extends Controller
             $service->type_service = $data['type_service'];
             $service->profit_percentaje = $data['profit_percentaje'];
             $service->duration_service = $data['duration_service'];
-            //$service->image_service = $data['image_service'];
             $service->service_comment = $data['service_comment'];
             $service->save();
 

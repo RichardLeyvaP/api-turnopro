@@ -82,17 +82,20 @@ class ClientController extends Controller
                 'phone' => 'required|max:15',
                 'user_id' => 'nullable|number'
             ]);
-            $filename = "image/default.png";            
+           
             $client = new Client();
-            if ($request->hasFile('client_image')) {
-               $filename = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
-            }
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];
             $client->second_surname = $clients_data['second_surname'];
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
             $client->user_id = $clients_data['user_id'];
+            $client->save();
+            
+            $filename = "image/default.png"; 
+            if ($request->hasFile('client_image')) {
+               $filename = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
+            }
             $client->client_image = $filename;
             $client->save();
 

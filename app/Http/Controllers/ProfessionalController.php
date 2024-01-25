@@ -159,13 +159,6 @@ class ProfessionalController extends Controller
                 'user_id' => 'required|numeric'
             ]);            
             $professional = new Professional();
-            Log::info($professional->id);
-            $filename = "image/default.png";
-            if ($request->hasFile('image_url')) {
-                //$filename = $this->imageService->subirImagen($request, 'professionals', 'image_url');
-                $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
-                //$data['image_url'] = $filename;
-            }
             $professional->name = $data['name'];
             $professional->surname = $data['surname'];
             $professional->second_surname = $data['second_surname'];
@@ -173,8 +166,14 @@ class ProfessionalController extends Controller
             $professional->phone = $data['phone'];
             $professional->charge_id = $data['charge_id'];
             $professional->user_id = $data['user_id'];
-            $professional->image_url = $filename;
             $professional->state = 0;
+            $professional->save();
+            Log::info($professional->id);
+            $filename = "image/default.png";
+            if ($request->hasFile('image_url')) {
+                $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
+            }
+            $professional->image_url = $filename;
             $professional->save();
 
             return response()->json(['msg' => 'Profesional insertado correctamente'], 200);
