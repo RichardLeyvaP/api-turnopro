@@ -37,8 +37,8 @@ class CommentController extends Controller
             ]); 
             $filename = "image/default.png";
             $comment = new Comment();
-            if ($request->hasFile('image_look')) {
-                $filename = $request->file('image_look')->storeAs('comments',$comment->id.'.'.$request->file('image_look')->extension(),'public');
+            if ($request->hasFile('client_look')) {
+                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
              }
             $client = Client::find($data['client_id']);
             $professional = Professional::find($data['professional_id']);
