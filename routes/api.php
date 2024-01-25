@@ -284,7 +284,7 @@ Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) 
     $response->header("Content-Type", $type);
 
     return $response;
-})->where(['folder' => 'professionals|clients|comments|products|services', 'filename' => '.*']);
+})->where(['folder' => 'professionals|clients|comments|products|services|coordinator', 'filename' => '.*']);
 
 
 
