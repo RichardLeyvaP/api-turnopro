@@ -67,7 +67,7 @@ class CommentController extends Controller
             $filename = "image/default.png";
             
             $comment = new Comment();
-            if ($request->hasFile('c')) {
+            if ($request->hasFile('client_look')) {
                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
             }
             $reservation = Reservation::find($data['reservation_id']);
