@@ -65,18 +65,34 @@ class CommentController extends Controller
                 'look' => 'required'
             ]); 
             $filename = "image/default.png";
+            if ($request->hasFile('client_look')) {
+                Log::info("sii llegoo la imagen ");
+                Log::info($request->hasFile('client_look'));
+
+            }
+            else{
+                Log::info("NOOOOO llegoo la imagen ");
+            }
             
             $comment = new Comment();
-            if ($request->hasFile('client_look')) {
-               $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
-            }
             $reservation = Reservation::find($data['reservation_id']);
             $client_professional_id = $reservation->car->clientProfessional->id;
             $comment->client_professional_id = $client_professional_id;
             $comment->data = Carbon::now();
             $comment->look = $data['look'];
+            $comment->save();
+
+            if ($request->hasFile('client_look')) {
+                Log::info("client_look 1 ");
+                Log::info("comment -> $comment->id");
+               $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+               Log::info("filename-  $filename ");
+               Log::info("client_look 2 ");
+            }
+            Log::info("client_look 3");           
             $comment->client_look = $filename;
             $comment->save();
+            Log::info("client_look 4 ");
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
