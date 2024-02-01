@@ -94,7 +94,7 @@ class ReservationService {
         return $reservation;
     }
 
-    public function clientHistory($data){
+    public function client_history($data){
         $fiel = null;
         $frecuencia =null;
         $client = Client::find($data['client_id']);

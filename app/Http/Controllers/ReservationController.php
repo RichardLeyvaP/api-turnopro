@@ -289,14 +289,14 @@ class ReservationController extends Controller
         }
     }
 
-    public function clientHistory(Request $request)
+    public function client_history(Request $request)
     {
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'client_id' => 'required|numeric'
             ]);
-            $history = $this->reservationService->clientHistory($data);
+            $history = $this->reservationService->client_history($data);
             return response()->json(['clientHistory' => $history], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al mostrar la history'], 500);
