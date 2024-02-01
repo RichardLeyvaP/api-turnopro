@@ -371,4 +371,22 @@ class TailController extends Controller
             }
     }
 
+    public function reasigned_client(Request $request)
+    {
+        try { 
+            
+            Log::info( "Reasignar Cliente a barbero");
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
+                'client_id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
+            ]);
+            $this->tailService->reasigned_client($data);
+            
+            return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
+            } catch (\Throwable $th) {  
+                Log::error($th);
+                    return response()->json(['msg' => $th->getMessage()."Error al mostrar las Cola"], 500);
+            } 
+    }
 }

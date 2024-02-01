@@ -218,6 +218,7 @@ Route::get('/set_clock', [TailController::class, 'set_clock']); //dado una id de
 Route::get('/get_clock', [TailController::class, 'get_clock']); //dado una id de la reservacion devolver el estado del clock
 Route::get('/set_timeClock', [TailController::class, 'set_timeClock']); //dado una id de la reservacion guardar el tiempo del reloj y el estado
 Route::get('/tail_branch_attended', [TailController::class, 'tail_branch_attended']); //dado una id de la branch Mostrar los clientes que estan siendo atendidos (attended [1:por el barbero, 2:por el tecnico capilar])
+Route::get('/reasigned_client', [TailController::class, 'reasigned_client']); //dado una dado una reservatio, un cliente y un professional, reasignar este cliente al professional)
 
 Route::get('/workplace', [WorkplaceController::class, 'index']);
 Route::get('/workplace-show', [WorkplaceController::class, 'show']);

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Branch;
 use App\Models\Car;
+use App\Models\Client;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Reservation;
@@ -188,5 +189,22 @@ class TailService {
         })->values();
 
         return $branchTails;
+    }
+
+    public function reasigned_client($data){
+        $client = Client::find($data['client_id']);
+        $professional = Professional::find($data['professional_id']);
+        $reservation = Reservation::find($data['reservation_id']);
+        $car = Car::find($reservation->car_id);
+        $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+        if($client_professional_id){
+            Log::info("no existe");
+            $professional->clients()->attach($client->id);
+            $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+            Log::info($client_professional_id);
+        }
+        $car->client_professional_id = $client_professional_id;
+        $car->save();
+        
     }
 }

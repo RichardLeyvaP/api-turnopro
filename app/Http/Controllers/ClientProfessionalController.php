@@ -36,7 +36,7 @@ class ClientProfessionalController extends Controller
             //$result = ClientProfessional::where('client_id',$data['client_id'])->where('professional_id',$data['professional_id'])->get();
             if (!$client_professional) {                
                 $professional->clients()->attach($client->id);
-                return $result = ClientProfessional::latest('id')->first();
+                $result = ClientProfessional::latest('id')->first();
                 }
             return response()->json(['msg' => 'Empleado asignado correctamente al cliente'], 200);
         } catch (\Throwable $th) {
