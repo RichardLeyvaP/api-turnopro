@@ -97,12 +97,29 @@ class ReservationService {
     public function client_history($data){
         $fiel = null;
         $frecuencia =null;
-        $client = Client::find($data['client_id']);
+        $client = Client::findorFail($data['client_id']);
        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
             $query->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('client_id', $data['client_id']);
         })->get();
+        if(!$reservations){
+           return  $result = [
+                'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
+                'imageLook' => null,             
+                'cantVisit' => 0,
+                'endLook' => null,
+                'frecuencia' => 0,
+                'services' =>  [
+                        'name' => null,
+                        'cant' => null
+                ],
+                'products' => [
+                        'name' => null,
+                        'cant' => null
+              ]
+                ];   
+        }
         if ($reservations->count()>=12) {
             $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->whereHas('professional.branches', function ($query) use ($data){
