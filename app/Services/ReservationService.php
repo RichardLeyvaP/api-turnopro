@@ -98,6 +98,23 @@ class ReservationService {
         $fiel = null;
         $frecuencia =null;
         $client = Client::findorFail($data['client_id']);
+        if(!$client){
+            return  $result = [
+                 'clientName' => null,
+                 'imageLook' => null,             
+                 'cantVisit' => 0,
+                 'endLook' => null,
+                 'frecuencia' => 0,
+                 'services' =>  [
+                         'name' => null,
+                         'cant' => null
+                 ],
+                 'products' => [
+                         'name' => null,
+                         'cant' => null
+               ]
+                 ];   
+         }
        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
             $query->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
