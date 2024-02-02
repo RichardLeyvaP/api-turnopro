@@ -97,7 +97,7 @@ class ReservationService {
     public function client_history($data){
         $fiel = null;
         $frecuencia =null;
-        $client = Client::findorFail($data['client_id']);
+        $client = Client::find($data['client_id']);
         if(!$client){
             return  $result = [
                  'clientName' => null,
