@@ -165,13 +165,30 @@ class ReservationService {
             'frecuencia' => $fiel ? $fiel : $frecuencia,
             'services' => $services->map(function ($service){
                 return [
+                    'id' => $service->id,
                     'name' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
                     'cant' => $service->orders_count
                 ];
             }),
             'products' => $products->map(function ($product){
                 return [
+                    'id' => $product->id,
                     'name' => $product->name,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'product_exit' => 0,//solo para utilizar el modelo en apk bien,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
                     'cant' => $product->orders_count
                 ];
             })
