@@ -97,6 +97,7 @@ class ReservationService {
     public function client_history($data){
         $fiel = null;
         $frecuencia =null;
+        $cantMaxService = 0;
         $client = Client::find($data['client_id']);
         if(!$client){
             return  $result = [
@@ -105,14 +106,8 @@ class ReservationService {
                  'cantVisit' => 0,
                  'endLook' => null,
                  'frecuencia' => 0,
-                 'services' =>  [
-                         'name' => null,
-                         'cant' => null
-                 ],
-                 'products' => [
-                         'name' => null,
-                         'cant' => null
-               ]
+                 'services' =>  [],
+                 'products' => []
                  ];   
          }
        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
@@ -127,14 +122,8 @@ class ReservationService {
                 'cantVisit' => 0,
                 'endLook' => null,
                 'frecuencia' => 0,
-                'services' =>  [
-                        'name' => null,
-                        'cant' => null
-                ],
-                'products' => [
-                        'name' => null,
-                        'cant' => null
-              ]
+                'services' =>  [],
+                'products' => []
                 ];   
         }
         if ($reservations->count()>=12) {
@@ -180,7 +169,7 @@ class ReservationService {
             'cantVisit' => $reservations->count(),
             'endLook' => $comment ? $comment->look : null,
             'frecuencia' => $fiel ? $fiel : $frecuencia,
-            'services' => $services->map(function ($service){
+            'services' => $services->map(function ($service) use ($cantMaxService){
                 return [
                     'id' => $service->id,
                     'name' => $service->name,
@@ -208,7 +197,8 @@ class ReservationService {
                     'updated_at' => $product->updated_at,
                     'cant' => $product->orders_count
                 ];
-            })
+            }),
+            'cantMaxService' => $services->max('orders_count')
           ];
            return $result;
 
