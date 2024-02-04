@@ -93,7 +93,7 @@ Route::post('/business-type-destroy', [BusinessTypesController::class, 'destroy'
 Route::get('/branch', [BranchController::class, 'index']);
 Route::get('/branch-show', [BranchController::class, 'show']);
 Route::post('/branch', [BranchController::class, 'store']);
-Route::put('/branch', [BranchController::class, 'update']);
+Route::post('/branch-update', [BranchController::class, 'update']);
 Route::post('/branch-destroy', [BranchController::class, 'destroy']);
 Route::get('/branch_winner', [BranchController::class, 'branch_winner']);//devuelve las ganancias y products mas vendido de una branch 
 Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
