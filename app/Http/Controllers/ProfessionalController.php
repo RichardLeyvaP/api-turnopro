@@ -197,8 +197,7 @@ class ProfessionalController extends Controller
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
                 'user_id' => 'required|numeric',
-                'state' => 'required|numeric',
-                'image_url' => 'nullable'
+                'state' => 'required|numeric'
             ]);
             Log::info($request);
             $professional = Professional::find($professionals_data['id']);

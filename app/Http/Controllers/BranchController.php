@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\BranchService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 //todo Richard comentario nuevo
@@ -140,7 +141,12 @@ class BranchController extends Controller
             $branch->business_id = $branch_data['business_id'];
             $branch->business_type_id = $branch_data['business_type_id'];
             $branch->save();
-
+            $filename = "image/default.png";
+            if ($request->hasFile('image_data')) {
+                $filename = $request->file('image_data')->storeAs('branches',$branch->id.'.'.$request->file('image_data')->extension(),'public');
+            }
+            $branch->image_data = $filename;
+            $branch->save();
             return response()->json(['msg' => 'Sucursal insertada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -164,6 +170,14 @@ class BranchController extends Controller
             ]);
 
             $branch = Branch::find($branch_data['id']);
+            if($branch->image_data != $request['image_data'])
+                {
+                    $destination=public_path("storage\\".$branch->image_data);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }                    
+                    $branch->image_data = $request->file('image_data')->storeAs('branches',$branch->id.'.'.$request->file('image_data')->extension(),'public');
+                }
             $branch->name = $branch_data['name'];
             $branch->phone = $branch_data['phone'];
             $branch->address = $branch_data['address'];
@@ -184,6 +198,15 @@ class BranchController extends Controller
             $branch_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
+            $branch = Branch::find($branch_data['id']);
+            if($branch->image_data != $request['image_data'])
+                {
+                    $destination=public_path("storage\\".$branch->image_data);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }                    
+                    $branch->image_data = $request->file('image_data')->storeAs('branches',$branch->id.'.'.$request->file('image_data')->extension(),'public');
+                }
             Branch::destroy($branch_data['id']);
 
             return response()->json(['msg' => 'Sucursal eliminada correctamente'], 200);
