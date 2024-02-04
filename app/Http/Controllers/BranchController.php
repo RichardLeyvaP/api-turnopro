@@ -199,13 +199,12 @@ class BranchController extends Controller
                 'id' => 'required|numeric'
             ]);
             $branch = Branch::find($branch_data['id']);
-            if($branch->image_data != $request['image_data'])
+            if($branch->image_data != "image/default.png")
                 {
                     $destination=public_path("storage\\".$branch->image_data);
                     if (File::exists($destination)) {
                         File::delete($destination);
-                    }                    
-                    $branch->image_data = $request->file('image_data')->storeAs('branches',$branch->id.'.'.$request->file('image_data')->extension(),'public');
+                    } 
                 }
             Branch::destroy($branch_data['id']);
 
