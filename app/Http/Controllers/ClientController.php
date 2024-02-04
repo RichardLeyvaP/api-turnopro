@@ -80,7 +80,7 @@ class ClientController extends Controller
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15',
-                'user_id' => 'nullable|number'
+                'user_id' => 'nullable|numeric'
             ]);
            
             $client = new Client();
@@ -91,7 +91,7 @@ class ClientController extends Controller
             $client->phone = $clients_data['phone'];
             $client->user_id = $clients_data['user_id'];
             $client->save();
-            
+            Log::info($client);
             $filename = "image/default.png"; 
             if ($request->hasFile('client_image')) {
                $filename = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
@@ -120,8 +120,9 @@ class ClientController extends Controller
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email',
                 'phone' => 'required|max:15',
-                'user_id' => 'required|number'
+                'user_id' => 'required|numeric'
             ]);
+            Log::info($request['client_image']);
             $client = Client::find($clients_data['id']);
             if($client->client_image != $request['client_image'])
                 {
@@ -131,8 +132,6 @@ class ClientController extends Controller
                     }                    
                     $client->client_image = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
                 }
-            Log::info($request);
-            $client = Client::find($clients_data['id']);
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];
             $client->second_surname = $clients_data['second_surname'];
@@ -163,7 +162,7 @@ class ClientController extends Controller
                         File::delete($destination);
                     }
                 }
-            $client->destroy();
+                Client::destroy($clients_data['id']);
 
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {

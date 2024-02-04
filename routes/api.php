@@ -74,7 +74,7 @@ Route::get('/get-professionals-service', [ProfessionalController::class, 'get_pr
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
 Route::post('/client', [ClientController::class, 'store']);
-Route::put('/client', [ClientController::class, 'update']);
+Route::post('/client-update', [ClientController::class, 'update']);
 Route::post('/client-destroy', [ClientController::class, 'destroy']);
 Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
 
