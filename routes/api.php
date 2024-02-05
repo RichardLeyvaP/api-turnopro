@@ -135,7 +135,7 @@ Route::get('/product_mostSold_date', [ProductController::class, 'product_mostSol
 Route::get('/service', [ServiceController::class, 'index']);
 Route::get('/service-show', [ServiceController::class, 'show']);
 Route::post('/service', [ServiceController::class, 'store']);
-Route::put('/service', [ServiceController::class, 'update']);
+Route::post('/service-update', [ServiceController::class, 'update']);
 Route::post('/service-destroy', [ServiceController::class, 'destroy']);
 
 Route::get('/productstore', [ProductStoreController::class, 'index']);
