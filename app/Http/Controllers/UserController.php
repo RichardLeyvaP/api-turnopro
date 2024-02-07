@@ -212,9 +212,9 @@ class UserController extends Controller
             "msg" => "Acerca del perfil de usuario",
             "data" => auth()->user()
         ]);
-    }catch(\Throwable $th){
-        return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
-    }
+        }catch(\Throwable $th){
+            return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
+        }
     }
 
     public function qrCode(){
