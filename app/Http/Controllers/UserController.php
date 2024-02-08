@@ -182,6 +182,7 @@ class UserController extends Controller
                         'id' => $user->id,
                         'userName' => $user->name,
                         'email' => $user->email,
+                        'business_id' => $user->professional->business ? $user->professional->business->value('id') : 0,
                         'charge' => $user->professional ? $user->professional->charge->name : null,
                         'name' => $user->professional ? ($user->professional->name .' '. $user->professional->surname .' '. $user->professional->second_surname) : ($user->client->name .' '. $user->client->surname .' '. $user->client->second_surname), 
                         'charge_id' =>$user->professional ? ($user->professional->charge_id) : 0,
