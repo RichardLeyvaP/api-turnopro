@@ -42,6 +42,19 @@ class BranchController extends Controller
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
     }
+
+    public function show_Business(Request $request)
+    {
+        try {
+            $branch_data = $request->validate([
+                'business_id' => 'required|numeric'
+            ]);
+            Log::info($branch_data['business_id']);
+            return response()->json(['branches' => Branch::where('business_id', $branch_data['business_id'])->get()], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
+        }
+    }
     
     public function branch_winner(Request $request)
     {
