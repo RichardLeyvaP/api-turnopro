@@ -26,9 +26,10 @@ class StoreController extends Controller
             ]);
             return response()->json(['client' => Store::find($stores_data['id'])], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar el almacen"], 500);
+            return response()->json(['msg' => "Error al mostrar el almacén"], 500);
         }
     }
+
     public function store(Request $request)
     {
 
