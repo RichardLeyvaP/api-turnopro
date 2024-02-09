@@ -17,6 +17,7 @@ class ProductStoreController extends Controller
             $productStore = ProductStore::with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query){
                 return [
                     'id' => $query->id,
+                    //'product_quantity' => $query->product_quantity,
                     'product_exit' => $query->product_exit,
                     'product_id' => $query->product_id,
                     'store_id' => $query->store_id,
@@ -163,36 +164,29 @@ class ProductStoreController extends Controller
         }
     }
     public function move_product_store(Request $request){
-        Log::info("Mover productos de Producto de un almacén o otro");
+        Log::info("Mover productos de un almacén o otro");
         Log::info($request);
-        try {
+        try {           
             $data = $request->validate([
-                'id' => 'required|numeric',
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
+                'store_idM' => 'required|numeric',
                 'product_quantity' => 'required|numeric'
             ]);
-            $productstore = ProductStore::find($data['id']);
-            $productexist = Product::find($productstore['product_id']);
-            $storeexist = Store::find($productstore['store_id']);
-            
-            if ($productstore['product_exit']<$data['product_quantity']) {
-                return response()->json(['msg' => 'Error al mover el producto a este almacén, la cantidad excede la existente'], 500);
+            $productexist = Product::find($data['product_id']);
+            $storeexist = Store::find($data['store_id']);
+            $store = Store::find($data['store_idM']);
+            Log::info($productexist);
+            $productstoreexist = $storeexist->products()->wherePivot('product_id', $productexist->id)->first();
+            $storeexist->products()->updateExistingPivot($productexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$productstoreexist->pivot->product_exit-$data['product_quantity']]);
+            $productstore = $store->products()->wherePivot('product_id', $productexist->id)->first();
+            if ($productstore) {
+                $store->products()->updateExistingPivot($productexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$productstore->pivot->product_exit + $data['product_quantity']]);
             }
             else {
-                $productexist->stores()->updateExistingPivot($storeexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$productstore['product_exit']-$data['product_quantity']]);  
+                $store->products()->attach($productexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
             }
-            $producstorenew = ProductStore::where('product_id', $data['product_id'])->where('store_id', $data['store_id'])->first();
-            $product = Product::find($data['product_id']);
-            $store = Store::find($data['store_id']);
-            
-            if ($producstorenew) {
-            $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']+$producstorenew['product_exit']]);
-            }
-            else {
-                $product->stores()->attach($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
-            }
-            return response()->json(['msg' => 'Producto asignado correctamente al almacén'], 200);
+            return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
         return response()->json(['msg' => 'Error al mover el producto a este almacén'], 500);
         } 
