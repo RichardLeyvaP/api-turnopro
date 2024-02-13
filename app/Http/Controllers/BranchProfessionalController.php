@@ -46,7 +46,7 @@ class BranchProfessionalController extends Controller
         try {             
             Log::info("Dado un professionals devuelve las branches a las que pertenece");
             $data = $request->validate([
-                'professional_id' => 'nullable|numeric'
+                'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
                 return response()->json(['branches' => $professional->branches],200); 
@@ -54,6 +54,24 @@ class BranchProfessionalController extends Controller
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar las branches"], 500);
+        }
+    }
+
+    public function branch_professionals(Request $request)
+    {
+        try {             
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->with('charge')->get();
+                return response()->json(['professionals' => $professionals],200); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
         }
     }
 
@@ -82,10 +100,10 @@ class BranchProfessionalController extends Controller
             ]);
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            $branch->professionals()->destroy($professional->id);
+            $branch->professionals()->detach($professional->id);
             return response()->json(['msg' => 'Professional eliminada correctamente de la branch'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al eliminar la professional de esta branch'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al eliminar la professional de esta branch'], 500);
         }
     }
 }

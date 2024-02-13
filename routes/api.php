@@ -256,6 +256,7 @@ Route::get('/branchprofessional-show', [BranchProfessionalController::class, 'sh
 Route::post('/branchprofessional', [BranchProfessionalController::class, 'store']);
 Route::put('/branchprofessional', [BranchProfessionalController::class, 'update']);
 Route::post('/branchprofessional-destroy', [BranchProfessionalController::class, 'destroy']);
+Route::get('/branch-professionals', [BranchProfessionalController::class, 'branch_professionals']);//dado una branch devuelve los professionales que trabajan en ella
 
 Route::get('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'index']);
 Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::class, 'show']);
