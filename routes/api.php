@@ -22,6 +22,7 @@ use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
@@ -270,6 +271,12 @@ Route::post('/comment', [CommentController::class, 'store']);
 Route::put('/comment', [CommentController::class, 'update']);
 Route::post('/comment-destroy', [CommentController::class, 'destroy']);
 Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
+
+Route::get('/notification', [NotificationController::class, 'index']);
+Route::get('/notification-show', [NotificationController::class, 'show']);
+Route::post('/notification', [NotificationController::class, 'store']);
+Route::put('/notification', [NotificationController::class, 'update']);
+Route::post('/notification-destroy', [NotificationController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

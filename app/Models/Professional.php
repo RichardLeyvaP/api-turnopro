@@ -64,5 +64,10 @@ class Professional extends Model
         return $this->belongsToMany(Workplace::class, 'professional_workplace')->withPivot('data')->withTimestamps();
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
     protected $table = "professionals";
 }

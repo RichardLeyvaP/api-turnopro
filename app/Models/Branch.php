@@ -56,4 +56,8 @@ class Branch extends Model
     public function tails(){
         return $this->hasManyDeep(Tail::class, ['branch_professional' ,Professional::class, ClientProfessional::class, Car::class, Reservation::class]);
     }
+
+    public function notifications(){
+        return $this->HasMany(Notification::class);
+    }
 }
