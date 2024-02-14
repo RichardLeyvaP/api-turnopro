@@ -109,14 +109,11 @@ class NotificationController extends Controller
     {
         Log::info('Modificar el estado de una notificacion');
         try {
-            $data = $request->validate([
-                'professional_id' => 'required|numeric',
-                'branch_id' => 'required|numeric',
-           ]);
-           
-           $branch = Branch::find($data['branch_id']);
-           $professional = Professional::find($data['professional_id']);
-            $notification = $branch->notifications()->where('professional_id', $professional->id)->first();
+                $data = $request->validate([
+                    'id' => 'required|numeric'
+               ]);
+               
+                $notification = Notification::find($data['id']);
             $notification->state = 1;
             $notification->save();
            return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
