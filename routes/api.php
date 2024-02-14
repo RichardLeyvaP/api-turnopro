@@ -274,6 +274,7 @@ Route::post('/storeByReservationId', [CommentController::class, 'storeByReservat
 
 Route::get('/notification', [NotificationController::class, 'index']);
 Route::get('/notification-show', [NotificationController::class, 'show']);
+Route::get('/notification-professional', [NotificationController::class, 'professional_show']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
 Route::post('/notification', [NotificationController::class, 'store']);
 Route::put('/notification', [NotificationController::class, 'update']);
 Route::post('/notification-destroy', [NotificationController::class, 'destroy']);
