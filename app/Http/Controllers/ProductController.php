@@ -15,7 +15,7 @@ class ProductController extends Controller
     {
         try {             
             Log::info( "Entra a buscar productos");
-            return response()->json(['products' => Product::with('productcategory')->get()], 200);
+            return response()->json(['products' => Product::with('productcategory')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los productos"], 500);
@@ -107,7 +107,7 @@ class ProductController extends Controller
             'branches' => $result,
             'Product' => $productcompany->name,
             'cantProduct' => $productcompany->orders_count
-          ], 200);
+          ], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
@@ -119,7 +119,7 @@ class ProductController extends Controller
             $product_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['product' => Product::find($product_data['id'])], 200);
+            return response()->json(['product' => Product::find($product_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el producto"], 500);
         }
