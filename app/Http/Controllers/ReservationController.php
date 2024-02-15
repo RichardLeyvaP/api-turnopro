@@ -36,7 +36,7 @@ class ReservationController extends Controller
         try {             
             Log::info( "Entra a buscar las reservaciones");
             $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->get();
-            return response()->json(['reservaciones' => $reservations], 200);
+            return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
@@ -187,7 +187,7 @@ class ReservationController extends Controller
             })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
-            return response()->json(['reservaciones' => $reservations], 200);
+            return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -202,7 +202,7 @@ class ReservationController extends Controller
                 'id' => 'required|numeric'
             ]);
             $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->where('id', $data['id'])->get();
-            return response()->json(['reservaciones' => $reservations], 200);
+            return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
@@ -268,7 +268,7 @@ class ReservationController extends Controller
             })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
-            return response()->json(['reservaciones' => $reservations], 200);
+            return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al mostrar las reservaciones en esa fecha'], 500);
         }
@@ -297,7 +297,7 @@ class ReservationController extends Controller
                 'client_id' => 'required|numeric'
             ]);
             $history = $this->reservationService->client_history($data);
-            return response()->json(['clientHistory' => $history], 200);
+            return response()->json(['clientHistory' => $history], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al mostrar la history'], 500);
         }
