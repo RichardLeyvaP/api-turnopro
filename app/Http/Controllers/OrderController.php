@@ -31,7 +31,7 @@ class OrderController extends Controller
             Log::info( "Entra a buscar las orders");
             $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->has('productStore.product')->orHas('branchServiceProfessional.branchService.service')->get();
             /*$car = Order::join('cars', 'cars.id', '=', 'orders.car_id')->join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->leftjoin('product_store', 'product_store.id', '=', 'orders.product_store_id')->leftjoin('products', 'products.id', '=', 'product_store.product_id')->leftjoin('branch_service_professional', 'branch_service_professional.id', '=', 'orders.branch_service_professional_id')->leftjoin('branch_service', 'branch_service.id', '=', 'branch_service_professional.branch_service_id')->leftjoin('services', 'services.id', '=', 'branch_service.service_id')->get(['cars.*', 'clients.*', 'professionals.*', 'products.*', 'services.*','orders.*']);*/
-            return response()->json(['orders' => $orders], 200);
+            return response()->json(['orders' => $orders], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
@@ -77,7 +77,7 @@ class OrderController extends Controller
             ]);
                 $productSales = $this->orderService->sales_periodo_product($data);
                 $serviceSales = $this->orderService->sales_periodo_service($data);      
-             return response()->json(['ProductSales' =>$productSales, 'ServiceSales' => $serviceSales], 200);
+             return response()->json(['ProductSales' =>$productSales, 'ServiceSales' => $serviceSales], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();
@@ -102,7 +102,7 @@ class OrderController extends Controller
                     'category' => $order->is_product ? $order->productStore->product->productCategory->name : $order->branchServiceProfessional->branchService->service->type_service,
                 ];
             });
-            return response()->json(['orders' => $orders], 200);
+            return response()->json(['orders' => $orders], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las orders"], 500);
