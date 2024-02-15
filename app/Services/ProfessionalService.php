@@ -186,15 +186,15 @@ class ProfessionalService
           ];
     }
 
-    public function professionals_ganancias_branch_month($data, $mes)
+    public function professionals_ganancias_branch_month($data, $mes, $year)
     {
         Log::info('Obtener los cars');
         $cars = Car::whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             });
-        })->whereHas('orders', function ($query) use ($mes){
-            $query->whereMonth('data', $mes);
+        })->whereHas('orders', function ($query) use ($mes, $year){
+            $query->whereMonth('data', $mes)->whereYear('data', $year);
         })->get();
        $services =0;
        $products =0;
@@ -209,7 +209,7 @@ class ProfessionalService
                     $query->where('type_service', 'Especial');
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
-        })->whereMonth('data', $mes)->get();
+        })->whereMonth('data', $mes)->whereYear('data', $year)->get();
         Log::info($orders);
         $totalClients = $cars->count();
           return $result = [
