@@ -15,7 +15,7 @@ class NotificationController extends Controller
     {
         Log::info('entra a buscar las notificaciones por professional');
         try {
-            return response()->json(['notifications' => Notification::with('professional', 'branch')->get()], 200);
+            return response()->json(['notifications' => Notification::with('professional', 'branch')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las notifocaciones"], 500);
         }
@@ -69,7 +69,7 @@ class NotificationController extends Controller
                 ];
             });
                 
-           return response()->json(['notifications' => $notifications], 200);
+           return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar las notifocaciones"], 500);
        }
@@ -99,7 +99,7 @@ class NotificationController extends Controller
                 ];
             });
                 
-           return response()->json(['notifications' => $notifications], 200);
+           return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar las notifocaciones"], 500);
        }
