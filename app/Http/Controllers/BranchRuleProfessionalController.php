@@ -16,7 +16,7 @@ class BranchRuleProfessionalController extends Controller
     {
         try {
             $professionalrules = BranchRuleProfessional::with('branchRule.rule', 'professional')->get();
-            return response()->json(['branchRuleProfesional' => $professionalrules], 200);
+            return response()->json(['branchRuleProfesional' => $professionalrules], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las rules por trabajador"], 500);
         }
@@ -76,7 +76,7 @@ class BranchRuleProfessionalController extends Controller
             $data = $request->validate([
                 'professional_id' => 'numeric'
             ]);
-            return response()->json(['professional' => Professional::find($data['professional_id'])->branchRules], 200);            
+            return response()->json(['professional' => Professional::find($data['professional_id'])->branchRules], 200, [], JSON_NUMERIC_CHECK);            
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar el estado de las rules de un  professional"], 500);
@@ -121,7 +121,7 @@ class BranchRuleProfessionalController extends Controller
                     'state' => $branchRuleProfessional->estado
                 ];
             });
-            return response()->json(['rules' => $branchRuleProfessionals], 200);            
+            return response()->json(['rules' => $branchRuleProfessionals], 200, [], JSON_NUMERIC_CHECK);            
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar el estado de las rules de un  professional"], 500);
