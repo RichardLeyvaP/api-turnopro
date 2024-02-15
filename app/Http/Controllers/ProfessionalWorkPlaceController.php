@@ -19,7 +19,7 @@ class ProfessionalWorkPlaceController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los puestos de trabajos por branches");
-            return response()->json(['workplaces' => Branch::with('professionals')->get()], 200);
+            return response()->json(['workplaces' => Branch::with('professionals')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los productos"], 500);
@@ -66,7 +66,7 @@ class ProfessionalWorkPlaceController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-            return response()->json(['professionals' => $professional->workplaces->get()],200); 
+            return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
             Log::error($th);
