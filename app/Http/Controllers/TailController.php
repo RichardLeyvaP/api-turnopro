@@ -151,7 +151,7 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             
-            return response()->json(['tail' => $this->tailService->cola_branch_data($data['branch_id'])], 200);
+            return response()->json(['tail' => $this->tailService->cola_branch_data($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);
@@ -165,7 +165,7 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             
-            return response()->json(['tail' => $this->tailService->tail_branch_attended($data['branch_id'])], 200);
+            return response()->json(['tail' => $this->tailService->tail_branch_attended($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);
@@ -181,7 +181,7 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             
-            return response()->json(['tail' => $this->tailService->cola_branch_capilar($data['branch_id'])], 200);
+            return response()->json(['tail' => $this->tailService->cola_branch_capilar($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage()], 500);
@@ -198,7 +198,7 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric',
             ]);
             
-            return response()->json(['tail' => $this->tailService->cola_branch_tecnico($data['branch_id'], $data['professional_id'])], 200);
+            return response()->json(['tail' => $this->tailService->cola_branch_tecnico($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage()], 500);
@@ -232,7 +232,7 @@ class TailController extends Controller
             ]);
 
             
-            return response()->json(['tail' => $this->tailService->cola_branch_professional($data['branch_id'], $data['professional_id'])], 200);
+            return response()->json(['tail' => $this->tailService->cola_branch_professional($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' =>"Error al mostrar las Tail"], 500);

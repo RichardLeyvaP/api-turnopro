@@ -76,20 +76,20 @@ class TailService {
         })->whereNot('attended', [2])->get();
         $branchTails = $tails->map(function ($tail){
             return [
-                'reservation_id' => intval($tail->reservation->id),
-                'car_id' => intval($tail->reservation->car_id),
+                'reservation_id' => $tail->reservation->id,
+                'car_id' => $tail->reservation->car_id,
                 'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
                 'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
                 'total_time' => $tail->reservation->total_time,
                 'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
-                'client_id' => intval($tail->reservation->car->clientProfessional->client_id),
-                'professional_id' => intval($tail->reservation->car->clientProfessional->professional_id),
-                'attended' => intval($tail->attended), 
+                'client_id' => $tail->reservation->car->clientProfessional->client_id,
+                'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
+                'attended' => $tail->attended, 
                 'updated_at' => $tail->updated_at, 
-                'clock' => intval($tail->clock), 
-                'timeClock' => intval($tail->timeClock), 
-                'detached' => intval($tail->detached), 
+                'clock' => $tail->clock, 
+                'timeClock' => $tail->timeClock, 
+                'detached' => $tail->detached, 
                 'total_services' => Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()/*$tail->reservation->car->orders->map(function ($orderData){
                     $orderData->where('is_product', false);
                       })*/
@@ -146,17 +146,17 @@ class TailService {
         }])->orderBy('updated_at')->whereIn('attended', [4,5])->get();
         $branchTails = $tails->map(function ($tail){
             return [
-                'reservation_id' => intval($tail->reservation->id),
-                'car_id' => intval($tail->reservation->car_id),
+                'reservation_id' => $tail->reservation->id,
+                'car_id' => $tail->reservation->car_id,
                 'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
                 'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
-                'total_time' => intval($tail->reservation->total_time),
+                'total_time' => $tail->reservation->total_time,
                 'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
-                'client_id' => intval($tail->reservation->car->clientProfessional->client_id),
-                'professional_id' => intval($tail->reservation->car->clientProfessional->professional_id),
-                'professional_state' => intval($tail->reservation->car->clientProfessional->professional->state),
-                'attended' => intval($tail->attended)
+                'client_id' => $tail->reservation->car->clientProfessional->client_id,
+                'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
+                'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
+                'attended' => $tail->attended
             ];
         })->values();
 
@@ -174,17 +174,17 @@ class TailService {
         })->orderBy('updated_at')->whereIn('attended', [4])->get();
         $branchTails = $tails->map(function ($tail){
             return [
-                'reservation_id' => intval($tail->reservation->id),
-                'car_id' => intval($tail->reservation->car_id),
+                'reservation_id' => $tail->reservation->id,
+                'car_id' => $tail->reservation->car_id,
                 'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
                 'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
-                'total_time' => intval($tail->reservation->total_time),
+                'total_time' => $tail->reservation->total_time,
                 'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname." ".$tail->reservation->car->clientProfessional->client->second_surname,
                 'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname." ".$tail->reservation->car->clientProfessional->professional->second_surname,
-                'client_id' => intval($tail->reservation->car->clientProfessional->client_id),
-                'professional_id' => intval($tail->reservation->car->clientProfessional->professional_id),
-                'professional_state' => intval($tail->reservation->car->clientProfessional->professional->state),
-                'attended' => intval($tail->attended)
+                'client_id' => $tail->reservation->car->clientProfessional->client_id,
+                'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
+                'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
+                'attended' => $tail->attended
             ];
         })->values();
 
