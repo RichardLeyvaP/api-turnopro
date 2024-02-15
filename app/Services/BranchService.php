@@ -201,10 +201,9 @@ class BranchService
                 $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
                 $total_company += round($cars->sum('earnings'),2);
             }//foreach
-          return [
-            'branches' => $result,
-            'totalEarnings' => $total_company
-          ];
+            $result[$i]['name'] = 'Total';
+                $result[$i++]['earnings'] = $total_company;
+          return $result;
     }
 
     public function company_winner_periodo($startDate ,$endDate)
@@ -227,10 +226,9 @@ class BranchService
                 $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
                 $total_company += round($cars->sum('earnings'),2);
             }//foreach
-          return [
-            'branches' => $result,
-            'totalEarnings' => $total_company
-          ];
+            $result[$i]['name'] = 'Total';
+            $result[$i++]['earnings'] = $total_company;
+      return $result;
     }
 
     public function company_winner_date()
@@ -254,10 +252,9 @@ class BranchService
                 $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
                 $total_company += round($cars->sum('earnings'),2);
             }//foreach
-          return [
-            'branches' => $result,
-            'totalEarnings' => $total_company
-          ];
+            $result[$i]['name'] = 'Total';
+            $result[$i++]['earnings'] = $total_company;
+      return $result;
     }
 
     public function branch_professionals_winner_date($branch_id)

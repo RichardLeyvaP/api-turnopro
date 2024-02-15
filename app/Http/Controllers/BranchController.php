@@ -81,10 +81,6 @@ class BranchController extends Controller
     public function company_winner(Request $request)
     {
         try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric'
-           ]);
-
            if ($request->has('mes')) {
             return response()->json($this->branchService->company_winner_month($request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
             }
