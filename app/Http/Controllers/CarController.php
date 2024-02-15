@@ -26,7 +26,7 @@ class CarController extends Controller
         try {             
             Log::info( "Entra a buscar los carros");
             $car = Car::with('clientProfessional.client', 'clientProfessional.professional')->get();
-            return response()->json(['cars' => $car], 200);
+            return response()->json(['cars' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
@@ -94,7 +94,7 @@ class CarController extends Controller
                     'request_delete' => $orderData->request_delete
                     ];
                 });
-           return response()->json(['productscar' => $products, 'servicescar' => $services], 200);
+           return response()->json(['productscar' => $products, 'servicescar' => $services], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar ls ordenes"], 500);
        }
