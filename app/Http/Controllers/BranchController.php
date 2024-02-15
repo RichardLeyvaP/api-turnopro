@@ -64,13 +64,13 @@ class BranchController extends Controller
            ]);
 
            if ($request->has('mes')) {
-            return response()->json($this->branchService->branch_winner_month($data['branch_id'], $request->mes, $request->year), 200);
+            return response()->json($this->branchService->branch_winner_month($data['branch_id'], $request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
-                return response()->json($this->branchService->branch_winner_periodo($data['branch_id'], $request->startDate, $request->endDate), 200);
+                return response()->json($this->branchService->branch_winner_periodo($data['branch_id'], $request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
             }
             else {
-                return response()->json($this->branchService->branch_winner_date($data['branch_id']), 200);
+                return response()->json($this->branchService->branch_winner_date($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             }
             
        } catch (\Throwable $th) {
@@ -86,13 +86,13 @@ class BranchController extends Controller
            ]);
 
            if ($request->has('mes')) {
-            return response()->json($this->branchService->company_winner_month($request->mes, $request->year), 200);
+            return response()->json($this->branchService->company_winner_month($request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
-                return response()->json($this->branchService->company_winner_periodo($request->startDate, $request->endDate), 200);
+                return response()->json($this->branchService->company_winner_periodo($request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
             }            
             else {
-                return response()->json($this->branchService->company_winner_date(), 200);
+                return response()->json($this->branchService->company_winner_date(), 200, [], JSON_NUMERIC_CHECK);
             }
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
@@ -107,13 +107,13 @@ class BranchController extends Controller
            ]);
 
            if ($request->has('mes')) {
-            return response()->json($this->branchService->branch_professionals_winner_month($data['branch_id'], $request->mes, $request->year), 200);
+            return response()->json($this->branchService->branch_professionals_winner_month($data['branch_id'], $request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
-                return response()->json($this->branchService->branch_professionals_winner_periodo($data['branch_id'], $request->startDate, $request->endDate), 200);
+                return response()->json($this->branchService->branch_professionals_winner_periodo($data['branch_id'], $request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
             }
             else {
-                return response()->json($this->branchService->branch_professionals_winner_date($data['branch_id']), 200);
+                return response()->json($this->branchService->branch_professionals_winner_date($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             }
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
