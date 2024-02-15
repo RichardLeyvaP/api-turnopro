@@ -118,7 +118,7 @@ class ProfessionalController extends Controller
                'endDate' => 'required|date'
            ]);
            $ganancias = $this->professionalService->professionals_ganancias($data);
-          return response()->json(['earningByDay' => $ganancias], 200);
+          return response()->json(['earningByDay' => $ganancias], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
        }
@@ -133,13 +133,13 @@ class ProfessionalController extends Controller
                 'professional_id' => 'required|numeric'
            ]);
            if ($request->has('mes')) {
-            return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_month($data, $request->mes)], 200);
+            return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_month($data, $request->mes, $request->year)], 200, [], JSON_NUMERIC_CHECK);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
-                return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_Periodo($data, $request->startDate, $request->endDate)], 200);
+                return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_Periodo($data, $request->startDate, $request->endDate)], 200, [], JSON_NUMERIC_CHECK);
             }
             else {
-                return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_date($data)], 200);
+                return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_date($data)], 200, [], JSON_NUMERIC_CHECK);
             }
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Profssional no obtuvo ganancias en este período"], 500);
