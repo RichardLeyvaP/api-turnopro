@@ -32,7 +32,7 @@ class ProductStoreController extends Controller
                     'storetReference' => $query->store->reference
                 ];
             });
-            return response()->json(['products' => $productStore], 200);
+            return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los productos"], 500);
@@ -77,12 +77,12 @@ class ProductStoreController extends Controller
                 'product_id' => 'numeric'
             ]);
             if ($data['store_id'] && $data['product_id'] == null) {
-                return response()->json(['stores' => Store::find($data['store_id'])->products], 200);
+                return response()->json(['stores' => Store::find($data['store_id'])->products], 200, [], JSON_NUMERIC_CHECK);
             }
             if ($data['product_id'] && $data['store_id'] == null) {
-                return response()->json(['products' => Product::find($data['product_id'])->stores],200); 
+                return response()->json(['products' => Product::find($data['product_id'])->stores],200, [], JSON_NUMERIC_CHECK); 
             } else {
-                return response()->json(['stores' => Product::find($data['product_id'])->stores, 'products' => Store::find($data['store_id'])->products],200); 
+                return response()->json(['stores' => Product::find($data['product_id'])->stores, 'products' => Store::find($data['store_id'])->products],200, [], JSON_NUMERIC_CHECK); 
             }
             
             } catch (\Throwable $th) {  
@@ -118,7 +118,7 @@ class ProductStoreController extends Controller
                    'image_product' => $productStore->product->image_product
                ];
            });
-           return response()->json(['category_products' => $productsArray], 200);
+           return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }
