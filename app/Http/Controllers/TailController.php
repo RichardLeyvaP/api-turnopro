@@ -27,7 +27,7 @@ class TailController extends Controller
             $tails = Tail::with(['reservation'=> function ($query) {
                 $query->orderBy('start_time');
             }])->get();
-            return response()->json(['tails' => $tails], 200);
+            return response()->json(['tails' => $tails], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
