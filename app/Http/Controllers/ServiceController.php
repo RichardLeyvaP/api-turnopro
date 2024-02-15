@@ -14,7 +14,7 @@ class ServiceController extends Controller
     {
         try {             
             Log::info( "Entra a buscar servicios");
-            return response()->json(['services' => Service::all()], 200);
+            return response()->json(['services' => Service::all()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios"], 500);
@@ -67,7 +67,7 @@ class ServiceController extends Controller
                 'id' => 'required|numeric'
             ]);
             $service = Service::find($data['id']);
-            return response()->json(['service' => $service], 200);
+            return response()->json(['service' => $service], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }
