@@ -285,8 +285,7 @@ class TailController extends Controller
             if (!$attended) {
                 $attended = 0;
             }
-
-            return response()->json($attended, 200);
+             return response()->json([$attended], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al mostrar el estado de la reservacion'], 500);
         }
