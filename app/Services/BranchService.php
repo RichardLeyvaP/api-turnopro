@@ -274,7 +274,7 @@ class BranchService
                         return $clientprofessional->cars->sum('tip');
                     })*0.8), 2)
                 ];
-            })->sortByDesc('winner');  
+            })->sortByDesc('winner')->values();  
     
     }
 
@@ -284,7 +284,7 @@ class BranchService
             $query->whereMonth('data', $month)->whereYear('data', $year);
             }])->whereHas('branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
-            })->get()->map(function ($professional) use ($month){
+            })->get()->map(function ($professional){
                 return [
                     'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
                     'winner' => round(($professional->clientProfessionals->sum(function ($clientprofessional){
@@ -295,7 +295,7 @@ class BranchService
                         return $clientprofessional->cars->sum('tip');
                     })*0.8), 2)
                 ];
-            })->sortByDesc('winner');  
+            })->sortByDesc('winner')->values();  
     }
 
     public function branch_professionals_winner_periodo($branch_id, $startDate, $endDate)
@@ -315,7 +315,7 @@ class BranchService
                         return $clientprofessional->cars->sum('tip');
                     })*0.8), 2)
                 ];
-            })->sortByDesc('winner');  
+            })->sortByDesc('winner')->values();  
     }
 
 }
