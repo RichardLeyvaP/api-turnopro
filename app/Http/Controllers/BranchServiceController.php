@@ -15,7 +15,7 @@ class BranchServiceController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los servicios por sucursales");
-            return response()->json(['branch' => Branch::with('branchservices')->get()], 200);
+            return response()->json(['branch' => Branch::with('branchservices')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los servicios por sucursales"], 500);
@@ -53,7 +53,7 @@ class BranchServiceController extends Controller
             $services = Service::whereHas('branchServices', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->with('branchServices.branchServiceProfessional:id')->get();
-                return response()->json(['services' => $services],200); 
+                return response()->json(['services' => $services],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
             Log::error($th);
