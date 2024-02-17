@@ -14,7 +14,7 @@ class BranchServiceProfessionalController extends Controller
     {
         try {
             $professionalservices = BranchServiceProfessional::with('branchService.service', 'professional')->get();
-            return response()->json(['branchServiceProfesional' => $professionalservices], 200);
+            return response()->json(['branchServiceProfesional' => $professionalservices], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
@@ -60,7 +60,7 @@ class BranchServiceProfessionalController extends Controller
                 ];
            });*/
            
-           return response()->json(['professional_services' => $serviceModels], 200);
+           return response()->json(['professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
        }
@@ -95,7 +95,7 @@ class BranchServiceProfessionalController extends Controller
             ]);
             $result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
             
-            return response()->json(['branchServiceProfesional' => $result], 200);            
+            return response()->json(['branchServiceProfesional' => $result], 200, [], JSON_NUMERIC_CHECK);            
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
