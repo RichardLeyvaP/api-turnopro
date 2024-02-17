@@ -19,7 +19,7 @@ class CommentController extends Controller
         try {             
             Log::info( "Entra a buscar los carros");
             $comments = Comment::with('clientProfessional.client', 'clientProfessional.professional')->get();
-            return response()->json(['comments' => $comments], 200);
+            return response()->json(['comments' => $comments], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
@@ -94,7 +94,7 @@ class CommentController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['branch' => Comment::with('clientProfessional.client', 'clientProfessional.professional')->find($data['id'])], 200);
+            return response()->json(['branch' => Comment::with('clientProfessional.client', 'clientProfessional.professional')->find($data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el comment"], 500);
         }
