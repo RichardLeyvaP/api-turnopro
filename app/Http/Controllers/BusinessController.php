@@ -11,7 +11,7 @@ class BusinessController extends Controller
     public function index()
     {
         try {
-            return response()->json(['business' => Business::with(['professional', 'branches'])->get()], 200);
+            return response()->json(['business' => Business::with(['professional', 'branches'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los negocios"], 500);
         }
@@ -22,7 +22,7 @@ class BusinessController extends Controller
             $business_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['business' => Business::with('professional')->find($business_data['id'])], 200);
+            return response()->json(['business' => Business::with('professional')->find($business_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
