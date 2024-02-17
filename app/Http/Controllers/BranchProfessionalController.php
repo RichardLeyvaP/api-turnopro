@@ -13,7 +13,7 @@ class BranchProfessionalController extends Controller
     {
         try {             
             Log::info( "Entra a buscar los Professionales por sucursales");
-            return response()->json(['branch' => Branch::with('professionals')->get()], 200);
+            return response()->json(['branch' => Branch::with('professionals')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar los professionals por sucursales"], 500);
@@ -49,7 +49,7 @@ class BranchProfessionalController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-                return response()->json(['branches' => $professional->branches],200); 
+                return response()->json(['branches' => $professional->branches],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
             Log::error($th);
@@ -67,7 +67,7 @@ class BranchProfessionalController extends Controller
             $professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->with('charge')->get();
-                return response()->json(['professionals' => $professionals],200); 
+                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
             Log::error($th);
