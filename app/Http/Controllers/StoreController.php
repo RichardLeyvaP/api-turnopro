@@ -12,7 +12,7 @@ class StoreController extends Controller
         try { 
             
             Log::info( "entra a almacenes");
-            return response()->json(['stores' => Store::all()], 200);
+            return response()->json(['stores' => Store::all()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los almacenes"], 500);
@@ -24,7 +24,7 @@ class StoreController extends Controller
             $stores_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['client' => Store::find($stores_data['id'])], 200);
+            return response()->json(['client' => Store::find($stores_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el almacén"], 500);
         }

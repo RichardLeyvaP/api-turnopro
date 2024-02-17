@@ -191,7 +191,7 @@ class UserController extends Controller
                         'branch_id' =>$branch ? $branch['branch_id']: 0,
                         'nameBranch' =>$branch ? $branch['nameBranch'] : "",           
                         'token' => $user->createToken('auth_token')->plainTextToken
-                    ],200);
+                    ],200, [], JSON_NUMERIC_CHECK);
                 }else{
                     return response()->json([
                       "msg" => "Contraseña incorrecta"
