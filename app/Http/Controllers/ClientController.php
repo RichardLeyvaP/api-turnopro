@@ -19,7 +19,7 @@ class ClientController extends Controller
 
             $client=Client::all();
             Log::info( $client);
-            return response()->json(['clients' => Client::with('user')->get()], 200);
+            return response()->json(['clients' => Client::with('user')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
 
@@ -32,7 +32,7 @@ class ClientController extends Controller
             $clients_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['client' => Client::with('user')->find($clients_data['id'])], 200);
+            return response()->json(['client' => Client::with('user')->find($clients_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la professionala"], 500);
         }
@@ -65,7 +65,7 @@ class ClientController extends Controller
           return response()->json([
             'branches' => $result,
             'companyAttended' => $total_company
-          ], 200);
+          ], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
