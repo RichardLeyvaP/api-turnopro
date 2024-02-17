@@ -26,7 +26,7 @@ class BranchController extends Controller
     public function index()
     {
         try {
-            return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200);
+            return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
         }
@@ -37,7 +37,7 @@ class BranchController extends Controller
             $branch_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            return response()->json(['branch' => Branch::with('professional')->find($branch_data['id'])], 200);
+            return response()->json(['branch' => Branch::with('professional')->find($branch_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
@@ -50,7 +50,7 @@ class BranchController extends Controller
                 'business_id' => 'required|numeric'
             ]);
             Log::info($branch_data['business_id']);
-            return response()->json(['branches' => Branch::where('business_id', $branch_data['business_id'])->get()], 200);
+            return response()->json(['branches' => Branch::where('business_id', $branch_data['business_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
@@ -124,7 +124,7 @@ class BranchController extends Controller
             ]);
             return response()->json(['branches' => Branch::whereHas('professionals', function ($query) use ($data){
                 $query->where('professional_id', $data['professional_id']);
-            })->get()], 200);
+            })->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las branch"], 500);
         }
