@@ -14,7 +14,7 @@ class BranchRuleController extends Controller
     {
         try {             
             Log::info( "Devuelve las branches y sus reglas");
-            return response()->json(['branch' => Branch::with('rules')->get()], 200);
+            return response()->json(['branch' => Branch::with('rules')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => "Error al mostrar las rules por branch"], 500);
@@ -51,7 +51,7 @@ class BranchRuleController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $branch = Branch::find($data['branch_id']);
-            return response()->json(['rules' => $branch->rules->first()],200); 
+            return response()->json(['rules' => $branch->rules->first()],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
             Log::error($th);
@@ -73,7 +73,7 @@ class BranchRuleController extends Controller
                     'description' => $branchrule->rule->description
                 ];
             });
-            return response()->json(['rules' => $branchrules],200); 
+            return response()->json(['rules' => $branchrules],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
             Log::error($th);
