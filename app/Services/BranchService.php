@@ -73,8 +73,8 @@ class BranchService
     {
         $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch_id){
            $query->where('branch_id', $branch_id);
-        })->whereHas('orders', function ($query) use ($month){
-            $query->whereMonth('data', $month);
+        })->whereHas('orders', function ($query) use ($month, $year){
+            $query->whereMonth('data', $month)->whereYear('data', $year);
         })->get();
             $totalservices =0;
             $totalproducts =0;
@@ -259,63 +259,60 @@ class BranchService
 
     public function branch_professionals_winner_date($branch_id)
     {
-        return $professionals = Professional::with(['clientProfessionals.cars.orders' => function ($query){
-            $query->whereDate('data', Carbon::now());
-            }])->whereHas('branches', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
-            })->get()->map(function ($professional){
-                return [
-                    'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                    'winner' => round(($professional->clientProfessionals->sum(function ($clientprofessional){
-                        return $clientprofessional->cars->sum(function ($car){
-                            return $car->orders->sum('price');
-                        });
-                    })*0.45) + ($professional->clientProfessionals->sum(function ($clientprofessional){
-                        return $clientprofessional->cars->sum('tip');
-                    })*0.8), 2)
-                ];
-            })->sortByDesc('winner')->values();  
+        return $resultados = Professional::with(['orders' => function ($query){
+            $query->whereDate('data',  Carbon::now());
+        }, 'clientProfessionals.cars.orders' => function ($query){
+            $query->whereMonth('data', Carbon::now());
+        }])->whereHas('branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })
+        ->get()->map(function ($professional){
+            return [
+                'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
+                'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->sum('tip')*0.8;
+                }))->sum(), 2) : 0
+            ];
+        })->sortByDesc('winner')->values();    
     
     }
 
     public function branch_professionals_winner_month($branch_id, $month, $year)
     {
-        return $professionals = Professional::with(['clientProfessionals.cars.orders' => function ($query) use ($month, $year){
+        return $resultados = Professional::with(['orders' => function ($query) use ($month, $year) {
             $query->whereMonth('data', $month)->whereYear('data', $year);
-            }])->whereHas('branches', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
-            })->get()->map(function ($professional){
-                return [
-                    'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                    'winner' => round(($professional->clientProfessionals->sum(function ($clientprofessional){
-                        return $clientprofessional->cars->sum(function ($car){
-                            return $car->orders->sum('price');
-                        });
-                    })*0.45) + ($professional->clientProfessionals->sum(function ($clientprofessional){
-                        return $clientprofessional->cars->sum('tip');
-                    })*0.8), 2)
-                ];
-            })->sortByDesc('winner')->values();  
+        }, 'clientProfessionals.cars.orders' => function ($query) use ($month, $year) {
+            $query->whereMonth('data', $month)->whereYear('data', $year);
+        }])->whereHas('branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })
+        ->get()->map(function ($professional){
+            return [
+                'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
+                'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->sum('tip')*0.8;
+                }))->sum(), 2) : 0
+            ];
+        })->sortByDesc('winner')->values();        
     }
 
     public function branch_professionals_winner_periodo($branch_id, $startDate, $endDate)
     {
-        return $professionals = Professional::with(['clientProfessionals.cars.orders' => function ($query) use ($startDate, $endDate){
-            $query->whereBetWeen('data', [$startDate, $endDate]);
-            }])->whereHas('branches', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
-            })->get()->map(function ($professional){
-                return [
-                    'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                    'winner' => round(($professional->clientProfessionals->sum(function ($clientprofessional){
-                        return $clientprofessional->cars->sum(function ($car){
-                            return $car->orders->sum('price');
-                        });
-                    })*0.45) + ($professional->clientProfessionals->sum(function ($clientprofessional){
-                        return $clientprofessional->cars->sum('tip');
-                    })*0.8), 2)
-                ];
-            })->sortByDesc('winner')->values();  
+        return $resultados = Professional::with(['orders' => function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('data', [$startDate, $endDate]);
+        }, 'clientProfessionals.cars.orders' => function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('data', [$startDate, $endDate]);
+        }])->whereHas('branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })
+        ->get()->map(function ($professional){
+            return [
+                'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
+                'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->sum('tip')*0.8;
+                }))->sum(), 2) : 0
+            ];
+        })->sortByDesc('winner')->values();         
     }
 
 }
