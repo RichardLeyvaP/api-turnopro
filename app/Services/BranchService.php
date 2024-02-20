@@ -299,13 +299,19 @@ class BranchService
         ->get()->map(function ($professional){
             return [
                 'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                'winner' => $professional->orders ? round(($professional->orders->sum('price'))*0.45 + ($professional->clientProfessionals->map(function ($clientProfessional){
+                'amount' => $professional->orders ? round($professional->orders->sum('price')*0.45, 2) : 0,
+                'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->filter(function ($car){
+                        return $car->orders->isNotEmpty();
+                    })->sum('tip') * 0.8;
+                }))->sum(), 2) : 0,
+                'total' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
                     return $clientProfessional->cars->filter(function ($car){
                         return $car->orders->isNotEmpty();
                     })->sum('tip') * 0.8;
                 }))->sum(), 2) : 0
             ];
-        })->sortByDesc('winner')->values();    
+        })->sortByDesc('total')->values();      
     
     }
 
@@ -321,13 +327,19 @@ class BranchService
         ->get()->map(function ($professional){
             return [
                 'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
+                'amount' => $professional->orders ? round($professional->orders->sum('price')*0.45, 2) : 0,
+                'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->filter(function ($car){
+                        return $car->orders->isNotEmpty();
+                    })->sum('tip') * 0.8;
+                }))->sum(), 2) : 0,
+                'total' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
                     return $clientProfessional->cars->filter(function ($car){
                         return $car->orders->isNotEmpty();
                     })->sum('tip') * 0.8;
                 }))->sum(), 2) : 0
             ];
-        })->sortByDesc('winner')->values();        
+        })->sortByDesc('total')->values();        
     }
 
     public function branch_professionals_winner_periodo($branch_id, $startDate, $endDate)
@@ -342,13 +354,19 @@ class BranchService
         ->get()->map(function ($professional){
             return [
                 'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
+                'amount' => $professional->orders ? round($professional->orders->sum('price')*0.45, 2) : 0,
+                'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->filter(function ($car){
+                        return $car->orders->isNotEmpty();
+                    })->sum('tip') * 0.8;
+                }))->sum(), 2) : 0,
+                'total' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
                     return $clientProfessional->cars->filter(function ($car){
                         return $car->orders->isNotEmpty();
                     })->sum('tip') * 0.8;
                 }))->sum(), 2) : 0
             ];
-        })->sortByDesc('winner')->values();         
+        })->sortByDesc('total')->values();         
     }
 
 }
