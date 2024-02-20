@@ -58,13 +58,19 @@ class ProfessionalController extends Controller
             })->with(['reservations'=> function ($query) use ($data){
                 $query->whereDate('data', $data['data']);
             }])->first();
-            $reservations = $professional->reservations->map(function ($reservation){
-                return [
-                    'start_time' => $reservation->start_time,
-                    'final_hour' => $reservation->final_hour,
-                    'total_time' => $reservation->total_time
-                ];
-            });
+            if ($professional) {
+                $reservations = $professional->reservations->map(function ($reservation){
+                    return [
+                        'start_time' => $reservation->start_time,
+                        'final_hour' => $reservation->final_hour,
+                        'total_time' => $reservation->total_time
+                    ];
+                });
+            }
+            else{
+                $reservations =  [];
+            }
+            
             return response()->json(['reservations' => $reservations], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las professionales"], 500);
