@@ -187,6 +187,7 @@ class BranchService
            $result = [];
            $i = 0;
            $total_company = 0;
+           $total_tip = 0;
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch){
                     $query->where('branch_id', $branch->id);
@@ -194,15 +195,19 @@ class BranchService
                 $query->whereMonth('data', $month)->whereYear('data', $year);
                 })->get()->map(function ($car){
                     return [
-                        'earnings' => $car->amount
+                        'earnings' => $car->amount,
+                        'tip' => $car->tip
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
-                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
-                $total_company += round($cars->sum('earnings'),2);
+                $result[$i]['earnings'] = round($cars->sum('earnings'),2);
+                $result[$i++]['tip'] = round($cars->sum('tip'), 2);
+                $total_tip += round($cars->sum('tip'),2);
+                $total_company += round($cars->sum('earnings')+$cars->sum('tip'),2);
             }//foreach
             $result[$i]['name'] = 'Total';
-                $result[$i++]['earnings'] = $total_company;
+            $result[$i]['tip'] = $total_tip;
+            $result[$i++]['earnings'] = $total_company;
           return $result;
     }
 
@@ -212,6 +217,7 @@ class BranchService
            $result = [];
            $i = 0;
            $total_company = 0;
+           $total_tip = 0;
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch){
                     $query->where('branch_id', $branch->id);
@@ -219,14 +225,18 @@ class BranchService
                 $query->whereBetWeen('data', [$startDate ,$endDate]);
                 })->get()->map(function ($car){
                     return [
-                        'earnings' => $car->amount
+                        'earnings' => $car->amount,
+                        'tip' => $car->tip
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
-                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
-                $total_company += round($cars->sum('earnings'),2);
+                $result[$i]['earnings'] = round($cars->sum('earnings'),2);
+                $result[$i++]['tip'] = round($cars->sum('tip'), 2);
+                $total_tip += round($cars->sum('tip'),2);
+                $total_company += round($cars->sum('earnings')+$cars->sum('tip'),2);
             }//foreach
             $result[$i]['name'] = 'Total';
+            $result[$i]['tip'] = $total_tip;
             $result[$i++]['earnings'] = $total_company;
       return $result;
     }
@@ -237,6 +247,7 @@ class BranchService
            $result = [];
            $i = 0;
            $total_company = 0;
+           $total_tip = 0;
            $data= Carbon::now()->toDateString();
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch){
@@ -245,14 +256,18 @@ class BranchService
                 $query->whereDate('data', $data);
                 })->get()->map(function ($car){
                     return [
-                        'earnings' => $car->amount
+                        'earnings' => $car->amount,
+                        'tip' => $car->tip
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
-                $result[$i++]['earnings'] = round($cars->sum('earnings'),2);
-                $total_company += round($cars->sum('earnings'),2);
+                $result[$i]['earnings'] = round($cars->sum('earnings'),2);
+                $result[$i++]['tip'] = round($cars->sum('tip'), 2);
+                $total_tip += round($cars->sum('tip'),2);
+                $total_company += round($cars->sum('earnings')+$cars->sum('tip'),2);
             }//foreach
             $result[$i]['name'] = 'Total';
+            $result[$i]['tip'] = $total_tip;
             $result[$i++]['earnings'] = $total_company;
       return $result;
     }
@@ -262,15 +277,17 @@ class BranchService
         return $resultados = Professional::with(['orders' => function ($query){
             $query->whereDate('data',  Carbon::now());
         }, 'clientProfessionals.cars.orders' => function ($query){
-            $query->whereMonth('data', Carbon::now());
+            $query->whereDate('data', Carbon::now());
         }])->whereHas('branches', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })
         ->get()->map(function ($professional){
             return [
                 'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
-                    return $clientProfessional->cars->sum('tip')*0.8;
+                'winner' => $professional->orders ? round(($professional->orders->sum('price'))*0.45 + ($professional->clientProfessionals->map(function ($clientProfessional){
+                    return $clientProfessional->cars->filter(function ($car){
+                        return $car->orders->isNotEmpty();
+                    })->sum('tip') * 0.8;
                 }))->sum(), 2) : 0
             ];
         })->sortByDesc('winner')->values();    
@@ -290,7 +307,9 @@ class BranchService
             return [
                 'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
                 'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
-                    return $clientProfessional->cars->sum('tip')*0.8;
+                    return $clientProfessional->cars->filter(function ($car){
+                        return $car->orders->isNotEmpty();
+                    })->sum('tip') * 0.8;
                 }))->sum(), 2) : 0
             ];
         })->sortByDesc('winner')->values();        
@@ -309,7 +328,9 @@ class BranchService
             return [
                 'name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
                 'winner' => $professional->orders ? round(($professional->orders->sum('price')*0.45) + ($professional->clientProfessionals->map(function ($clientProfessional){
-                    return $clientProfessional->cars->sum('tip')*0.8;
+                    return $clientProfessional->cars->filter(function ($car){
+                        return $car->orders->isNotEmpty();
+                    })->sum('tip') * 0.8;
                 }))->sum(), 2) : 0
             ];
         })->sortByDesc('winner')->values();         
