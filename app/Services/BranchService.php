@@ -181,9 +181,9 @@ class BranchService
           ];
     }
 
-    public function company_winner_month($month, $year)
+    public function company_winner_month($month, $year, $data)
     {
-           $branches = Branch::all();
+            $branches = Branch::where('business_id', $data['business_id'])->get();
            $result = [];
            $i = 0;
            $total_company = 0;
@@ -216,9 +216,9 @@ class BranchService
           return $result;
     }
 
-    public function company_winner_periodo($startDate ,$endDate)
+    public function company_winner_periodo($startDate ,$endDate, $data)
     {
-           $branches = Branch::all();
+        $branches = Branch::where('business_id', $data['business_id'])->get();
            $result = [];
            $i = 0;
            $total_company = 0;
@@ -251,9 +251,9 @@ class BranchService
           return $result;
     }
 
-    public function company_winner_date()
+    public function company_winner_date($data)
     {
-           $branches = Branch::all();
+        $branches = Branch::where('business_id', $data['business_id'])->get();
            $result = [];
            $i = 0;
            $total_company = 0;
