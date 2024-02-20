@@ -44,6 +44,33 @@ class ProfessionalController extends Controller
         }
     }
 
+    public function professional_reservations_time(Request $request)
+    {
+        try {
+            
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'data' => 'required|date'
+            ]);
+            $professional = Professional::find($data['professional_id'])->whereHas('branches.professionals', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->with(['reservations'=> function ($query) use ($data){
+                $query->whereDate('data', $data['data']);
+            }])->first();
+            $reservations = $professional->reservations->map(function ($reservation){
+                return [
+                    'start_time' => $reservation->start_time,
+                    'final_hour' => $reservation->final_hour,
+                    'total_time' => $reservation->total_time
+                ];
+            });
+            return response()->json(['reservations' => $reservations], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las professionales"], 500);
+        }
+    }
+
     public function professionals_branch(Request $request)
     {
         try {

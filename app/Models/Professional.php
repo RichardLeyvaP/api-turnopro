@@ -69,5 +69,9 @@ class Professional extends Model
         return $this->hasMany(Notification::class);
     }
 
+    public function reservations(){
+        return $this->hasManyDeep(Reservation::class, [ClientProfessional::class, Car::class]);
+    }
+
     protected $table = "professionals";
 }

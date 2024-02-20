@@ -71,6 +71,7 @@ Route::get('/branch_professionals', [ProfessionalController::class, 'branch_prof
 Route::get('/professionals_ganancias_branch', [ProfessionalController::class, 'professionals_ganancias_branch']); //Obtener Monto total de un professionals en una branch y un periodo dado
 Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
+Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']);
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
