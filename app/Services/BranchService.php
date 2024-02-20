@@ -187,6 +187,7 @@ class BranchService
            $result = [];
            $i = 0;
            $total_company = 0;
+           $total_branch = 0;
            $total_tip = 0;
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch){
@@ -196,18 +197,22 @@ class BranchService
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
-                        'tip' => $car->tip
+                        'tip' => $car->tip,
+                        'total' => $car->amount + $car->tip
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
                 $result[$i]['earnings'] = round($cars->sum('earnings'),2);
-                $result[$i++]['tip'] = round($cars->sum('tip'), 2);
+                $result[$i]['tip'] = round($cars->sum('tip'), 2);
+                $result[$i++]['total'] = round($cars->sum('total'), 2);
                 $total_tip += round($cars->sum('tip'),2);
-                $total_company += round($cars->sum('earnings')+$cars->sum('tip'),2);
+                $total_branch += round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('total'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
             $result[$i]['tip'] = $total_tip;
-            $result[$i++]['earnings'] = $total_company;
+            $result[$i]['earnings'] = $total_branch;
+            $result[$i++]['total'] = $total_company;
           return $result;
     }
 
@@ -217,6 +222,7 @@ class BranchService
            $result = [];
            $i = 0;
            $total_company = 0;
+           $total_branch = 0;
            $total_tip = 0;
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch){
@@ -226,19 +232,23 @@ class BranchService
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
-                        'tip' => $car->tip
+                        'tip' => $car->tip,
+                        'total' => $car->amount + $car->tip
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
                 $result[$i]['earnings'] = round($cars->sum('earnings'),2);
-                $result[$i++]['tip'] = round($cars->sum('tip'), 2);
+                $result[$i]['tip'] = round($cars->sum('tip'), 2);
+                $result[$i++]['total'] = round($cars->sum('total'), 2);
                 $total_tip += round($cars->sum('tip'),2);
-                $total_company += round($cars->sum('earnings')+$cars->sum('tip'),2);
+                $total_branch += round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('total'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
             $result[$i]['tip'] = $total_tip;
-            $result[$i++]['earnings'] = $total_company;
-      return $result;
+            $result[$i]['earnings'] = $total_branch;
+            $result[$i++]['total'] = $total_company;
+          return $result;
     }
 
     public function company_winner_date()
@@ -248,6 +258,7 @@ class BranchService
            $i = 0;
            $total_company = 0;
            $total_tip = 0;
+           $total_branch = 0;
            $data= Carbon::now()->toDateString();
            foreach ($branches as $branch) {
             $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($branch){
@@ -257,18 +268,22 @@ class BranchService
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
-                        'tip' => $car->tip
+                        'tip' => $car->tip,
+                        'total' => $car->amount + $car->tip
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
                 $result[$i]['earnings'] = round($cars->sum('earnings'),2);
-                $result[$i++]['tip'] = round($cars->sum('tip'), 2);
+                $result[$i]['tip'] = round($cars->sum('tip'), 2);
+                $result[$i++]['total'] = round($cars->sum('total'), 2);
                 $total_tip += round($cars->sum('tip'),2);
-                $total_company += round($cars->sum('earnings')+$cars->sum('tip'),2);
+                $total_branch += round($cars->sum('earnings'),2);
+                $total_company += round($cars->sum('total'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
             $result[$i]['tip'] = $total_tip;
-            $result[$i++]['earnings'] = $total_company;
+            $result[$i]['earnings'] = $total_branch;
+            $result[$i++]['total'] = $total_company;
       return $result;
     }
 
