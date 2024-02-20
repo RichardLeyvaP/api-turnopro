@@ -3,11 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Services\BusinessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class BusinessController extends Controller
 {
+    private BusinessService $businessService;
+    
+    public function __construct(BusinessService $businessService)
+    {
+         $this->businessService = $businessService;
+    }
+
     public function index()
     {
         try {
@@ -26,6 +34,22 @@ class BusinessController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
+    }
+    public function business_winner(Request $request)
+    {
+        try {
+           if ($request->has('mes')) {
+            return response()->json($this->businessService->business_winner_month($request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
+            }
+            if ($request->has('startDate') && $request->has('endDate')) {
+                return response()->json($this->businessService->business_winner_periodo($request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
+            }            
+            else {
+                return response()->json($this->businessService->business_winner_date(), 200, [], JSON_NUMERIC_CHECK);
+            }
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La compañía no obtuvo ganancias en este dia"], 500);
+       }
     }
     public function store(Request $request)
     {

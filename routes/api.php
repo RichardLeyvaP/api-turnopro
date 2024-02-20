@@ -85,6 +85,8 @@ Route::get('/business-show', [BusinessController::class, 'show']);
 Route::post('/business', [BusinessController::class, 'store']);
 Route::put('/business', [BusinessController::class, 'update']);
 Route::post('/business-destroy', [BusinessController::class, 'destroy']);
+Route::get('/business-winner', [BusinessController::class, 'business_winner']);//Ganancias por negocios
+
 
 Route::get('/business-type', [BusinessTypesController::class, 'index']);
 Route::get('/business-type-show', [BusinessTypesController::class, 'show']);
