@@ -195,6 +195,10 @@ class TailService {
         $client = Client::find($data['client_id']);
         $professional = Professional::find($data['professional_id']);
         $reservation = Reservation::find($data['reservation_id']);
+        $horaActual = Carbon::now()->format('H:i:s');
+        $reservation->start_time = $horaActual;
+        $reservation->final_hour = Carbon::parse($horaActual)->addMinutes($reservation->total_time)->toTimeString();
+        $reservation->save();
         $car = Car::find($reservation->car_id);
         $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
         if($client_professional_id){
