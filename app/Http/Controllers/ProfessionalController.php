@@ -281,4 +281,17 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => 'Error al eliminar la professional'], 500);
         }
     }
+
+    public function professionals_state(Request $request)
+    {
+        try {
+            $data = $request->validate([
+               'branch_id' => 'required|numeric'
+           ]);
+           $professional = $this->professionalService->professionals_state($data['branch_id']);
+           return response()->json(['professionals' => $professional], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."Professionals no pertenece a esta Sucursal"], 500);
+       }
+    }
 }

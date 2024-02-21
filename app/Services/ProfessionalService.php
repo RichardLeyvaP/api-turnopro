@@ -227,4 +227,19 @@ class ProfessionalService
           ];
     }
 
+    public function professionals_state($branch_id)
+    {   Carbon::now()->format('H:i:s');
+        $time = 20;
+        $horaActual = Carbon::parse(Carbon::now()->format('H:i:s'))->addMinutes($time)->toTimeString();
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+           })->whereHas('tails', function ($query){
+            $query->whereIn('attended', [0,2,3]);
+           })->with(['tails.reservation' => function ($query) use ($horaActual) {
+            $query->where('start_time', '>=', $horaActual);
+        }])->get();
+
+           return $professionals;
+    }
+
 }

@@ -73,5 +73,11 @@ class Professional extends Model
         return $this->hasManyDeep(Reservation::class, [ClientProfessional::class, Car::class]);
     }
 
+    public function tails(){
+        return $this->hasManyDeep(Tail::class, [ClientProfessional::class, Car::class, Reservation::class]);
+    }
+
+    
+
     protected $table = "professionals";
 }

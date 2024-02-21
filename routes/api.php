@@ -72,6 +72,7 @@ Route::get('/professionals_ganancias_branch', [ProfessionalController::class, 'p
 Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
 Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']); // dado un professional una branch y una fecha devuelve los horarios reservados de ese professional
+Route::get('/professional-state', [ProfessionalController::class, 'professionals_state']); // dado una branch devuelve los professional disponibles
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-show', [ClientController::class, 'show']);
