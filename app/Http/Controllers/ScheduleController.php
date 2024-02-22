@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 
 class ScheduleController extends Controller
 {
-    
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         try {
@@ -18,6 +20,8 @@ class ScheduleController extends Controller
             return response()->json(['msg' => "Error al mostrar los Locales de Trabajo"], 500);
         }
     }
+
+
 
     public function show(Request $request)
     {
@@ -37,7 +41,15 @@ class ScheduleController extends Controller
              $SchedSchedule_data = $request->validate([
                  'branch_id' => 'required|numeric'//este es el id de la branch
              ]);
-             $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, start_time,  closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')")->get();
+             $i = 0;
+             $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, start_time,  closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')")->get()->map(function ($query) use (&$i){
+                return [
+                    'id' => $i++,
+                    'day' => $query->day,
+                    'start_time' => $query->start_time,
+                    'closing_time' => $query->closing_time
+                ];
+            });
              return response()->json(['Schedules' => $schules], 200, [], JSON_NUMERIC_CHECK);
          } catch (\Throwable $th) {
              return response()->json(['msg' => "Error al mostrar Horario"], 500);
