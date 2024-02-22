@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class ScheduleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    
     public function index()
     {
         try {
