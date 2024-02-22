@@ -289,7 +289,7 @@ class ProfessionalController extends Controller
                'branch_id' => 'required|numeric'
            ]);
            $professional = $this->professionalService->professionals_state($data['branch_id']);
-           return response()->json(['professionals' => $professional], 200);
+           return response()->json(['professionals' => $professional], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Professionals no pertenece a esta Sucursal"], 500);
        }
