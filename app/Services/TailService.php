@@ -48,7 +48,7 @@ class TailService {
     public function tail_branch_attended($branch_id){
         $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        }])->whereIn('attended', [1,5,11,111])->get();
+        }])->whereIn('attended', [1,5,11,111,4])->get();
         $branchTails = $tails->map(function ($tail){
             $reservation = $tail->reservation;
                 $professional = $reservation->car->clientProfessional->professional;
