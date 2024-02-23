@@ -53,7 +53,7 @@ class BranchService
                 })->where('branch_id', $branch_id);
             })->whereDate('data', Carbon::now())->get();
           return $result = [
-            'Monto Generado' => round($cars->sum('amount'),2),
+            'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance')*5000),2),
             'Propina' => round($cars->sum('tip'), 2),
             'Producto mas Vendido' => $products->orders_count ? $products->name : null,
             'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
@@ -108,7 +108,7 @@ class BranchService
                 })->where('branch_id', $branch_id);
             })->whereMonth('data', $month)->whereYear('data', $year)->get();
           return $result = [
-            'Monto Generado' => round($cars->sum('amount'),2),
+            'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance')*5000),2),
             'Propina' => round($cars->sum('tip'), 2),
             'Producto mas Vendido' => $products->orders_count ? $products->name : null,
             'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
@@ -165,7 +165,7 @@ class BranchService
             })->whereBetWeen('data', [$startDate, $endDate])->get();
             //Log::info($services);
           return $result = [
-            'Monto Generado' => round($cars->sum('amount'),2),
+            'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance')*5000),2),
             'Propina' => round($cars->sum('tip'), 2),
             'Producto mas Vendido' => $products->orders_count ? $products->name : null,
             'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
@@ -197,16 +197,17 @@ class BranchService
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
+                        'technical_assistance' => $car->technical_assistance,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip
+                        'total' => $car->amount + $car->tip + $car->technical_assistance *5000
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
-                $result[$i]['earnings'] = round($cars->sum('earnings'),2);
+                $result[$i]['earnings'] = round($cars->sum('earnings') + ($cars->sum('technical_assistance')*5000),2);
                 $result[$i]['tip'] = round($cars->sum('tip'), 2);
-                $result[$i++]['total'] = round($cars->sum('total'), 2);
+                $result[$i++]['total'] = round($cars->sum('total') + ($cars->sum('technical_assistance')*5000), 2);
                 $total_tip += round($cars->sum('tip'),2);
-                $total_branch += round($cars->sum('earnings'),2);
+                $total_branch += round($cars->sum('earnings') + ($cars->sum('technical_assistance')*5000),2);
                 $total_company += round($cars->sum('total'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
@@ -232,16 +233,17 @@ class BranchService
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
+                        'technical_assistance' => $car->technical_assistance,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip
+                        'total' => $car->amount + $car->tip + $car->technical_assistance *5000
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
-                $result[$i]['earnings'] = round($cars->sum('earnings'),2);
+                $result[$i]['earnings'] = round($cars->sum('earnings') + ($cars->sum('technical_assistance')*5000),2);
                 $result[$i]['tip'] = round($cars->sum('tip'), 2);
-                $result[$i++]['total'] = round($cars->sum('total'), 2);
+                $result[$i++]['total'] = round($cars->sum('total') + ($cars->sum('technical_assistance')*5000), 2);
                 $total_tip += round($cars->sum('tip'),2);
-                $total_branch += round($cars->sum('earnings'),2);
+                $total_branch += round($cars->sum('earnings') + ($cars->sum('technical_assistance')*5000),2);
                 $total_company += round($cars->sum('total'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
@@ -266,18 +268,19 @@ class BranchService
             })->whereHas('orders', function ($query) use ($data){
                 $query->whereDate('data', $data);
                 })->get()->map(function ($car){
-                    return [
+                   return [
                         'earnings' => $car->amount,
+                        'technical_assistance' => $car->technical_assistance,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip
+                        'total' => $car->amount + $car->tip + $car->technical_assistance *5000
                     ];
                 });
                 $result[$i]['name'] = $branch->name;
-                $result[$i]['earnings'] = round($cars->sum('earnings'),2);
+                $result[$i]['earnings'] = round($cars->sum('earnings') + ($cars->sum('technical_assistance')*5000),2);
                 $result[$i]['tip'] = round($cars->sum('tip'), 2);
-                $result[$i++]['total'] = round($cars->sum('total'), 2);
+                $result[$i++]['total'] = round($cars->sum('total') + ($cars->sum('technical_assistance')*5000), 2);
                 $total_tip += round($cars->sum('tip'),2);
-                $total_branch += round($cars->sum('earnings'),2);
+                $total_branch += round($cars->sum('earnings') + ($cars->sum('technical_assistance')*5000),2);
                 $total_company += round($cars->sum('total'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
