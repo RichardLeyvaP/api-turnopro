@@ -59,16 +59,25 @@ class ProfessionalController extends Controller
                 $query->whereDate('data', $data['data']);
             }])->first();
             if ($professional) {
-                $reservations = $professional->reservations->map(function ($reservation){
-                    //$startMinutes = Carbon::parse($reservation->start_time)->minute;
-                    $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-
+                $reservations = $professional->reservations->map(function ($reservation) {
                     $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
-                    $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes > 30 ? '30' : '00');
-
-                    return [$startFormatted, $finalFormatted];
+                    $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+            
+                    $intervalos = [$startFormatted];
+                    $startTime = Carbon::parse($startFormatted);
+                    $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
+            
+                    $finalTime = Carbon::parse($finalFormatted);
+            
+                    // Agregar las horas intermedias de 15 en 15 minutos
+                    while ($startTime->addMinutes(15) <= $finalTime) {
+                        $intervalos[] = $startTime->format('H:i');
+                    }
+            
+                    return $intervalos;
                 })->flatten()->values()->all();
             }
+            
             else{
                 $reservations =  [];
             }
