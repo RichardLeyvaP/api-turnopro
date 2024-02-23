@@ -60,12 +60,14 @@ class ProfessionalController extends Controller
             }])->first();
             if ($professional) {
                 $reservations = $professional->reservations->map(function ($reservation){
-                    return [
-                        'start_time' => $reservation->start_time,
-                        'final_hour' => $reservation->final_hour,
-                        'total_time' => $reservation->total_time
-                    ];
-                });
+                    //$startMinutes = Carbon::parse($reservation->start_time)->minute;
+                    $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+
+                    $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                    $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes > 30 ? '30' : '00');
+
+                    return [$startFormatted, $finalFormatted];
+                })->flatten()->values()->all();
             }
             else{
                 $reservations =  [];
