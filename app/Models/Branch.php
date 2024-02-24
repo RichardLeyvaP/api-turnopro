@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
@@ -55,6 +56,10 @@ class Branch extends Model
 
     public function tails(){
         return $this->hasManyDeep(Tail::class, ['branch_professional' ,Professional::class, ClientProfessional::class, Car::class, Reservation::class]);
+    }
+
+    public function cars(){
+        return $this->hasManyDeep(Car::class, ['branch_professional' ,Professional::class, ClientProfessional::class]);
     }
 
     public function notifications(){

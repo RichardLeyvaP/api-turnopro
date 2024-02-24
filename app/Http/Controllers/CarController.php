@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Order;
@@ -30,6 +31,46 @@ class CarController extends Controller
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
+        }
+    }
+
+    public function branch_cars(Request $request)
+    {
+        try {    
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);         
+            Log::info( "Entra a buscar los carros");
+            $branch = Branch::find($data['branch_id']);
+
+            $cars = $branch->cars()->with('clientProfessional.client', 'clientProfessional.professional')->whereHas('orders', function ($query){
+                $query->whereDate('orders.data', Carbon::now()->toDateString());
+            })->get()->map(function ($car){
+                $client = $car->clientProfessional->client;
+                $professional = $car->clientProfessional->professional;
+                return [
+                    'id' => $car->id,
+                    'client_professional_id' => $car->client_professional_id,
+                    'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
+                    'tip' => $car->tip,
+                    'pay' => $car->pay,
+                    'active' => $car->active,
+                    'technical_assistance' => $car->technical_assistance * 5000,
+                    'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'client_image' => $client->client_image,
+                    'image_url' => $professional->image_url
+
+                ];
+            });
+            /*$car = Car::whereHas('branch', function ($query) use ($data){
+                $query->where('id', $data['branch_id']);
+            })->with('clientProfessional.client', 'clientProfessional.professional')->get();*/
+            //$car = Car::with('clientProfessional.client', 'clientProfessional.professional')->get();
+            return response()->json(['cars' => $cars], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
         }
     }
 
