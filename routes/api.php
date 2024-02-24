@@ -86,7 +86,8 @@ Route::get('/business-show', [BusinessController::class, 'show']);
 Route::post('/business', [BusinessController::class, 'store']);
 Route::put('/business', [BusinessController::class, 'update']);
 Route::post('/business-destroy', [BusinessController::class, 'destroy']);
-Route::get('/business-winner', [BusinessController::class, 'business_winner']);//Ganancias por negocios
+Route::get('/business-winner', [BusinessController::class, 'business_winner']);//Ganancias por negocioscompany_close_car
+
 
 
 Route::get('/business-type', [BusinessTypesController::class, 'index']);
@@ -105,6 +106,7 @@ Route::get('/branches_professional', [BranchController::class, 'branches_profess
 Route::get('/company_winner', [BranchController::class, 'company_winner']);//devuelve las ganancias y el products mas vendido de la compañia
 Route::get('/branch_professionals_winner', [BranchController::class, 'branch_professionals_winner']);//devuelve las ganancias y products mas vendido de una branch
 Route::get('/show-business', [BranchController::class, 'show_business']);
+Route::get('/company-close-car', [BranchController::class, 'company_close_cars']);//Cierre de caja de la compañia por branch
 
 Route::get('/store', [StoreController::class, 'index']);
 Route::get('/store-show', [StoreController::class, 'show']);

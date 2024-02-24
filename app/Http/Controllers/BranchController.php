@@ -98,6 +98,26 @@ class BranchController extends Controller
        }
     }
 
+    public function company_close_cars(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'business_id' => 'required|numeric'
+           ]);
+           if ($request->has('mes')) {
+            return response()->json($this->branchService->company_close_car_month($request->mes, $request->year, $data), 200, [], JSON_NUMERIC_CHECK);
+            }
+            if ($request->has('startDate') && $request->has('endDate')) {
+                return response()->json($this->branchService->company_close_car_periodo($request->startDate, $request->endDate, $data), 200, [], JSON_NUMERIC_CHECK);
+            }            
+            else {
+                return response()->json($this->branchService->company_close_car_date($data), 200, [], JSON_NUMERIC_CHECK);
+            }
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
+    }
+
     public function branch_professionals_winner(Request $request)
     {
         try {
