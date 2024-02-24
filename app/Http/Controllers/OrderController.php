@@ -92,9 +92,11 @@ class OrderController extends Controller
             $data = $request->validate([
                 'car_id' => 'required|numeric'
             ]);
-            $orders = Order::with(['productStore.product', 'branchServiceProfessional.branchService.service'])->has('productStore.product')->orHas('branchServiceProfessional.branchService.service')->where('car_id', $data['car_id'])->get()->map(function ($order){
+            $car = Car::find($data['car_id']);
+            $orders = Order::with(['product', 'service'])->where('car_id', $car->id)->get()->map(function ($order){
                 return [
                     'id' => $order->id,
+                    'car_id' => $order->car_id,
                     'request_delete' => $order->request_delete,
                     'name' => $order->is_product ? $order->productStore->product->name : $order->branchServiceProfessional->branchService->service->name,
                     'image' => $order->is_product ? $order->productStore->product->image_product : $order->branchServiceProfessional->branchService->service->image_service,

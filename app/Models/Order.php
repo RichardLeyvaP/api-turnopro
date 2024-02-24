@@ -24,6 +24,16 @@ class Order extends Model
         return $this->belongsTo(Car::class);
     }
 
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     protected $casts = [
         'is_product' => 'integer',
         'price' => 'double',
