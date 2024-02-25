@@ -42,12 +42,13 @@ class CarController extends Controller
             ]);         
             Log::info( "Entra a buscar los carros");
             $branch = Branch::find($data['branch_id']);
-
-            $cars = $branch->cars()->with('clientProfessional.client', 'clientProfessional.professional')->whereHas('orders', function ($query){
-                $query->whereDate('orders.data', Carbon::now()->toDateString());
+            $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){
+                $query->whereDate('orders.data', '2024-02-24');
             })->get()->map(function ($car){
                 $client = $car->clientProfessional->client;
                 $professional = $car->clientProfessional->professional;
+                $products = $car->orders->where('is_product', 1)->sum('price');
+                $services = $car->orders->where('is_product', 0)->sum('price');
                 return [
                     'id' => $car->id,
                     'client_professional_id' => $car->client_professional_id,
@@ -55,11 +56,14 @@ class CarController extends Controller
                     'tip' => $car->tip,
                     'pay' => $car->pay,
                     'active' => $car->active,
+                    'product' => $products,
+                    'service' => $services,
                     'technical_assistance' => $car->technical_assistance * 5000,
                     'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
                     'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
                     'client_image' => $client->client_image,
-                    'image_url' => $professional->image_url
+                    'image_url' => $professional->image_url,
+                    'payment' => $car->payment
 
                 ];
             });

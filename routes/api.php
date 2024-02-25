@@ -23,6 +23,7 @@ use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
@@ -285,6 +286,12 @@ Route::get('/notification-professional', [NotificationController::class, 'profes
 Route::post('/notification', [NotificationController::class, 'store']);
 Route::put('/notification', [NotificationController::class, 'update']);
 Route::post('/notification-destroy', [NotificationController::class, 'destroy']);
+
+Route::get('/payment', [PaymentController::class, 'index']);
+Route::get('/payment-show', [PaymentController::class, 'show']);
+Route::post('/payment', [PaymentController::class, 'store']);
+Route::put('/payment', [PaymentController::class, 'update']);
+Route::post('/payment-destroy', [PaymentController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

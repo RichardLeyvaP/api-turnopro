@@ -29,6 +29,11 @@ class Car extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+
     protected $casts = [
         'amount' => 'double'
     ];

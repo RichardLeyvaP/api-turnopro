@@ -300,7 +300,7 @@ class BranchService
                     $query->where('branch_id', $branch->id);
             })->whereHas('orders', function ($query) use ($startDate ,$endDate){
                 $query->whereBetWeen('data', [$startDate ,$endDate]);
-                })->get()->map(function ($car) use ($startDate ,$endDate){
+                })->get()->map(function ($car){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
                     return [
