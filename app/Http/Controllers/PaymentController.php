@@ -47,7 +47,8 @@ class PaymentController extends Controller
                 'creditCard' => 'nullable|numeric',
                 'debit' => 'nullable|numeric',
                 'transfer' => 'nullable|numeric',
-                'other' => 'nullable|numeric'
+                'other' => 'nullable|numeric',
+                'tip' => 'nullable|numeric'
             ]);
 
             $car = Car::find($data['car_id']);
@@ -66,6 +67,7 @@ class PaymentController extends Controller
 
             $car->pay = 1;
             $car->active = 0;
+            $car->tip = $data['tip'];
             $car->save();
 
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
