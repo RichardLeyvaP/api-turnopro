@@ -43,7 +43,7 @@ class CarController extends Controller
             Log::info( "Entra a buscar los carros");
             $branch = Branch::find($data['branch_id']);
             $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){
-                $query->whereDate('orders.data', '2024-02-24');
+                $query->whereDate('orders.data', Carbon::now());
             })->get()->map(function ($car){
                 $client = $car->clientProfessional->client;
                 $professional = $car->clientProfessional->professional;
