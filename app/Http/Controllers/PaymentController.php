@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Box;
+use App\Models\Branch;
 use App\Models\Car;
 use App\Models\Payment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -50,8 +53,11 @@ class PaymentController extends Controller
                 'other' => 'nullable|numeric',
                 'tip' => 'nullable|numeric'
             ]);
-
-            $car = Car::find($data['car_id']);
+            $car = Car::find($data['car_id']);            
+           $branch = Branch::whereHas('cars', function ($query) use ($car){
+                $query->where('cars.id', $car->id);
+            })->first();
+            Log::info($branch);
             $payment = Payment::where('car_id', $data['car_id'])->first();
             if (!$payment) {
                 $payment = new Payment();
@@ -69,6 +75,17 @@ class PaymentController extends Controller
             $car->active = 0;
             $car->tip = $data['tip'];
             $car->save();
+            Log::info($branch->id);
+            $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
+            Log::info($car->id);
+            if (!$box) {                
+                $box = new Box();
+                $box->existence = $data['cash'];              
+                $box->branch_id = $branch->id;
+            }else{                
+                $box->existence = $box->existence + $data['cash'];
+            }
+            $box->save();
 
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {

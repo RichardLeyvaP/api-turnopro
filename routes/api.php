@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\BoxCloseController;
+use App\Http\Controllers\BoxController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\BranchProfessionalController;
 use App\Http\Controllers\BranchRuleController;
@@ -292,6 +294,18 @@ Route::get('/payment-show', [PaymentController::class, 'show']);
 Route::post('/payment', [PaymentController::class, 'store']);
 Route::put('/payment', [PaymentController::class, 'update']);
 Route::post('/payment-destroy', [PaymentController::class, 'destroy']);
+
+Route::get('/box', [BoxController::class, 'index']);
+Route::get('/box-show', [BoxController::class, 'show']);
+Route::post('/box', [BoxController::class, 'store']);
+Route::put('/box', [BoxController::class, 'update']);
+Route::post('/box-destroy', [BoxController::class, 'destroy']);
+
+Route::get('/closebox', [BoxCloseController::class, 'index']);
+Route::get('/closebox-show', [BoxCloseController::class, 'show']);
+Route::post('/closebox', [BoxCloseController::class, 'store']);
+Route::put('/closebox', [BoxCloseController::class, 'update']);
+Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
