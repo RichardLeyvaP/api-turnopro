@@ -11,6 +11,7 @@ use App\Models\ProductStore;
 use App\Models\Professional;
 use App\Models\Reservation;
 use App\Services\OrderService;
+use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+    use ProductExitTrait;
+
     private OrderService $orderService;
 
     public function __construct(OrderService $orderService)
@@ -144,6 +147,7 @@ class OrderController extends Controller
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
                 $productstore->save();
+                $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
             elseif (!$order->is_product) {
                 $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);

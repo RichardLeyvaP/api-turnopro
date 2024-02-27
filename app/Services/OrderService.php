@@ -9,11 +9,15 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Service;
+use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class OrderService {
+
+    use ProductExitTrait;
+    
     public function product_order_store($data){
             $car = Car::findOrFail($data['car_id']);
             $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
@@ -26,7 +30,7 @@ class OrderService {
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit - 1;
                 $productstore->save();
-                             
+                $this->actualizarProductExit($productstore->product_id, $productstore->service_id);            
                  $order = new Order();
                  $order->car_id = $car_id;
                  $order->product_store_id = $data['product_id'];

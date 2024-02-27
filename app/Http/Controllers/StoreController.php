@@ -21,10 +21,12 @@ class StoreController extends Controller
     public function show(Request $request)
     {
         try {
-            $stores_data = $request->validate([
-                'id' => 'required|numeric'
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
             ]);
-            return response()->json(['client' => Store::find($stores_data['id'])], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['stores' => Store::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el almacén"], 500);
         }

@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Store;
+use App\Traits\ProductExitTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ProductStoreController extends Controller
 {
+    use ProductExitTrait;
+    
     public function index()
     {
         try {             
@@ -70,24 +73,35 @@ class ProductStoreController extends Controller
 
     public function show(Request $request)
     {
-        try {             
-            Log::info( "Entra a buscar los productos de un almacén");
+        try {    
             $data = $request->validate([
-                'store_id' => 'numeric',
-                'product_id' => 'numeric'
-            ]);
-            if ($data['store_id'] && $data['product_id'] == null) {
-                return response()->json(['stores' => Store::find($data['store_id'])->products], 200, [], JSON_NUMERIC_CHECK);
-            }
-            if ($data['product_id'] && $data['store_id'] == null) {
-                return response()->json(['products' => Product::find($data['product_id'])->stores],200, [], JSON_NUMERIC_CHECK); 
-            } else {
-                return response()->json(['stores' => Product::find($data['product_id'])->stores, 'products' => Store::find($data['store_id'])->products],200, [], JSON_NUMERIC_CHECK); 
-            }
-            
-            } catch (\Throwable $th) {  
+                'branch_id' => 'required|numeric'
+            ]);         
+            Log::info( "Entra a buscar los almacenes con los productos pertenecientes en el");
+            $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query){
+                return [
+                    'id' => $query->id,
+                    //'product_quantity' => $query->product_quantity,
+                    'product_exit' => $query->product_exit,
+                    'product_id' => $query->product_id,
+                    'store_id' => $query->store_id,
+                    'name' => $query->product->name,
+                    'reference' => $query->product->reference,
+                    'code' => $query->product->code,
+                    'status_product' => $query->product->status_product,
+                    'sale_price' => $query->product->sale_price,
+                    'purchase_price' => $query->product->purchase_price,
+                    'image_product' => $query->product->image_product,
+                    'direccionStore' => $query->store->address,
+                    'storetReference' => $query->store->reference
+                ];
+            });
+            return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
             Log::error($th);
-        return response()->json(['msg' => "Error al mostrar los productos"], 500);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos"], 500);
         }
     }
 
@@ -186,9 +200,10 @@ class ProductStoreController extends Controller
             else {
                 $store->products()->attach($productexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
             }
+            $this->actualizarProductExit($productexist->id, $storeexist->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
-        return response()->json(['msg' => 'Error al mover el producto a este almacén'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al mover el producto a este almacén'], 500);
         } 
     }
 }
