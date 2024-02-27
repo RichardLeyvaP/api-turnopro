@@ -8,6 +8,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Facades\Log;
 
 class Send_mail extends Mailable
 {
@@ -18,18 +20,21 @@ class Send_mail extends Mailable
     public $template;
     public $start_time;
     public $branch_name;
+    public $file;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($logoUrl,$client_name,$data,$template,$start_time,$branch_name)
+    public function __construct($logoUrl,$client_name,$data,$template,$start_time,$branch_name,$file)
     {
         $this->logoUrl = $logoUrl;
         $this->client_name = $client_name;
         $this->data = $data;
         $this->template = $template;
         $this->start_time = $start_time;
-        $this->branch_name = $branch_name;
+        $this->branch_name = $branch_name;       
+        $this->file = $file ?? ' ';       
+        
     }
 
     /**
@@ -51,6 +56,7 @@ class Send_mail extends Mailable
             view: 'mails.' . $this->template,
            // view: 'mails.send_mail',
             
+           
             with:  [
                 'logoUrl' => $this->logoUrl,
                 'client_name' => $this->client_name,
@@ -58,6 +64,7 @@ class Send_mail extends Mailable
                 'template' => $this->template,
                 'start_time' => $this->start_time,
                 'branch_name' => $this->branch_name,
+                'file' => $this->file,
             ]
         );
     }
@@ -67,8 +74,22 @@ class Send_mail extends Mailable
      *
      * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
-    public function attachments(): array
-    {
-        return [];
+  public function attachments(): array
+{
+   
+   if (!empty($this->file)) {
+    $filePath = storage_path('app/public/pdfs/' . $this->file);
+
+    if (file_exists($filePath)) {
+        return [
+            Attachment::fromPath($filePath)
+        ];
+    } else {
+        Log::error("El archivo $this->file no se encontró en la ubicación: $filePath");
     }
+}
+    return [];
+
+
+}
 }
