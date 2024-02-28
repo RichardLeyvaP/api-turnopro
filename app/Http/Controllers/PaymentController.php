@@ -51,7 +51,8 @@ class PaymentController extends Controller
                 'debit' => 'nullable|numeric',
                 'transfer' => 'nullable|numeric',
                 'other' => 'nullable|numeric',
-                'tip' => 'nullable|numeric'
+                'tip' => 'nullable|numeric',
+                'cardGif' => 'nullable|numeric'
             ]);
             $car = Car::find($data['car_id']);            
            $branch = Branch::whereHas('cars', function ($query) use ($car){
@@ -69,6 +70,7 @@ class PaymentController extends Controller
             $payment->debit = $data['debit'];
             $payment->transfer = $data['transfer'];
             $payment->other = $data['other'];
+            $payment->cardGif = $data['cardGif'];
             $payment->save();
 
             $car->pay = 1;

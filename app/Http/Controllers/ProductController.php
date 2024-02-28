@@ -125,6 +125,20 @@ class ProductController extends Controller
         }
     }
 
+    public function but_product(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $products = Product::withCount('orders')->whereHas('stores.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);})->orderBy('orders_count', 'desc')->take(10)->get();
+            return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar el producto"], 500);
+        }
+    }
+
     public function update(Request $request)
     {
         try {

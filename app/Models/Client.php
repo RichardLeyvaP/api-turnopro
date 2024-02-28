@@ -26,4 +26,8 @@ class Client extends Model
         return $this->hasManyThrough(Comment::class, ClientProfessional::class);
     }
 
+    public function cars(){
+        return $this->hasManyThrough(Car::class, ClientProfessional::class);
+    }
+
 }

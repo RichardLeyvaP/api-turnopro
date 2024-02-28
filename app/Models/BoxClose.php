@@ -22,6 +22,7 @@ class BoxClose extends Model
         'totalDebit' => 'double',
         'totalCreditCard' => 'double',
         'totalTransfer' => 'double',
-        'totalOther' => 'double',        
+        'totalOther' => 'double', 
+        'totalcardGif' => 'double' 
     ];
 }

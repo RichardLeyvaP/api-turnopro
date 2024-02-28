@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('totalCreditCard', 8, 2)->nullable();
             $table->decimal('totalTransfer', 8, 2)->nullable();
             $table->decimal('totalOther', 8, 2)->nullable();
+            $table->decimal('totalCardGif', 8, 2)->nullable();
             $table->foreign('box_id')->references('id')->on('boxes')->onDelete('cascade');
             $table->timestamps();
         });

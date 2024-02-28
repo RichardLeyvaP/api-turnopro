@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('debit', 8, 2)->nullable();
             $table->decimal('transfer', 8, 2)->nullable();
             $table->decimal('other', 8, 2)->nullable();
+            $table->decimal('cardGif', 8, 2)->nullable();
             $table->foreign('car_id')->references('id')->on('cars')->onDelete('cascade');
             $table->timestamps();
         });

@@ -83,6 +83,9 @@ Route::post('/client', [ClientController::class, 'store']);
 Route::post('/client-update', [ClientController::class, 'update']);
 Route::post('/client-destroy', [ClientController::class, 'destroy']);
 Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
+Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
+Route::get('/client-most-assistance', [ClientController::class, 'client_most_assistance']);
+
 
 Route::get('/business', [BusinessController::class, 'index']);
 Route::get('/business-show', [BusinessController::class, 'show']);
@@ -142,6 +145,7 @@ Route::post('/product', [ProductController::class, 'store']);
 Route::post('/product-update', [ProductController::class, 'update']);
 Route::post('/product-destroy', [ProductController::class, 'destroy']);
 Route::get('/product_mostSold_date', [ProductController::class, 'product_mostSold_date']);
+Route::get('/but-product', [ProductController::class, 'but_product']);//optener los productos mas vendidos
 
 Route::get('/service', [ServiceController::class, 'index']);
 Route::get('/service-show', [ServiceController::class, 'show']);

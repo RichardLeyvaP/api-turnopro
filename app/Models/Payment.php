@@ -19,6 +19,7 @@ class Payment extends Model
         'creditCard' => 'double',
         'debit' => 'double',
         'transfer' => 'double',
-        'other' => 'double'
+        'other' => 'double',
+        'cardGif' => 'double'
     ];
 }

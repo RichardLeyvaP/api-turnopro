@@ -38,6 +38,28 @@ class ClientController extends Controller
         }
     }
 
+    public function client_most_assistance(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date'
+                
+            ]);
+            $clients = Client::withCount(['cars' => function ($query) use ($data){
+                $query->whereHas('orders.productStore.store.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->with(['orders' => function ($query) use ($data){
+                    $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
+                }]);
+            }])->orderByDesc('cars_count')->take(10)->get();
+            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar la professionala"], 500);
+        }
+    }
+
     public function client_attended_date(Request $request)
     {
         try {

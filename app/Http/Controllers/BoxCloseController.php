@@ -47,7 +47,8 @@ class BoxCloseController extends Controller
                 'totalDebit' => 'nullable|numeric',
                 'totalCreditCard' => 'nullable|numeric',
                 'totalTransfer' => 'nullable|numeric',
-                'totalOther' => 'nullable|numeric'
+                'totalOther' => 'nullable|numeric',
+                'totalCardGif' => 'nullable|numeric'
             ]);
             Log::info($data);
             $box = Box::find($data['box_id']);
@@ -70,6 +71,7 @@ class BoxCloseController extends Controller
             $boxClose->totalDebit = $data['totalDebit'];
             $boxClose->totalTransfer = $data['totalTransfer'];
             $boxClose->totalOther = $data['totalOther'];
+            $boxClose->totalCardGif = $data['totalCardGif'];
             $boxClose->data = Carbon::now();
             $boxClose->save();
             Log::info("Generar PDF");
