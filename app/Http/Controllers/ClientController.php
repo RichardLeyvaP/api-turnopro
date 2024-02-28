@@ -19,6 +19,7 @@ class ClientController extends Controller
 
             $client=Client::all();
             Log::info( $client);
+
             return response()->json(['clients' => Client::with('user')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -26,6 +27,24 @@ class ClientController extends Controller
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
+
+    public function client_autocomplete()
+    {
+        try {
+            $clients = Client::with('user')->get()->map(function ($client){
+                return [
+                    'name' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'client_image' => $client->client_image,
+                    'user_id' => $client->user_id
+
+                ];
+            });
+            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar la professionala"], 500);
+        }
+    }
+
     public function show(Request $request)
     {
         try {

@@ -86,6 +86,7 @@ Route::post('/client-destroy', [ClientController::class, 'destroy']);
 Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
 Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
 Route::get('/client-most-assistance', [ClientController::class, 'client_most_assistance']);
+Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplete']);
 
 
 Route::get('/business', [BusinessController::class, 'index']);
@@ -316,6 +317,8 @@ Route::get('/card-gift', [CardGiftController::class, 'index']);
 Route::get('/card-gift-show', [CardGiftController::class, 'show']);
 Route::post('/card-gift', [CardGiftController::class, 'store']);
 Route::put('/card-gift', [CardGiftController::class, 'update']);
+Route::post('/card-gift-destroy', [CardGiftController::class, 'destroy']);
+Route::get('/show-value', [CardGiftController::class, 'show_value']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
