@@ -69,4 +69,8 @@ class Branch extends Model
     public function boxes(){
         return $this->hasOne(Box::class);
     }
+
+    public function cardGift(){
+        return $this->hasMany(CardGift::class);
+    }
 }

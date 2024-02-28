@@ -23,6 +23,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
+use App\Http\Controllers\CardGiftController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
@@ -310,6 +311,11 @@ Route::get('/closebox-show', [BoxCloseController::class, 'show']);
 Route::post('/closebox', [BoxCloseController::class, 'store']);
 Route::put('/closebox', [BoxCloseController::class, 'update']);
 Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
+
+Route::get('/card-gift', [CardGiftController::class, 'index']);
+Route::get('/card-gift-show', [CardGiftController::class, 'show']);
+Route::post('/card-gift', [CardGiftController::class, 'store']);
+Route::put('/card-gift', [CardGiftController::class, 'update']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

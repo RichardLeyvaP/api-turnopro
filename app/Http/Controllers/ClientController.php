@@ -53,7 +53,7 @@ class ClientController extends Controller
                 })->with(['orders' => function ($query) use ($data){
                     $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
                 }]);
-            }])->orderByDesc('cars_count')->take(10)->get();
+            }])->orderByDesc('cars_count')->limit(10)->get();
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar la professionala"], 500);
