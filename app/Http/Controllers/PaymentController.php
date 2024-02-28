@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Box;
 use App\Models\Branch;
 use App\Models\Car;
+use App\Models\CardGift;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -52,7 +53,8 @@ class PaymentController extends Controller
                 'transfer' => 'nullable|numeric',
                 'other' => 'nullable|numeric',
                 'tip' => 'nullable|numeric',
-                'cardGif' => 'nullable|numeric'
+                'cardGif' => 'nullable|numeric',
+                'id' => 'nullable|numeric'
             ]);
             $car = Car::find($data['car_id']);            
            $branch = Branch::whereHas('cars', function ($query) use ($car){
@@ -63,7 +65,16 @@ class PaymentController extends Controller
             if (!$payment) {
                 $payment = new Payment();
             }
-            Log::info($car->id);
+            if ($data['cardGif']) {
+                $cardGift = CardGift::find($data['id']);
+                Log::info($car->id);
+                if(!$cardGift->value - $data['cardGif']){
+                    $cardGift->state = "Redimida";
+                }
+                $cardGift->value = $cardGift->value - $data['cardGif'];
+                $cardGift->save();
+            }
+            Log::info($cardGift);
             $payment->car_id = $car->id;
             $payment->cash = $data['cash'];
             $payment->creditCard = $data['creditCard'];
@@ -72,6 +83,8 @@ class PaymentController extends Controller
             $payment->other = $data['other'];
             $payment->cardGif = $data['cardGif'];
             $payment->save();
+
+
 
             $car->pay = 1;
             $car->active = 0;

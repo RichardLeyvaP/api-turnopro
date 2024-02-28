@@ -67,7 +67,7 @@ class CardGiftController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $cardGifts = CardGift::Where('branch_id', $data['branch_id'])->with(['branch', 'user.client'])->get()->map(function ($query){
+            $cardGifts = CardGift::where('state', 'Activa')->Where('branch_id', $data['branch_id'])->with(['branch', 'user.client'])->get()->map(function ($query){
                 return [
                     'id' => $query->id,
                     'data' => $query->data,
