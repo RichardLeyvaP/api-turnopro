@@ -33,7 +33,7 @@ class Send_mail extends Mailable
         $this->template = $template;
         $this->start_time = $start_time;
         $this->branch_name = $branch_name;       
-        $this->file = $file ?? ' ';       
+        $this->file = $file ?? '';       
         
     }
 
@@ -77,6 +77,12 @@ class Send_mail extends Mailable
   public function attachments(): array
 {
    
+
+// Obtén los últimos cuatro caracteres de la cadena
+$extension = substr($this->file, -4);
+
+// Verifica si los últimos cuatro caracteres son ".pdf"
+if ($extension === '.pdf') {
    if (!empty($this->file)) {
     $filePath = storage_path('app/public/pdfs/' . $this->file);
 
@@ -88,7 +94,25 @@ class Send_mail extends Mailable
         Log::error("El archivo $this->file no se encontró en la ubicación: $filePath");
     }
 }
-    return [];
+return [];
+}
+else{
+    //DE ESTA FORMA ES GENERANDOLO AL MOMENTO Y SIN GUARDARLO
+$attachments = [];
+
+// Adjunta el PDF si está presente en $this->pdf
+if (!empty($this->file)) {
+    // Adjunta el PDF desde la variable $reporte
+    $attachments[] = Attachment::fromData(fn () => $this->file, 'Cierre-caja.pdf')
+    ->withMime('application/pdf');
+}
+
+return $attachments;
+
+}
+
+
+
 
 
 }
