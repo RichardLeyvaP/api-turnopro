@@ -91,6 +91,7 @@ class TailService {
             $query->where('is_product', false);
         })->whereNot('attended', [2])->get();
         $branchTails = $tails->map(function ($tail){
+           // Log::info($tail->updated_at->format('Y-m-d H:i:s'));
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
@@ -102,7 +103,7 @@ class TailService {
                 'client_id' => $tail->reservation->car->clientProfessional->client_id,
                 'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
                 'attended' => $tail->attended, 
-                'updated_at' => $tail->updated_at, 
+                'updated_at' => $tail->updated_at->format('Y-m-d H:i:s'),
                 'clock' => $tail->clock, 
                 'timeClock' => $tail->timeClock, 
                 'detached' => $tail->detached, 

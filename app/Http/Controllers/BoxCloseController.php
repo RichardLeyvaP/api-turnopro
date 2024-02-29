@@ -10,12 +10,22 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\SendEmailService;
+
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\Message;
 
 class BoxCloseController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    private SendEmailService $sendEmailService;
+    public function __construct(SendEmailService $sendEmailService )
+    {
+       
+        $this->sendEmailService = $sendEmailService;
+    }
     public function index()
     {
         //
@@ -76,9 +86,27 @@ class BoxCloseController extends Controller
             $boxClose->save();
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
-            //$filename = 'reporte.pdf';
-            $reporte = $pdf->stream('Cierre-caja'.$boxClose->data, array('Attachment' => 0));
-            //Aqui logica de enviar correo con el pdf adjuntado
+            $reporte = $pdf->output(); // Convertir el PDF en una cadena
+            Log::info($reporte);
+            // Envía el correo electrónico con el PDF adjunto
+            $this->sendEmailService->emailBoxClosure('richardleyvap1991@gmail.com', $reporte);
+
+
+            //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA
+            /*
+            Log::info("Generar PDF");
+$pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
+$reporte = $pdf->output(); // Convertir el PDF en una cadena
+Log::info($reporte);
+
+// Adjuntar el PDF al correo electrónico
+Mail::send([], [], function (Message $message) use ($reporte) {
+    $message->to('richardleyvap1991@gmail.com')
+            ->subject('Asunto del correo')
+            ->attachData($reporte, 'Cierre-caja.pdf');
+});
+*/
+            
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
