@@ -86,7 +86,26 @@ class NotificationController extends Controller
            
            $branch = Branch::find($data['branch_id']);
            $professional = Professional::find($data['professional_id']);
-            $notifications = $branch->notifications()->where('professional_id', $professional->id)->get()->map(function ($query) {
+            // $notifications = $branch->notifications()->where('professional_id', $professional->id)->get()->map(function ($query) {
+            //     return [
+            //         'id' => $query->id,
+            //         'professional_id' => $query->professional_id,
+            //         'branch_id' => $query->branch_id,
+            //         'tittle' => $query->tittle,
+            //         'description' => $query->description,
+            //         'state' => $query->state,
+            //         'created_at' => $query->created_at->format('Y-m-d h:i:s A'),
+            //         'updated_at' => $query->updated_at->format('Y-m-d h:i:s A')
+            //     ];
+            // })->sortByDesc('created_at')
+            // ->sortByDesc(function ($notification) {
+            //     return $notification['created_at']->format('H:i:s');
+            // })
+            // ->values();
+            $notifications = $branch->notifications()
+            ->where('professional_id', $professional->id)
+            ->get()
+            ->map(function ($query) {
                 return [
                     'id' => $query->id,
                     'professional_id' => $query->professional_id,
@@ -94,12 +113,13 @@ class NotificationController extends Controller
                     'tittle' => $query->tittle,
                     'description' => $query->description,
                     'state' => $query->state,
-                    'created_at' => $query->created_at->format('Y-m-d h:i:s A'),
-                    'updated_at' => $query->updated_at->format('Y-m-d h:i:s A')
+                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
+                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
                 ];
-            })->sortByDesc('created_at')
+            })
+            ->sortByDesc('created_at')
             ->sortByDesc(function ($notification) {
-                return $notification['created_at']->format('H:i:s');
+                return Carbon::parse($notification['created_at'])->format('H:i:s');
             })
             ->values();
                 
