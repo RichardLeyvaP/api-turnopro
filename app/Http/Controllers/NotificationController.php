@@ -103,25 +103,24 @@ class NotificationController extends Controller
             // })
             // ->values();
             $notifications = $branch->notifications()
-            ->where('professional_id', $professional->id)
-            ->get()
-            ->map(function ($query) {
-                return [
-                    'id' => $query->id,
-                    'professional_id' => $query->professional_id,
-                    'branch_id' => $query->branch_id,
-                    'tittle' => $query->tittle,
-                    'description' => $query->description,
-                    'state' => $query->state,
-                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
-                ];
-            })
-            ->sortByDesc('created_at')
-            ->sortByDesc(function ($notification) {
-                return Carbon::parse($notification['created_at'])->format('H:i:s');
-            })
-            ->values();
+    ->where('professional_id', $professional->id)
+    ->get()
+    ->map(function ($query) {
+        return [
+            'id' => $query->id,
+            'professional_id' => $query->professional_id,
+            'branch_id' => $query->branch_id,
+            'tittle' => $query->tittle,
+            'description' => $query->description,
+            'state' => $query->state,
+            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
+            'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+        ];
+    })
+    ->sortByDesc(function ($notification) {
+        return $notification['created_at'];
+    })
+    ->values();
                 
            return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
