@@ -25,6 +25,7 @@ use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CardGiftController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
@@ -319,6 +320,12 @@ Route::post('/card-gift', [CardGiftController::class, 'store']);
 Route::put('/card-gift', [CardGiftController::class, 'update']);
 Route::post('/card-gift-destroy', [CardGiftController::class, 'destroy']);
 Route::get('/show-value', [CardGiftController::class, 'show_value']);
+
+Route::get('/enrollment', [EnrollmentController::class, 'index']);
+Route::get('/enrollment-show', [EnrollmentController::class, 'show']);
+Route::post('/enrollment', [EnrollmentController::class, 'store']);
+Route::put('/enrollment', [EnrollmentController::class, 'update']);
+Route::post('/enrollment-destroy', [EnrollmentController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

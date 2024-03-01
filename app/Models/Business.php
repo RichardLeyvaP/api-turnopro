@@ -18,5 +18,10 @@ class Business extends Model
     {
         return $this->hasMany(Branch::class, 'business_id');
     }
+
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class, 'business_id');
+    }
     
 }
