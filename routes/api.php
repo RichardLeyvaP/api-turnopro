@@ -25,12 +25,14 @@ use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CardGiftController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
@@ -317,7 +319,7 @@ Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
 Route::get('/card-gift', [CardGiftController::class, 'index']);
 Route::get('/card-gift-show', [CardGiftController::class, 'show']);
 Route::post('/card-gift', [CardGiftController::class, 'store']);
-Route::put('/card-gift', [CardGiftController::class, 'update']);
+Route::put('/card-gift-update', [CardGiftController::class, 'update']);
 Route::post('/card-gift-destroy', [CardGiftController::class, 'destroy']);
 Route::get('/show-value', [CardGiftController::class, 'show_value']);
 
@@ -326,6 +328,18 @@ Route::get('/enrollment-show', [EnrollmentController::class, 'show']);
 Route::post('/enrollment', [EnrollmentController::class, 'store']);
 Route::put('/enrollment', [EnrollmentController::class, 'update']);
 Route::post('/enrollment-destroy', [EnrollmentController::class, 'destroy']);
+
+Route::get('/student', [StudentController::class, 'index']);
+Route::get('/student-show', [StudentController::class, 'show']);
+Route::post('/student', [StudentController::class, 'store']);
+Route::post('/student-update', [StudentController::class, 'update']);
+Route::post('/student-destroy', [StudentController::class, 'destroy']);
+
+Route::get('/course', [CourseController::class, 'index']);
+Route::get('/course-show', [CourseController::class, 'show']);
+Route::post('/course', [CourseController::class, 'store']);
+Route::post('/course-update', [CourseController::class, 'update']);
+Route::post('/course-destroy', [CourseController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

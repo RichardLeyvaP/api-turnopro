@@ -13,4 +13,9 @@ class Enrollment extends Model
     {
         return $this->belongsTo(Business::class);
     }
+    
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
 }

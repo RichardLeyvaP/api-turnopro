@@ -97,7 +97,11 @@ class NotificationController extends Controller
                     'created_at' => $query->created_at->format('Y-m-d h:i:s A'),
                     'updated_at' => $query->updated_at->format('Y-m-d h:i:s A')
                 ];
-            });
+            })->sortByDesc('created_at')
+            ->sortByDesc(function ($notification) {
+                return $notification['created_at']->format('H:i:s');
+            })
+            ->values();
                 
            return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {

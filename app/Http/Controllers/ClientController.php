@@ -17,9 +17,6 @@ class ClientController extends Controller
             
             Log::info( "entra a cliente");
 
-            $client=Client::all();
-            Log::info( $client);
-
             return response()->json(['clients' => Client::with('user')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
