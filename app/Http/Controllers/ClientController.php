@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Car;
 use App\Models\Client;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -25,20 +26,57 @@ class ClientController extends Controller
         }
     }
 
+    public function index_autocomplete()
+    {
+        try { 
+            
+            Log::info( "entra a cliente");
+            $clients = Client::with('user')->get()->map(function ($client){
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'client_image' => $client->client_image
+
+                ];
+            });
+            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+
+            return response()->json(['msg' => "Error al mostrar los clientes"], 500);
+        }
+    }
+
     public function client_autocomplete()
     {
         try {
-            $clients = Client::with('user')->get()->map(function ($client){
+            $clients = User::whereHas('client')->orWhereHas('professional')->get()->map(function ($user){
+                $name = '';
+                $image = '';
+                $id = '';
+                if($user->client)
+                {
+                    $name = $user->client->name.' '.$user->client->surname.' '.$user->client->second_surname;
+                    $image = $user->client->client_image;
+                    $id = $user->client->id;
+                }
+                if($user->professional)
+                {
+                    $id = $user->professional->id;
+                    $name = $user->professional->name.' '.$user->professional->surname.' '.$user->professional->second_surname;
+                    $image = $user->professional->image_url;
+                }
                 return [
-                    'name' => $client->name.' '.$client->surname.' '.$client->second_surname,
-                    'client_image' => $client->client_image,
-                    'user_id' => $client->user_id
+                    'id' => $id,
+                    'name' => $name,
+                    'client_image' => $image,
+                    'user_id' => $user->id
 
                 ];
             });
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la professionala"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar la professionala"], 500);
         }
     }
 

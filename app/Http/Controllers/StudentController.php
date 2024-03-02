@@ -65,13 +65,18 @@ class StudentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request)
+    public function show()
     {
         try {
-            $data = $request->validate([
-                'id' => 'required|numeric'
-            ]);
-            return response()->json(['client' => Student::find($data['id'])], 200, [], JSON_NUMERIC_CHECK);
+            $students = Student::all()->map(function ($student){
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name.' '.$student->surname.' '.$student->second_surname,
+                    'client_image' => $student->student_image
+
+                ];
+            });
+            return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el estudiante"], 500);
         }

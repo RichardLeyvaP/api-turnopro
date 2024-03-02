@@ -32,6 +32,23 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar las professionales"], 500);
         }
     }
+    public function show_autocomplete(Request $request)
+    {
+        try {
+            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional){
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'image_url' => $professional->image_url
+
+                ];
+            });
+            return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar el professional"], 500);
+        }
+    }
+
     public function show(Request $request)
     {
         try {
@@ -224,6 +241,30 @@ class ProfessionalController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' =>  $th->getMessage().'Error al insertar el professional'], 500);
+        }
+    }
+
+    public function update_state(Request $request)
+    {
+        try {
+
+            Log::info("entra a actualizar");
+                $data = $request->validate([
+                'id' => 'nullable|numeric',
+                'email' => 'required|email',
+                'state' => 'required|numeric'
+            ]);
+            Log::info($request);
+            $professional = Professional::where('email', $data['email'])->first();
+
+            $professional->state = $data['state'];
+            //$professional->image_url = $filename;
+            $professional->save();
+
+            return response()->json(['msg' => 'Estado del Profesional actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage().'Error al actualizar el estado professional'], 500);
         }
     }
 

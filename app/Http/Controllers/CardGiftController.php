@@ -90,9 +90,9 @@ class CardGiftController extends Controller
     {
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'code' => 'required'
             ]);
-            $cardGifts = CardGift::find($data['id'])->value('value');
+            $cardGifts = CardGift::where('code', $data['code'])->first()->value('value');
             Log::info($cardGifts);
             return response()->json($cardGifts, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {

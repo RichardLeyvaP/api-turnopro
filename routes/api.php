@@ -26,6 +26,7 @@ use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CardGiftController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseStudentController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
+use App\Models\CourseStudent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Response;
@@ -55,12 +57,12 @@ Route::post('/register_client', [UserController::class, 'register_client']);
 Route::post('/register_professional', [UserController::class, 'register_professional']);
 Route::post('/login', [UserController::class, 'login']);
 Route::get('/usuario', [UserController::class, 'index']);
+Route::get('qrCode', [UserController::class, 'qrCode']);
 
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
     Route::post('change_password', [UserController::class, 'change_password']);
-    Route::get('qrCode', [UserController::class, 'qrCode']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -69,6 +71,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/professional', [ProfessionalController::class, 'index']);
 Route::get('/professional-show', [ProfessionalController::class, 'show']);
+Route::get('/professional-show-autocomplete', [ProfessionalController::class, 'show_autocomplete']);
 Route::post('/professional', [ProfessionalController::class, 'store']);
 Route::post('/professional-update', [ProfessionalController::class, 'update']);
 Route::post('/professional-destroy', [ProfessionalController::class, 'destroy']);
@@ -80,8 +83,10 @@ Route::get('/services_professional', [ProfessionalController::class, 'services_p
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
 Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']); // dado un professional una branch y una fecha devuelve los horarios reservados de ese professional
 Route::get('/professional-state', [ProfessionalController::class, 'professionals_state']); // dado una branch devuelve los professional disponibles
+Route::get('/update-state', [ProfessionalController::class, 'update_state']); // dado una un correo actualiza el state del professional
 
 Route::get('/client', [ClientController::class, 'index']);
+Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);
 Route::get('/client-show', [ClientController::class, 'show']);
 Route::post('/client', [ClientController::class, 'store']);
 Route::post('/client-update', [ClientController::class, 'update']);
@@ -113,6 +118,7 @@ Route::post('/branch', [BranchController::class, 'store']);
 Route::post('/branch-update', [BranchController::class, 'update']);
 Route::post('/branch-destroy', [BranchController::class, 'destroy']);
 Route::get('/branch_winner', [BranchController::class, 'branch_winner']);//devuelve las ganancias y products mas vendido de una branch 
+Route::get('/branch_winner_icon', [BranchController::class, 'branch_winner_icon']);//devuelve las ganancias y products mas vendido de una branch 
 Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
 Route::get('/company_winner', [BranchController::class, 'company_winner']);//devuelve las ganancias y el products mas vendido de la compañia
 Route::get('/branch_professionals_winner', [BranchController::class, 'branch_professionals_winner']);//devuelve las ganancias y products mas vendido de una branch
@@ -340,6 +346,12 @@ Route::get('/course-show', [CourseController::class, 'show']);
 Route::post('/course', [CourseController::class, 'store']);
 Route::post('/course-update', [CourseController::class, 'update']);
 Route::post('/course-destroy', [CourseController::class, 'destroy']);
+
+Route::get('/course-student', [CourseStudentController::class, 'index']);
+Route::get('/course-student-show', [CourseStudentController::class, 'show']);
+Route::post('/course-student', [CourseStudentController::class, 'store']);
+Route::post('/course-student-update', [CourseStudentController::class, 'update']);
+Route::post('/course-student-destroy', [CourseStudentController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 

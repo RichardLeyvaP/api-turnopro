@@ -78,6 +78,28 @@ class BranchController extends Controller
        }
     }
 
+    public function branch_winner_icon(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+           ]);
+
+           if ($request->has('mes')) {
+            return response()->json($this->branchService->branch_winner_month_icon($data['branch_id'], $request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
+            }
+            if ($request->has('startDate') && $request->has('endDate')) {
+                return response()->json($this->branchService->branch_winner_periodo_icon($data['branch_id'], $request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
+            }
+            else {
+                return response()->json($this->branchService->branch_winner_date_icon($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
+            }
+            
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()], 500);
+       }
+    }
+
     public function company_winner(Request $request)
     {
         try {
