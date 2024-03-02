@@ -101,10 +101,10 @@ class ReservationService {
         $client = Client::find($data['client_id']);
         if(!$client){
             return  $result = [
-                 'clientName' => null,
-                 'imageLook' => null,             
+                 'clientName' => "",
+                 'imageLook' => "",             
                  'cantVisit' => 0,
-                 'endLook' => null,
+                 'endLook' => "",
                  'frecuencia' => 0,
                  'services' =>  [],
                  'products' => []
@@ -120,7 +120,7 @@ class ReservationService {
                 'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
                 'imageLook' => null,             
                 'cantVisit' => 0,
-                'endLook' => null,
+                'endLook' => "",
                 'frecuencia' => 0,
                 'services' =>  [],
                 'products' => []
