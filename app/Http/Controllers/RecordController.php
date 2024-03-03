@@ -225,7 +225,7 @@ class RecordController extends Controller
                 ->filter(function ($registro) {
                     // Considera llegada tardía si es después de las 9:00 AM
                     return Carbon::parse($registro->start_time)->hour >= 9;
-                })->map(function ($group) use ($cant){   
+                })->map(function ($group){   
                     return [
                         /*'professional_id' => $group->first()->professional_id,
                         /*'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
@@ -351,4 +351,102 @@ class RecordController extends Controller
         }
     }
 
+    public function arriving_branch_periodo(Request $request)
+    {
+
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+            ]);
+            $llegadasTardias = [];
+            $branchId = Branch::find($data['branch_id']);
+            if($branchId)
+            $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
+                ->whereBetween('start_time', [$request->start_date, $request->end_date])
+                ->get()
+                ->filter(function ($registro) {
+                    // Considera llegada tardía si es después de las 9:00 AM
+                    return Carbon::parse($registro->start_time)->hour < 9;
+                })->groupBy('professional_id')->groupBy('professional_id')->map(function ($group){
+                    return [
+                        'professional_id' => $group->first()->professional_id,
+                        'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
+                        'image_url' => $group->first()->professional->image_url,
+                        'charge' => $group->first()->professional->charge->name,
+                        'cant' => $group->sum('professional_count')
+                    ];
+                })->sortByDesc('cant')->values();
+
+            return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error'], 500);
+        }
+    }
+
+    public function arriving_branch_date(Request $request)
+    {
+
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+            ]);
+            $today = now()->endOfDay(); // Incluye toda la jornada del último día
+
+            $llegadasTardias = [];
+            $branchId = Branch::find($data['branch_id']);
+            if($branchId)
+            $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
+                ->whereDate('start_time', $today)
+                ->get()
+                ->filter(function ($registro) {
+                    // Considera llegada tardía si es después de las 9:00 AM
+                    return Carbon::parse($registro->start_time)->hour <  9;
+                })->groupBy('professional_id')->map(function ($group){
+                    return [
+                        'professional_id' => $group->first()->professional_id,
+                        'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
+                        'image_url' => $group->first()->professional->image_url,
+                        'charge' => $group->first()->professional->charge->name,
+                        'cant' => $group->sum('professional_count')
+                    ];
+                })->sortByDesc('cant')->values();
+
+            return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error'], 500);
+        }
+    }
+
+    public function arriving_branch_month(Request $request)
+    {
+
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+            ]);
+            $llegadasTardias = [];
+            $branchId = Branch::find($data['branch_id']);
+            if($branchId)
+            $llegadasTardias = Record::withCount('professional')->where('branch_id', $branchId->id)
+                ->whereMonth('start_time', $request->mes)->whereYear('start_time', $request->year)                
+                ->get()
+                ->filter(function ($registro) {
+                    // Considera llegada tardía si es después de las 9:00 AM
+                    return Carbon::parse($registro->start_time)->hour < 9;
+                })->groupBy('professional_id')->map(function ($group){
+                    return [
+                        'professional_id' => $group->first()->professional_id,
+                        'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
+                        'image_url' => $group->first()->professional->image_url,
+                        'charge' => $group->first()->professional->charge->name,
+                        'cant' => $group->sum('professional_count')
+                    ];
+                })->sortByDesc('cant')->values();
+
+            return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error'], 500);
+        }
+    }
+    
 }

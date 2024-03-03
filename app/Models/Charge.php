@@ -13,4 +13,8 @@ class Charge extends Model
     {
         return $this->hasMany(Professional::class);
     }
+
+    public function permissions(){
+        return $this->belongsToMany(Permission::class)->withTimestamps();
+    }
 }

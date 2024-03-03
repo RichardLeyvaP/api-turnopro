@@ -24,12 +24,14 @@ use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CardGiftController;
+use App\Http\Controllers\ChargePermissionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseStudentController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\ReservationController;
@@ -38,6 +40,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
+use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -365,6 +368,21 @@ Route::get('/arriving-late-branch-periodo', [RecordController::class, 'arriving_
 Route::get('/arriving-late-professional-date', [RecordController::class, 'arriving_late_professional_date']);
 Route::get('/arriving-late-professional-periodo', [RecordController::class, 'arriving_late_professional_periodo']);
 Route::get('/arriving-late-professional-month', [RecordController::class, 'arriving_late_professional_month']);
+Route::get('/arriving-branch-date', [RecordController::class, 'arriving_branch_date']);
+Route::get('/arriving-branch-month', [RecordController::class, 'arriving_branch_month']);
+Route::get('/arriving-branch-periodo', [RecordController::class, 'arriving_branch_periodo']);
+
+Route::get('/permission', [PermissionController::class, 'index']);
+Route::get('/permission-show', [PermissionController::class, 'show']);
+Route::post('/permission', [PermissionController::class, 'store']);
+Route::put('/permission', [PermissionController::class, 'update']);
+Route::post('/permission-destroy', [PermissionController::class, 'destroy']);
+
+Route::get('/charge-permission', [ChargePermissionController::class, 'index']);
+Route::get('/charge-permission-show', [ChargePermissionController::class, 'show']);
+Route::post('/charge-permission', [ChargePermissionController::class, 'store']);
+Route::put('/charge-permission', [ChargePermissionController::class, 'update']);
+Route::post('/charge-permission-destroy', [ChargePermissionController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
