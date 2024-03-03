@@ -77,6 +77,10 @@ class Professional extends Model
         return $this->hasManyDeep(Tail::class, [ClientProfessional::class, Car::class, Reservation::class]);
     }
 
+    public function records()
+    {
+        return $this->hasMany(Record::class);
+    }
     
 
     protected $table = "professionals";

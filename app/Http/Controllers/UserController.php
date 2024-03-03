@@ -250,8 +250,6 @@ class UserController extends Controller
                     'branch_id' => $professional->branches->first()->value('id'),
                     'hora' => Carbon::now()->format('H:i:s')
                 ];
-
-
                 $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
                 $qrCodeBase64 = base64_encode($qrCode);
                 return $qrCodeBase64;

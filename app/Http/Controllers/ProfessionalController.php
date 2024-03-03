@@ -250,12 +250,11 @@ class ProfessionalController extends Controller
 
             Log::info("entra a actualizar");
                 $data = $request->validate([
-                'id' => 'nullable|numeric',
-                'email' => 'required|email',
+                'professional_id' => 'nullable|numeric',
                 'state' => 'required|numeric'
             ]);
             Log::info($request);
-            $professional = Professional::where('email', $data['email'])->first();
+            $professional = Professional::find($data['professional_id']);
 
             $professional->state = $data['state'];
             //$professional->image_url = $filename;

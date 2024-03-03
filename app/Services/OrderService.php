@@ -30,7 +30,7 @@ class OrderService {
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit - 1;
                 $productstore->save();
-                //$this->actualizarProductExit($productstore->product_id, $productstore->service_id);            
+                $this->actualizarProductExit($productstore->product_id, $productstore->store_id);            
                  $order = new Order();
                  $order->car_id = $car_id;
                  $order->product_store_id = $data['product_id'];

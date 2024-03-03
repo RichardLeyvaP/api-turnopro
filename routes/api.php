@@ -31,6 +31,7 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
+use App\Http\Controllers\RecordController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
@@ -83,7 +84,7 @@ Route::get('/services_professional', [ProfessionalController::class, 'services_p
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
 Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']); // dado un professional una branch y una fecha devuelve los horarios reservados de ese professional
 Route::get('/professional-state', [ProfessionalController::class, 'professionals_state']); // dado una branch devuelve los professional disponibles
-Route::get('/update-state', [ProfessionalController::class, 'update_state']); // dado una un correo actualiza el state del professional
+Route::get('/update-state', [ProfessionalController::class, 'update_state']); // dado una un id actualiza el state del professional
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);
@@ -352,6 +353,18 @@ Route::get('/course-student-show', [CourseStudentController::class, 'show']);
 Route::post('/course-student', [CourseStudentController::class, 'store']);
 Route::post('/course-student-update', [CourseStudentController::class, 'update']);
 Route::post('/course-student-destroy', [CourseStudentController::class, 'destroy']);
+
+Route::get('/record', [RecordController::class, 'index']);
+Route::get('/record-show', [RecordController::class, 'show']);
+Route::post('/record', [RecordController::class, 'store']);
+Route::put('/record', [RecordController::class, 'update']);
+Route::post('/record-destroy', [RecordController::class, 'destroy']);
+Route::get('/arriving-late-branch-date', [RecordController::class, 'arriving_late_branch_date']);
+Route::get('/arriving-late-branch-month', [RecordController::class, 'arriving_late_branch_month']);
+Route::get('/arriving-late-branch-periodo', [RecordController::class, 'arriving_late_branch_periodo']);
+Route::get('/arriving-late-professional-date', [RecordController::class, 'arriving_late_professional_date']);
+Route::get('/arriving-late-professional-periodo', [RecordController::class, 'arriving_late_professional_periodo']);
+Route::get('/arriving-late-professional-month', [RecordController::class, 'arriving_late_professional_month']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 
