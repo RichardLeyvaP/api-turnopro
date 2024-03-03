@@ -202,7 +202,8 @@ class UserController extends Controller
                         'client_id' => $user->client ? ($user->client->id) : 0,
                         'branch_id' => $branch ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
-                        'token' => $user->createToken('auth_token')->plainTextToken
+                        'token' => $user->createToken('auth_token')->plainTextToken,
+                        'permissions' => $user->professional ? $user->professional->charge->permissions : 0,
                     ], 200, [], JSON_NUMERIC_CHECK);
                 } else {
                     return response()->json([
