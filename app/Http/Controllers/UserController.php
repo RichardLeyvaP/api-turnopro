@@ -203,7 +203,12 @@ class UserController extends Controller
                         'branch_id' => $branch ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'token' => $user->createToken('auth_token')->plainTextToken,
-                        'permissions' => $user->professional ? $user->professional->charge->permissions : 0,
+                        'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
+                            return [
+                                'name' => $query->name,
+                                'module' => $query->module,
+                            ];
+                        }) : 0,
                     ], 200, [], JSON_NUMERIC_CHECK);
                 } else {
                     return response()->json([
