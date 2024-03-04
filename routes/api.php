@@ -386,6 +386,7 @@ Route::put('/charge-permission', [ChargePermissionController::class, 'update']);
 Route::post('/charge-permission-destroy', [ChargePermissionController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
+Route::get('/sendMessage', [ReservationController::class, 'sendMessage']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
