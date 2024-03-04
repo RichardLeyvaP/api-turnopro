@@ -36,6 +36,7 @@ use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\SendMailController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
@@ -386,7 +387,7 @@ Route::put('/charge-permission', [ChargePermissionController::class, 'update']);
 Route::post('/charge-permission-destroy', [ChargePermissionController::class, 'destroy']);
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
-Route::get('/sendMessage', [ReservationController::class, 'sendMessage']);
+Route::get('/sendMessage', [SendMailController::class, 'sendMessage']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
