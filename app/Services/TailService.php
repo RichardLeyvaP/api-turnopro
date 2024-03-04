@@ -15,47 +15,50 @@ use Illuminate\Support\Facades\Log;
 class TailService {
 
     public function cola_branch_data($branch_id){
-        $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
-            $query->where('branch_id', $branch_id);
-        }])->whereIn('attended', [0,3])->get();
-        $branchTails = $tails->map(function ($tail){
+        $branch = Branch::whereHas('tails', function ($query){
+            $query->whereIn('attended', [0,3]);
+        })->where('id', $branch_id)->with('tails')->get();
+        $tails = $branch->flatMap(function ($branch) {
+            return $branch->tails->map(function ($tail) {
                 $reservation = $tail->reservation;
                 $professional = $reservation->car->clientProfessional->professional;
                 $client = $reservation->car->clientProfessional->client;
-            $workplace = $professional->workplaces()
-                ->whereDate('data', $reservation->data)
-                ->first();
-            return [
-                'reservation_id' => $tail->reservation->id,
-                'car_id' => $tail->reservation->car_id,
-                'from_home' => $tail->reservation->from_home,
-                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
-                'total_time' => $reservation->total_time,
-                'client_name' => $client->name." ".$client->surname." ".$client->second_surname,
-                'professional_name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
-                'client_id' => $reservation->car->clientProfessional->client_id,
-                'professional_id' => $reservation->car->clientProfessional->professional_id,
-                'professional_state' => $professional->state,
-                'attended' => $tail->attended,
-                'puesto' => $workplace ? $workplace->name : null,
-            ];
-        })->sortByDesc('professional_state')->sortBy('start_time')->values();
+                $workplace = $professional->workplaces()
+                    ->whereDate('data', $reservation->data)
+                    ->first();
+                    return [
+                        'reservation_id' => $reservation->id,
+                        'car_id' => $reservation->car_id,
+                        'from_home' => $reservation->from_home,
+                        'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
+                        'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                        'total_time' => $reservation->total_time,
+                        'client_name' => $client->name." ".$client->surname." ".$client->second_surname,
+                        'professional_name' => $professional->name." ".$professional->surname." ".$professional->second_surname,
+                        'client_id' => $reservation->car->clientProfessional->client_id,
+                        'professional_id' => $reservation->car->clientProfessional->professional_id,
+                        'professional_state' => $professional->state,
+                        'attended' => $tail->attended,
+                        'puesto' => $workplace ? $workplace->name : null,
+                    ];
+                })->sortByDesc('professional_state')->sortBy('start_time')->values();
+        });
 
-        return $branchTails;
+        return $tails;
     }
 
     public function tail_branch_attended($branch_id){
-        $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
-            $query->where('branch_id', $branch_id);
-        }])->whereIn('attended', [1,5,11,111,4])->get();
-        $branchTails = $tails->map(function ($tail){
-            $reservation = $tail->reservation;
+        $branch = Branch::whereHas('tails', function ($query){
+            $query->whereIn('attended', [1,5,11,111,4]);
+        })->where('id', $branch_id)->with('tails')->get();
+        $tails = $branch->flatMap(function ($branch) {
+            return $branch->tails->map(function ($tail) {
+                $reservation = $tail->reservation;
                 $professional = $reservation->car->clientProfessional->professional;
                 $client = $reservation->car->clientProfessional->client;
-            $workplace = $professional->workplaces()
-                ->whereDate('data', $reservation->data)
-                ->first();
+                $workplace = $professional->workplaces()
+                    ->whereDate('data', $reservation->data)
+                    ->first();
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
@@ -72,8 +75,8 @@ class TailService {
                 'puesto' => $workplace ? $workplace->name : null,
             ];
         })->sortBy('start_time')->values();
-
-        return $branchTails;
+    });
+        return $tails;
     }
 
     public function cola_branch_delete($branch_id){

@@ -232,6 +232,7 @@ Route::get('/professional_reservations', [ReservationController::class, 'profess
 Route::get('/professional_reservationDate', [ReservationController::class, 'professional_reservationDate']);
 Route::post('/reservation_store', [ReservationController::class, 'reservation_store']);//Hacer una reservation en una fecha dada
 Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch
+Route::get('/update-confirmation', [ReservationController::class, 'update_confirmation']);//Dado una branch y actualizar la confirmation
 
 Route::get('/tail', [TailController::class, 'index']);
 Route::put('/tail', [TailController::class, 'update']);

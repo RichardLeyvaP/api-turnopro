@@ -238,6 +238,26 @@ class ReservationController extends Controller
         }
     }
 
+    public function update_confirmation(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'confirmation' => 'required|numeric',
+                'id' => 'required'
+
+            ]);
+            $reservacion = Reservation::find($data['id']);
+            $reservacion->confirmation = $data['confirmation'];
+            $reservacion->save();
+
+            return response()->json(['msg' => 'Reservacion confirmada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
+        }
+    }
+
+
     public function reservation_tail()
     {
         log::info('registrar las reservaciones del dia en la cola');
@@ -278,9 +298,12 @@ class ReservationController extends Controller
     {
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'cause' => 'required|string|max:255'
             ]);
             $reservacion = Reservation::find($data['id']);
+            $reservacion->cause = $request->cause;
+            $reservacion->save();
             $reservacion->delete();
 
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
