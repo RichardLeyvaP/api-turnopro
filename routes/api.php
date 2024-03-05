@@ -89,6 +89,7 @@ Route::get('/get-professionals-service', [ProfessionalController::class, 'get_pr
 Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']); // dado un professional una branch y una fecha devuelve los horarios reservados de ese professional
 Route::get('/professional-state', [ProfessionalController::class, 'professionals_state']); // dado una branch devuelve los professional disponibles
 Route::get('/update-state', [ProfessionalController::class, 'update_state']); // dado una un id actualiza el state del professional
+Route::get('/branch-professionals-service', [ProfessionalController::class, 'branch_professionals_service']); // los professionales de una branch que realizan x servicios
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);
@@ -234,6 +235,7 @@ Route::get('/professional_reservationDate', [ReservationController::class, 'prof
 Route::post('/reservation_store', [ReservationController::class, 'reservation_store']);//Hacer una reservation en una fecha dada
 Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch
 Route::get('/update-confirmation', [ReservationController::class, 'update_confirmation']);//Dado una branch y actualizar la confirmation
+Route::get('/branch-reservations', [ReservationController::class, 'branch_reservations']);//Dado una branch devolver las reservations del dia
 
 Route::get('/tail', [TailController::class, 'index']);
 Route::put('/tail', [TailController::class, 'update']);

@@ -78,6 +78,44 @@ class ReservationController extends Controller
         }
     }
 
+    public function branch_reservations(Request $request)
+    {
+        try {    
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);         
+            Log::info( "Entra a buscar las reservaciones");
+            $branch = Branch::find($data['branch_id']);
+            $reservations = $branch->reservations()->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->whereDate('data', Carbon::now())->orderByDesc('data')->get()->map(function ($reservation){
+                $client = $reservation->car->clientProfessional->client;
+                $professional = $reservation->car->clientProfessional->professional;
+                $services = $reservation->car->orders->where('is_product', 0)->count();
+                return [
+                    'id' => $reservation->id,
+                    'car_id' => $reservation->car_id,
+                    'client_professional_id' => $reservation->car->client_professional_id,
+                    'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'client_image' => $client->client_image,
+                    'image_url' => $professional->image_url,
+                    'data' => $reservation->data,
+                    'start_time' => $reservation->start_time,
+                    'end_time' => $reservation->final_hour,
+                    'total_time' => $reservation->total_time
+
+                ];
+            });
+            /*$car = Car::whereHas('branch', function ($query) use ($data){
+                $query->where('id', $data['branch_id']);
+            })->with('clientProfessional.client', 'clientProfessional.professional')->get();*/
+            //$car = Car::with('clientProfessional.client', 'clientProfessional.professional')->get();
+            return response()->json(['reservations' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
+        }
+    }
+
     public function reservation_store(Request $request)
     {
         Log::info("Guardar Reservacion");
@@ -308,7 +346,7 @@ class ReservationController extends Controller
 
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al eliminar la reservacion'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al eliminar la reservacion'], 500);
         }
     }
 

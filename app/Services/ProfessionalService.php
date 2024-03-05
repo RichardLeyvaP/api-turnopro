@@ -54,6 +54,17 @@ class ProfessionalService
            })->get();
     }
 
+    public function branch_professionals_service($branch_id, $services)
+    {
+        return $professionals = Professional::whereHas('branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+           })->whereHas('branchServices', function ($query) use ($services){
+            $query->whereIn('service_id', $services);
+           })->whereHas('charge', function ($query) {
+            $query->where('id', 1);
+           })->get();
+    }
+
     public function get_professionals_service($data)
     {
         return $professionals = Professional::whereHas('branchServices', function ($query) use ($data) {

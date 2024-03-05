@@ -33,6 +33,7 @@ class CarController extends Controller
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
         }
     }
+    
 
     public function branch_cars(Request $request)
     {
@@ -105,7 +106,7 @@ class CarController extends Controller
             $data = $request->validate([
                'id' => 'required|numeric'
            ]);
-           $orderProductsDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', true)->orderBy('updated_at', 'desc')->get();
+           $orderProductsDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', true)->orderBy('data', 'desc')->get();
             $products = $orderProductsDatas->map(function ($orderData){
                     return [
                         'id' => $orderData->id,                   
@@ -122,7 +123,7 @@ class CarController extends Controller
                         'request_delete' => $orderData->request_delete
                     ];
                });
-           $orderServicesDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', false)->orderBy('updated_at', 'desc')->get();
+           $orderServicesDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', false)->orderBy('data', 'desc')->get();
            $services = $orderServicesDatas->map(function ($orderData){
               return [
                     'id' => $orderData->id,
@@ -345,7 +346,8 @@ class CarController extends Controller
                       'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
                       'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
                       'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
-                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service
+                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
+                      'description' => $orderData->branchServiceProfessional->branchService->service->service_comment
                       ];
                   });
             
