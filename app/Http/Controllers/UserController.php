@@ -169,7 +169,7 @@ class UserController extends Controller
             if (isset($user->id)) {
                 if (Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
-                    if ($user->professional) {
+                    if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
                         $branch = $user->professional->branches->map(function ($branch) {
                             return [
@@ -200,7 +200,7 @@ class UserController extends Controller
                         'professional_id' => $user->professional ? ($user->professional->id) : 0,
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
                         'client_id' => $user->client ? ($user->client->id) : 0,
-                        'branch_id' => $branch ? $branch['branch_id'] : 0,
+                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
