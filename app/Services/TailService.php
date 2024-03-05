@@ -217,23 +217,40 @@ class TailService {
 
     public function reasigned_client($data){
         $client = Client::find($data['client_id']);
+        Log::info($client);
         $professional = Professional::find($data['professional_id']);
+        Log::info($professional);
         $reservation = Reservation::find($data['reservation_id']);
+        Log::info($reservation);
         $horaActual = Carbon::now()->format('H:i:s');
         $timestamp = strtotime($reservation->total_time);
         $tiempo_entero = date('Gis', $timestamp);
         $horas = intval(substr($tiempo_entero, 0, 1));
         $minutos = intval(substr($tiempo_entero, 2, 2));
         $time = $horas * 60 + $minutos;
+        Log::info($horaActual);
+        Log::info(Carbon::parse($horaActual)->addMinutes($time)->toTimeString());
         $reservation->start_time = $horaActual;
         $reservation->final_hour = Carbon::parse($horaActual)->addMinutes($time)->toTimeString();
         $reservation->save();
         $car = Car::find($reservation->car_id);
-        $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
-        if($client_professional_id){
+        
+        Log::info($car);
+        //$relation = Client::find($data['client_id'])->professionals()->where('professional_id', $data['professional_id'])->first();
+        //Log::info($relation);
+        //$client_professional_id = $relation->pivot->id;
+        //$client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()/*->map->pivot->value('id')*/;
+        $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+        
+       
+        if(!$client_professional){
             Log::info("no existe");
             $professional->clients()->attach($client->id);
             $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+            Log::info($client_professional_id);
+        }
+        else{
+            $client_professional_id = $client_professional->pivot->id;
             Log::info($client_professional_id);
         }
         $car->client_professional_id = $client_professional_id;
