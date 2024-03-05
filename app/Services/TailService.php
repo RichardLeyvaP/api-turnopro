@@ -48,10 +48,9 @@ class TailService {
     }
 
     public function tail_branch_attended($branch_id){
-        $branch = Branch::whereHas('tails', function ($query){
+        return $branch = Branch::where('id', $branch_id)->whereHas('tails', function ($query){
             $query->whereIn('attended', [1,5,11,111,4]);
-        })->where('id', $branch_id)->with('tails')->get();
-        $tails = $branch->flatMap(function ($branch) {
+        })->get()->flatMap(function ($branch) {
             return $branch->tails->map(function ($tail) {
                 $reservation = $tail->reservation;
                 $professional = $reservation->car->clientProfessional->professional;
@@ -76,7 +75,7 @@ class TailService {
             ];
         })->sortBy('start_time')->values();
     });
-        return $tails;
+        return $branch;
     }
 
     public function cola_branch_delete($branch_id){
