@@ -44,7 +44,8 @@ return [
                 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
             ],
             'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                'verify' => env('GUZZLE_SSL_VERIFY', true), // Esta opción controla si se realiza la verificación del certificado SSL
+                'cert' => env('GUZZLE_CERT', 'C:\Users\Richard\Documents\GitHub\api-turnopro\storage\app\public\licenc\cacert.pem'), // Esta opción especifica la ruta al archivo cacert.pem
             ],
         ],
 
