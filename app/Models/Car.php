@@ -24,6 +24,10 @@ class Car extends Model
         return $this->hasOne(Reservation::class);
     }
 
+    public function reservation()
+    {
+        return $this->hasOne(Reservation::class);
+    }
     public function branch()
     {
         return $this->belongsTo(Branch::class);

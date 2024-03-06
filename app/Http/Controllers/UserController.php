@@ -178,13 +178,15 @@ class UserController extends Controller
                             ];
                         })->first();
                     }
-                    Log::info($branch);
-                    if ($user->professional) {
+                    Log::info($user->professional->branchRules);
+                    if ($user->professional->branchRules) {
                         $branchRules = Branch::find($branch['branch_id']);
                         $professional = Professional::find($user->professional->id);
-                        $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now()->toDateString())->get();
-                        if (!count($professionalRules)) {
+                        $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now())->get();
+                        Log::info($professionalRules);
+                        if (count($professionalRules)) {
                             $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
+                            Log::info($branchRulesId);
                             $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
                         }
                     }
@@ -204,11 +206,8 @@ class UserController extends Controller
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
-                            return [
-                                'name' => $query->name,
-                                'module' => $query->module,
-                            ];
-                        }) : 0,
+                            return $query->name . ', ' . $query->module;
+                        })->values()->all() : [],
                     ], 200, [], JSON_NUMERIC_CHECK);
                 } else {
                     return response()->json([

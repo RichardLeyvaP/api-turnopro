@@ -9,12 +9,14 @@ class CardGift extends Model
 {
     use HasFactory;
 
-    public function user(){
-        return $this->belongsTo(User::class);
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 
-    public function branch(){
-        return $this->belongsTo(Branch::class);
+    public function cardGiftUser()
+    {
+        return $this->hasMany(CardGiftUser::class);
     }
 
     protected $casts = [

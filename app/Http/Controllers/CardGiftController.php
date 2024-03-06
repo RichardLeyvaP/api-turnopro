@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CardGift;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -17,7 +18,7 @@ class CardGiftController extends Controller
     public function index()
     {
         try {
-            return response()->json(['cardGifts' => CardGift::with(['branch', 'user'])->get()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['cardGifts' => CardGift::with(['business'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
         }
@@ -32,24 +33,28 @@ class CardGiftController extends Controller
 
             Log::info("Crear");
             $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'user_id' => 'nullable|numeric',
-                'value' => 'nullable|numeric'
+                'business_id' => 'required|numeric',
+                'value' => 'nullable|numeric',
+                'name' => 'required|string'
             ]);
             
-            do {
+            /*do {
                 // Genera un código alfanumérico aleatorio
                 $codigo = Str::random(8);
         
                 // Verifica si el código ya existe en la base de datos
-            } while (CardGift::where('code', $codigo)->exists());
+            } while (CardGift::where('code', $codigo)->exists());*/
             $cardGift = new CardGift();
-            $cardGift->branch_id = $data['branch_id'];
-            $cardGift->user_id = $data['user_id'];
-            $cardGift->code = $codigo;
-            $cardGift->data = Carbon::now();
+            $cardGift->business_id = $data['business_id'];
             $cardGift->value = $data['value'];
-            $cardGift->state = 'Activa';
+            $cardGift->name = $data['name'];
+            $cardGift->save();
+            Log::info($cardGift);
+            $filename = "image/default.png"; 
+            if ($request->hasFile('image_cardgift')) {
+               $filename = $request->file('image_cardgift')->storeAs('cardgifts',$cardGift->id.'.'.$request->file('image_cardgift')->extension(),'public');
+            }
+            $cardGift->image_cardgift = $filename;
             $cardGift->save();
             return response()->json(['msg' => 'Tarjeta de regalo asignadda correctamente'], 200);
         } catch (\Throwable $th) {
@@ -65,18 +70,16 @@ class CardGiftController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'business_id' => 'required|numeric'
             ]);
-            $cardGifts = CardGift::where('state', 'Activa')->Where('branch_id', $data['branch_id'])->with(['branch', 'user.client'])->get()->map(function ($query){
+            $cardGifts = CardGift::Where('business_id', $data['business_id'])->with(['business'])->get()->map(function ($query){
                 return [
                     'id' => $query->id,
-                    'data' => $query->data,
-                    'code' => $query->code,
-                    'state' => $query->state,
+                    'name' => $query->state,
                     'value' => $query->value,
-                    'name' => $query->user->client->name.' '.$query->user->client->surname.' '.$query->user->client->second_surname,
-                    'user_id' => $query->user->id,
-                    'client_image' => $query->user->client->client_image
+                    'businesName' => $query->business->name,
+                    'business_id' => $query->business_id,
+                    'image_cardgift' => $query->image_cardgift
                 ];
             });
             Log::info($cardGifts);
@@ -86,7 +89,7 @@ class CardGiftController extends Controller
         }
     }
 
-    public function show_value(Request $request)
+    /*public function show_value(Request $request)
     {
         try {
             $data = $request->validate([
@@ -98,7 +101,7 @@ class CardGiftController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
         }
-    }
+    }*/
 
     /**
      * Update the specified resource in storage.
@@ -107,17 +110,24 @@ class CardGiftController extends Controller
     {
         try {
 
-        Log::info("Crear");
+        Log::info("Editar");
         $data = $request->validate([
-            'user_id' => 'nullable|numeric',
             'value' => 'nullable|numeric',
+            'name' => 'nullable|numeric',
             'id' => 'required|numeric'
         ]);
         $cardGift = CardGift::find($data['id']);
-        $cardGift->user_id = $data['user_id'];
+        if($cardGift->image_cardgift != $request['image_cardgift'])
+            {
+                $destination=public_path("storage\\".$cardGift->image_cardgift);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }                    
+                $cardGift->image_cardgift = $request->file('image_cardgift')->storeAs('cardgifts',$cardGift->id.'.'.$request->file('image_cardgift')->extension(),'public');
+            }
         $cardGift->value = $data['value'];
         $cardGift->save();
-        return response()->json(['msg' => 'Tarjeta de regalo asignadda correctamente'], 200);
+        return response()->json(['msg' => 'Tarjeta de regalo creada correctamente'], 200);
     } catch (\Throwable $th) {
         Log::info($th);
     return response()->json(['msg' => $th->getMessage().'Error al asignartar la ttarjeta de regalo'], 500);
@@ -134,7 +144,13 @@ class CardGiftController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            
+            $cardGift = CardGift::find($data['id']);
+            if ($cardGift->image_cardgift != "image/default.png") {
+                $destination=public_path("storage\\".$cardGift->image_cardgift);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
                 CardGift::destroy($data['id']);
 
             return response()->json(['msg' => 'Tarjeta de Regalo eliminada correctamente'], 200);

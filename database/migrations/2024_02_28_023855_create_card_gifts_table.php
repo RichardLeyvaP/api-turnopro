@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('card_gifts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('branch_id');
-            $table->unsignedBigInteger('user_id');
-            $table->date('data');
-            $table->string('code');
-            $table->string('state')->nullable();
-            $table->decimal('value', 8, 2)->nullable();
-            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('business_id');
+            $table->string('name');
+            $table->string('image_cardgift')->nullable();
+            $table->decimal('value')->nullable();
+            $table->foreign('business_id')->references('id')->on('businesses')->onDelete('restrict');
             $table->timestamps();
         });
     }

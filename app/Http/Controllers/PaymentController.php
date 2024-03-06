@@ -6,6 +6,7 @@ use App\Models\Box;
 use App\Models\Branch;
 use App\Models\Car;
 use App\Models\CardGift;
+use App\Models\CardGiftUser;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -53,9 +54,10 @@ class PaymentController extends Controller
                 'transfer' => 'nullable|numeric',
                 'other' => 'nullable|numeric',
                 'tip' => 'nullable|numeric',
-                'cardGif' => 'nullable|numeric',
-                'id' => 'nullable|numeric'
+                'cardGift' => 'nullable|numeric',
+                'id' => 'nullable'
             ]);
+            Log::info($data);
             $car = Car::find($data['car_id']);            
            $branch = Branch::whereHas('cars', function ($query) use ($car){
                 $query->where('cars.id', $car->id);
@@ -65,23 +67,24 @@ class PaymentController extends Controller
             if (!$payment) {
                 $payment = new Payment();
             }
-            if ($data['cardGif']) {
-                $cardGift = CardGift::find($data['id']);
+            Log::info($data['cardGift']);
+            if (!$data['cardGift']) {
+                $cardGiftUser = CardGiftUser::where('code',$data['id'])->first();
                 Log::info($car->id);
-                if(!$cardGift->value - $data['cardGif']){
-                    $cardGift->state = "Redimida";
+                if(!$cardGiftUser->exist - $data['cardGift']){
+                    $cardGiftUser->state = "Redimida";
                 }
-                $cardGift->value = $cardGift->value - $data['cardGif'];
-                $cardGift->save();
+                $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
+                $cardGiftUser->save();
             }
-            Log::info($cardGift);
+            //Log::info($cardGiftUser);
             $payment->car_id = $car->id;
             $payment->cash = $data['cash'];
             $payment->creditCard = $data['creditCard'];
             $payment->debit = $data['debit'];
             $payment->transfer = $data['transfer'];
             $payment->other = $data['other'];
-            $payment->cardGif = $data['cardGif'];
+            $payment->cardGif = $data['cardGift'];
             $payment->save();
 
 
@@ -95,7 +98,8 @@ class PaymentController extends Controller
             Log::info($car->id);
             if (!$box) {                
                 $box = new Box();
-                $box->existence = $data['cash'];              
+                $box->existence = $data['cash'];    
+                $box->data = Carbon::now();         
                 $box->branch_id = $branch->id;
             }else{                
                 $box->existence = $box->existence + $data['cash'];

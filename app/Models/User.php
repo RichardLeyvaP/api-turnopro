@@ -54,7 +54,8 @@ class User extends Authenticatable
         return $this->hasOne(Client::class);
     }
 
-    public function cardGift(){
-        return $this->hasMany(CardGift::class);
+    public function cardGiftUser()
+    {
+        return $this->belongsTo(CardGiftUser::class);
     }
 }

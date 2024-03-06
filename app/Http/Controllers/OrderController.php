@@ -142,7 +142,10 @@ class OrderController extends Controller
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
-            if ($order->is_product) {
+            Log::info($order);
+            Log::info($car);
+            if ($order->is_product) {                
+            Log::ingo("Es producto");
                 $productstore = ProductStore::find($order->product_store_id);
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
@@ -150,9 +153,13 @@ class OrderController extends Controller
                 $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
             elseif (!$order->is_product) {
+                Log::info("servicio");
                 $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
+                Log::info($branchServiceprofessional);
                 $service = $branchServiceprofessional->branchService->service;
+                Log::info("card:".$car);
                 $reservation = Reservation::where('car_id', $order->car_id)->first();
+                Log::info($reservation);
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
                 $reservation->save();

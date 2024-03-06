@@ -23,5 +23,10 @@ class Business extends Model
     {
         return $this->hasMany(Enrollment::class, 'business_id');
     }
+
+    public function cardgifts()
+    {
+        return $this->hasMany(CardGift::class);
+    }
     
 }

@@ -24,6 +24,7 @@ use App\Http\Controllers\ProductStoreController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\BranchServiceProfessionalController;
 use App\Http\Controllers\CardGiftController;
+use App\Http\Controllers\CardGiftUserController;
 use App\Http\Controllers\ChargePermissionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
@@ -333,9 +334,16 @@ Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
 Route::get('/card-gift', [CardGiftController::class, 'index']);
 Route::get('/card-gift-show', [CardGiftController::class, 'show']);
 Route::post('/card-gift', [CardGiftController::class, 'store']);
-Route::put('/card-gift-update', [CardGiftController::class, 'update']);
+Route::post('/card-gift-update', [CardGiftController::class, 'update']);
 Route::post('/card-gift-destroy', [CardGiftController::class, 'destroy']);
-Route::get('/show-value', [CardGiftController::class, 'show_value']);
+//Route::get('/show-value', [CardGiftController::class, 'show_value']);
+
+Route::get('/card-gift-user', [CardGiftUserController::class, 'index']);
+Route::get('/card-gift-user-show', [CardGiftUserController::class, 'show']);
+Route::post('/card-gift-user', [CardGiftUserController::class, 'store']);
+Route::post('/card-gift-user-update', [CardGiftUserController::class, 'update']);
+Route::post('/card-gift-user-destroy', [CardGiftUserController::class, 'destroy']);
+Route::get('/card-gift-user-show-value', [CardGiftUserController::class, 'show_value']);//dado un codigo mostrsr el valor existente
 
 Route::get('/enrollment', [EnrollmentController::class, 'index']);
 Route::get('/enrollment-show', [EnrollmentController::class, 'show']);

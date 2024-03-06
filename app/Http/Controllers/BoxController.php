@@ -35,7 +35,8 @@ class BoxController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $box = Box::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->first();
+            $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->get();
+            Log::info($box);
             return response()->json(['box' => $box], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
@@ -58,13 +59,15 @@ class BoxController extends Controller
             ]);
 
             $branch = Branch::find($data['branch_id']);
-            $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
-            if (!$box) {                
+            $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
+               
+            Log::info($box); 
+            if (!$box) {              
                 $box = new Box();
                 $box->existence = $data['cashFound'];
                 $box->extraction = $data['extraction'];
-            }else{                
-                $box->existence = $box->existence + $data['cashFound'];               
+            }else{                         
+                $box->existence += $data['cashFound'] - $data['extraction'];               
                 $box->extraction = $box->extraction + $data['extraction'];
             }
             $box->branch_id = $branch->id;
