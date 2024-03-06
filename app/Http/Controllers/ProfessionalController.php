@@ -64,6 +64,49 @@ class ProfessionalController extends Controller
     public function professional_reservations_time(Request $request)
     {
         try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'data' => 'required|date'
+            ]);
+        
+            $professional = Professional::where('id', $data['professional_id'])
+                ->whereHas('branches', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                ->with(['reservations' => function ($query) use ($data) {
+                    $query->whereDate('data', $data['data']);
+                }])
+                ->first();
+        
+            if ($professional) {
+                $reservations = $professional->reservations->map(function ($reservation) {
+                    $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                    $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+        
+                    $intervalos = [$startFormatted];
+                    $startTime = Carbon::parse($startFormatted);
+                    $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
+        
+                    $finalTime = Carbon::parse($finalFormatted);
+        
+                    // Agregar las horas intermedias de 15 en 15 minutos
+                    while ($startTime->addMinutes(15) <= $finalTime) {
+                        $intervalos[] = $startTime->format('H:i');
+                    }
+        
+                    return $intervalos;
+                })->flatten()->values()->all();
+            } else {
+                $reservations = [];
+            }
+        
+            return response()->json(['reservations' => $reservations], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los profesionales"], 500);
+        }
+        
+       /* try {
             
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -102,7 +145,7 @@ class ProfessionalController extends Controller
             return response()->json(['reservations' => $reservations], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las professionales"], 500);
-        }
+        }*/
     }
 
     public function professionals_branch(Request $request)
