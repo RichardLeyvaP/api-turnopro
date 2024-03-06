@@ -58,5 +58,18 @@ public function sendMessage(Request $request)
     return response()->json(json_decode((string) $response->getBody(), true));
 }
 
+public function emailBoxClosure($client_email,$type)
+    {
+        $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+        $template = 'cierrecaja';       
+
+       
+
+              Log::info($client_email);
+              $mail = new Send_mail($logoUrl, '$client_name','$data_reservation',$template,'$start_time','$branch_name',$type);
+              $this->sendEmail($client_email,$mail);
+
+
+}
 
 }

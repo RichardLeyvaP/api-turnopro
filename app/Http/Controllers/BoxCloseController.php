@@ -85,14 +85,14 @@ class BoxCloseController extends Controller
             $boxClose->data = Carbon::now();
             $boxClose->save();
             Log::info("Generar PDF");
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
-            $this->sendEmailService->emailBoxClosure('richardleyvap1991@gmail.com', $reporte);
+            $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
 
 
-            //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA
+            //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
             /*
             Log::info("Generar PDF");
 $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
