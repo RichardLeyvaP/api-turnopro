@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
 use App\Models\Branch;
+use App\Models\Business;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\ReservationService;
@@ -237,10 +238,13 @@ class ReservationController extends Controller
             $data = $request->validate([
                 'business_id' => 'required|numeric'
             ]);
-            $reservations = Branch::where('business_id', $data['business_id'])->get()->map(function ($query){
-                return $query->reservations()->whereDate('data', Carbon::now());
-            });
-            return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+            $business = Business::find($data['business_id']);
+            $reservations = $business->branches()->withCount(['reservations' => function ($query){
+                $query->whereDate('data', now()->toDateString());
+            }])->get()->pluck('reservations_count', 'id')->map(function ($count, $branchId){
+                return ['branch_id' => $branchId, 'reservations_count' => $count];
+            })->values();
+            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
