@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Business;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Order;
@@ -34,6 +35,35 @@ class CarController extends Controller
         }
     }
     
+    public function cars_sum_amount(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar una las reservations del dia");
+            $data = $request->validate([
+                'business_id' => 'required|numeric'
+            ]);
+            $business = Business::find($data['business_id']);
+             return $branches = $business->branches->map(function ($branch){
+                $amount = $branch->cars()->whereHas('reservations', function ($query){
+                    $query->whereDate('data', now()->toDateString());
+                })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query){
+                    $query->whereDate('data', now()->toDateString());
+                })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query){
+                    $query->whereDate('data', now()->toDateString());
+                })->sum('technical_assistance') * 5000;
+                return ['branchID' => $branch->id, 'amount' => $amount];
+            });
+            /*->withCount(['reservations' => function ($query){
+                $query->whereDate('data', now()->toDateString());
+            }])->get()->pluck('reservations_count', 'id')->map(function ($count, $branchId){
+                return ['branch_id' => $branchId, 'reservations_count' => $count];
+            })->values();*/
+            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+        }
+    }
 
     public function branch_cars(Request $request)
     {
