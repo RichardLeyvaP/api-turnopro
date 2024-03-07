@@ -191,7 +191,11 @@ class BranchService
         $totalproducts = 0;
         $seleccionado = 0;
         $aleatorio = 0;
+        $transformedResult = [];
         $totalClients = $cars->count();
+       if(!$totalClients = $cars->count()){
+        return $transformedResult;
+       }
         $products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate) {
             $query->whereBetWeen('data', [$startDate, $endDate]);
         }])->whereHas('productStores.store.branches', function ($query) use ($branch_id) {
@@ -274,7 +278,11 @@ class BranchService
         $seleccionado = 0;
         $aleatorio = 0;
         $totalClients = 0;
+        $transformedResult = [];
         $totalClients = $cars->count();
+       if(!$totalClients = $cars->count()){
+        return $transformedResult;
+       }
         $products = Product::withCount(['orders' => function ($query) use ($month, $year) {
             $query->whereMonth('data', $month)->whereYear('data', $year);
         }])->whereHas('productStores.store.branches', function ($query) use ($branch_id) {
@@ -361,8 +369,7 @@ class BranchService
         $transformedResult = [];
         $totalClients = $cars->count();
        if(!$totalClients = $cars->count()){
-        return 
-        $transformedResult;
+        return $transformedResult;
        }
         $products = Product::withCount(['orders' => function ($query) {
             $query->whereDate('data', Carbon::now());
