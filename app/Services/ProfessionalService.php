@@ -259,11 +259,13 @@ class ProfessionalService
     
     $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
         $query->where('branch_id', $branch_id);
-    })->whereHas('tails', function ($query) use ($horaActual) {
-        $query->whereHas('reservation', function ($query) use ($horaActual) {
-            $query->where('start_time', '>=', $horaActual);
-        })->whereIn('attended', [0, 2, 3]);
-    })->orWhereDoesntHave('tails')->get();
+    })->where(function ($query) use ($horaActual) {
+        $query->whereHas('tails', function ($query) use ($horaActual) {
+            $query->whereHas('reservation', function ($query) use ($horaActual) {
+                $query->where('start_time', '>=', $horaActual);
+            })->whereIn('attended', [0, 2, 3]);
+        })->orWhereDoesntHave('tails');
+    })->get();
 
     // Convertir el campo telefono a string
     $professionals->map(function ($professional) {
