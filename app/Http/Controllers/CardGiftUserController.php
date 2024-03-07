@@ -107,7 +107,7 @@ class CardGiftUserController extends Controller
             $data = $request->validate([
                 'code' => 'required'
             ]);
-            $cardGiftUser = CardGiftUser::where('code', 'kNRylWZ3')->get()->value('exist');
+            $cardGiftUser = CardGiftUser::where('code', $data['code'])->get()->value('exist');
             Log::info($cardGiftUser);
             return response()->json($cardGiftUser, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {

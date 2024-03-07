@@ -43,8 +43,6 @@ class ReservationController extends Controller
         }
     }
 
- 
-
     public function store(Request $request)
     {
         Log::info("Guardar Reservacion");
@@ -225,6 +223,23 @@ class ReservationController extends Controller
             })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
+            return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+        }
+    }
+
+    public function reservations_count(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar una las reservations del dia");
+            $data = $request->validate([
+                'business_id' => 'required|numeric'
+            ]);
+            $reservations = Branch::where('business_id', $data['business_id'])->get()->map(function ($query){
+                return $query->reservations()->whereDate('data', Carbon::now());
+            });
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);

@@ -113,7 +113,7 @@ class CardGiftController extends Controller
         Log::info("Editar");
         $data = $request->validate([
             'value' => 'nullable|numeric',
-            'name' => 'nullable|numeric',
+            'name' => 'nullable|string',
             'id' => 'required|numeric'
         ]);
         $cardGift = CardGift::find($data['id']);

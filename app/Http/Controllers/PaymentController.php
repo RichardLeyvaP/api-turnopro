@@ -55,7 +55,7 @@ class PaymentController extends Controller
                 'other' => 'nullable|numeric',
                 'tip' => 'nullable|numeric',
                 'cardGift' => 'nullable|numeric',
-                'id' => 'nullable'
+                'code' => 'nullable'
             ]);
             Log::info($data);
             $car = Car::find($data['car_id']);            
@@ -68,10 +68,16 @@ class PaymentController extends Controller
                 $payment = new Payment();
             }
             Log::info($data['cardGift']);
-            if (!$data['cardGift']) {
-                $cardGiftUser = CardGiftUser::where('code',$data['id'])->first();
+            if ($data['cardGift'] != 0) {
+                Log::info($data['code']);
+                $cardGiftUser = CardGiftUser::where('code',$data['code'])->first();
+                Log::info('tarjeta asognada');
+                Log::info($cardGiftUser);
+                Log::info('carro');
                 Log::info($car->id);
-                if(!$cardGiftUser->exist - $data['cardGift']){
+                Log::info("ver si es cero al pagar");
+                Log::info($cardGiftUser->exist - $data['cardGift']);
+                if($cardGiftUser->exist - $data['cardGift'] <= 0){
                     $cardGiftUser->state = "Redimida";
                 }
                 $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
