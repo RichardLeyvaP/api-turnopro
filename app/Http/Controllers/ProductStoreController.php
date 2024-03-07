@@ -200,7 +200,8 @@ class ProductStoreController extends Controller
             else {
                 $store->products()->attach($productexist->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
             }
-            $this->actualizarProductExit($productexist->id, $storeexist->id);
+            //todo pendiente para revisar importante
+           // $this->actualizarProductExit($productexist->id, $storeexist->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
         return response()->json(['msg' => $th->getMessage().'Error al mover el producto a este almacén'], 500);
