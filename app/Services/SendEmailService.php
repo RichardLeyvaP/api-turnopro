@@ -15,8 +15,7 @@ class SendEmailService {
     public function confirmReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional)
     {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
-        $template = 'send_mail_reservation';
-        $template = '';
+        $template = 'send_mail_reservation';        
         $client = Client::where('id', $client_id)->first();
         $branch = Branch::where('id', $branch_id)->first();
 
