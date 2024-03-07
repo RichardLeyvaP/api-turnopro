@@ -271,7 +271,7 @@ class ProfessionalService
         return $professional;
     });
 
-    return $professionals->where('charge_id', 1);
+    return $professionals->where('charge_id', 1)->values();
 }
 
 
