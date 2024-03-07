@@ -44,11 +44,11 @@ class CarController extends Controller
             ]);
             $business = Business::find($data['business_id']);
              $branches = $business->branches->map(function ($branch){
-                $amount = $branch->cars()->whereHas('reservations', function ($query){
+                $amount = $branch->cars()->whereHas('reservation', function ($query){
                     $query->whereDate('data', now()->toDateString());
-                })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query){
+                })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query){
                     $query->whereDate('data', now()->toDateString());
-                })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query){
+                })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query){
                     $query->whereDate('data', now()->toDateString());
                 })->sum('technical_assistance') * 5000;
                 return ['branchID' => $branch->id, 'amount' => $amount];
@@ -72,11 +72,11 @@ class CarController extends Controller
              $branches = $business->branches->map(function ($branch){
                 $startOfWeek = now()->startOfWeek()->toDateString();
                 $endOfWeek = now()->endOfWeek()->toDateString();
-                $amount = $branch->cars()->whereHas('reservations', function ($query)  use ($startOfWeek, $endOfWeek){
+                $amount = $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
                     $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
-                })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query)  use ($startOfWeek, $endOfWeek){
+                })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
                     $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
-                })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query)  use ($startOfWeek, $endOfWeek){
+                })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
                     $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
                 })->sum('technical_assistance') * 5000;
                 return ['branchID' => $branch->id, 'amount' => $amount];

@@ -91,7 +91,7 @@ class BoxCloseController extends Controller
             Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
            // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
-           $emails = Professional::whereIn('charge_id', [3, 4])
+           $emails = Professional::whereIn('charge_id', [3, 4, 5])
            ->pluck('email');
              // Supongamos que tienes 5 direcciones de correo electrónico en un array
             //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
