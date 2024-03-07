@@ -14,6 +14,7 @@ use App\Mail\Send_mail;
 use App\Models\Branch;
 use App\Models\Business;
 use App\Models\Client;
+use App\Models\Professional;
 use App\Models\User;
 use App\Services\ReservationService;
 use App\Services\SendEmailService;
@@ -118,7 +119,6 @@ class ReservationController extends Controller
     public function reservation_store(Request $request)
     {
         Log::info("Guardar Reservacion");
-       
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -217,9 +217,11 @@ class ReservationController extends Controller
                 Log::info( "5.actualice la cola");
               }
                      
-           
+              //optener nombre del professional
+              $professional = Professional::find($data['professional_id']);
+                $name = $professional->name .' '. $professional->surname .' '. $professional->second_surname;
             //todo *************** llamando al servicio de envio de email *******************
-                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],null,'AQUI-VA-EL-NOMBRE-DEL-PROFESIONAL');
+                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],null, $name);
                 
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
