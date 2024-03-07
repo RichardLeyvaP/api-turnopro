@@ -351,12 +351,19 @@ class BranchService
         })->whereHas('orders', function ($query) {
             $query->whereDate('data', Carbon::now());
         })->get();
+        
         $totalservices = 0;
         $totalproducts = 0;
         $seleccionado = 0;
         $aleatorio = 0;
         $totalClients = 0;
+        
+        $transformedResult = [];
         $totalClients = $cars->count();
+       if(!$totalClients = $cars->count()){
+        return 
+        $transformedResult;
+       }
         $products = Product::withCount(['orders' => function ($query) {
             $query->whereDate('data', Carbon::now());
         }])->whereHas('productStores.store.branches', function ($query) use ($branch_id) {
@@ -412,7 +419,6 @@ class BranchService
             'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
         ];
 
-        $transformedResult = [];
 
         foreach ($result as $key => $value) {
             $transformedResult[$key] = [
