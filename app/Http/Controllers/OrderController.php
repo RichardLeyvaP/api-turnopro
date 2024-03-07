@@ -150,7 +150,8 @@ class OrderController extends Controller
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
                 $productstore->save();
-                $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
+                //todo pendiente para revisar importante
+               // $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
             elseif (!$order->is_product) {
                 Log::info("servicio");

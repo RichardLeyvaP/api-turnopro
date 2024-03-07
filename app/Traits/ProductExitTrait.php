@@ -15,7 +15,7 @@ trait ProductExitTrait
 
         // Actualizar el campo product_exit utilizando la relación
         $productstoreexist = $store->products()->wherePivot('product_id', $product->id)->first()->pivot;
-        Log::info("sddsfsdfsdfsdfsdfsdf");
+        Log::info("llamando a actualizarProductExit ($productId, $storeId)");
         Log::info($productstoreexist);
         $branch = $store->branches()->value('branches.id');
         $professional = Professional::whereHas('branches', function ($query) use ($branch){

@@ -29,7 +29,7 @@
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
     <td><strong>Propinas:</strong> {{ $totalTip }}</td>
     <td><strong>Venta de Productos:</strong> {{ $totalProduct }}</td>
-    <td><strong>Prestacion de Servicios:</strong> {{ $totalService }}</td>
+    <td><strong>Prestación de Servicios:</strong> {{ $totalService }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;  background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
     <td colspan="3" align="center"><strong>Formas de pago</strong></td>

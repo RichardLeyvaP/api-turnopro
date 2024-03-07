@@ -49,7 +49,7 @@ class Send_mail extends Mailable
     {
         $this->logoUrl = $logoUrl;
         $this->client_name = $client_name;
-        $this->name_professional = $name_professional ?? '';
+        $this->name_professional = $name_professional ?? 'Profesional seleccionado';
         $this->data = $data;
         $this->template = $template;
         $this->start_time = $start_time;
