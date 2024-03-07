@@ -219,7 +219,7 @@ class ReservationController extends Controller
                      
            
             //todo *************** llamando al servicio de envio de email *******************
-                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],'reporte1.pdf');
+                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],null,'AQUI-VA-EL-NOMBRE-DEL-PROFESIONAL');
                 
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
@@ -401,7 +401,7 @@ class ReservationController extends Controller
         }
     }
     //metodos privados
-    public function send_email($data_reservation,$start_time,$client_id,$branch_id,$template,$logoUrl)
+    public function send_email($data_reservation,$start_time,$client_id,$branch_id,$template,$logoUrl,$name_professional)
     {
         try {    
                      
@@ -428,7 +428,7 @@ class ReservationController extends Controller
                             
                             if($client_email){
                                // Envía el correo con los datos
-                               $mail = new Send_mail($logoUrl, $client_name,$data_reservation,$template,$start_time,$branch_name,'reporte1.pdf');//falta mandar dinamicamente la sucursal
+                               $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,null);//falta mandar dinamicamente la sucursal
                                Mail::to($client_email)
                                ->send($mail->from('reservas@simplifies.cl', 'simplifies')
                                            ->subject('Confirmación de Reserva en simplifies'));       

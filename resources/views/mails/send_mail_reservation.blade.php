@@ -16,6 +16,7 @@
     <ul>
         <li><strong>Fecha de Reserva:</strong> {{$data}}</li>
         <li><strong>Hora de Reserva:</strong> {{$start_time}}</li>
+        <li><strong>Barbero:</strong> {{$name_professional}}</li>
         <li><strong>Sucursal:</strong> {{$branch_name}}</li>
     </ul>
 
