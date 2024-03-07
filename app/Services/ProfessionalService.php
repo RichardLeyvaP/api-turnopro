@@ -51,7 +51,7 @@ class ProfessionalService
     {
         return $professionals = Professional::whereHas('branches', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-           })->get();
+           })->where('charge_id', 1)->get();
     }
 
     public function branch_professionals_service($branch_id, $services)
