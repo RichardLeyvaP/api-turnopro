@@ -89,7 +89,9 @@ class BoxCloseController extends Controller
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
-            $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
+           // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
+           $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
+
 
 
             //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
