@@ -220,7 +220,7 @@ class ReservationController extends Controller
                      
            
             //todo *************** llamando al servicio de envio de email *******************
-                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],'reporte1.pdf','AQUI-VA-EL-NOMBRE-DEL-PROFESIONAL');
+                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],null,'AQUI-VA-EL-NOMBRE-DEL-PROFESIONAL');
                 
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
