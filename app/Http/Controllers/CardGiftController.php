@@ -126,6 +126,7 @@ class CardGiftController extends Controller
                 $cardGift->image_cardgift = $request->file('image_cardgift')->storeAs('cardgifts',$cardGift->id.'.'.$request->file('image_cardgift')->extension(),'public');
             }
         $cardGift->value = $data['value'];
+        $cardGift->name = $data['name'];
         $cardGift->save();
         return response()->json(['msg' => 'Tarjeta de regalo creada correctamente'], 200);
     } catch (\Throwable $th) {
