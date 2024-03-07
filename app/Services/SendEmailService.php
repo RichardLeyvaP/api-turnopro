@@ -69,10 +69,11 @@ class SendEmailService {
               $this->sendEmail($client_email,$mail,'Cierre de Caja');
 
 
+
+
     }
 
     
-
     public function sendEmail($client_email,$mail,$subject){
           Mail::to($client_email)
         ->send($mail->from('reservas@simplifies.cl', 'Simplifies')
