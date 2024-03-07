@@ -43,7 +43,7 @@ class CarController extends Controller
                 'business_id' => 'required|numeric'
             ]);
             $business = Business::find($data['business_id']);
-             return $branches = $business->branches->map(function ($branch){
+             $branches = $business->branches->map(function ($branch){
                 $amount = $branch->cars()->whereHas('reservations', function ($query){
                     $query->whereDate('data', now()->toDateString());
                 })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query){
@@ -58,7 +58,7 @@ class CarController extends Controller
             }])->get()->pluck('reservations_count', 'id')->map(function ($count, $branchId){
                 return ['branch_id' => $branchId, 'reservations_count' => $count];
             })->values();*/
-            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['business' => $branches], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
