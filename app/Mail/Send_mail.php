@@ -135,7 +135,7 @@ class Send_mail extends Mailable
             // Adjunta el PDF si está presente en $this->pdf
             if (!empty($this->file)) {
                 // Adjunta el PDF desde la variable $reporte
-                $attachments[] = Attachment::fromData(fn () => $this->file, 'cierrecaja.pdf')
+                $attachments[] = Attachment::fromData(fn () => $this->file, 'Cierre de caja.pdf')
                     ->withMime('application/pdf');
             }
 
