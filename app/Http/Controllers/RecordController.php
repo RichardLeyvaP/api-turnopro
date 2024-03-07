@@ -210,15 +210,20 @@ class RecordController extends Controller
 
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
+                'branch_id' => 'nullable|numeric',
+                'professional_id' => 'nullable|numeric'
             ]);
             $cant = 0;             
             $llegadasTardias = [];
             $branchId = Branch::find($data['branch_id']);
             $professionalId = Professional::find($data['professional_id']);
             $today = now()->endOfDay(); // Incluye toda la jornada del último día
-            if ($branchId && $professionalId) {
+            Log::info($branchId);
+            Log::info('sadsd');
+            Log::info($professionalId);
+            if (!$branchId || !$professionalId) 
+            return $llegadasTardias;
+        
             $llegadasTardias = Record::with('professional')->where('branch_id', $branchId->id)->where('professional_id', $professionalId->id)
                 ->whereDate('start_time', $today)
                 ->get()
@@ -235,7 +240,8 @@ class RecordController extends Controller
                         'end_time' => $group->end_time
                     ];
                 })->values();
-                                 
+                Log::info('ffafafafafa');   
+                Log::info($llegadasTardias);                
                 $cant = $llegadasTardias->count();
                 $total = [
                     /*'professional_id' => 0,
@@ -245,8 +251,8 @@ class RecordController extends Controller
                         'start_time' =>'Total',
                         'end_time' => $cant
                 ];
-                $llegadasTardias[] = $total;                
-            }
+                $llegadasTardias[] = $total;
+            
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al mostrar las llegadas tardes'], 500);
