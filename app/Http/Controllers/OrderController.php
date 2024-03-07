@@ -145,7 +145,7 @@ class OrderController extends Controller
             Log::info($order);
             Log::info($car);
             if ($order->is_product) {                
-            Log::ingo("Es producto");
+            Log::info("Es producto");
                 $productstore = ProductStore::find($order->product_store_id);
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
