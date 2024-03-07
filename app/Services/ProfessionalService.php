@@ -255,17 +255,23 @@ class ProfessionalService
     public function professionals_state($branch_id)
 {
     $time = 20;
-    $horaActual = Carbon::parse(Carbon::now()->format('H:i:s'))->addMinutes($time)->toTimeString();
-    
-    $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
-        $query->where('branch_id', $branch_id);
-    })->where(function ($query) use ($horaActual) {
-        $query->whereHas('tails', function ($query) use ($horaActual) {
-            $query->whereHas('reservation', function ($query) use ($horaActual) {
-                $query->where('start_time', '>=', $horaActual);
-            })->whereIn('attended', [0, 2, 3]);
-        })->orWhereDoesntHave('tails');
-    })->get();
+    $branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
+$currentTime = Carbon::now();
+$endTimeThreshold = $currentTime->copy()->addMinutes(20);
+
+$professionals = Professional::whereHas('branches', function ($query) use ($branchId) {
+    $query->where('branch_id', $branchId);
+})->where(function ($query) use ($endTimeThreshold) {
+    $query->orWhereDoesntHave('tails')
+          ->orWhereHas('tails', function ($subquery) {
+              $subquery->whereIn('attended', [0, 2, 3]);
+          })
+          ->orWhereHas('tails', function ($subquery) use ($endTimeThreshold) {
+              $subquery->whereNotIn('attended', [0, 2, 3])
+                      ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
+                      ->orWhereNull('start_time');
+          });
+})->get();
 
     // Convertir el campo telefono a string
     $professionals->map(function ($professional) {
