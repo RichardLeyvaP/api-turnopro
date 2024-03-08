@@ -10,7 +10,7 @@ class Store extends Model
     use HasFactory;
 
     public function products(){
-        return $this->belongsToMany(Product::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification')->withTimestamps();
+        return $this->belongsToMany(Product::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification', 'branch_id', 'id')->withTimestamps();
     }
     public function productStores(){
         return $this->hasMany(ProductStore::class);

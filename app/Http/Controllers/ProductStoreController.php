@@ -51,18 +51,26 @@ class ProductStoreController extends Controller
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
                 'product_quantity' => 'required|numeric',
+                'branch_id' => 'required|numeric'
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
             ]);
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
-            $productstore = $store->products()->wherePivot('product_id', $product->id)->first();
-            if ($productstore) {
-                $cuantity = $productstore->pivot->product_exit + $data['product_quantity'];
-                $store->products()->updateExistingPivot($product->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$cuantity]);
+            //$productstore = $store->products()->wherePivot('product_id', $product->id)->first();
+            $productStore = $store->products()
+                ->wherePivot('product_id', $product->id)
+                ->wherePivot('branch_id', $data['branch_id'])
+                ->first();
+            if ($productStore) {
+                Log::info('tiene valor');
+                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
+                $productstore->product_exit += $data['product_quantity'];
+                $productstore->product_quantity = $data['product_quantity'];
+                $productstore->save();
             }
             else {
-                $store->products()->attach($product->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
+                $store->products()->attach($product->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity'], 'branch_id' => $data['branch_id']]);
             }
             return response()->json(['msg' => 'Producto asignado correctamente al almacén'], 200);
         } catch (\Throwable $th) {
@@ -78,9 +86,7 @@ class ProductStoreController extends Controller
                 'branch_id' => 'required|numeric'
             ]);         
             Log::info( "Entra a buscar los almacenes con los productos pertenecientes en el");
-            $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query){
+            $productStore = ProductStore::where('branch_id', $data['branch_id'])->with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query){
                 return [
                     'id' => $query->id,
                     //'product_quantity' => $query->product_quantity,
@@ -114,9 +120,7 @@ class ProductStoreController extends Controller
            ]);
             $productStores = ProductStore::whereHas('product', function ($query) use ($data){
                $query->where('product_category_id', $data['id']);
-           })->whereHas('store.branches', function ($query) use ($data){              
-                   $query->where('branches.id', $data['branch_id']);
-           })->where('product_exit', '>', 0)->get();
+           })->where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->get();
            $productsArray = $productStores->map(function ($productStore){
                return [
                    'id' => $productStore->id,
@@ -143,26 +147,31 @@ class ProductStoreController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                /*'product_id' => 'required|numeric',
-                'store_id' => 'required|numeric',*/
-                'id' => 'required|numeric',
+                'product_id' => 'required|numeric',
+                'store_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
                 'product_quantity' => 'required|numeric',
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
             ]);
-            /*$product = Product::find($data['product_id']);
-            $store = Store::find($data['store_id']);            
-            $store->products()->updateExistingPivot($product->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);*/   
-
-            $productStore = ProductStore::find($data['id']);
-            Log::info($productStore);
-            $productStore->product_exit =  $data['product_quantity'];
-            $productStore->product_quantity =  $data['product_quantity'];
-            $productStore->save();
+            $product = Product::find($data['product_id']);
+            $store = Store::find($data['store_id']);
+            //$productstore = $store->products()->wherePivot('product_id', $product->id)->first();
+            $productStore = $store->products()
+                ->wherePivot('product_id', $product->id)
+                ->wherePivot('branch_id', $data['branch_id'])
+                ->first();
+            if ($productStore) {
+                Log::info('tiene valor');
+                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
+                $productstore->product_exit = $data['product_quantity'];
+                $productstore->product_quantity = $data['product_quantity'];
+                $productstore->save();
+            }
             return response()->json(['msg' => 'Asignación actualizada correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => 'Error al actualizar el producto a este almacén'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al actualizar el producto a este almacén'], 500);
         }
     }
 
@@ -173,11 +182,21 @@ class ProductStoreController extends Controller
         try {
             $data = $request->validate([
                 'product_id' => 'required|numeric',
-                'store_id' => 'required|numeric'
+                'store_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
             ]);
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
-                $store->products()->updateExistingPivot($product->id,['product_exit'=>0]);         
+            $productStore = $store->products()
+            ->wherePivot('product_id', $product->id)
+            ->wherePivot('branch_id', $data['branch_id'])
+            ->first();
+        if ($productStore) {
+            Log::info('tiene valor');
+            $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
+                $productstore->product_exit = 0;
+                $productstore->save();
+        }      
             return response()->json(['msg' => 'Operación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
