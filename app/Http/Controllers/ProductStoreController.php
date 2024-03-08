@@ -143,15 +143,22 @@ class ProductStoreController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                'product_id' => 'required|numeric',
-                'store_id' => 'required|numeric',
+                /*'product_id' => 'required|numeric',
+                'store_id' => 'required|numeric',*/
+                'id' => 'required|numeric',
                 'product_quantity' => 'required|numeric',
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
             ]);
-            $product = Product::find($data['product_id']);
+            /*$product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);            
-            $store->products()->updateExistingPivot($product->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);     
+            $store->products()->updateExistingPivot($product->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);*/   
+
+            $productStore = ProductStore::find($data['id']);
+            Log::info($productStore);
+            $productStore->product_exit =  $data['product_quantity'];
+            $productStore->product_quantity =  $data['product_quantity'];
+            $productStore->save();
             return response()->json(['msg' => 'Asignación actualizada correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

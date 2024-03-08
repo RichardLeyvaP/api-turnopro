@@ -256,15 +256,67 @@ class ReservationController extends Controller
         try {             
             Log::info( "Entra a buscar una las reservations del dia");
             $data = $request->validate([
-                'business_id' => 'required|numeric'
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable|numeric'
             ]);
-            $business = Business::find($data['business_id']);
+            if($data['branch_id']){
+                Log::info( "Branch");
+                $branch = Branch::find($data['branch_id']);
+            $reservations = $branch->withCount(['reservations' => function ($query){
+                $query->whereDate('data', now()->toDateString());
+            }])->value('reservations_count');
+            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+            }
+            else{
+                Log::info( "Business");
+                $business = Business::find($data['business_id']);
             $reservations = $business->branches()->withCount(['reservations' => function ($query){
                 $query->whereDate('data', now()->toDateString());
-            }])->get()->pluck('reservations_count', 'id')->map(function ($count, $branchId){
-                return ['branch_id' => $branchId, 'reservations_count' => $count];
-            })->values();
+            }])->value('reservations_count');
             return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+            }
+            
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+        }
+    }
+
+    public function reservations_count_week(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar una las reservations del dia");
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable|numeric'
+            ]);
+            if($data['branch_id']){
+                Log::info( "Branch");
+                $branch = Branch::find($data['branch_id']);
+            $reservations = $branch->withCount(['reservations' => function ($query){
+                $query->whereBetween(DB::raw('DATE_FORMAT(data, "%Y-%m-%d")'), [now()->startOfWeek(), now()->endOfWeek()]);
+            }])->get()
+            ->map(function ($branch) {
+                return [
+                    'reservations_by_day' => $branch->reservations
+                        ->groupBy(function ($reservation) {
+                            return Carbon::parse($reservation->data)->format('l'); // Obtener el nombre del día de la semana
+                        })
+                        ->map->count()
+                ];
+            })
+            ->first();
+            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+            }
+            else{
+                Log::info( "Business");
+                $business = Business::find($data['business_id']);
+            $reservations = $business->branches()->withCount(['reservations' => function ($query){
+                $query->whereDate('data', now()->toDateString());
+            }])->value('reservations_count');
+            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+            }
+            
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
