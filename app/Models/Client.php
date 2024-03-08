@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Client extends Model
 {
     use HasFactory;
+    use HasRelationships;
 
     public function professionals(){
         return $this->belongsToMany(Professional::class)->withTimestamps();
@@ -29,5 +31,7 @@ class Client extends Model
     public function cars(){
         return $this->hasManyThrough(Car::class, ClientProfessional::class);
     }
-
+    public function reservations(){
+        return $this->hasManyDeep(Reservation::class, [ClientProfessional::class, Car::class]);
+    }
 }

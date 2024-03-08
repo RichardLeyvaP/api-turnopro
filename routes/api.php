@@ -102,6 +102,7 @@ Route::get('/client_attended_date', [ClientController::class, 'client_attended_d
 Route::get('/client_attended_date', [ClientController::class, 'client_attended_date']);
 Route::get('/client-most-assistance', [ClientController::class, 'client_most_assistance']);
 Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplete']);
+Route::get('/client-frecuente', [ClientController::class, 'client_frecuente']);///dado una business devolver la cantidad de visitas a por branch
 
 
 Route::get('/business', [BusinessController::class, 'index']);
@@ -219,7 +220,7 @@ Route::get('/reservation_services', [CarController::class, 'reservation_services
 Route::get('/car_services', [CarController::class, 'car_services']); //dado una reservations devolver los servicios
 Route::get('/cars-winner-day', [CarController::class, 'cars_sum_amount']);//Dado un business devolver las ganancial del dia
 Route::get('/cars-winner-week', [CarController::class, 'cars_sum_amount_week']);//Dado un business devolver las ganancial de la semana
-Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mount']);//Dado un business devolver las ganancial de la semana
+Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial de la semana
 
 Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-show', [OrderController::class, 'show']);

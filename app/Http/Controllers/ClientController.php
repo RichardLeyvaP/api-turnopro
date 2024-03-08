@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Business;
 use App\Models\Car;
 use App\Models\Client;
 use App\Models\User;
@@ -14,12 +16,12 @@ class ClientController extends Controller
 {
     public function index()
     {
-        try { 
-            
-            Log::info( "entra a cliente");
+        try {
+
+            Log::info("entra a cliente");
 
             return response()->json(['clients' => Client::with('user')->get()], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
 
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
@@ -28,19 +30,19 @@ class ClientController extends Controller
 
     public function index_autocomplete()
     {
-        try { 
-            
-            Log::info( "entra a cliente");
-            $clients = Client::with('user')->get()->map(function ($client){
+        try {
+
+            Log::info("entra a cliente");
+            $clients = Client::with('user')->get()->map(function ($client) {
                 return [
                     'id' => $client->id,
-                    'name' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'name' => $client->name . ' ' . $client->surname . ' ' . $client->second_surname,
                     'client_image' => $client->client_image
 
                 ];
             });
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
 
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
@@ -50,20 +52,18 @@ class ClientController extends Controller
     public function client_autocomplete()
     {
         try {
-            $clients = User::whereHas('client')->orWhereHas('professional')->get()->map(function ($user){
+            $clients = User::whereHas('client')->orWhereHas('professional')->get()->map(function ($user) {
                 $name = '';
                 $image = '';
                 $id = '';
-                if($user->client)
-                {
-                    $name = $user->client->name.' '.$user->client->surname.' '.$user->client->second_surname;
+                if ($user->client) {
+                    $name = $user->client->name . ' ' . $user->client->surname . ' ' . $user->client->second_surname;
                     $image = $user->client->client_image;
                     $id = $user->client->id;
                 }
-                if($user->professional)
-                {
+                if ($user->professional) {
                     $id = $user->professional->id;
-                    $name = $user->professional->name.' '.$user->professional->surname.' '.$user->professional->second_surname;
+                    $name = $user->professional->name . ' ' . $user->professional->surname . ' ' . $user->professional->second_surname;
                     $image = $user->professional->image_url;
                 }
                 return [
@@ -76,7 +76,7 @@ class ClientController extends Controller
             });
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar la professionala"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la professionala"], 500);
         }
     }
 
@@ -99,18 +99,18 @@ class ClientController extends Controller
                 'branch_id' => 'required|numeric',
                 'startDate' => 'required|date',
                 'endDate' => 'required|date'
-                
+
             ]);
-            $clients = Client::withCount(['cars' => function ($query) use ($data){
-                $query->whereHas('orders.productStore.store.branches', function ($query) use ($data){
+            $clients = Client::withCount(['cars' => function ($query) use ($data) {
+                $query->whereHas('orders.productStore.store.branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
-                })->with(['orders' => function ($query) use ($data){
+                })->with(['orders' => function ($query) use ($data) {
                     $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
                 }]);
             }])->orderByDesc('cars_count')->limit(10)->get();
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar la professionala"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la professionala"], 500);
         }
     }
 
@@ -119,32 +119,33 @@ class ClientController extends Controller
         try {
             $data = $request->validate([
                 'Date' => 'required|date'
-           ]);
-           Log::info('Obtener los cars');
-           $branches = Branch::all();
-           $result = [];
-           $i = 0;
-           $total_company = 0;
-           foreach ($branches as $branch) {
-            $clients = Car::whereHas('orders', function ($query) use ($data, $branch){
-                $query->whereDate('data', Carbon::parse($data['Date']))
-                      ->whereHas('branchServiceProfessional.branchService', function ($query) use ($branch){
-                        $query->where('branch_id', $branch->id);})
-                      ->orWhereHas('productStore.store.branches', function ($query) use ($branch){
-                        $query->where('branch_id', $branch->id);
-                    });
-            })->count();
+            ]);
+            Log::info('Obtener los cars');
+            $branches = Branch::all();
+            $result = [];
+            $i = 0;
+            $total_company = 0;
+            foreach ($branches as $branch) {
+                $clients = Car::whereHas('orders', function ($query) use ($data, $branch) {
+                    $query->whereDate('data', Carbon::parse($data['Date']))
+                        ->whereHas('branchServiceProfessional.branchService', function ($query) use ($branch) {
+                            $query->where('branch_id', $branch->id);
+                        })
+                        ->orWhereHas('productStore.store.branches', function ($query) use ($branch) {
+                            $query->where('branch_id', $branch->id);
+                        });
+                })->count();
                 $result[$i]['nameBranch'] = $branch->name;
                 $result[$i++]['attended'] = $clients;
-                $total_company += round($clients,2);
-            }//foreach
-          return response()->json([
-            'branches' => $result,
-            'companyAttended' => $total_company
-          ], 200, [], JSON_NUMERIC_CHECK);
-       } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
-       }
+                $total_company += round($clients, 2);
+            } //foreach
+            return response()->json([
+                'branches' => $result,
+                'companyAttended' => $total_company
+            ], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "La branch no obtuvo ganancias en este dia"], 500);
+        }
     }
 
     public function store(Request $request)
@@ -158,7 +159,7 @@ class ClientController extends Controller
                 'phone' => 'required|max:15',
                 'user_id' => 'nullable|numeric'
             ]);
-           
+
             $client = new Client();
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];
@@ -168,9 +169,9 @@ class ClientController extends Controller
             $client->user_id = $clients_data['user_id'];
             $client->save();
             Log::info($client);
-            $filename = "image/default.png"; 
+            $filename = "image/default.png";
             if ($request->hasFile('client_image')) {
-               $filename = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
+                $filename = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
             $client->client_image = $filename;
             $client->save();
@@ -200,14 +201,13 @@ class ClientController extends Controller
             ]);
             Log::info($request['client_image']);
             $client = Client::find($clients_data['id']);
-            if($client->client_image != $request['client_image'])
-                {
-                    $destination=public_path("storage\\".$client->client_image);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }                    
-                    $client->client_image = $request->file('client_image')->storeAs('clients',$client->id.'.'.$request->file('client_image')->extension(),'public');
+            if ($client->client_image != $request['client_image']) {
+                $destination = public_path("storage\\" . $client->client_image);
+                if (File::exists($destination)) {
+                    File::delete($destination);
                 }
+                $client->client_image = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
+            }
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];
             $client->second_surname = $clients_data['second_surname'];
@@ -227,22 +227,52 @@ class ClientController extends Controller
     public function destroy(Request $request)
     {
         try {
-            
+
             $clients_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
             $client = Client::find($clients_data['id']);
             if ($client->client_image != "image/default.png") {
-                $destination=public_path("storage\\".$client->client_image);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }
+                $destination = public_path("storage\\" . $client->client_image);
+                if (File::exists($destination)) {
+                    File::delete($destination);
                 }
-                Client::destroy($clients_data['id']);
+            }
+            Client::destroy($clients_data['id']);
 
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar el cliente'], 500);
+        }
+    }
+
+    public function client_frecuente(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable|numeric'
+            ]);
+
+            $currentDate = Carbon::now()->format('Y-m-d');
+            if (!$data['branch_id']) {
+                $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
+                    $query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                    });
+                })->has('reservations', '>', 3)->get();
+            }else{
+                $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate) {
+                    $query->whereDate('data', '=', $currentDate);
+                })->has('reservations', '>', 3)->get();
+            }
+            
+
+            $cantidadClientes = $clientesConMasDeTresReservas->count();
+
+            return response()->json(['branchVisits' => $cantidadClientes], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }
     }
 }
