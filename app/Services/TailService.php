@@ -34,6 +34,7 @@ class TailService {
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
+                'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
                 'professional_name' => $professional->name." ".$professional->surname,
                 'client_id' => $reservation->car->clientProfessional->client_id,
                 'professional_id' => $reservation->car->clientProfessional->professional_id,

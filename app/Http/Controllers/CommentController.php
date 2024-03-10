@@ -45,9 +45,11 @@ class CommentController extends Controller
             $comment->look = $data['look'];
             $comment->save();
             
-            $filename = "image/default.png";
+            $filename = "comments/default_profile.jpg";
             if ($request->hasFile('client_look')) {
-                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+                $filename = $request->file('client_look')->storeAs('comments',$client->id.'.'.$request->file('client_look')->extension(),'public');
+                $client->client_image = $filename;
+                $client->save();
              }
             $comment->image_look = $filename;
             $comment->save();
