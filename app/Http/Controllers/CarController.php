@@ -39,11 +39,12 @@ class CarController extends Controller
     {
         try {             
             Log::info( "Entra a buscar una las ganancias del dia");
+            Log::info(now()->toDateString());
             $data = $request->validate([
                 'business_id' => 'required|numeric',
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'nullable'
             ]);
-            if($data['branch_id']){
+            if($data['branch_id'] !=null){
                 Log::info("Branch"); 
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
                     $amount = $branch->cars()->whereHas('reservation', function ($query){
@@ -53,7 +54,7 @@ class CarController extends Controller
                     })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query){
                         $query->whereDate('data', now()->toDateString());
                     })->sum('technical_assistance') * 5000;
-                    return ['amount' => $amount];
+                    return $amount;
                 });
             }else{      
                 Log::info("Businesssss");          
@@ -66,10 +67,10 @@ class CarController extends Controller
                 })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query){
                     $query->whereDate('data', now()->toDateString());
                 })->sum('technical_assistance') * 5000;
-                return ['amount' => $amount];
+                return $amount;
             });
             }
-            return response()->json(['business' => $branches], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json($branches->sum(), 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -95,9 +96,9 @@ class CarController extends Controller
                 })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
                     $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
                 })->sum('technical_assistance') * 5000;
-                return ['branchID' => $branch->id, 'amount' => $amount];
+                return $amount;
             });
-            return response()->json(['business' => $branches], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json($branches->sum(), 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -110,9 +111,9 @@ class CarController extends Controller
             Log::info( "Entra a buscar una las ganancias del mes");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'nullable'
             ]);
-            if($data['branch_id']){
+            if($data['branch_id'] !=null){
                 Log::info("branch");
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
                     $startOfMonth = now()->startOfMonth()->toDateString();
@@ -124,7 +125,7 @@ class CarController extends Controller
                     })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
                         $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
                     })->sum('technical_assistance') * 5000;
-                    return ['amount' => $amount];
+                    return $amount;
                 });
             }else{
                 Log::info("businesss");
@@ -139,10 +140,10 @@ class CarController extends Controller
                 })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
                     $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
                 })->sum('technical_assistance') * 5000;
-                return ['amount' => $amount];
+                return $amount;
             });
             }
-            return response()->json(['business' => $branches], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json($branches->sum(), 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
