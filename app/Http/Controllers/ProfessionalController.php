@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Professional;
+use App\Models\User;
 use App\Services\ImageService;
 use App\Services\ProfessionalService;
 use Carbon\Carbon;
@@ -27,11 +28,35 @@ class ProfessionalController extends Controller
     public function index()
     {
         try {
-            return response()->json(['professionals' => Professional::with('user', 'charge')->get()], 200);
+            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional){
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name,
+                    'surname' => $professional->surname,
+                    'second_surname' => $professional->second_surname,
+                    'email' => $professional->email,
+                    'phone' => $professional->phone,
+                    'user_id' => $professional->user_id,
+                    'state' => $professional->state,
+                    'image_url' => $professional->image_url,
+                    'charge_id' => $professional->charge_id,
+                    'user' => $professional->user->name,
+                    'charge' => $professional->charge->name,
+                ];
+            });
+            return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las professionales"], 500);
         }
     }
+    /*public function index()
+    {
+        try {
+            return response()->json(['professionals' => Professional::with('user', 'charge')->get()], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar las professionales"], 500);
+        }
+    }*/
     public function show_autocomplete(Request $request)
     {
         try {
@@ -342,9 +367,16 @@ class ProfessionalController extends Controller
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
                 'user_id' => 'required|numeric',
+                'user' => 'required|string',
                 'state' => 'required|numeric'
             ]);
             Log::info($request);
+            
+            $user = User::find($professionals_data['user_id']);
+            $user->name = $professionals_data['user'];
+            $user->email = $professionals_data['email'];
+            $user->save();
+
             $professional = Professional::find($professionals_data['id']);
             if($professional->image_url != $request['image_url'])
                 {
@@ -360,10 +392,10 @@ class ProfessionalController extends Controller
             $professional->email = $professionals_data['email'];
             $professional->phone = $professionals_data['phone'];
             $professional->charge_id = $professionals_data['charge_id'];
-            $professional->user_id = $professionals_data['user_id'];
             $professional->state = $professionals_data['state'];
             //$professional->image_url = $filename;
             $professional->save();
+
 
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
         } catch (\Throwable $th) {

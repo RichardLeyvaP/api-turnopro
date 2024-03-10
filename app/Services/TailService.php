@@ -53,7 +53,7 @@ class TailService {
         })->get()->flatMap(function ($branch) {
             return $branch->tails->filter(function ($tail) {
                 // Add the condition to filter tails based on the 'attended' attribute
-                return in_array($tail->attended, [1, 5, 11, 111, 4]);
+                return in_array($tail->attended, [1]);//[1, 5, 11, 111, 4]
             })->map(function ($tail) {
                 $reservation = $tail->reservation;
                 $professional = $reservation->car->clientProfessional->professional;

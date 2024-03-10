@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class ChargePermission extends Model
 {
     use HasFactory;
+
+    protected $table = "charge_permission";
 }

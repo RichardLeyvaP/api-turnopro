@@ -156,7 +156,7 @@ Route::get('/product-category-show', [ProductCategoryController::class, 'show'])
 Route::post('/product-category', [ProductCategoryController::class, 'store']);
 Route::put('/product-category', [ProductCategoryController::class, 'update']);
 Route::post('/product-category-destroy', [ProductCategoryController::class, 'destroy']);
-Route::get('/category_branch', [ProductCategoryController::class, 'category_branch']);
+Route::get('/category_branch', [ProductCategoryController::class, 'category_branch']); //devolver las categorías de lso productos que existen en una branch
 
 Route::get('/product', [ProductController::class, 'index']);
 Route::get('/product-show', [ProductController::class, 'show']);
@@ -177,7 +177,7 @@ Route::get('/productstore-show', [ProductStoreController::class, 'show']);
 Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
-Route::get('/category_products', [ProductStoreController::class, 'category_products']);
+Route::get('/category_products', [ProductStoreController::class, 'category_products']);//dada una branch y una categiría devolver los pructos
 Route::post('/move-product-store', [ProductStoreController::class, 'move_product_store']);
 
 Route::get('/branchstore', [BranchStoreController::class, 'index']);
@@ -401,6 +401,7 @@ Route::get('/charge-permission-show', [ChargePermissionController::class, 'show'
 Route::post('/charge-permission', [ChargePermissionController::class, 'store']);
 Route::put('/charge-permission', [ChargePermissionController::class, 'update']);
 Route::post('/charge-permission-destroy', [ChargePermissionController::class, 'destroy']);
+Route::get('/charge-permission-NOTIN', [ChargePermissionController::class, 'show_charge_NoIN']);//devolver para asignar los permisos que no posee el cargo
 
 Route::get('/send_email', [ReservationController::class, 'send_email']);
 Route::get('/sendMessage', [SendMailController::class, 'sendMessage']);

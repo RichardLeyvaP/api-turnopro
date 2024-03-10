@@ -74,6 +74,47 @@ class ChargePermissionController extends Controller
         }
     }
 
+    public function show_charge_NoIN(Request $request)
+    {
+        try {             
+            Log::info("Dado una cargo devuelva solo los permisos que no posee");
+            $request->validate([
+                'charge_id' => 'required|numeric'
+            ]);
+            $chragePermission = ChargePermission::where('charge_id', $request->charge_id)->get()->pluck('permission_id');
+            $permissions = Charge::find($request->charge_id)->whereHAs('permissions', function ($query) use ($chragePermission){
+                $query->whereNotIn('permission_id', $chragePermission);
+            });/*->map(function ($query){
+                return [
+                    'id' => $query->pivot->value('id'),
+                    'charge_id' => $query->pivot->charge_id,
+                    'permission_id' => $query->pivot->permission_id,
+                    'name' => $query->name,
+                    'module' => $query->module,
+                    'description' => $query->description,
+                ];
+            });
+            /*$permissions = $charge->permissions->whereNotIn('permission_id', $chragePermission)->map(function ($query){
+                return [
+                    'id' => $query->pivot->value('id'),
+                    'charge_id' => $query->pivot->charge_id,
+                    'permission_id' => $query->pivot->permission_id,
+                    'name' => $query->name,
+                    'module' => $query->module,
+                    'description' => $query->description,
+                ];
+            });*/
+            /*$permissions = Permission::whereHas('charges', function ($query) use ($request){
+                $query->where('charge_id', $request->charge_id);
+            })->with('charges')->get();*/
+                return response()->json(['permissions' => $permissions],200, [], JSON_NUMERIC_CHECK); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      */

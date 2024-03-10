@@ -102,6 +102,8 @@ class ReservationService {
         if(!$client){
             return  $result = [
                  'clientName' => null,
+                 'professionalName' => null,
+                 'image_url' => null,
                  'imageLook' => null,             
                  'cantVisit' => 0,
                  'endLook' => null,
@@ -117,7 +119,7 @@ class ReservationService {
         })->get();
         if(!$reservations){
            return  $result = [
-                'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
+                'clientName' => '', 
                 'imageLook' => null,             
                 'cantVisit' => 0,
                 'endLook' => null,
@@ -165,6 +167,8 @@ class ReservationService {
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         $result = [
             'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
+            'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname.' '.$comment->clientProfessional->professional->second_surname,
+            'image_url' => $comment->clientProfessional->professional->image_url,
             'imageLook' => $comment ? $comment->client_look : null,             
             'cantVisit' => $reservations->count(),
             'endLook' => $comment ? $comment->look : null,

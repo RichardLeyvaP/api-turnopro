@@ -212,6 +212,7 @@ class ProductStoreController extends Controller
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
                 'store_idM' => 'required|numeric',
+                'branch_idM' => 'required|numeric',
                 'product_quantity' => 'required|numeric'
             ]);
             $productexist = Product::find($data['product_id']);
@@ -230,9 +231,10 @@ class ProductStoreController extends Controller
                 $productstoreE->product_quantity = $data['product_quantity'];
                 $productstoreE->save();
             }
+            //sumar al nuevo store
             $productStoreMov = $store->products()
                 ->wherePivot('product_id', $productexist->id)
-                ->wherePivot('branch_id', $data['branch_id'])
+                ->wherePivot('branch_id', $data['branch_idM'])
                 ->first();
                 Log::info('Producto A sumar');
                 Log::info($productStoreMov);
@@ -243,7 +245,7 @@ class ProductStoreController extends Controller
                 $productstoreM->product_quantity = $data['product_quantity'];
                 $productstoreM->save();
             } else {
-                $store->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_id']]);
+                $store->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_idM']]);
             }
             //todo pendiente para revisar importante
             // $this->actualizarProductExit($productexist->id, $storeexist->id);

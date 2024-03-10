@@ -36,7 +36,7 @@ class ProductCategoryController extends Controller
             $data = $request->validate([
                'branch_id' => 'required|numeric'
            ]);
-           $Categories = ProductCategory::whereHas('products.stores.branches', function ($query) use ($data) {
+           $Categories = ProductCategory::whereHas('products.stores', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('products.stores', function ($query) {
             $query->where('product_exit', '>', 0);

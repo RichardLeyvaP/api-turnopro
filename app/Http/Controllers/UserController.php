@@ -94,10 +94,10 @@ class UserController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password)
             ]);
-            $filename = "image/default.png";
+            /*$filename = "image/default.png";
             if ($request->hasFile('image_url')) {
                 $filename = $request->file('image_url')->storeAs('professionals', $request->file('image_url')->getClientOriginalName(), 'public');
-            }
+            }*/
             $professional = new Professional();
             $professional->name = $request['name'];
             $professional->surname = $request['surname'];
@@ -106,8 +106,14 @@ class UserController extends Controller
             $professional->phone = $request['phone'];
             $professional->charge_id = $request['charge_id'];
             $professional->user_id = $user->id;
-            $professional->image_url = $filename;
             $professional->state = 0;
+            $professional->save();
+
+            $filename = "image/default.png";
+            if ($request->hasFile('image_url')) {
+                $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
+            }
+            $professional->image_url = $filename;
             $professional->save();
 
             return response()->json([
