@@ -718,31 +718,30 @@ class BranchService
     public function branch_professionals_winner_date($branch_id)
     {
         return $resultados = Professional::with(['orders' => function ($query) {
-            $query->whereDate('data',  Carbon::now());
+            $query->whereDate('data', Carbon::now());
         }, 'clientProfessionals.cars.orders' => function ($query) {
             $query->whereDate('data', Carbon::now());
         }])->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })
             ->get()->map(function ($professional) {
-                $totalOrdersAmount = $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0;
-    $totalTips = $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
-        return $clientProfessional->cars->filter(function ($car) {
-            return $car->orders->isNotEmpty();
-        })->sum('tip') * 0.8;
-    }))->sum(), 2) : 0;
-
-    $totalCars = $professional->clientProfessionals->map(function ($clientProfessional) {
-        return $clientProfessional->cars->count();
-    })->sum();
-
-    return [
-        'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-        'amount' => $totalOrdersAmount,
-        'tip' => $totalTips,
-        'total' => round($totalOrdersAmount + $totalTips, 2),
-        'total_cars' => $totalCars,
-    ];
+                return [
+                    'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
+                    'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
+                    'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
+                        return $clientProfessional->cars->filter(function ($car) {
+                            return $car->orders->isNotEmpty();
+                        })->sum('tip') * 0.8;
+                    }))->sum(), 2) : 0,
+                    'total_cars' => $professional->clientProfessionals->map(function ($clientProfessional) {
+                        return $clientProfessional->cars->count();
+                    })->sum(),
+                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
+                        return $clientProfessional->cars->filter(function ($car) {
+                            return $car->orders->isNotEmpty();
+                        })->sum('tip') * 0.8;
+                    }))->sum(), 2) : 0
+                ];
             })->sortByDesc('total')->values();
     }
 

@@ -316,7 +316,7 @@ class ProfessionalController extends Controller
             $professional->state = 0;
             $professional->save();
             Log::info($professional->id);
-            $filename = "image/default.png";
+            $filename = "professionals/default_profile.jpg";
             if ($request->hasFile('image_url')) {
                 $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
             }
@@ -412,7 +412,7 @@ class ProfessionalController extends Controller
                 'id' => 'required|numeric'
             ]);
             $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url != "image/default.png") {
+            if ($professional->image_url != "professionals/default_profile.jpg") {
                 //$this->imageService->destroyImagen($professional->image_url);
                 $destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {
