@@ -103,8 +103,8 @@ class ReservationService {
             return  $result = [
                  'clientName' => null,
                  'professionalName' => null,
-                 'image_url' => null,
-                 'imageLook' => null,             
+                 'image_url' => 'professionals/default_profile.jpg',
+                 'imageLook' => 'comments/default_profile.jpg',             
                  'cantVisit' => 0,
                  'endLook' => null,
                  'frecuencia' => 0,
@@ -120,7 +120,8 @@ class ReservationService {
         if(!$reservations){
            return  $result = [
                 'clientName' => '', 
-                'imageLook' => null,             
+                'imageLook' => 'comments/default_profile.jpg',
+                'image_url' => 'professionals/default_profile.jpg',             
                 'cantVisit' => 0,
                 'endLook' => null,
                 'frecuencia' => 0,
@@ -168,8 +169,8 @@ class ReservationService {
         $result = [
             'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
             'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname.' '.$comment->clientProfessional->professional->second_surname,
-            'image_url' => $comment->clientProfessional->professional->image_url,
-            'imageLook' => $comment ? $comment->client_look : null,             
+            'image_url' => $comment->clientProfessional->professional->image_url ? $comment->clientProfessional->professional->image_url : 'professionals/default_profile.jpg',
+            'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
             'cantVisit' => $reservations->count(),
             'endLook' => $comment ? $comment->look : null,
             'frecuencia' => $fiel ? $fiel : $frecuencia,
