@@ -333,7 +333,7 @@ class ReservationController extends Controller
             }
            
             $reservationsString = implode(',', $reservations);
-            return response($reservationsString, 200, ['Content-Type' => 'text/plain']);
+            return response($reservationsString, 200, ['Content-Type' => 'application/json']);
 
         } catch (\Throwable $th) {
             Log::error($th);

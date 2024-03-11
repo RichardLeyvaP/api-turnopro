@@ -82,9 +82,7 @@ class ChargePermissionController extends Controller
                 'charge_id' => 'required|numeric'
             ]);
             $chragePermission = ChargePermission::where('charge_id', $request->charge_id)->get()->pluck('permission_id');
-            $permissions = Charge::find($request->charge_id)->whereHAs('permissions', function ($query) use ($chragePermission){
-                $query->whereNotIn('permission_id', $chragePermission);
-            });/*->map(function ($query){
+            $permissions = Permission::whereNotIn('id', $chragePermission)->get();/*->map(function ($query){
                 return [
                     'id' => $query->pivot->value('id'),
                     'charge_id' => $query->pivot->charge_id,

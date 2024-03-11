@@ -181,6 +181,7 @@ class ReservationService {
                 'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
+                'lastDate' => Carbon::parse($comment->data)->format('dd/mm/YY'),
                 'frecuencia' => $fiel ? $fiel : $frecuencia,
                 'services' => $services->map(function ($service) use ($cantMaxService){
                     return [
