@@ -331,7 +331,10 @@ class ReservationController extends Controller
                 $fullWeek = array_fill_keys(range(0, 6), 0);
                 $reservations = array_replace($fullWeek, $reservations);
             }
-            return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE);
+           
+            $reservationsString = implode(',', $reservations);
+            return response($reservationsString, 200, ['Content-Type' => 'application/json']);
+
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
