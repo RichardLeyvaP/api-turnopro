@@ -38,20 +38,22 @@ class CarController extends Controller
     public function cars_sum_amount(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar una las ganancias del dia");
+            Log::info( "Entra a buscar una las reservaciones del dia");
             Log::info(now()->toDateString());
             $data = $request->validate([
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            if($data['branch_id'] !=null){
+            Log::info('111111');
+            Log::info($data['branch_id']);
+            if($data['branch_id'] =null){
                 Log::info("Branch"); 
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
-                    $amount = $branch->cars()->whereHas('reservation', function ($query){
+                    $amount = $branch->cars()->whereHas('reservations', function ($query){
                         $query->whereDate('data', now()->toDateString());
-                    })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query){
+                    })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query){
                         $query->whereDate('data', now()->toDateString());
-                    })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query){
+                    })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query){
                         $query->whereDate('data', now()->toDateString());
                     })->sum('technical_assistance') * 5000;
                     return $amount;
@@ -60,11 +62,11 @@ class CarController extends Controller
                 Log::info("Businesssss");          
             $business = Business::find($data['business_id']);            
             $branches = $business->branches->map(function ($branch){
-                $amount = $branch->cars()->whereHas('reservation', function ($query){
+                $amount = $branch->cars()->whereHas('reservations', function ($query){
                     $query->whereDate('data', now()->toDateString());
-                })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query){
+                })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query){
                     $query->whereDate('data', now()->toDateString());
-                })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query){
+                })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query){
                     $query->whereDate('data', now()->toDateString());
                 })->sum('technical_assistance') * 5000;
                 return $amount;
@@ -82,23 +84,68 @@ class CarController extends Controller
         try {             
             Log::info( "Entra a buscar una las reservations del dia");
             $data = $request->validate([
-                'business_id' => 'required|numeric'
-            ]);
-
-            $business = Business::find($data['business_id']);
-             $branches = $business->branches->map(function ($branch){
-                $startOfWeek = now()->startOfWeek()->toDateString();
-                $endOfWeek = now()->endOfWeek()->toDateString();
-                $amount = $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
-                    $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
-                })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
-                    $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
-                })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfWeek, $endOfWeek){
-                    $query->whereBetween('data', [$startOfWeek, $endOfWeek]);
-                })->sum('technical_assistance') * 5000;
-                return $amount;
-            });
-            return response()->json($branches->sum(), 200, [], JSON_NUMERIC_CHECK);
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);           
+            $array = [];
+                        $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
+                        $end = now()->endOfWeek();   // End of the current week, shifted to Sunday
+                        $dates = [];
+                        //return [$start, $end];
+          $i=0;
+          $day = 0;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
+                        if ($data['branch_id']) {
+                            Log::info('branchesssss');
+                            $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
+                                $query->whereBetween('data', [$start, $end]);
+                            })->whereHas('clientProfessional.professional.branches', function ($query) use ($data){
+                                    $query->where('branch_id', $data['branch_id']);
+                                })->get()->map(function ($car){
+                                    return [
+                                        'date' => $car->reservations->data,
+                                        'earnings' => $car->amount + $car->tip + ($car->technical_assistance * 5000)
+                                    ];
+                                });
+                                for($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++){
+                                    $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
+                                    $dates['amount'][$i] = $machingResult ? $machingResult: 0;
+                                  }
+                                  return $dates;
+                            /*for($start; $start <= $end; $start->addDay()){                            
+                                $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch) use ($start){
+                                    $amount = $branch->cars()->whereHas('reservation', function ($query) use ($start){
+                                        $query->whereDate('data', $start);
+                                    })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query) use ($start){
+                                        $query->whereDate('data', $start);
+                                    })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query) use ($start){
+                                        $query->whereDate('data', $start);
+                                    })->sum('technical_assistance') * 5000;
+                                    return $amount;
+                });
+                $array [] = $branches;
+            }*/
+                        } else {
+                            $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
+                                $query->whereBetween('data', [$start, $end]);
+                            })->whereHas('clientProfessional.professional.branches.business', function ($query) use ($data){
+                                    $query->where('id', $data['business_id']);
+                                })->get()->map(function ($car){
+                                    return [
+                                        'date' => $car->reservations->data,
+                                        'earnings' => $car->amount + $car->tip + ($car->technical_assistance * 5000)
+                                    ];
+                                });
+                                for($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++){
+                                    $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
+                                    $dates['amount'][$i] = $machingResult ? $machingResult: 0;
+                                  }
+                                  return $dates;
+                        }
+                        
+        
+    //Log::info($branches);
+            
+            return response()->json( $dates, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -113,16 +160,16 @@ class CarController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            if($data['branch_id'] !=null){
+            if(!$data['branch_id']!=null){
                 Log::info("branch");
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
                     $startOfMonth = now()->startOfMonth()->toDateString();
                     $endOfMonth = now()->endOfMonth()->toDateString();
-                    $amount = $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
+                    $amount = $branch->cars()->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
                         $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                    })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
+                    })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
                         $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                    })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
+                    })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
                         $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
                     })->sum('technical_assistance') * 5000;
                     return $amount;
@@ -133,11 +180,11 @@ class CarController extends Controller
              $branches = $business->branches->map(function ($branch){
                 $startOfMonth = now()->startOfMonth()->toDateString();
                 $endOfMonth = now()->endOfMonth()->toDateString();
-                $amount = $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
+                $amount = $branch->cars()->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
                     $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
+                })->sum('amount') + $branch->cars()->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
                     $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query)  use ($startOfMonth, $endOfMonth){
+                })->sum('tip') + $branch->cars()->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
                     $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
                 })->sum('technical_assistance') * 5000;
                 return $amount;

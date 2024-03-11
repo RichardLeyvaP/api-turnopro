@@ -257,15 +257,18 @@ class ReservationController extends Controller
             Log::info( "Entra a buscar una las reservations del dia");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'nullable'
             ]);
-            if($data['branch_id']){
+            Log::info('dataaaaaaaaaa');
+            Log::info($data);
+            if(!$data['branch_id']){
                 Log::info( "Branch");
                 $branch = Branch::find($data['branch_id']);
+                Log::info('222222222');
+                Log::info($branch);
             $reservations = $branch->withCount(['reservations' => function ($query){
                 $query->whereDate('data', now()->toDateString());
             }])->value('reservations_count');
-            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
             }
             else{
                 Log::info( "Business");
@@ -273,8 +276,11 @@ class ReservationController extends Controller
             $reservations = $business->branches()->withCount(['reservations' => function ($query){
                 $query->whereDate('data', now()->toDateString());
             }])->value('reservations_count');
-            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
             }
+            
+            Log::info('rerwerewrererewrewrewrew');
+            Log::info($reservations);
+            return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
             
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -451,7 +457,6 @@ class ReservationController extends Controller
             $history = $this->reservationService->client_history($data);
             return response()->json(['clientHistory' => $history], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::info("client_history 8 :$th");
             return response()->json(['msg' => $th->getMessage().'Error al mostrar la history'], 500);
         }
     }

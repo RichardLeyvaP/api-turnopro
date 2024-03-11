@@ -253,7 +253,7 @@ class ClientController extends Controller
         try {
             $data = $request->validate([
                 'business_id' => 'required|numeric',
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'nullable'
             ]);
 
             $currentDate = Carbon::now()->format('Y-m-d');
@@ -272,7 +272,7 @@ class ClientController extends Controller
 
             $cantidadClientes = $clientesConMasDeTresReservas->count();
 
-            return response()->json(['branchVisits' => $cantidadClientes], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json($cantidadClientes, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }
