@@ -68,7 +68,7 @@ class TailService {
                     ->first();
                     $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
                         $query->where('client_id', $client->id);
-                    })->orderByDesc('data')->orderByDesc('updated_at')->first();
+                    })->orderByDesc('updated_at')->first();
     
                 return [
                     'reservation_id' => $tail->reservation->id,
