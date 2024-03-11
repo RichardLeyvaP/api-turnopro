@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Reservation;
 use App\Models\Tail;
+use App\Models\Comment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,9 @@ class TailService {
             $workplace = $professional->workplaces()
                 ->whereDate('data', $reservation->data)
                 ->first();
+                $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
+                    $query->where('client_id', $client->id);
+                })->orderByDesc('data')->orderByDesc('updated_at')->first();
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
@@ -34,7 +38,7 @@ class TailService {
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
-                'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
+                'client_image' => $comment ?  $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg':'comments/default_profile.jpg',
                 'professional_name' => $professional->name." ".$professional->surname,
                 'client_id' => $reservation->car->clientProfessional->client_id,
                 'professional_id' => $reservation->car->clientProfessional->professional_id,
@@ -62,6 +66,9 @@ class TailService {
                 $workplace = $professional->workplaces()
                     ->whereDate('data', $reservation->data)
                     ->first();
+                    $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
+                        $query->where('client_id', $client->id);
+                    })->orderByDesc('data')->orderByDesc('updated_at')->first();
     
                 return [
                     'reservation_id' => $tail->reservation->id,
@@ -71,6 +78,7 @@ class TailService {
                     'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
                     'total_time' => $reservation->total_time,
                     'client_name' => $client->name . " " . $client->surname,
+                    'client_image' => $comment ?  $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg':'comments/default_profile.jpg',
                     'professional_name' => $professional->name . " " . $professional->surname,
                     'client_id' => $reservation->car->clientProfessional->client_id,
                     'professional_id' => $reservation->car->clientProfessional->professional_id,
