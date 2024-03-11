@@ -107,7 +107,8 @@ class ReservationService {
                  'image_url' => 'professionals/default_profile.jpg',
                  'imageLook' => 'comments/default_profile.jpg',             
                  'cantVisit' => 0,
-                 'endLook' => null,
+                 'endLook' => '',
+                 'lastDate' => '',
                  'frecuencia' => 0,
                  'services' =>  [],
                  'products' => []
@@ -127,7 +128,8 @@ class ReservationService {
                 'imageLook' => 'comments/default_profile.jpg',
                 'image_url' => 'professionals/default_profile.jpg',             
                 'cantVisit' => 0,
-                'endLook' => null,
+                'endLook' => '',
+                'lastDate' => '',
                 'frecuencia' => 0,
                 'services' =>  [],
                 'products' => []
@@ -181,7 +183,7 @@ class ReservationService {
                 'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
-                'lastDate' => Carbon::parse($comment->data)->format('dd/mm/YY'),
+                'lastDate' => Carbon::parse($comment->data)->format('d/m/Y'),
                 'frecuencia' => $fiel ? $fiel : $frecuencia,
                 'services' => $services->map(function ($service) use ($cantMaxService){
                     return [
