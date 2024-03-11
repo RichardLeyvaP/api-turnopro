@@ -222,8 +222,8 @@ if ($clientProfessional) {
 }
             $result = [
                 'clientName' => $client->name." ".$client->surname, 
-               'professionalName' => $professional->name." ".$professional->surname,
-                'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+               'professionalName' => 'No ha sido atendido',
+                'image_url' => 'professionals/default_profile.jpg',
                 'imageLook' => 'comments/default_profile.jpg',             
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
