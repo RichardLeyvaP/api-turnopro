@@ -167,9 +167,11 @@ class ClientController extends Controller
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
             $client->user_id = $clients_data['user_id'];
+            $client->client_image = 'comments/default_profile.jpg';
             $client->save();
             Log::info($client);
-            $filename = "image/default.png";
+          //  $filename = "image/default.png";
+            $filename = "comments/default_profile.jpg";
             if ($request->hasFile('client_image')) {
                 $filename = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
@@ -232,7 +234,7 @@ class ClientController extends Controller
                 'id' => 'required|numeric'
             ]);
             $client = Client::find($clients_data['id']);
-            if ($client->client_image != "image/default.png") {
+            if ($client->client_image != "comments/default_profile.jpg") {
                 $destination = public_path("storage\\" . $client->client_image);
                 if (File::exists($destination)) {
                     File::delete($destination);

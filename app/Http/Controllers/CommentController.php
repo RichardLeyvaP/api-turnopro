@@ -68,7 +68,7 @@ class CommentController extends Controller
                 'reservation_id' => 'required|numeric',
                 'look' => 'required'
             ]); 
-            $filename = "image/default.png";
+            $filename = "comments/default_profile.jpg";
             
             $comment = new Comment();
             $reservation = Reservation::find($data['reservation_id']);
@@ -138,7 +138,7 @@ class CommentController extends Controller
                 'id' => 'required'
             ]); 
             $comment = Comment::find($data['id']);
-            if ($comment->client_look != "image/default.png") {
+            if ($comment->client_look != "comments/default_profile.jpg") {
                 $destination=public_path("storage\\".$comment->client_look);
                     if (File::exists($destination)) {
                         File::delete($destination);
