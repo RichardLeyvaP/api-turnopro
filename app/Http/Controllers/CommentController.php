@@ -45,14 +45,14 @@ class CommentController extends Controller
             $comment->look = $data['look'];
             $comment->save();
             
-            $filename = "comments/default_profile.jpg";
+            $filename = "ccomments/default_profile.jpg";
             if ($request->hasFile('client_look')) {
-                $filename = $request->file('client_look')->storeAs('comments',$client->id.'.'.$request->file('client_look')->extension(),'public');
-                $client->client_image = $filename;
-                $client->save();
+                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
              }
             $comment->image_look = $filename;
             $comment->save();
+            $client->client_image = $filename;
+            $client->save();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -123,6 +123,9 @@ class CommentController extends Controller
             $comment->look = $data['look'];
             $comment->client_look = $filename;
             $comment->save();
+            $client = Client::find($comment->clientProfessional->client->id);
+            $client->client_image = $filename;
+            $client->save();
             return response()->json(['msg' => 'Comment actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -144,6 +147,9 @@ class CommentController extends Controller
                         File::delete($destination);
                     }
                 }
+                $client = Client::find($comment->clientProfessional->client->id);
+            $client->client_image = "comments/default_profile.jpg";
+            $client->save();
                 Comment::destroy($data['id']);
             return response()->json(['msg' => 'Comment eliminado correctamente'], 200);
         } catch (\Throwable $th) {
