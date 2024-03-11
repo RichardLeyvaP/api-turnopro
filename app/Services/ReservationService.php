@@ -100,6 +100,7 @@ class ReservationService {
         $cantMaxService = 0;
         $client = Client::find($data['client_id']);
         if(!$client){
+            Log::info("client_history 1");
             return  $result = [
                  'clientName' => null,
                  'professionalName' => null,
@@ -112,12 +113,15 @@ class ReservationService {
                  'products' => []
                  ];   
          }
+         Log::info("client_history 2");
        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
             $query->whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('client_id', $data['client_id']);
         })->get();
+        Log::info("client_history 3");
         if(!$reservations){
+            Log::info("client_history 4");
            return  $result = [
                 'clientName' => '', 
                 'imageLook' => 'comments/default_profile.jpg',
@@ -130,6 +134,7 @@ class ReservationService {
                 ];   
         }
         if ($reservations->count()>=12) {
+           ;
             $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->whereHas('professional.branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
@@ -143,12 +148,13 @@ class ReservationService {
             $frecuencia = "No Frecuente";
         }
         //$client = Client::find($data['client_id']);
+        Log::info("client_history 5");
        $reservationids = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
         $query->whereHas('professional.branches', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
         })->where('client_id', $data['client_id']);
         })->orderByDesc('data')->take(3)->get()->pluck('car_id');
-
+        Log::info("client_history 6");
         $services = Service::withCount(['orders'=> function ($query) use ($data, $reservationids){
             $query->whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->whereHas('professional.branches', function ($query) use ($data){
@@ -166,45 +172,96 @@ class ReservationService {
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
             $query->where('client_id', $client->id);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
-        $result = [
-            'clientName' => $client->name." ".$client->surname." ".$client->second_surname, 
-            'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname.' '.$comment->clientProfessional->professional->second_surname,
-            'image_url' => $comment->clientProfessional->professional->image_url ? $comment->clientProfessional->professional->image_url : 'professionals/default_profile.jpg',
-            'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
-            'cantVisit' => $reservations->count(),
-            'endLook' => $comment ? $comment->look : null,
-            'frecuencia' => $fiel ? $fiel : $frecuencia,
-            'services' => $services->map(function ($service) use ($cantMaxService){
-                return [
-                    'id' => $service->id,
-                    'name' => $service->name,
-                    'simultaneou' => $service->simultaneou,
-                    'price_service' => $service->price_service,
-                    'type_service' => $service->type_service,
-                    'profit_percentaje' => $service->profit_percentaje,
-                    'duration_service' => $service->duration_service,
-                    'image_service' => $service->image_service,
-                    'service_comment' => $service->service_comment,
-                    'cant' => $service->orders_count
-                ];
-            }),
-            'products' => $products->map(function ($product){
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'code' => $product->code,
-                    'description' => $product->description,
-                    'product_exit' => 0,//solo para utilizar el modelo en apk bien,
-                    'status_product' => $product->status_product,
-                    'purchase_price' => $product->purchase_price,
-                    'sale_price' => $product->sale_price,
-                    'created_at' => $product->created_at,
-                    'updated_at' => $product->updated_at,
-                    'cant' => $product->orders_count
-                ];
-            }),
-            'cantMaxService' => $services->max('orders_count')
-          ];
+        
+        if ($comment && $comment->clientProfessional) {
+            $result = [
+                'clientName' => $client->name." ".$client->surname, 
+                'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname,
+                'image_url' => $comment->clientProfessional->professional->image_url ? $comment->clientProfessional->professional->image_url : 'professionals/default_profile.jpg',
+                'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
+                'cantVisit' => $reservations->count(),
+                'endLook' => $comment ? $comment->look : null,
+                'frecuencia' => $fiel ? $fiel : $frecuencia,
+                'services' => $services->map(function ($service) use ($cantMaxService){
+                    return [
+                        'id' => $service->id,
+                        'name' => $service->name,
+                        'simultaneou' => $service->simultaneou,
+                        'price_service' => $service->price_service,
+                        'type_service' => $service->type_service,
+                        'profit_percentaje' => $service->profit_percentaje,
+                        'duration_service' => $service->duration_service,
+                        'image_service' => $service->image_service,
+                        'service_comment' => $service->service_comment,
+                        'cant' => $service->orders_count
+                    ];
+                }),
+                'products' => $products->map(function ($product){
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'code' => $product->code,
+                        'description' => $product->description,
+                        'product_exit' => 0,//solo para utilizar el modelo en apk bien,
+                        'status_product' => $product->status_product,
+                        'purchase_price' => $product->purchase_price,
+                        'sale_price' => $product->sale_price,
+                        'created_at' => $product->created_at,
+                        'updated_at' => $product->updated_at,
+                        'cant' => $product->orders_count
+                    ];
+                }),
+                'cantMaxService' => $services->max('orders_count')
+              ];
+        } else {
+            // Manejar la situación cuando el objeto es nulo
+            $clientProfessional = ClientProfessional::where('client_id', $data['client_id'])->first();
+
+if ($clientProfessional) {
+    $professional = $clientProfessional->professional;   
+}
+            $result = [
+                'clientName' => $client->name." ".$client->surname, 
+               'professionalName' => $professional->name." ".$professional->surname,
+                'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+                'imageLook' => 'comments/default_profile.jpg',             
+                'cantVisit' => $reservations->count(),
+                'endLook' => $comment ? $comment->look : null,
+                'frecuencia' => $fiel ? $fiel : $frecuencia,
+                'services' => $services->map(function ($service) use ($cantMaxService){
+                    return [
+                        'id' => $service->id,
+                        'name' => $service->name,
+                        'simultaneou' => $service->simultaneou,
+                        'price_service' => $service->price_service,
+                        'type_service' => $service->type_service,
+                        'profit_percentaje' => $service->profit_percentaje,
+                        'duration_service' => $service->duration_service,
+                        'image_service' => $service->image_service,
+                        'service_comment' => $service->service_comment,
+                        'cant' => $service->orders_count
+                    ];
+                }),
+                'products' => $products->map(function ($product){
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'code' => $product->code,
+                        'description' => $product->description,
+                        'product_exit' => 0,//solo para utilizar el modelo en apk bien,
+                        'status_product' => $product->status_product,
+                        'purchase_price' => $product->purchase_price,
+                        'sale_price' => $product->sale_price,
+                        'created_at' => $product->created_at,
+                        'updated_at' => $product->updated_at,
+                        'cant' => $product->orders_count
+                    ];
+                }),
+                'cantMaxService' => $services->max('orders_count')
+              ];
+        }
+        
+          Log::info("client_history 7");
            return $result;
 
     }

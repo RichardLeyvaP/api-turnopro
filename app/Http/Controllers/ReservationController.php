@@ -451,6 +451,7 @@ class ReservationController extends Controller
             $history = $this->reservationService->client_history($data);
             return response()->json(['clientHistory' => $history], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::info("client_history 8 :$th");
             return response()->json(['msg' => $th->getMessage().'Error al mostrar la history'], 500);
         }
     }
