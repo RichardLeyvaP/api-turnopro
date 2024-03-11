@@ -94,7 +94,7 @@ class CarController extends Controller
                         //return [$start, $end];
           $i=0;
           $day = 0;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
-                        if ($data['branch_id']) {
+                        if (!$data['branch_id']) {
                             Log::info('branchesssss');
                             $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
                                 $query->whereBetween('data', [$start, $end]);
@@ -145,11 +145,11 @@ class CarController extends Controller
         
     //Log::info($branches);
             
-            return response()->json( $dates, 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
-        }
+            return response()->json( $dates, 200, [], JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $th) {  
+                Log::error($th);
+                return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+            }
     }
 
     public function cars_sum_amount_mounth(Request $request)

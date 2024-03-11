@@ -18,6 +18,7 @@ use App\Models\Professional;
 use App\Models\User;
 use App\Services\ReservationService;
 use App\Services\SendEmailService;
+use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,7 +28,7 @@ class ReservationController extends Controller
     private ReservationService $reservationService;
     private SendEmailService $sendEmailService;
 
-    public function __construct(ReservationService $reservationService,SendEmailService $sendEmailService )
+    public function __construct(ReservationService $reservationService, SendEmailService $sendEmailService)
     {
         $this->reservationService = $reservationService;
         $this->sendEmailService = $sendEmailService;
@@ -35,11 +36,11 @@ class ReservationController extends Controller
 
     public function index()
     {
-        try {             
-            Log::info( "Entra a buscar las reservaciones");
+        try {
+            Log::info("Entra a buscar las reservaciones");
             $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
         }
@@ -59,13 +60,13 @@ class ReservationController extends Controller
             ]);
 
             $orderServicesDatas = Order::with('car')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
-            $sumaDuracion = $orderServicesDatas->sum(function ($orderServicesData){
+            $sumaDuracion = $orderServicesDatas->sum(function ($orderServicesData) {
                 return $orderServicesData->branchServiceProfessional->branchService->service->duration_service;
             });
             $reservacion = new Reservation();
             $reservacion->start_time = Carbon::parse($data['start_time'])->toTimeString();
             $reservacion->final_hour = Carbon::parse($data['start_time'])->addMinutes($sumaDuracion)->toTimeString();
-            $reservacion->total_time = sprintf('%02d:%02d:%02d', floor($sumaDuracion/60),$sumaDuracion%60,0);
+            $reservacion->total_time = sprintf('%02d:%02d:%02d', floor($sumaDuracion / 60), $sumaDuracion % 60, 0);
             $reservacion->data = $data['data'];
             $reservacion->from_home = $data['from_home'];
             $reservacion->car_id = $data['car_id'];
@@ -74,19 +75,19 @@ class ReservationController extends Controller
             return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage().'Error al hacer la reservacion'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
 
     public function branch_reservations(Request $request)
     {
-        try {    
+        try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
-            ]);         
-            Log::info( "Entra a buscar las reservaciones");
+            ]);
+            Log::info("Entra a buscar las reservaciones");
             $branch = Branch::find($data['branch_id']);
-            $reservations = $branch->reservations()->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->whereDate('data', Carbon::now())->orderByDesc('data')->get()->map(function ($reservation){
+            $reservations = $branch->reservations()->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->whereDate('data', Carbon::now())->orderByDesc('data')->get()->map(function ($reservation) {
                 $client = $reservation->car->clientProfessional->client;
                 $professional = $reservation->car->clientProfessional->professional;
                 $services = $reservation->car->orders->where('is_product', 0)->count();
@@ -94,8 +95,8 @@ class ReservationController extends Controller
                     'id' => $reservation->id,
                     'car_id' => $reservation->car_id,
                     'client_professional_id' => $reservation->car->client_professional_id,
-                    'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
-                    'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'clientName' => $client->name . ' ' . $client->surname . ' ' . $client->second_surname,
+                    'professionalName' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
                     'client_image' => $client->client_image,
                     'image_url' => $professional->image_url,
                     'data' => $reservation->data,
@@ -110,9 +111,9 @@ class ReservationController extends Controller
             })->with('clientProfessional.client', 'clientProfessional.professional')->get();*/
             //$car = Car::with('clientProfessional.client', 'clientProfessional.professional')->get();
             return response()->json(['reservations' => $reservations], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
         }
     }
 
@@ -134,211 +135,219 @@ class ReservationController extends Controller
             ]);
             if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
-            }
-            else {
+            } else {
                 $data['select_professional'] = 1;
             }
-            $servs = $request->input('services');  
-            $id_client=0;
+            $servs = $request->input('services');
+            $id_client = 0;
             //1-Verificar que el usuario no este registrado
             $user = User::where('email', $data['email_client'])->first();
-             // Verificar si se encontró un usuario
+            // Verificar si se encontró un usuario
             if ($user) {
-                Log::info( "1");
-            // Buscar el cliente
-            $client = Client::where('email', $data['email_client'])->first();
-            if($client)
-            {
-                  Log::info( "2");
+                Log::info("1");
+                // Buscar el cliente
+                $client = Client::where('email', $data['email_client'])->first();
+                if ($client) {
+                    Log::info("2");
+                    $id_client = $client->id;
+                    $this->reservationService->store($data, $servs, $id_client);
+                } else {
+                    Log::info("4");
+
+                    $client = new Client();
+                    $client->name = $data['name_client'];
+                    $client->surname = $data['surname_client'];
+                    $client->second_surname = $data['second_surname'];
+                    $client->email = $data['email_client'];
+                    $client->phone = $data['phone_client'];
+                    $client->user_id = $user->id;
+                    $client->save();
+                    $id_client = $client->id;
+
+                    Log::info("5");
+                    Log::info($id_client);
+                    $this->reservationService->store($data, $servs, $id_client);
+                }
+            } else {
+                Log::info("3");
+                // Crear Usuario
+                $user = User::create([
+                    'name' => $data['name_client'],
+                    'email' => $data['email_client'],
+                    'password' => Hash::make($data['email_client'])
+                ]);
+                Log::info("4");
+
+                $client = new Client();
+                $client->name = $data['name_client'];
+                $client->surname = $data['surname_client'];
+                $client->second_surname = $data['second_surname'];
+                $client->email = $data['email_client'];
+                $client->phone = $data['phone_client'];
+                $client->user_id = $user->id;
+                $client->save();
                 $id_client = $client->id;
-                $this->reservationService->store($data, $servs,$id_client);
+
+                Log::info("5");
+                Log::info($id_client);
+                $this->reservationService->store($data, $servs, $id_client);
             }
-            else
-            {
-                Log::info( "4");
 
-            $client = new Client();
-            $client->name = $data['name_client'];
-            $client->surname = $data['surname_client'];
-            $client->second_surname = $data['second_surname'];
-            $client->email = $data['email_client'];
-            $client->phone = $data['phone_client'];
-            $client->user_id = $user->id;
-            $client->save();
-            $id_client = $client->id;
+            DB::commit();
 
-            Log::info( "5");
-            Log::info($id_client);
-                $this->reservationService->store($data, $servs,$id_client);
-            }
-           } 
-           else {
-                 Log::info( "3");
-            // Crear Usuario
-            $user = User::create([
-                'name' => $data['name_client'],
-                'email' => $data['email_client'],
-                'password' => Hash::make($data['email_client'])
-            ]);
-            Log::info( "4");
+            // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
+            Log::info("5.comparando fechas");
 
-            $client = new Client();
-            $client->name = $data['name_client'];
-            $client->surname = $data['surname_client'];
-            $client->second_surname = $data['second_surname'];
-            $client->email = $data['email_client'];
-            $client->phone = $data['phone_client'];
-            $client->user_id = $user->id;
-            $client->save();
-            $id_client = $client->id;
 
-            Log::info( "5");
-            Log::info($id_client);
-                $this->reservationService->store($data, $servs,$id_client);
-
-            }
-                               
-            DB::commit(); 
-
-              // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
-              Log::info( "5.comparando fechas");
-              
-
-              $fechaHoy = Carbon::today();
+            $fechaHoy = Carbon::today();
             // Obtener la fecha formateada como 'YYYY-MM-DD'
             $fechaFormateada = $fechaHoy->toDateString();
-            Log::info( $data['data']);
-                        Log::info( $fechaFormateada);
+            Log::info($data['data']);
+            Log::info($fechaFormateada);
 
-              if(($data['data'] == $fechaFormateada ))
-              {
-                Log::info( "5.las fechas son iguales");
+            if (($data['data'] == $fechaFormateada)) {
+                Log::info("5.las fechas son iguales");
                 $this->reservation_tail();
-                Log::info( "5.actualice la cola");
-              }
-                     
-              //optener nombre del professional
-              $professional = Professional::find($data['professional_id']);
-                $name = $professional->name .' '. $professional->surname .' '. $professional->second_surname;
+                Log::info("5.actualice la cola");
+            }
+
+            //optener nombre del professional
+            $professional = Professional::find($data['professional_id']);
+            $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
             //todo *************** llamando al servicio de envio de email *******************
-                $this->sendEmailService->confirmReservation($data['data'],$data['start_time'],$id_client,$data['branch_id'],null, $name);
-                
+            $this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();
-        return response()->json(['msg' => $th->getMessage().'Error al hacer la reservacion'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
 
-    public function professional_reservations(Request $request){
-        try {             
-            Log::info( "Entra a buscar las reservaciones de un professionals en una fecha dada");
+    public function professional_reservations(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar las reservaciones de un professionals en una fecha dada");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data){
+            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
+            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
 
     public function reservations_count(Request $request)
     {
-        try {             
-            Log::info( "Entra a buscar una las reservations del dia");
+        try {
+            Log::info("Entra a buscar una las reservations del dia");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
             Log::info('dataaaaaaaaaa');
             Log::info($data);
-            if(!$data['branch_id']){
-                Log::info( "Branch");
+            if (!$data['branch_id']) {
+                Log::info("Branch");
                 $branch = Branch::find($data['branch_id']);
                 Log::info('222222222');
                 Log::info($branch);
-            $reservations = $branch->withCount(['reservations' => function ($query){
-                $query->whereDate('data', now()->toDateString());
-            }])->value('reservations_count');
-            }
-            else{
-                Log::info( "Business");
+                $reservations = $branch->withCount(['reservations' => function ($query) {
+                    $query->whereDate('data', now()->toDateString());
+                }])->value('reservations_count');
+            } else {
+                Log::info("Business");
                 $business = Business::find($data['business_id']);
-            $reservations = $business->branches()->withCount(['reservations' => function ($query){
-                $query->whereDate('data', now()->toDateString());
-            }])->value('reservations_count');
+                $reservations = $business->branches()->withCount(['reservations' => function ($query) {
+                    $query->whereDate('data', now()->toDateString());
+                }])->value('reservations_count');
             }
-            
+
             Log::info('rerwerewrererewrewrewrew');
             Log::info($reservations);
             return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
-            
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
 
     public function reservations_count_week(Request $request)
     {
-        try {             
-            Log::info( "Entra a buscar una las reservations del dia");
+        try {
+            Log::info("Entra a buscar una las reservations del dia");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'nullable'
             ]);
-            if($data['branch_id']){
-                Log::info( "Branch");
-                $branch = Branch::find($data['branch_id']);
-            $reservations = $branch->withCount(['reservations' => function ($query){
-                $query->whereBetween(DB::raw('DATE_FORMAT(data, "%Y-%m-%d")'), [now()->startOfWeek(), now()->endOfWeek()]);
-            }])->get()
-            ->map(function ($branch) {
-                return [
-                    'reservations_by_day' => $branch->reservations
-                        ->groupBy(function ($reservation) {
-                            return Carbon::parse($reservation->data)->format('l'); // Obtener el nombre del día de la semana
-                        })
-                        ->map->count()
-                ];
-            })
-            ->first();
-            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
-            }
-            else{
-                Log::info( "Business");
+            if (!$data['branch_id']) {
+                Log::info("Branch");
+                $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
+                $end = now()->endOfWeek();
                 $business = Business::find($data['business_id']);
-            $reservations = $business->branches()->withCount(['reservations' => function ($query){
-                $query->whereDate('data', now()->toDateString());
-            }])->value('reservations_count');
-            return response()->json(['business' => $reservations], 200, [], JSON_NUMERIC_CHECK);
+                $reservations = Branch::find($data['branch_id'])->with(['reservations' => function ($query) use ($start, $end) {
+                    $query->whereBetween('data', [$start, $end]);
+                }])->get()
+                    ->flatMap(function ($branch) {
+                        return $branch->reservations->groupBy(function ($reservation) {
+                            $date = new DateTime($reservation->data);
+                            return $date->format('w'); // Agrupa por día de la semana (0 para domingo, 1 para lunes, etc.)
+                        });
+                    })
+                    ->map(function ($reservationsByDay) {
+                        return count($reservationsByDay);
+                    })
+                    ->toArray();
+                // Llenar los días faltantes con 0
+                $fullWeek = array_fill_keys(range(0, 6), 0);
+                $reservations = array_replace($fullWeek, $reservations);
+            } else {
+                Log::info("Business");
+                $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
+                $end = now()->endOfWeek();
+                $business = Business::find($data['business_id']);
+                $reservations = $business->branches()->with(['reservations' => function ($query) use ($start, $end) {
+                    $query->whereBetween('data', [$start, $end]);
+                }])->get()
+                    ->flatMap(function ($branch) {
+                        return $branch->reservations->groupBy(function ($reservation) {
+                            $date = new DateTime($reservation->data);
+                            return $date->format('w'); // Agrupa por día de la semana (0 para domingo, 1 para lunes, etc.)
+                        });
+                    })
+                    ->map(function ($reservationsByDay) {
+                        return count($reservationsByDay);
+                    })->toArray();
+                // Llenar los días faltantes con 0
+                $fullWeek = array_fill_keys(range(0, 6), 0);
+                $reservations = array_replace($fullWeek, $reservations);
             }
-            
-        } catch (\Throwable $th) {  
+            return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE);
+        } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
 
     public function show(Request $request)
     {
-        try {             
-            Log::info( "Entra a buscar una reservaciones");
+        try {
+            Log::info("Entra a buscar una reservaciones");
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
             $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->where('id', $data['id'])->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
         }
@@ -369,7 +378,7 @@ class ReservationController extends Controller
             return response()->json(['msg' => 'Reservacion actualizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
+            return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
         }
     }
 
@@ -388,7 +397,7 @@ class ReservationController extends Controller
             return response()->json(['msg' => 'Reservacion confirmada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
+            return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
         }
     }
 
@@ -398,9 +407,9 @@ class ReservationController extends Controller
         log::info('registrar las reservaciones del dia en la cola');
         try {
             $reservations = Reservation::whereDate('data', Carbon::today())
-            ->whereDoesntHave('tail')
-            ->orderBy('start_time')->get();
-            foreach($reservations as $reservation){
+                ->whereDoesntHave('tail')
+                ->orderBy('start_time')->get();
+            foreach ($reservations as $reservation) {
                 $cola = $reservation->tail()->create();
             }
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
@@ -418,14 +427,14 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data){
+            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data){
+            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al mostrar las reservaciones en esa fecha'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las reservaciones en esa fecha'], 500);
         }
     }
 
@@ -443,7 +452,7 @@ class ReservationController extends Controller
 
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al eliminar la reservacion'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la reservacion'], 500);
         }
     }
 
@@ -457,52 +466,49 @@ class ReservationController extends Controller
             $history = $this->reservationService->client_history($data);
             return response()->json(['clientHistory' => $history], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al mostrar la history'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al mostrar la history'], 500);
         }
     }
     //metodos privados
-    public function send_email($data_reservation,$start_time,$client_id,$branch_id,$template,$logoUrl,$name_professional)
+    public function send_email($data_reservation, $start_time, $client_id, $branch_id, $template, $logoUrl, $name_professional)
     {
-        try {    
-                     
-            Log::info( "Entra a send_email");
-                            //todo una ves que reserva envia email
-                            $client = Client::where('id', $client_id)->first();
-                            $branch = Branch::where('id', $branch_id)->first();
-           
-                            if ($client) {
-                                $client_email = $client->email;
-                                $client_name = $client->name.' '.$client->surname;
-                            } else {
-                                // El cliente con id 5 no fue encontrado
-                                $client_email = null; // o manejar de acuerdo a tus necesidades
-                            }
-                            if ($branch) {
-                                $branch_name = $branch->name;
-                            } else {
-                                // El cliente con id 5 no fue encontrado
-                                $branch_name = null; // o manejar de acuerdo a tus necesidades
-                            }
-                                  Log::info($client_email);
-                            // Puedes agregar más datos según sea necesario
-                            
-                            if($client_email){
-                               // Envía el correo con los datos
-                               $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,null);//falta mandar dinamicamente la sucursal
-                               Mail::to($client_email)
-                               ->send($mail->from('reservas@simplifies.cl', 'simplifies')
-                                           ->subject('Confirmación de Reserva en simplifies'));       
-                             
-                               Log::info( "Enviado send_email");
-           
-                            }
-                            else
-                            {
-                               Log::info( "ERROR:El Correo es null por eso no envio el correo"); 
-                            }
-                             //todo *********Cerrando lógica de envio de correo**********************
+        try {
+
+            Log::info("Entra a send_email");
+            //todo una ves que reserva envia email
+            $client = Client::where('id', $client_id)->first();
+            $branch = Branch::where('id', $branch_id)->first();
+
+            if ($client) {
+                $client_email = $client->email;
+                $client_name = $client->name . ' ' . $client->surname;
+            } else {
+                // El cliente con id 5 no fue encontrado
+                $client_email = null; // o manejar de acuerdo a tus necesidades
+            }
+            if ($branch) {
+                $branch_name = $branch->name;
+            } else {
+                // El cliente con id 5 no fue encontrado
+                $branch_name = null; // o manejar de acuerdo a tus necesidades
+            }
+            Log::info($client_email);
+            // Puedes agregar más datos según sea necesario
+
+            if ($client_email) {
+                // Envía el correo con los datos
+                $mail = new Send_mail($logoUrl, $client_name, $name_professional, $data_reservation, $template, $start_time, $branch_name, null); //falta mandar dinamicamente la sucursal
+                Mail::to($client_email)
+                    ->send($mail->from('reservas@simplifies.cl', 'simplifies')
+                        ->subject('Confirmación de Reserva en simplifies'));
+
+                Log::info("Enviado send_email");
+            } else {
+                Log::info("ERROR:El Correo es null por eso no envio el correo");
+            }
+            //todo *********Cerrando lógica de envio de correo**********************
             return response()->json(['Response' => "Email enviado correctamente"], 200);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => "Error al enviar el Email"], 500);
         }
