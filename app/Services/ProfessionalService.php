@@ -63,8 +63,6 @@ class ProfessionalService
             $query->where('branch_id', $branch_id);
         })->whereHas('branchServices', function ($query) use ($services) {
             $query->whereIn('service_id', $services);
-        }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('id', 1);
         })->get();
         Log::info($professionals);
         return $professionals;
