@@ -181,7 +181,8 @@ class UserController extends Controller
                         $branch = $user->professional->branches->map(function ($branch) {
                             return [
                                 'branch_id' => $branch->id,
-                                'nameBranch' => $branch->name
+                                'nameBranch' => $branch->name,
+                                'useTechnical' => $branch->useTechnical
                             ];
                         })->first();
                     }
@@ -211,6 +212,7 @@ class UserController extends Controller
                         'client_id' => $user->client ? ($user->client->id) : 0,
                         'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch['useTechnical'] : "false",
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;
@@ -227,6 +229,7 @@ class UserController extends Controller
                 ], 404);
             }
         } catch (\Throwable $th) {
+            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
     }

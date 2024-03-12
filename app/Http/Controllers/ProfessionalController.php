@@ -250,6 +250,7 @@ class ProfessionalController extends Controller
            
            return response()->json(['professionals' => $professionals], 200);
        } catch (\Throwable $th) {
+        Log::info($th);
            return response()->json(['msg' => "Professionals"], 500);
        }
     }
