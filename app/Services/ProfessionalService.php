@@ -69,7 +69,7 @@ class ProfessionalService
             $query->whereDate('data', Carbon::now()->toDateString())
             ->whereRaw('TIMESTAMPDIFF(MINUTE, reservations.start_time, reservations.final_hour) > ?', [$totaltime]);                
         })->get();
-
+        Log::info($professionals);
         return $professionals;
     }
 
