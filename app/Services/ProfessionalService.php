@@ -60,14 +60,11 @@ class ProfessionalService
         Log::info($totaltime);
         //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $services) {
-            $query->where('branch_id', $branch_id)->whereHas('services', function ($query) use ($services) {
-                $query->whereIn('services.id', $services);
-            }, '=', count($services));
-        })->whereHas('charge', function ($query) {
+            $query->where('branch_id', $branch_id);
+        })->whereHas('branchServices', function ($query) use ($services) {
+            $query->whereIn('service_id', $services);
+        }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('id', 1);
-        })->whereDoesntHave('reservations')->orwhereHas('reservations', function ($query) use ($totaltime){
-            $query->whereDate('data', Carbon::now()->toDateString())
-            ->whereRaw('TIMESTAMPDIFF(MINUTE, reservations.start_time, reservations.final_hour) > ?', [$totaltime]);                
         })->get();
         Log::info($professionals);
         return $professionals;
