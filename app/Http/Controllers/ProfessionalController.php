@@ -301,7 +301,7 @@ class ProfessionalController extends Controller
                 'name' => 'required|max:50',
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:professionals',
+                'email' => 'required|max:100|email|unique:professionals',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
                 'user_id' => 'required|numeric'

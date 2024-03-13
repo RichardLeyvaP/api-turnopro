@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssociatedController;
 use App\Http\Controllers\BoxCloseController;
 use App\Http\Controllers\BoxController;
 use App\Http\Controllers\BranchController;
@@ -404,8 +405,11 @@ Route::put('/charge-permission', [ChargePermissionController::class, 'update']);
 Route::post('/charge-permission-destroy', [ChargePermissionController::class, 'destroy']);
 Route::get('/charge-permission-NOTIN', [ChargePermissionController::class, 'show_charge_NoIN']);//devolver para asignar los permisos que no posee el cargo
 
-Route::get('/send_email', [ReservationController::class, 'send_email']);
-Route::get('/sendMessage', [SendMailController::class, 'sendMessage']);
+Route::get('/associated', [AssociatedController::class, 'index']);
+Route::get('/associated-show', [AssociatedController::class, 'show']);
+Route::post('/associated', [AssociatedController::class, 'store']);
+Route::put('/associated', [AssociatedController::class, 'update']);
+Route::post('/associated-destroy', [AssociatedController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Associated;
 use App\Models\Box;
 use App\Models\BoxClose;
 use App\Models\Branch;
@@ -93,9 +94,12 @@ class BoxCloseController extends Controller
            // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
            $emails = Professional::whereIn('charge_id', [3, 4, 5])
            ->pluck('email');
+           $emailassociated = Associated::all()->pluck('email');
+
+           $mergedEmails = $emails->merge($emailassociated);
              // Supongamos que tienes 5 direcciones de correo electrónico en un array
             //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
-           $this->sendEmailService->emailBoxClosure($emails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
+           $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
 
 
 
