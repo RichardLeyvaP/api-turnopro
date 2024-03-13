@@ -733,14 +733,14 @@ class BranchService
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total_cars' => $professional->clientProfessionals->map(function ($clientProfessional) {
-                        return $clientProfessional->cars->count();
-                    })->sum(),
                     'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0
+                    }))->sum(), 2) : 0,
+                    'total_cars' => $professional->reservations()
+                    ->whereDate('data', Carbon::now())
+                    ->count(),
                 ];
             })->sortByDesc('total')->values();
     }
@@ -754,7 +754,7 @@ class BranchService
         }])->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })
-            ->get()->map(function ($professional) {
+            ->get()->map(function ($professional)  use ($month, $year) {
                 return [
                     'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
                     'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
@@ -767,7 +767,10 @@ class BranchService
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0
+                    }))->sum(), 2) : 0,
+                    'total_cars' => $professional->reservations()
+                    ->whereMonth('data', $month)->whereYear('data', $year)
+                    ->count(),
                 ];
             })->sortByDesc('total')->values();
     }
@@ -781,7 +784,7 @@ class BranchService
         }])->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })
-            ->get()->map(function ($professional) {
+            ->get()->map(function ($professional)  use ($startDate, $endDate) {
                 return [
                     'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
                     'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
@@ -794,7 +797,10 @@ class BranchService
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0
+                    }))->sum(), 2) : 0,
+                    'total_cars' => $professional->reservations()
+                    ->whereBetween('data', [$startDate, $endDate])
+                    ->count(),
                 ];
             })->sortByDesc('total')->values();
     }
