@@ -285,7 +285,7 @@ class ClientController extends Controller
                 'phone' => 'nullable',
                 'email' => 'nullable'
             ]);
-            return response()->json(['client' => Client::where('phone', $request->phone)->orWhere('email', $request->email)->get()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['client' => Client::Where('email', $request->email)->orwhere('phone', $request->phone)->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
         }
