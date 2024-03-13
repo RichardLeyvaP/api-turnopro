@@ -277,4 +277,17 @@ class ClientController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }
     }
+
+    public function client_email_phone(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'phone' => 'nullable',
+                'email' => 'nullable'
+            ]);
+            return response()->json(['client' => Client::where('phone', $request->phone)->orWhere('email', $request->email)->get()], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
+        }
+    }
 }

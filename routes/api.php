@@ -103,6 +103,7 @@ Route::get('/client_attended_date', [ClientController::class, 'client_attended_d
 Route::get('/client-most-assistance', [ClientController::class, 'client_most_assistance']);
 Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplete']);
 Route::get('/client-frecuente', [ClientController::class, 'client_frecuente']);///dado una business devolver la cantidad de visitas a por branch
+Route::get('/client-email-phone', [ClientController::class, 'client_email_phone']);///dado un numero de telefono o un email devolver si es client
 
 
 Route::get('/business', [BusinessController::class, 'index']);
