@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('branches', function (Blueprint $table) {
-            $table->boolean('useTechnical')->default(false);
+            $table->integer('useTechnical')->default(0);
         });
     }
 

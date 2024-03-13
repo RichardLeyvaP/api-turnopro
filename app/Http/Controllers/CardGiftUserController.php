@@ -21,6 +21,7 @@ class CardGiftUserController extends Controller
         try {
             return response()->json(['cardGiftUsers' => CardGiftUser::with(['cardGift', 'user'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::info($th);
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
         }
     }
@@ -111,6 +112,7 @@ class CardGiftUserController extends Controller
             Log::info($cardGiftUser);
             return response()->json($cardGiftUser, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::info($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
         }
     }

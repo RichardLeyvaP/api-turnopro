@@ -20,6 +20,7 @@ class CardGiftController extends Controller
         try {
             return response()->json(['cardGifts' => CardGift::with(['business'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::info($th);
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
         }
     }
@@ -85,6 +86,7 @@ class CardGiftController extends Controller
             Log::info($cardGifts);
             return response()->json(['cardGifts' => $cardGifts], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::info($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
         }
     }
