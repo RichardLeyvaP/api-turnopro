@@ -168,7 +168,8 @@ class UserController extends Controller
             }
             $branch = [
                 'branch_id' => null,
-                'nameBranch' => null
+                'nameBranch' => null,
+                'useTechnical' => 0
             ];
             Log::info("obtener el usuario");
             $user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
@@ -176,7 +177,7 @@ class UserController extends Controller
             if (isset($user->id)) {
                 if (Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
-                    if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
+                    if (!$user->professional->branches) { // Check if branches exist
                         Log::info("Es professional");
                         $branch = $user->professional->branches->map(function ($branch) {
                             return [
@@ -212,7 +213,7 @@ class UserController extends Controller
                         'client_id' => $user->client ? ($user->client->id) : 0,
                         'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
-                        //'useTechnical' => $branch ? $branch['useTechnical'] : false,
+                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;
