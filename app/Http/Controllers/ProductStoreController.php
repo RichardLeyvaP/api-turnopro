@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MovementProduct;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Store;
 use App\Traits\ProductExitTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -247,6 +249,18 @@ class ProductStoreController extends Controller
             } else {
                 $store->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_idM']]);
             }
+
+            //registro de movimiento de productos
+            $movementprodct = new MovementProduct();
+            $movementprodct->data = Carbon::now();
+            $movementprodct->product_id = $data['product_id'];
+            $movementprodct->branch_out_id = $data['branch_id'];
+            $movementprodct->store_out_id = $data['store_id'];
+            $movementprodct->branch_int_id = $data['branch_idM'];
+            $movementprodct->store_int_id = $data['store_idM'];
+            $movementprodct->store_out_exit = $productStoreExit->product_exit;
+            $movementprodct->store_out_exit = $productstoreM->product_exit;  
+            $movementprodct->cant = $data['product_quantity'];
             //todo pendiente para revisar importante
             // $this->actualizarProductExit($productexist->id, $storeexist->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
