@@ -284,7 +284,7 @@ class ClientController extends Controller
                 'branch_id' => 'nullable'
             ]);
             Log::info($data);
-            if (array_key_exists('branch_id', $data) && !$data['branch_id']) {
+            if ($data['branch_id'] != null) {
                 Log::info('es una branch');
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
@@ -368,10 +368,9 @@ class ClientController extends Controller
     {
         try {
             $data = $request->validate([
-                'phone' => 'nullable',
-                'email' => 'nullable'
+                'email' => 'required'
             ]);
-            return response()->json(['client' => Client::Where('email', $request->email)->orwhere('phone', $request->phone)->get()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['client' => Client::Where('email', $request->email)->orwhere('phone', $request->email)->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
         }
