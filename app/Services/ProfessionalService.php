@@ -65,7 +65,7 @@ class ProfessionalService
                 $type = 1;
                 $name = $query->name.' '.$query->surname.' '.$query->second_surname;
             }
-            else{
+            if($query->charge_id != 1 && $query->charge_id != 7){
                 $type = 0;
                 $name = '';
             }
