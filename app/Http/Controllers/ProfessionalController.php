@@ -358,7 +358,7 @@ class ProfessionalController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar");
+            Log::info("entra a buscar cargo");
                 $data = $request->validate([
                 'email' => 'required|email'
             ]);

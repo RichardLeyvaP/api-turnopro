@@ -56,16 +56,17 @@ class ProfessionalService
 
     public function verifi_tec_prof($email)
     {
-        return $professionals = Professional::where('email', $email)->get()->map(function ($query){
-            if ($query->charge_id == 1) {
+        $professionals = Professional::where('email', $email)->get();
+        if(!$professionals){
+            if ($professionals->charge_id == 1) {
                 $type = 2;
-                $name = $query->name.' '.$query->surname.' '.$query->second_surname;
+                $name = $professionals->name.' '.$professionals->surname.' '.$professionals->second_surname;
             }
-            if ($query->charge_id == 7) {
+            if ($professionals->charge_id == 7) {
                 $type = 1;
-                $name = $query->name.' '.$query->surname.' '.$query->second_surname;
+                $name = $professionals->name.' '.$professionals->surname.' '.$professionals->second_surname;
             }
-            if($query->charge_id != 1 && $query->charge_id != 7){
+            if($professionals->charge_id != 1 && $professionals->charge_id != 7){
                 $type = 0;
                 $name = '';
             }
@@ -73,7 +74,13 @@ class ProfessionalService
                 'name' => $name,
                 'type' => $type 
             ];
-        });
+        }
+        else{
+            return [
+                'name' => '',
+                'type' => 0  
+            ];
+        }
     }
 
     public function branch_professionals_service($branch_id, $services)
