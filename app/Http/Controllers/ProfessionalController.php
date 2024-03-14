@@ -354,6 +354,26 @@ class ProfessionalController extends Controller
         }
     }
 
+    public function verifi_tec_profe(Request $request)
+    {
+        try {
+
+            Log::info("entra a actualizar");
+                $data = $request->validate([
+                'email' => 'required|email'
+            ]);
+            $professionals = $this->professionalService->verifi_tec_prof($data['email']);
+           /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+           })->get();
+           */
+           return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage().'Error al actualizar el estado professional'], 500);
+        }
+    }
+
     public function update(Request $request)
     {
         try {

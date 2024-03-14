@@ -121,17 +121,19 @@ class ProductController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-           Log::info('Obtener los cars');
+           
            if ($data['branch_id'] != null) {
+            Log::info('Es branch');
             $products = Product::withCount('orders')->whereHas('productStores', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
             })->orderByDesc('orders_count')->get();
            }
            else {
+            Log::info('bussines');
             $products = Product::withCount('orders')->orderByDesc('orders_count')->get();
            }
         
-          return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
+          return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }

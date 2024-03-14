@@ -54,6 +54,28 @@ class ProfessionalService
         })->get();
     }
 
+    public function verifi_tec_prof($email)
+    {
+        return $professionals = Professional::where('email', $email)->get()->map(function ($query){
+            if ($query->charge_id == 1) {
+                $type = 2;
+                $name = $query->name.' '.$query->surname.' '.$query->second_surname;
+            }
+            if ($query->charge_id == 7) {
+                $type = 1;
+                $name = $query->name.' '.$query->surname.' '.$query->second_surname;
+            }
+            else{
+                $type = 0;
+                $name = '';
+            }
+            return [
+                'name' => $name,
+                'type' => $type 
+            ];
+        });
+    }
+
     public function branch_professionals_service($branch_id, $services)
     {
         $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');

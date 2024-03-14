@@ -92,6 +92,7 @@ Route::get('/professional-reservations-time', [ProfessionalController::class, 'p
 Route::get('/professional-state', [ProfessionalController::class, 'professionals_state']); // dado una branch devuelve los professional disponibles
 Route::get('/update-state', [ProfessionalController::class, 'update_state']); // dado una un id actualiza el state del professional
 Route::get('/branch-professionals-service', [ProfessionalController::class, 'branch_professionals_service']); // los professionales de una branch que realizan x servicios
+Route::get('/verify-tec-prof', [ProfessionalController::class, 'verifi_tec_profe']); // dado una email devolver el nombre y el typo de cargo
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);
