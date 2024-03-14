@@ -56,8 +56,9 @@ class ProfessionalService
 
     public function verifi_tec_prof($email)
     {
-        $professionals = Professional::where('email', $email)->get();
-        if(!$professionals){
+        $professionals = Professional::where('email', $email)->first();
+        Log::info($professionals);
+        if($professionals){
             if ($professionals->charge_id == 1) {
                 $type = 2;
                 $name = $professionals->name.' '.$professionals->surname.' '.$professionals->second_surname;
