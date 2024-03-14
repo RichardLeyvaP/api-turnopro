@@ -259,14 +259,12 @@ class ClientController extends Controller
             $currentDate = Carbon::now()->format('Y-m-d');
             if (!$data['branch_id']) {
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
-                    $query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                    ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id']);
-                    });
+                    ///});
                 })->has('reservations', '>', 3)->get();
             }else{
-                $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate) {
-                    $query->whereDate('data', '=', $currentDate);
-                })->has('reservations', '>', 3)->get();
+                $clientesConMasDeTresReservas = Client::withCount('reservations')->has('reservations', '>', 3)->get();
             }
             
 
@@ -277,6 +275,94 @@ class ClientController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }
     }
+
+    public function clients_frecuence_state(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);
+
+            $currentDate = Carbon::now()->format('Y-m-d');
+            if ($data['branch_id'] != null) {
+                Log::info('es una branch');
+                $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
+                    ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                    ///});
+                })->get()->map(function ($query){
+                    /*$yearCant = 0;
+                    $yearCant = $query->whereHas('reservations', function ($query){
+                        $query->whereYear('data', Carbon::now()->format('Y'));
+                    })->count();*/
+                    if($query->reservations_count >= 12){
+                        $frecuence = 'Fiel';
+                        Log::info('11111111');                        
+                        Log::info($frecuence);
+                    }
+                    if($query->reservations_count >= 2){
+                        $frecuence = 'Frecuente';
+                        Log::info('222222222222');  
+                        Log::info($frecuence);
+                    } 
+                    else{
+                        $frecuence = 'No Frecuente';
+                        Log::info('33333333333');                        
+                        Log::info($frecuence);
+                    }                    
+                    return [
+                        'name' => $query->name.' '.$query->surname.' ' .$query->second_surname,
+                        'email' =>$query->email,
+                        'phone' =>$query->phone,
+                        'client_image' =>$query->client_image,
+                        'frecuence' =>  $frecuence,
+                        'cant_visist' => $query->reservations_count,
+                        //'year' => $yearCant
+                    ];
+                });
+            }else{
+                $clientesConMasDeTresReservas = Client::withCount('reservations')->get()->map(function ($query){
+                    /*$yearCant = 0;
+                    $yearCant = $query->whereHas('reservations', function ($query){
+                        $query->whereYear('data', Carbon::now()->format('Y'));
+                    })->count();*/
+                    if($query->reservations_count >= 12){
+                        $frecuence = 'Fiel';
+                        Log::info('11111111');                        
+                        Log::info($frecuence);
+                    }
+                    if($query->reservations_count >= 2){
+                        $frecuence = 'Frecuente';
+                        Log::info('222222222222');  
+                        Log::info($frecuence);
+                    } 
+                    else{
+                        $frecuence = 'No Frecuente';
+                        Log::info('33333333333');                        
+                        Log::info($frecuence);
+                    }                    
+                    return [
+                        'name' => $query->name.' '.$query->surname.' ' .$query->second_surname,
+                        'email' =>$query->email,
+                        'phone' =>$query->phone,
+                        'client_image' =>$query->client_image,
+                        'frecuence' =>  $frecuence,
+                        'cant_visist' => $query->reservations_count,
+                        //'year' => $yearCant
+                    ];
+                });
+            }
+            
+
+            //$cantidadClientes = $clientesConMasDeTresReservas->count();
+
+            return response()->json($clientesConMasDeTresReservas, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
+        }
+    }
+
 
     public function client_email_phone(Request $request)
     {

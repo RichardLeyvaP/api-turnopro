@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Product;
+use App\Models\ProductStore;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -113,6 +114,68 @@ class ProductController extends Controller
        }
     }
 
+    public function product_mostSold(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);
+           Log::info('Obtener los cars');
+           if ($data['branch_id'] != null) {
+            $products = Product::withCount('orders')->whereHas('productStores', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+            })->orderByDesc('orders_count')->get();
+           }
+           else {
+            $products = Product::withCount('orders')->orderByDesc('orders_count')->get();
+           }
+        
+          return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
+    }
+
+    public function product_stock(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);
+           Log::info('Obtener los cars');
+           if ($data['branch_id'] != null) {
+            $products = ProductStore::where('product_exit', '<', 5)->where('branch_id', $data['branch_id'])->with('store', 'product')->get()->map(function ($query){
+                return [
+                    'name' => $query->product->name,
+                    'stock' => $query->product_exit,
+                    'reference' =>$query->product->reference,
+                    'code' => $query->product->code,
+                    'store' => $query->store->address,
+                    'nameBranch' => $query->store->branches()->first()->value('name')
+                ];
+            });
+           }
+           else {
+            $products = ProductStore::where('product_exit', '<', 5)->with('store', 'product')->get()->map(function ($query){
+                return [
+                    'name' => $query->product->name,
+                    'stock' => $query->product_exit,
+                    'reference' =>$query->product->reference,
+                    'code' => $query->product->code,
+                    'store' => $query->store->address,
+                    'nameBranch' => $query->store->branches()->first()->value('name')
+                ];
+            });
+           }
+        
+          return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+       }
+    }
+
     public function show(Request $request)
     {
         try {
@@ -203,4 +266,6 @@ class ProductController extends Controller
             return response()->json(['msg' => 'Error al eliminar el producto'], 500);
         }
     }
+
+
 }

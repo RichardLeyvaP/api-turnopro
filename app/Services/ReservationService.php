@@ -136,7 +136,6 @@ class ReservationService {
                 ];   
         }
         if ($reservations->count()>=12) {
-           ;
             $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->whereHas('professional.branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);

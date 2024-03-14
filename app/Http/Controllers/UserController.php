@@ -177,7 +177,7 @@ class UserController extends Controller
             if (isset($user->id)) {
                 if (Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
-                    if (!$user->professional->branches) { // Check if branches exist
+                    if ($user->professional->branches) { // Check if branches exist
                         Log::info("Es professional");
                         $branch = $user->professional->branches->map(function ($branch) {
                             return [

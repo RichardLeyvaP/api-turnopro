@@ -64,7 +64,8 @@ class OrderController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();
-        return response()->json(['msg' => 'Error al solicitar un pedido'], 500);
+            Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
         }
     }
 
