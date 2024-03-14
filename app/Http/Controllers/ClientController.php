@@ -284,7 +284,7 @@ class ClientController extends Controller
                 'branch_id' => 'nullable'
             ]);
             Log::info($data);
-            if ($request->branch_id->isNoEmpty()) {
+            if ($request->branch_id) {
                 Log::info('es una branch');
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
@@ -322,6 +322,7 @@ class ClientController extends Controller
                 });
             }else{
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->get()->map(function ($query){
+                    Log::info('bussines');
                     /*$yearCant = 0;
                     $yearCant = $query->whereHas('reservations', function ($query){
                         $query->whereYear('data', Carbon::now()->format('Y'));
