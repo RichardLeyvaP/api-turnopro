@@ -147,7 +147,7 @@ class ProductController extends Controller
                 'branch_id' => 'nullable'
             ]);
            Log::info('Obtener los cars');
-           if ($data['branch_id'] != null) {
+           if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
             $products = ProductStore::where('product_exit', '<', 5)->where('branch_id', $data['branch_id'])->with('store', 'product')->get()->map(function ($query){
                 return [
                     'name' => $query->product->name,
@@ -172,7 +172,7 @@ class ProductController extends Controller
             });
            }
         
-          return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
+          return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
