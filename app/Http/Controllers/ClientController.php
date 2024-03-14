@@ -283,9 +283,8 @@ class ClientController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-
-            $currentDate = Carbon::now()->format('Y-m-d');
-            if ($data['branch_id'] != null) {
+            Log::info($data);
+            if ($request->branch_id->isNoEmpty()) {
                 Log::info('es una branch');
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
