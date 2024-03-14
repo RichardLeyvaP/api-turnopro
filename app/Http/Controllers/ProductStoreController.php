@@ -127,7 +127,7 @@ class ProductStoreController extends Controller
                     'product_id' => $productStore->product_id,
                     'name' => $productStore->product->name,
                     'reference' => $productStore->product->reference,
-                    'code' => $productStore->product->code,
+                    'code' => $productStore->product->code. '',
                     'description' => $productStore->product->description,
                     'status_product' => $productStore->product->status_product,
                     'purchase_price' => $productStore->product->purchase_price,

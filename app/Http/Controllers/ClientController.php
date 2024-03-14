@@ -284,7 +284,7 @@ class ClientController extends Controller
                 'branch_id' => 'nullable'
             ]);
             Log::info($data);
-            if ($request->branch_id) {
+            if (array_key_exists('branch_id', $data) && !$data['branch_id']) {
                 Log::info('es una branch');
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
