@@ -89,12 +89,13 @@ class ProfessionalService
         }
     }
 
-    public function branch_professionals_service($branch_id, $services)
+    /*public function branch_professionals_service($branch_id, $services)
     {
         $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
         Log::info($totaltime);
         //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $services) {
+
             $query->where('branch_id', $branch_id);
         })->whereHas('branchServices', function ($query) use ($services) {
             $query->whereIn('service_id', $services);
@@ -103,7 +104,56 @@ class ProfessionalService
         })->get();
         Log::info($professionals);
         return $professionals;
+    }*/
+
+    public function branch_professionals_service($branch_id, $services)
+    {
+        $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
+        Log::info($totaltime);
+        //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $services) {
+
+            $query->where('branch_id', $branch_id);
+        })->whereHas('branchServices', function ($query) use ($services) {
+            $query->whereIn('service_id', $services);
+        }, '=', count($services))->whereHas('charge', function ($query) {
+            $query->where('id', 1);
+        })->get();
+        Log::info($professionals);
+        $current_date = Carbon::now();
+        foreach ($professionals as $professional) {
+            $reservations = $professional->reservations()
+->whereDate('data', $current_date)
+    ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
+    ->orderBy('start_time')
+    ->get();
+    Log::info($reservations);
+
+    $firstValidReservation = null;
+
+    $count = count($reservations);
+    
+    for ($i = 0; $i < $count - 1; $i++) {
+        $startTime1 = strtotime($reservations[$i]->final_hour);
+        $startTime2 = strtotime($reservations[$i + 1]->start_time);
+    
+        $differenceInMinutes = ($startTime2 - $startTime1) / 60;
+    
+        if ($differenceInMinutes >= 20) {
+            $firstValidReservation = $reservations[$i];
+            break; // Detener el bucle una vez que se encuentra la primera reserva válida
+        }
     }
+    
+    // Asegurémonos de incluir la última reserva también si es válida
+    if ($firstValidReservation === null && $count > 0) {
+        $firstValidReservation = $reservations[$count - 1];
+    }
+    $professional->start_time = $firstValidReservation->final_hour;
+        }
+        return $professionals;
+    }
+
 
     public function get_professionals_service($data)
     {

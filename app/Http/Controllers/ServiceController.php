@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BranchService;
 use App\Models\Service;
 use App\Services\ServiceService;
 use Illuminate\Http\Request;
@@ -68,6 +69,21 @@ class ServiceController extends Controller
             ]);
             $service = Service::find($data['id']);
             return response()->json(['service' => $service], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar el servicio"], 500);
+        }
+    }
+
+    public function branch_service_show(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $branchservices = BranchService::where('branch_id', $data['branch_id'])->get()->pluck('service_id');
+            $services = Service::whereNotIn('id', $branchservices)->get();
+            //$service = Service::find($data['id']);
+            return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }

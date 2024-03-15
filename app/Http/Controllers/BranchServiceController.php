@@ -34,12 +34,12 @@ class BranchServiceController extends Controller
             $branch = Branch::find($data['branch_id']);
             $service = Service::find($data['service_id']);
 
-            $branch->branchservices()->attach($service->id);
+            $branch->services()->attach($service->id);
 
             return response()->json(['msg' => 'Servicio asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' =>'Error al asignar el servicio a esta sucursal'], 500);
+        return response()->json(['msg' =>'Error interno del sistema'], 500);
         }
     }
 
@@ -124,7 +124,7 @@ class BranchServiceController extends Controller
             ]);
             $service = Service::find($data['service_id']);
             $branch = Branch::find($data['branch_id']);
-            $branch->branchservices()->detach($service->id);
+            $branch->services()->detach($service->id);
             return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar el servicio en esta sucursal'], 500);

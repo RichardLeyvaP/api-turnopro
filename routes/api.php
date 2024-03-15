@@ -177,6 +177,7 @@ Route::get('/service-show', [ServiceController::class, 'show']);
 Route::post('/service', [ServiceController::class, 'store']);
 Route::post('/service-update', [ServiceController::class, 'update']);
 Route::post('/service-destroy', [ServiceController::class, 'destroy']);
+Route::get('/branch-service-show', [ServiceController::class, 'branch_service_show']);//dada una branch devolver los servicios que no realiza esta branch
 
 Route::get('/productstore', [ProductStoreController::class, 'index']);
 Route::get('/productstore-show', [ProductStoreController::class, 'show']);
@@ -205,6 +206,9 @@ Route::post('/professionalservice', [BranchServiceProfessionalController::class,
 Route::put('/professionalservice', [BranchServiceProfessionalController::class, 'update']);
 Route::post('/professionalservice-destroy', [BranchServiceProfessionalController::class, 'destroy']);
 Route::get('/professional_services', [BranchServiceProfessionalController::class, 'professional_services']);
+Route::get('/store_professional_service', [BranchServiceProfessionalController::class, 'store_professional_service']);
+Route::get('/branch-service-professionals', [BranchServiceProfessionalController::class, 'branch_service_professionals']);//devolver los professionales que realizan un servicio en una sucursal
+Route::get('/professionals-branch-service', [BranchServiceProfessionalController::class, 'professionals_branch_service']);//devolver los professionales que no realizan un servicio en una sucursal
 
 Route::get('/clientprofessional', [ClientProfessionalController::class, 'index']);
 Route::get('/clientprofessional-show', [ClientProfessionalController::class, 'show']);
@@ -270,6 +274,7 @@ Route::get('/reasigned_client', [TailController::class, 'reasigned_client']); //
 
 Route::get('/workplace', [WorkplaceController::class, 'index']);
 Route::get('/workplace-show', [WorkplaceController::class, 'show']);
+Route::get('/branch-show', [WorkplaceController::class, 'branch_show']);
 Route::post('/workplace', [WorkplaceController::class, 'store']);
 Route::put('/workplace', [WorkplaceController::class, 'update']);
 Route::post('/workplace-destroy', [WorkplaceController::class, 'destroy']);

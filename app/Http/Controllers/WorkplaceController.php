@@ -35,6 +35,18 @@ class WorkplaceController extends Controller
         }
     }
 
+    public function branch_show(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            return response()->json(['workplaces' => Workplace::where('branch_id', $data['branch_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error interno del sistema"], 500);
+        }
+    }
+
     public function branch_workplaces_busy(Request $request)
     {
         try {
@@ -67,13 +79,11 @@ class WorkplaceController extends Controller
         try {
             $workplace_data = $request->validate([
                 'name' => 'required|max:100|unique:workplaces',
-                'busy' => 'required',
                 'branch_id' => 'required|numeric',
             ]);
 
             $workplace = new Workplace();
             $workplace->name = $workplace_data['name'];
-            $workplace->busy = $workplace_data['busy'];
             $workplace->branch_id = $workplace_data['branch_id'];
             $workplace->save();
 
@@ -93,20 +103,16 @@ class WorkplaceController extends Controller
             $workplace_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:100',
-                'busy' => 'required',
-                'branch_id' => 'required|numeric',
             ]);
 
             $workplace = Workplace::find($workplace_data['id']);
             $workplace->name = $workplace_data['name'];
-            $workplace->busy = $workplace_data['busy'];
-            $workplace->branch_id = $workplace_data['branch_id'];
             $workplace->save();
 
             return response()->json(['msg' => 'Local de Trabajo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => 'Error al actualizar el Local de Trabajo'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 

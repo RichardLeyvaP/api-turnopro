@@ -15,7 +15,7 @@ class Service extends Model
     }
 
     public function branches(){
-        return $this->belongsToMany(Branch::class)->withTimestamps();
+        return $this->belongsToMany(Branch::class)->withPivot('id')->withTimestamps();
     }
 
     public function orders(){

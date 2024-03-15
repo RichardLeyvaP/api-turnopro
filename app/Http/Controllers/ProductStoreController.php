@@ -217,6 +217,9 @@ class ProductStoreController extends Controller
                 'branch_idM' => 'required|numeric',
                 'product_quantity' => 'required|numeric'
             ]);
+            $productstoreE = new ProductStore();
+            $productstoreM = new ProductStore();            
+            $movementprodct = new MovementProduct();
             $productexist = Product::find($data['product_id']);
             $storeexist = Store::find($data['store_id']);
             $store = Store::find($data['store_idM']);
@@ -249,18 +252,21 @@ class ProductStoreController extends Controller
             } else {
                 $store->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_idM']]);
             }
-
+            Log::info('$productStoreExit->product_exit');
+            Log::info($productStoreExit->product_exit); 
+            Log::info('$productstoreM->product_exit');
+            Log::info($productstoreM->product_exit); 
             //registro de movimiento de productos
-            $movementprodct = new MovementProduct();
             $movementprodct->data = Carbon::now();
             $movementprodct->product_id = $data['product_id'];
             $movementprodct->branch_out_id = $data['branch_id'];
             $movementprodct->store_out_id = $data['store_id'];
             $movementprodct->branch_int_id = $data['branch_idM'];
             $movementprodct->store_int_id = $data['store_idM'];
-            $movementprodct->store_out_exit = $productStoreExit->product_exit;
-            $movementprodct->store_out_exit = $productstoreM->product_exit;  
+            $movementprodct->store_out_exit = $productStoreExit->pivot->product_exit;
+            $movementprodct->store_int_exit = $productStoreMov->pivot->product_exit;  
             $movementprodct->cant = $data['product_quantity'];
+            $movementprodct->save();
             //todo pendiente para revisar importante
             // $this->actualizarProductExit($productexist->id, $storeexist->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
