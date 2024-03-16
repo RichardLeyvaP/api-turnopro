@@ -169,7 +169,9 @@ class UserController extends Controller
             $branch = [
                 'branch_id' => null,
                 'nameBranch' => null,
-                'useTechnical' => 0
+                'useTechnical' => 0,
+                'business_id' => 0,
+                'nameBusiness' => ''
             ];
             Log::info("obtener el usuario");
             $user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
@@ -179,12 +181,18 @@ class UserController extends Controller
                     Log::info("Pass correct");
                     if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
-                        $branch = $user->professional->branches->map(function ($branch) {
+                        $branch = $user->professional->branches->map(function ($branch) use ($request){
+                            if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
+                                if($request->branch_id === $branch->id){
                             return [
                                 'branch_id' => $branch->id,
                                 'nameBranch' => $branch->name,
-                                'useTechnical' => $branch->useTechnical
+                                'useTechnical' => $branch->useTechnical,
+                                'business_id' => $branch->business->id,
+                                'nameBusiness' => $branch->business->name
                             ];
+                            }
+                        }
                         })->first();
                     }
                     Log::info($user->professional->branchRules);
@@ -199,12 +207,13 @@ class UserController extends Controller
                             $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
                         }
                     }
+                    //return $branch;
                     return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,
                         'email' => $user->email,
-                        'business_id' => $user->professional->business ? $user->professional->business->value('id') : 0,
-                        'nameBusiness' => $user->professional->business ? $user->professional->business->value('name') : "",
+                        'business_id' => $branch['business_id'] ? $branch['business_id'] : $user->professional->business->value('id'),
+                        'nameBusiness' => $branch['nameBusiness'] ? $branch['nameBusiness'] : $user->professional->business->value('name'),
                         'charge' => $user->professional ? $user->professional->charge->name : null,
                         'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
                         'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
