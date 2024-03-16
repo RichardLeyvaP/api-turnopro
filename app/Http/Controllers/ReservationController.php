@@ -256,29 +256,7 @@ class ReservationController extends Controller
             ]);
             Log::info('dataaaaaaaaaa');
             Log::info($data);
-<<<<<<< Updated upstream
-            if (!$data['branch_id']) {
-                Log::info("Branch");
-                $branch = Branch::find($data['branch_id']);
-                Log::info('222222222');
-                Log::info($branch);
-                $reservations = $branch->withCount(['reservations' => function ($query) {
-                    $query->whereDate('data', now()->toDateString());
-                }])->value('reservations_count');
-            } else {
-                Log::info("Business");
-                $business = Business::find($data['business_id']);
-                $reservations = $business->branches()->withCount(['reservations' => function ($query) {
-                    $query->whereDate('data', now()->toDateString());
-                }])->value('reservations_count');
-            }
-
-            Log::info('rerwerewrererewrewrewrew');
-            Log::info($reservations);
-            return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-=======
-            if(!$data['branch_id']){
+            if($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null'){
                 Log::info( "Branch");
                 $branch = Branch::find($data['branch_id']);
                 Log::info('222222222');
@@ -300,7 +278,6 @@ class ReservationController extends Controller
             return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
             
         } catch (\Throwable $th) {  
->>>>>>> Stashed changes
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
@@ -314,7 +291,7 @@ class ReservationController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            if (!$data['branch_id']) {
+            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
                 Log::info("Branch");
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
                 $end = now()->endOfWeek();

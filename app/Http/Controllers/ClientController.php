@@ -257,11 +257,10 @@ class ClientController extends Controller
             ]);
 
             $currentDate = Carbon::now()->format('Y-m-d');
-            if ($data['branch_id'] != null) {
+            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id']);
-<<<<<<< Updated upstream
                     ///});
                 })->has('reservations', '>', 3)->get();
             }else{
@@ -272,17 +271,6 @@ class ClientController extends Controller
             $cantidadClientes = $clientesConMasDeTresReservas->count();
 
             return response()->json($cantidadClientes, 200, [], JSON_NUMERIC_CHECK);
-=======
-                    });
-                })->get();
-            } else {
-                $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate) {
-                $query->whereDate('data', '=', $currentDate);
-            })->get();
-            }
-            $frecuente = $clientesConMasDeTresReservas->where('reservations_count', '>=', 3)->count();
-            return response()->json($frecuente, 200, [], JSON_NUMERIC_CHECK);
->>>>>>> Stashed changes
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }

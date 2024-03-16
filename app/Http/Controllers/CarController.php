@@ -46,7 +46,7 @@ class CarController extends Controller
             ]);
             Log::info('111111');
             Log::info($data['branch_id']);
-            if($data['branch_id'] =null){
+            if($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null'){
                 Log::info("Branch"); 
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
                     $amount = $branch->cars()->whereHas('reservations', function ($query){
@@ -94,11 +94,7 @@ class CarController extends Controller
                         //return [$start, $end];
           $i=0;
           $day = 0;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
-<<<<<<< Updated upstream
-                        if (!$data['branch_id']) {
-=======
-                        if ($data['branch_id']) {
->>>>>>> Stashed changes
+                        if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
                             Log::info('branchesssss');
                             $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
                                 $query->whereBetween('data', [$start, $end]);
@@ -112,11 +108,8 @@ class CarController extends Controller
                                 });
                                 for($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++){
                                     $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
-<<<<<<< Updated upstream
-                                    $dates['amount'][$i] = $machingResult ? $machingResult: 0;
-=======
+                                    //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
                                     $dates[$i] = $machingResult ? $machingResult: 0;
->>>>>>> Stashed changes
                                   }
                                   return $dates;
                             /*for($start; $start <= $end; $start->addDay()){                            
@@ -145,33 +138,20 @@ class CarController extends Controller
                                 });
                                 for($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++){
                                     $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
-<<<<<<< Updated upstream
-                                    $dates['amount'][$i] = $machingResult ? $machingResult: 0;
-=======
+                                    //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
                                     $dates[$i] = $machingResult ? $machingResult: 0;
->>>>>>> Stashed changes
                                   }
                                   return $dates;
                         }
                         
         
-<<<<<<< Updated upstream
     //Log::info($branches);
-            
-            return response()->json( $dates, 200, [], JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE);
-            } catch (\Throwable $th) {  
-                Log::error($th);
-                return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
-            }
-=======
-    Log::info($branches);
             
             return response()->json( $array, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
         }
->>>>>>> Stashed changes
     }
 
     public function cars_sum_amount_mounth(Request $request)
