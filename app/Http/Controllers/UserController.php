@@ -176,8 +176,12 @@ class UserController extends Controller
                 }
             Log::info($user);
             $pass = Str::random(8);
-            $user->password = Hash::make('email2');
+            $user->password = Hash::make($pass);
             $user->save();
+            $nombre = $user->professional->name.' '.$user->professional->surname.' '.$user->professional->second_surname;
+            $usuario = $user->name;
+            Log::info($nombre);
+            Log::info($usuario);
             return response()->json(['msg' => "Password modificada correctamente!!!"], 201);
             //}
             // else{
