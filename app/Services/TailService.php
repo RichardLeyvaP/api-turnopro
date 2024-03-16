@@ -20,8 +20,10 @@ class TailService {
             $query->where('branch_id', $branch_id);
         }])->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
-
+            Log::info($tail);
                 $reservation = $tail->reservation;
+                Log::info('reservacion');
+                Log::info($reservation);
                 $professional = $reservation->car->clientProfessional->professional;
                 $client = $reservation->car->clientProfessional->client;
             $workplace = $professional->workplaces()

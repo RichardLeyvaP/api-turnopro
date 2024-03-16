@@ -11,7 +11,7 @@ class Reservation extends Model
     use HasFactory;
     use SoftDeletes;
 
-    public function car ()
+    public function car()
     {
         return $this->belongsTo(Car::class);
     }
