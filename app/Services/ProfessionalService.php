@@ -111,7 +111,7 @@ class ProfessionalService
         $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
         Log::info($totaltime);
         //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
-        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $services) {
+        return $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $services) {
 
             $query->where('branch_id', $branch_id);
         })->whereHas('branchServices', function ($query) use ($services) {
@@ -144,7 +144,8 @@ class ProfessionalService
             break; // Detener el bucle una vez que se encuentra la primera reserva válida
         }
     }
-    
+    Log::info('$firstValidReservation');
+    Log::info($firstValidReservation);
     // Asegurémonos de incluir la última reserva también si es válida
     if ($firstValidReservation === null && $count > 0) {
         $firstValidReservation = $reservations[$count - 1];

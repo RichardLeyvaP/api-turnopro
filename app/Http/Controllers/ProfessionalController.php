@@ -317,7 +317,7 @@ class ProfessionalController extends Controller
             $professional->state = 0;
             $professional->save();
             Log::info($professional->id);
-            $filename = "professionals/default_profile.jpg";
+            $filename = "professionals/default.jpg";
             if ($request->hasFile('image_url')) {
                 $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
             }
@@ -441,6 +441,7 @@ class ProfessionalController extends Controller
                     }
                 }
             Professional::destroy($professionals_data['id']);
+            User::destroy($professional->user_id);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar la professional'], 500);

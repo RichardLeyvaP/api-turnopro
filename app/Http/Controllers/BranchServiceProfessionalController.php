@@ -50,6 +50,31 @@ class BranchServiceProfessionalController extends Controller
 
         return response()->json(['message' => 'Asociaciones actualizadas con éxito'], 200);
     }
+    public function services_professional_branch(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $serviceModels = BranchServiceProfessional::whereHas('branchService.branch', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('professional', function ($query) use ($data){
+                $query->where('id', $data['professional_id']);
+            })->get()->map(function ($branchservprof) {
+                return [
+                    'id' => $branchservprof->branch_service_id,
+                    "name" => $branchservprof->branchService->service->name,
+                    "type_service" => $branchservprof->branchService->service->type_service,
+                    "image_service" => $branchservprof->branchService->service->image_service,
+                    "profit_percentaje" => $branchservprof->branchService->service->profit_percentaje,
+                ];
+            });            
+            return response()->json(['branchServices' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
+        }
+    }
     public function professional_services(Request $request)
     {
         try {
@@ -74,28 +99,12 @@ class BranchServiceProfessionalController extends Controller
                     "service_comment" => $service->service_comment
                 ];
             });
-            /*$BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-           })->where('professional_id', $data['professional_id'])->get();
-           $serviceModels = $BSProfessional->map(function ($branchServiceProfessional){
-                return[
-                    "id" => $branchServiceProfessional->id,
-                    "name"=> $branchServiceProfessional->branchService->service->name,
-                    "simultaneou"=> $branchServiceProfessional->branchService->service->simultaneou,
-                    "price_service"=> $branchServiceProfessional->branchService->service->price_service,
-                    "type_service"=> $branchServiceProfessional->branchService->service->type_service,
-                    "profit_percentaje"=> $branchServiceProfessional->branchService->service->profit_percentaje,
-                    "duration_service"=> $branchServiceProfessional->branchService->service->duration_service,
-                    "image_service"=> $branchServiceProfessional->branchService->service->image_service,
-                    "service_comment"=> $branchServiceProfessional->branchService->service->service_comment
-                ];
-           });*/
-
             return response()->json(['professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
     }
+    
     public function store(Request $request)
     {
         try {
@@ -182,7 +191,32 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
-
+    public function services_professional_branch_free(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $ids = BranchServiceProfessional::whereHas('branchService.branch', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('professional', function ($query) use ($data){
+                $query->where('id', $data['professional_id']);
+            })->get()->pluck('branch_service_id'); 
+            $serviceModels = BranchService::whereNotIn('id', $ids)->where('branch_id', $data['branch_id'])->get()->map(function ($branchserv) {
+                return [
+                    'id' => $branchserv->id,
+                    "name" => $branchserv->service->name,
+                    "type_service" => $branchserv->service->type_service,
+                    "image_service" => $branchserv->service->image_service,
+                    "profit_percentaje" => $branchserv->service->profit_percentaje,
+                ];
+            });                 
+            return response()->json(['branchServices' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
+        }
+    }
     public function professionals_branch_service(Request $request)
     {
         try {
