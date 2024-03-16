@@ -47,7 +47,7 @@ class ServiceController extends Controller
             $service->service_comment = $data['service_comment'];
             $service->save();
 
-            $filename = "image/default.png";
+            $filename = "services/default.png";
             if ($request->hasFile('image_service')) {
                 $filename = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
             }
@@ -147,7 +147,7 @@ class ServiceController extends Controller
                 'id' => 'required|numeric'
             ]);
             $service = Service::find($data['id']);
-            if ($service->image_service != "image/default.png") {
+            if ($service->image_service != "services/default.jpg") {
             $destination=public_path("storage\\".$service->image_service);
                 if (File::exists($destination)) {
                     File::delete($destination);
