@@ -259,14 +259,17 @@ class ClientController extends Controller
             $currentDate = Carbon::now()->format('Y-m-d');
             if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
-                    ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                    $query->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id']);
-                    ///});
+                    });
                 })->has('reservations', '>', 3)->get();
             }else{
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->has('reservations', '>', 3)->get();
             }
-            
+            /*
+            $query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                    });*/
 
             $cantidadClientes = $clientesConMasDeTresReservas->count();
 
