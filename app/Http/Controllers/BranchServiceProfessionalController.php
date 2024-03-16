@@ -101,26 +101,32 @@ class BranchServiceProfessionalController extends Controller
         try {
             $data = $request->validate([
                 'branch_service_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
+                'professional_id' => 'required|numeric',
+                'percent' => 'required|numeric'
             ]);
 
+            Log::info($data);
+            $branchservice = BranchService::find($data['branch_service_id']);
+            $professional = professional::find($data['professional_id']);
 
-            $psersonservice = new BranchServiceProfessional();
-            $psersonservice->branch_service_id = $data['branch_service_id'];
-            $psersonservice->professional_id = $data['professional_id'];
-            $psersonservice->save();
+            $professional->branchservices()->attach($branchservice->id, ['percent' => $data['percent']]);
+
+            //$psersonservice = new BranchServiceProfessional();
+            //$psersonservice->branch_service_id = $data['branch_service_id'];
+            //$psersonservice->professional_id = $data['professional_id'];
+            //$psersonservice->save();
 
             return response()->json(['msg' => 'Servicio asignado correctamente a este trabajador'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al asignar el servicio a este empleado'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
 
     public function show(Request $request)
     {
         try {
-            Log::info("Entra a buscar los productos de un almacén");
+            Log::info("Entra a buscar los srvicios que realiza una branch");
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric'
             ]);
@@ -132,6 +138,7 @@ class BranchServiceProfessionalController extends Controller
                     'name' => $service->name,
                     'price_service' => $service->price_service,
                     'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,                    
                     'duration_service' => $service->duration_service,
                     'image_service' => $service->image_service,
                     'service_comment' => $service->service_comment

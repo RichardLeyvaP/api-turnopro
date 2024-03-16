@@ -75,6 +75,24 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    public function branch_professionals_barber(Request $request)
+    {
+        try {             
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('charge_id', 1)->get();
+                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+        }
+    }
+
     public function update(Request $request)
     {
         try {

@@ -14,6 +14,11 @@ class BranchService extends Model
          return $this->belongsToMany(Professional::class, 'branch_service_professional');
     }
 
+    public function professionals()
+    {
+         return $this->belongsToMany(Professional::class, 'branch_service_professional')->withPivot('percent', 'id')->withTimestamps();
+    }
+
     public function branchServiceProfessionals()
     {
          return $this->hasMany(BranchServiceProfessional::class);
