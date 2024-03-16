@@ -14,10 +14,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
+use App\Services\SendEmailService;
 use GuzzleHttp;
 
 class UserController extends Controller
 {
+    private SendEmailService $sendEmailService;
+    public function __construct(SendEmailService $sendEmailService )
+    {
+       
+        $this->sendEmailService = $sendEmailService;
+    }
     public function index()
     {
         try {
@@ -182,12 +189,21 @@ class UserController extends Controller
             $usuario = $user->name;
             Log::info($nombre);
             Log::info($usuario);
+            //AQUI SE LE ENVIA UN CORREO CON LA NUEVA CONTRASEÑA
+
+            //$this->sendEmailService->emailRecuperarPass($client_email, $type,$client_name, $usser, $pass);
+            $this->sendEmailService->emailRecuperarPass($request->email,$nombre, $usuario, $pass);
+           // $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
+
+
+
             return response()->json(['msg' => "Password modificada correctamente!!!"], 201);
             //}
             // else{
             //return response()->json(['msg' => "Password anterior incorrect0!!!"],400);
             //}
         } catch (\Throwable $th) {
+            Log::info($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
