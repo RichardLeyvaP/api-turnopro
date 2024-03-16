@@ -32,7 +32,7 @@ class ServiceController extends Controller
                 'simultaneou' => 'required|boolean',
                 'price_service' => 'required|numeric',
                 'type_service' => 'required',
-                'profit_percentaje' => 'required|numeric',
+                'profit_percentaje' => 'nullable|numeric',
                 'duration_service' => 'required|numeric',
                 'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
@@ -109,7 +109,7 @@ class ServiceController extends Controller
                 'simultaneou' => 'required|boolean',
                 'price_service' => 'required|numeric',
                 'type_service' => 'required',
-                'profit_percentaje' => 'required|numeric',
+                'profit_percentaje' => 'nullable|numeric',
                 'duration_service' => 'required|numeric',
                 'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
