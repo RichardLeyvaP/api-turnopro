@@ -124,7 +124,7 @@ class ProfessionalService
         foreach ($professionals as $professional) {
             $reservations = $professional->reservations()
 ->whereDate('data', $current_date)
-    ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
+    ->where('start_time', '<=', $current_date->format('Y-m-d H:i:s'))
     ->orderBy('start_time')
     ->get();
     Log::info($reservations);

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Str;
 use GuzzleHttp;
 
 class UserController extends Controller
@@ -151,6 +152,39 @@ class UserController extends Controller
             //}
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al modificar la password'], 500);
+        }
+    }
+
+    public function reactive_password(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                //'id' => 'required|numeric',
+                //'old_password' => 'required',
+                'email' => 'required' //|confirmed'
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $user = User::where('email',$request->email)->first();
+            //if(Hash::check($request->old_password, $user->password))
+            //{
+                if(!$user){
+                    return response()->json(['msg' => "Correo incorrecto!!!"], 404);
+                }
+            Log::info($user);
+            $pass = Str::random(8);
+            $user->password = Hash::make('email2');
+            $user->save();
+            return response()->json(['msg' => "Password modificada correctamente!!!"], 201);
+            //}
+            // else{
+            //return response()->json(['msg' => "Password anterior incorrect0!!!"],400);
+            //}
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 

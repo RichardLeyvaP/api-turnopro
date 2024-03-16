@@ -65,6 +65,7 @@ Route::post('/register_professional', [UserController::class, 'register_professi
 Route::post('/login', [UserController::class, 'login']);
 Route::get('/usuario', [UserController::class, 'index']);
 Route::get('qrCode', [UserController::class, 'qrCode']);
+Route::get('reactive-password', [UserController::class, 'reactive_password']);
 
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
