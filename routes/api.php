@@ -323,6 +323,7 @@ Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::clas
 Route::post('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'store']);
 Route::put('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'update']);
 Route::post('/professionalworkplace-destroy', [ProfessionalWorkPlaceController::class, 'destroy']);
+Route::get('/workplace-show-professional', [ProfessionalWorkPlaceController::class, 'workplace_show_professional']);//dato un professional devolver el puesto de trabajo en el que esta en el dia
 
 Route::get('/comment', [CommentController::class, 'index']);
 Route::get('/comment-show', [CommentController::class, 'show']);
