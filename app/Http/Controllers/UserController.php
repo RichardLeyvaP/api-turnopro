@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Professional;
+use App\Models\ProfessionalWorkPlace;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -321,12 +322,14 @@ class UserController extends Controller
                 $query->where('branch_id', $data['branch_id']);
             })->with(['user', 'charge', 'branches'])->where('email', $data['email'])->first();
             if ($professional) {
+                $workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->pluck('workplace_id');
                 $datos = [
                     'id' => $professional->user->id,
                     'userName' => $professional->user->name,
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
                     'email' => $professional->email,
                     'branch_id' => $professional->branches->first()->value('id'),
+                    'workplace_id' => $workplace_id,
                     'hora' => Carbon::now()->format('H:i:s')
                 ];
                 $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
