@@ -23,7 +23,7 @@ class BranchRuleController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Asignar empleado a atender cliente");
+        Log::info("Asignar regla de convivencia a branch");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -70,10 +70,29 @@ class BranchRuleController extends Controller
                 return [
                     'id' => $branchrule->id,
                     'name' => $branchrule->rule->name,
-                    'description' => $branchrule->rule->description
+                    'description' => $branchrule->rule->description,
+                    'type' => $branchrule->rule->type,
+                    'rule_id' => $branchrule->rule_id
                 ];
             });
             return response()->json(['rules' => $branchrules],200, [], JSON_NUMERIC_CHECK); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
+        }
+    }
+
+    public function branch_rules_noIn(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar las rules de una que aun no posee una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $branchrules = BranchRule::where('branch_id', $data['branch_id'])->get()->pluck('rule_id');
+            $rules = Rule::whereNotIn('id', $branchrules)->get();
+            return response()->json(['rules' => $rules],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
             Log::error($th);
@@ -106,7 +125,7 @@ class BranchRuleController extends Controller
             ]);
             $branch = Branch::find($data['branch_id']);
             $rule = Rule::find($data['rule_id']);
-            $branch->rules()->destroy($rule->id);
+            $branch->rules()->detach($rule->id);
             return response()->json(['msg' => 'Rule eliminada correctamente de la branch'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => 'Error al eliminar la rule de esta branch'], 500);
