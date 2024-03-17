@@ -6,6 +6,8 @@ use App\Models\Workplace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+use function Laravel\Prompts\select;
+
 class WorkplaceController extends Controller
 {
     /**
@@ -115,6 +117,52 @@ class WorkplaceController extends Controller
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
+
+    public function update_state_prof(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            Log::info($request);
+            $workplace_data = $request->validate([
+                'id' => 'required|numeric',
+                'busy' => 'required|numeric',
+            ]);
+
+            $workplace = Workplace::find($workplace_data['id']);
+            $workplace->busy = $workplace_data['busy'];
+            $workplace->save();
+
+            return response()->json(['msg' => 'Puesto de Trabajo actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+        }
+    }
+
+    public function update_state_tec(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            Log::info($request);
+            $workplace_data = $request->validate([
+                'id' => 'required|numeric',
+                'select' => 'required|numeric'
+            ]);
+
+            $workplace = Workplace::find($workplace_data['id']);
+            $workplace->select = $workplace_data['select'];
+            $workplace->save();
+
+            return response()->json(['msg' => 'Puesto de Trabajo actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+        }
+    }
+
+
 
     public function destroy(Request $request)
     {

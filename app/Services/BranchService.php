@@ -733,11 +733,21 @@ class BranchService
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
-                        return $clientProfessional->cars->filter(function ($car) {
-                            return $car->orders->isNotEmpty();
-                        })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0,
+                    'total' => $professional->orders ? 
+                    round(
+                        (
+                            $professional->orders->sum(function ($order) {
+                                return $order->is_product ? $order->price : $order->percent_win;
+                            }) * 0.45
+                        ) +
+                        (
+                            $professional->clientProfessionals->map(function ($clientProfessional) {
+                                return $clientProfessional->cars->filter(function ($car) {
+                                    return $car->orders->isNotEmpty();
+                                })->sum('tip') * 0.8;
+                            }))->sum(), 2) 
+                    : 0,
+        
                     'total_cars' => $professional->reservations()
                     ->whereDate('data', Carbon::now())
                     ->count(),
@@ -763,11 +773,20 @@ class BranchService
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
-                        return $clientProfessional->cars->filter(function ($car) {
-                            return $car->orders->isNotEmpty();
-                        })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0,
+                    'total' => $professional->orders ? 
+                    round(
+                        (
+                            $professional->orders->sum(function ($order) {
+                                return $order->is_product ? $order->price : $order->percent_win;
+                            }) * 0.45
+                        ) +
+                        (
+                            $professional->clientProfessionals->map(function ($clientProfessional) {
+                                return $clientProfessional->cars->filter(function ($car) {
+                                    return $car->orders->isNotEmpty();
+                                })->sum('tip') * 0.8;
+                            }))->sum(), 2) 
+                    : 0,
                     'total_cars' => $professional->reservations()
                     ->whereMonth('data', $month)->whereYear('data', $year)
                     ->count(),
@@ -793,11 +812,20 @@ class BranchService
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
-                        return $clientProfessional->cars->filter(function ($car) {
-                            return $car->orders->isNotEmpty();
-                        })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0,
+                    'total' => $professional->orders ? 
+                    round(
+                        (
+                            $professional->orders->sum(function ($order) {
+                                return $order->is_product ? $order->price : $order->percent_win;
+                            }) * 0.45
+                        ) +
+                        (
+                            $professional->clientProfessionals->map(function ($clientProfessional) {
+                                return $clientProfessional->cars->filter(function ($car) {
+                                    return $car->orders->isNotEmpty();
+                                })->sum('tip') * 0.8;
+                            }))->sum(), 2) 
+                    : 0,
                     'total_cars' => $professional->reservations()
                     ->whereBetween('data', [$startDate, $endDate])
                     ->count(),
