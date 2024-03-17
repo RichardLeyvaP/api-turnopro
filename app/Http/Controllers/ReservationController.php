@@ -145,6 +145,7 @@ class ReservationController extends Controller
             // Verificar si se encontró un usuario
             if ($user) {
                 Log::info("1");
+                Log::info($user);
                 // Buscar el cliente
                 $client = Client::where('email', $data['email_client'])->first();
                 if ($client) {

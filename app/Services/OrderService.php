@@ -46,15 +46,22 @@ class OrderService {
     public function service_order_store($data){
             $car = Car::findOrFail($data['car_id']);
             $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
+            
                 $service = $branchServiceprofessional->branchService->service;
                     $car->amount = $car->amount + $service->price_service;
                 $car->save();
                 $car_id = $car->id;
+                Log::info('$branchServiceProfessional->percent');
+                Log::info($branchServiceprofessional->percent);
+                $porcent = $service->price_service*$branchServiceprofessional->percent/100;
+                Log::info('$porcent');
+                Log::info($porcent);
                  $order = new Order();
                  $order->car_id = $car_id;
                  $order->product_store_id = null;
                  $order->branch_service_professional_id = $data['service_id'];
                  $order->data = Carbon::now();
+                 $order->percent_win = $service->price_service*$branchServiceprofessional->percent/100;
                  $order->is_product = false;
                  $order->price = $service->price_service;   
                  $order->request_delete = false;

@@ -54,14 +54,21 @@ class ReservationService {
                     $branchservice->save();
                 }
                 $branch_service_id = $branchservice->id;
+
                 $branchServiceProfessional = BranchServiceProfessional::where('branch_service_id', $branch_service_id)->where('professional_id', $data['professional_id'])->first();
-                if (!$branchServiceProfessional) {
+                //debe ser un servicio que realiza el professional
+                /*if (!$branchServiceProfessional) {
                     $branchServiceProfessional = new BranchServiceProfessional();
                     $branchServiceProfessional->branch_service_id = $branch_service_id;
                     $branchServiceProfessional->professional_id = $data['professional_id'];
                     $branchServiceProfessional->save();
-                }
+                }*/
                 Log::info("Crear ordenes");
+                Log::info('$branchServiceProfessional->percent');
+                Log::info($branchServiceProfessional->percent);
+                $porcent = $service->price_service*$branchServiceProfessional->percent/100;
+                Log::info('$porcent');
+                Log::info($porcent);
                 $branch_service_professional_id = $branchServiceProfessional->id;
                 $order = new Order();
                 $order->car_id = $car->id;
@@ -69,6 +76,8 @@ class ReservationService {
                 $order->branch_service_professional_id = $branch_service_professional_id;
                 $order->data = $data['data'];
                 $order->is_product = false;
+                //logica de porciento de ganancia
+                $order->percent_win = $service->price_service*$branchServiceProfessional->percent/100;
                 $order->price = $service->price_service;   
                 $order->request_delete = false;
                 $order->save();
