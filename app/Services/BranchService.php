@@ -725,15 +725,20 @@ class BranchService
             $query->where('branch_id', $branch_id);
         })
             ->get()->map(function ($professional) {
+                Log::info('$professional->orders->is_product');
+                Log::info($professional->orders->value('is_product'));
                 return [
+                    Log::info($professional->orders->value('is_product')),
                     'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                    'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
+                    'amount' => $professional->orders ? ($professional->orders->is_product ? round($professional->orders->sum('price') * 0.45, 2) : round($professional->orders->sum('percent_win') * 0.45, 2)) : 0,
                     'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
+                    'total' => $professional->orders ? $professional->orders->map(function ($query){
+                        return $query->is_product ? round($query->sum('price') * 0.45, 2) : round($query->sum('percent_win') * 0.45, 2);
+                    }) + ($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
@@ -757,13 +762,13 @@ class BranchService
             ->get()->map(function ($professional)  use ($month, $year) {
                 return [
                     'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                    'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
+                    'amount' => $professional->orders ? ($professional->orders->is_product ? round($professional->orders->sum('price') * 0.45, 2) : round($professional->orders->sum('percent_win') * 0.45, 2)) : 0,
                     'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
+                    'total' => $professional->orders ? round($professional->orders->is_product ? $professional->orders->sum('price') * 0.45 :$professional->orders->sum('percent_win') * 0.45/*($professional->orders->sum('price') * 0.45)*/ + ($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
@@ -787,13 +792,13 @@ class BranchService
             ->get()->map(function ($professional)  use ($startDate, $endDate) {
                 return [
                     'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                    'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
+                    'amount' => $professional->orders ? ($professional->orders->is_product ? round($professional->orders->sum('price') * 0.45, 2) : round($professional->orders->sum('percent_win') * 0.45, 2)) : 0,
                     'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;
                     }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? round(($professional->orders->sum('price') * 0.45) + ($professional->clientProfessionals->map(function ($clientProfessional) {
+                    'total' => $professional->orders ? round($professional->orders->is_product ? $professional->orders->sum('price') * 0.45 :$professional->orders->sum('percent_win') * 0.45/*($professional->orders->sum('price') * 0.45)*/ + ($professional->clientProfessionals->map(function ($clientProfessional) {
                         return $clientProfessional->cars->filter(function ($car) {
                             return $car->orders->isNotEmpty();
                         })->sum('tip') * 0.8;

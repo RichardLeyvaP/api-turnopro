@@ -99,12 +99,12 @@ class OrderService {
             $query->where('branch_id', $data['branch_id']);
         })->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
             $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
-            $query->select('price');
+            $query->select('percent_win');
         })->get()->map(function ($service) use ($data){
             Log::info($service);
            foreach ($service->branchServices as $branchService) {
                 foreach($branchService->branchServiceProfessionals as $branchServiceProfessional){
-                $totalService = $branchServiceProfessional->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->sum('price');
+                $totalService = $branchServiceProfessional->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->sum('percent_win');
                 }
             }
             return [

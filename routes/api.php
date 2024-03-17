@@ -313,6 +313,7 @@ Route::put('/branchprofessional', [BranchProfessionalController::class, 'update'
 Route::post('/branchprofessional-destroy', [BranchProfessionalController::class, 'destroy']);
 Route::get('/branch-professionals', [BranchProfessionalController::class, 'branch_professionals']);//dado una branch devuelve los professionales que trabajan en ella
 Route::get('/branch-professionals-barber', [BranchProfessionalController::class, 'branch_professionals_barber']);//dado una branch devuelve los professionales que trabajan en ella que son barberos
+Route::get('/branch-professionals-barber-tecnico', [BranchProfessionalController::class, 'branch_professionals_barber_tecnico']);//dado una branch devuelve los professionales que trabajan en ella que son barberos
 
 Route::get('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'index']);
 Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::class, 'show']);
