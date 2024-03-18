@@ -82,7 +82,7 @@ class ProfessionalController extends Controller
             ]);
             return response()->json(['professional' => Professional::with('user', 'charge')->find($professionals_data['id'])], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar el professional"], 500);
+            return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
 
@@ -433,7 +433,7 @@ class ProfessionalController extends Controller
                 'id' => 'required|numeric'
             ]);
             $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url != "professionals/default_profile.jpg") {
+            if ($professional->image_url != "professionals/default.jpg") {
                 //$this->imageService->destroyImagen($professional->image_url);
                 $destination=public_path("storage\\".$professional->image_url);
                     if (File::exists($destination)) {

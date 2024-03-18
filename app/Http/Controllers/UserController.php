@@ -119,7 +119,7 @@ class UserController extends Controller
             $professional->state = 0;
             $professional->save();
 
-            $filename = "professionals/default_profile.jpg";
+            $filename = "professionals/default.jpg";
             if ($request->hasFile('image_url')) {
                 $filename = $request->file('image_url')->storeAs('professionals',$professional->id.'.'.$request->file('image_url')->extension(),'public');
             }
