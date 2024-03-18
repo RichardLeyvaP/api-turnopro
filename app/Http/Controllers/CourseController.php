@@ -33,12 +33,19 @@ class CourseController extends Controller
     {
         try {
             $data = $request->validate([
+                
                 'name' => 'required|max:100',
                 'description' => 'required',
                 'price' => 'required|numeric',
                 'startDate' => 'required|date',
                 'endDate' => 'required|date',
-                'enrollment_id' => 'nullable|numeric'
+                'enrollment_id' => 'nullable|numeric',
+                'total_enrollment' => 'nullable|numeric',
+                'available_slots' => 'nullable|numeric',
+                'reservation_price' => 'nullable|numeric',
+                'duration' => 'nullable|numeric',
+                'practical_percentage' => 'nullable|numeric',
+                'theoretical_percentage' => 'nullable|numeric',   
             ]);
            
             $course = new Course();
@@ -48,6 +55,12 @@ class CourseController extends Controller
             $course->startDate = $data['startDate'];
             $course->endDate = $data['endDate'];
             $course->enrollment_id = $data['enrollment_id'];
+            $course->total_enrollment = $data['total_enrollment'];
+            $course->available_slots = $data['available_slots'];
+            $course->reservation_price = $data['reservation_price'];
+            $course->duration = $data['duration'];
+            $course->practical_percentage = $data['practical_percentage'];
+            $course->theoretical_percentage = $data['theoretical_percentage'];
             $course->save();
             Log::info($course);
             $filename = "image/default.png"; 
@@ -94,7 +107,13 @@ class CourseController extends Controller
                 'price' => 'required|numeric',
                 'startDate' => 'required|date',
                 'endDate' => 'required|date',
-                'enrollment_id' => 'nullable|numeric'
+                'enrollment_id' => 'nullable|numeric',
+                'total_enrollment' => 'nullable|numeric',
+                'available_slots' => 'nullable|numeric',
+                'reservation_price' => 'nullable|numeric',
+                'duration' => 'nullable|numeric',
+                'practical_percentage' => 'nullable|numeric',
+                'theoretical_percentage' => 'nullable|numeric',   
             ]);
            
             Log::info($request['course_image']);
@@ -113,6 +132,12 @@ class CourseController extends Controller
             $course->startDate = $data['startDate'];
             $course->endDate = $data['endDate'];
             $course->enrollment_id = $data['enrollment_id'];
+            $course->total_enrollment = $data['total_enrollment'];
+            $course->available_slots = $data['available_slots'];
+            $course->reservation_price = $data['reservation_price'];
+            $course->duration = $data['duration'];
+            $course->practical_percentage = $data['practical_percentage'];
+            $course->theoretical_percentage = $data['theoretical_percentage'];
             $course->save();
             Log::info($course);
 

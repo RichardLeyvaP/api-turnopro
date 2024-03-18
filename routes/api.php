@@ -233,7 +233,7 @@ Route::get('/reservation_services', [CarController::class, 'reservation_services
 Route::get('/car_services', [CarController::class, 'car_services']); //dado una reservations devolver los servicios
 Route::get('/cars-winner-day', [CarController::class, 'cars_sum_amount']);//Dado un business devolver las ganancial del dia
 Route::get('/cars-winner-week', [CarController::class, 'cars_sum_amount_week']);//Dado un business devolver las ganancial de la semana
-Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial de la semana
+Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial del mes
 
 Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-show', [OrderController::class, 'show']);
@@ -392,6 +392,7 @@ Route::post('/course-destroy', [CourseController::class, 'destroy']);
 Route::get('/course-student', [CourseStudentController::class, 'index']);
 Route::get('/course-student-show', [CourseStudentController::class, 'show']);
 Route::post('/course-student', [CourseStudentController::class, 'store']);
+Route::post('/course-student-landing', [CourseStudentController::class, 'store_landing']);
 Route::post('/course-student-update', [CourseStudentController::class, 'update']);
 Route::post('/course-student-destroy', [CourseStudentController::class, 'destroy']);
 
