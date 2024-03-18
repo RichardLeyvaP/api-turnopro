@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Professional;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -82,9 +83,19 @@ class BranchProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $services = $request->input('services');
+            //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
+            $professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
+
                 $query->where('branch_id', $data['branch_id']);
-            })->where('charge_id', 1)->get();
+            })->whereHas('branchServices', function ($query) use ($services) {
+                $query->whereIn('service_id', $services);
+            }, '=', count($services))->whereHas('charge', function ($query) {
+                $query->where('id', 1);
+            })->get();
+            /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('charge_id', 1)->get();*/
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  

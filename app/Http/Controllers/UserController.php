@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Business;
 use App\Models\Client;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
@@ -234,6 +235,8 @@ class UserController extends Controller
             if (isset($user->id)) {
                 if (Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
+                    //return $user->professional->id;
+                    $business = Business::where('id', $user->professional->business_id)->get();
                     if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
                         $branch = $user->professional->branches->map(function ($branch) use ($request){
@@ -250,6 +253,8 @@ class UserController extends Controller
                         }
                         })->first();
                     }
+                    Log::info("obtener el usuario");
+                    Log::info("obtener el usuario");
                     Log::info($user->professional->branchRules);
                     if ($user->professional->branchRules) {
                         $branchRules = Branch::find($branch['branch_id']);
@@ -267,8 +272,8 @@ class UserController extends Controller
                         'id' => $user->id,
                         'userName' => $user->name,
                         'email' => $user->email,
-                        'business_id' => $branch['business_id'] ? $branch['business_id'] : $user->professional->business->value('id'),
-                        'nameBusiness' => $branch['nameBusiness'] ? $branch['nameBusiness'] : $user->professional->business->value('name'),
+                        'business_id' => $business->value('id'),
+                        'nameBusiness' => $business->value('name'),
                         'charge' => $user->professional ? $user->professional->charge->name : null,
                         'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
                         'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
