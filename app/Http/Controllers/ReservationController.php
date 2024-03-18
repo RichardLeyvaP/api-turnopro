@@ -324,8 +324,8 @@ class ReservationController extends Controller
                     $query->whereBetween('data', [$start, $end]);
                 }])
                 ->get()
-                ->flatMap(function ($branch) {
-                    return $branch->reservations;
+                ->flatMap(function ($branch) use ($data) {
+                    return $branch->reservations->where('laravel_through_key', $data['branch_id']);
                 });
             
             // Inicializar un array para contabilizar las reservaciones por día
@@ -351,7 +351,7 @@ class ReservationController extends Controller
                     $query->whereBetween('data', [$start, $end]);
                 }])
                 ->get()
-                ->flatMap(function ($branch) {
+                ->flatMap(function ($branch) use ($data) {
                     return $branch->reservations;
                 });
             
