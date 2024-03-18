@@ -257,28 +257,26 @@ class ReservationController extends Controller
             ]);
             Log::info('dataaaaaaaaaa');
             Log::info($data);
-            if($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null'){
-                Log::info( "Branch");
+            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+                Log::info("Branch");
                 $branch = Branch::find($data['branch_id']);
                 Log::info('222222222');
                 Log::info($branch);
-            $reservations = $branch->withCount(['reservations' => function ($query){
-                $query->whereDate('data', now()->toDateString());
-            }])->value('reservations_count');
-            }
-            else{
-                Log::info( "Business");
+                $reservations = $branch->withCount(['reservations' => function ($query) {
+                    $query->whereDate('data', now()->toDateString());
+                }])->value('reservations_count');
+            } else {
+                Log::info("Business");
                 $business = Business::find($data['business_id']);
-            $reservations = $business->branches()->withCount(['reservations' => function ($query){
-                $query->whereDate('data', now()->toDateString());
-            }])->value('reservations_count');
+                $reservations = $business->branches()->withCount(['reservations' => function ($query) {
+                    $query->whereDate('data', now()->toDateString());
+                }])->value('reservations_count');
             }
-            
+
             Log::info('rerwerewrererewrewrewrew');
             Log::info($reservations);
             return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
-            
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
@@ -293,9 +291,13 @@ class ReservationController extends Controller
                 'branch_id' => 'nullable'
             ]);
             if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
-                Log::info("Branch");
+                /*Log::info("Branch");
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
                 $end = now()->endOfWeek();
+                Log::info('$start');
+                Log::info($start);
+                Log::info('$end');
+                Log::info($end);
                 $business = Business::find($data['business_id']);
                 $reservations = Branch::find($data['branch_id'])->with(['reservations' => function ($query) use ($start, $end) {
                     $query->whereBetween('data', [$start, $end]);
@@ -312,7 +314,34 @@ class ReservationController extends Controller
                     ->toArray();
                 // Llenar los días faltantes con 0
                 $fullWeek = array_fill_keys(range(0, 6), 0);
-                $reservations = array_replace($fullWeek, $reservations);
+                $reservations = array_replace($fullWeek, $reservations);*/
+
+                $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
+                $end = now()->endOfWeek();
+                //$business = Business::find($data['business_id']);
+                $reservations = Branch::find($data['branch_id'])
+                ->with(['reservations' => function ($query) use ($start, $end) {
+                    $query->whereBetween('data', [$start, $end]);
+                }])
+                ->get()
+                ->flatMap(function ($branch) {
+                    return $branch->reservations;
+                });
+            
+            // Inicializar un array para contabilizar las reservaciones por día
+            $reservationsByDay = array_fill(0, 7, 0);
+            
+            // Contar las reservaciones por día
+            $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
+            foreach ($uniqueReservations as $reservation) {
+                $dayOfWeek = (new DateTime($reservation->data))->format('w');
+                $reservationsByDay[$dayOfWeek]++;
+            }
+            
+            // Llenar los días faltantes con 0
+            $fullWeek = array_replace(array_fill(0, 7, 0), $reservationsByDay);
+            
+            $reservations = $fullWeek;
             } else {
                 Log::info("Business");
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
@@ -320,24 +349,30 @@ class ReservationController extends Controller
                 $business = Business::find($data['business_id']);
                 $reservations = $business->branches()->with(['reservations' => function ($query) use ($start, $end) {
                     $query->whereBetween('data', [$start, $end]);
-                }])->get()
-                    ->flatMap(function ($branch) {
-                        return $branch->reservations->groupBy(function ($reservation) {
-                            $date = new DateTime($reservation->data);
-                            return $date->format('w'); // Agrupa por día de la semana (0 para domingo, 1 para lunes, etc.)
-                        });
-                    })
-                    ->map(function ($reservationsByDay) {
-                        return count($reservationsByDay);
-                    })->toArray();
-                // Llenar los días faltantes con 0
-                $fullWeek = array_fill_keys(range(0, 6), 0);
-                $reservations = array_replace($fullWeek, $reservations);
+                }])
+                ->get()
+                ->flatMap(function ($branch) {
+                    return $branch->reservations;
+                });
+            
+            // Inicializar un array para contabilizar las reservaciones por día
+            $reservationsByDay = array_fill(0, 7, 0);
+            
+            // Contar las reservaciones por día
+            $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
+            foreach ($uniqueReservations as $reservation) {
+                $dayOfWeek = (new DateTime($reservation->data))->format('w');
+                $reservationsByDay[$dayOfWeek]++;
             }
-           
+            
+            // Llenar los días faltantes con 0
+            $fullWeek = array_replace(array_fill(0, 7, 0), $reservationsByDay);
+            
+            $reservations = $fullWeek;
+            }
+
             $reservationsString = implode(',', $reservations);
             return response($reservationsString, 200, ['Content-Type' => 'application/json']);
-
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
