@@ -46,6 +46,12 @@ class Send_mail extends Mailable
      public $usser;
      public $pass;
 
+     //propiedades para las gitCars
+     public $expiration_date;
+     public $code;
+     public $value_card;
+
+
     /**
      * Create a new message instance.
      */
@@ -108,6 +114,11 @@ class Send_mail extends Mailable
                 // Propiedades adicionales a restaurar_pass
                 'usser' => $this->usser,
                 'pass' => $this->pass,
+
+                // Propiedades adicionales a git_card
+                'expiration_date' => $this->expiration_date,
+                'code' => $this->code,
+                'value_card' => $this->value_card,
 
 
             ]

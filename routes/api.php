@@ -48,6 +48,7 @@ use App\Models\CourseStudent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 
 /*
@@ -72,6 +73,12 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
 });
+Route::get('/time', function () {
+    //return now(); // Devuelve la hora actual.
+    return Carbon::parse(now())->timezone('America/Santiago')->format('Y-m-d H:i:s');
+
+});
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

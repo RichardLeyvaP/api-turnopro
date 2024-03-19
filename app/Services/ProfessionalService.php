@@ -122,41 +122,40 @@ class ProfessionalService
         Log::info($professionals);
         $current_date = Carbon::now();
         Log::info($current_date);
-        foreach ($professionals as $professional) {
-            $reservations = $professional->reservations()
-                ->whereDate('data', $current_date)
-                ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
-                ->orderBy('start_time')
-                ->get();
         
-            $count = count($reservations);
-        
-            if ($count == 0) {
-                $professional->start_time = '08:00:00';
-            } else {
-                $validReservationFound = false;
-        
-                foreach ($reservations as $reservation) {
-                    $startTime = strtotime($reservation->start_time);
-                    $finalHour = strtotime($reservation->final_hour);
-                    $currentTime = time();
-        
-                    // Comprobar si la reserva cumple con las condiciones
-                    if ($finalHour > $currentTime && ($startTime >= $currentTime || $startTime < $finalHour)) {
-                        if ($count == 1 || ($startTime - $currentTime) >= ($totaltime * 60)) {
-                            $professional->start_time = $reservation->final_hour;
-                            $validReservationFound = true;
-                            break;
-                        }
-                    }
-                }
-        
-                // Si ninguna reserva cumple con las condiciones, establecer start_time en vacío
-                if (!$validReservationFound) {
-                    $professional->start_time = 'Sin horario disponible';
-                }
+foreach ($professionals as $professional) {
+    $reservations = $professional->reservations()
+        ->whereDate('data', $current_date)
+        ->where('start_time', '<=', $current_date->format('Y-m-d H:i:s'))
+        ->orderBy('start_time')
+        ->get();
+
+    $count = count($reservations);
+
+    if ($count == 0) {
+        $professional->start_time = date('H:i:s');
+    } else {
+        $validReservationFound = false;
+
+        foreach ($reservations as $reservation) {
+            $startTime = strtotime($reservation->start_time);
+            $finalHour = strtotime($reservation->final_hour);
+            $currentTime = time();
+
+            // Comprobar si la reserva cumple con las condiciones
+            if ($finalHour > $currentTime && $startTime > $currentTime && ($count == 1 || ($startTime - $currentTime) >= ($totaltime * 60))) {
+                $professional->start_time = $reservation->final_hour;
+                $validReservationFound = true;
+                break;
             }
         }
+
+        // Si ninguna reserva cumple con las condiciones, establecer start_time en vacío
+        if (!$validReservationFound) {
+            $professional->start_time = 'No tiene horario disponible';
+        }
+    }
+}
         return $professionals;
     }
 

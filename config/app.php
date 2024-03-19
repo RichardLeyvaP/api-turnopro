@@ -70,7 +70,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    //'timezone' => 'UTC',
+    'timezone' => 'America/Santiago',
+    //'timezone' => 'America/New_York',
 
     /*
     |--------------------------------------------------------------------------

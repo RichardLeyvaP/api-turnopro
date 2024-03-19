@@ -6,6 +6,7 @@ use App\Models\CardGift;
 use App\Models\CardGiftUser;
 use App\Models\Client;
 use App\Models\User;
+use App\Services\SendEmailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,12 @@ use Illuminate\Support\Str;
 
 class CardGiftUserController extends Controller
 {
+    private SendEmailService $sendEmailService;
+    public function __construct(SendEmailService $sendEmailService )
+    {
+       
+        $this->sendEmailService = $sendEmailService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -40,6 +47,12 @@ class CardGiftUserController extends Controller
                 //'number_notification' => 'nullable|numeric'
             ]);
             $user = User::find($data['user_id']);
+            /*if ($user->professional) {                
+            return $user->professional;
+            }
+            else{
+                return $user->client;
+            }*/
             do {
                 // Genera un código alfanumérico aleatorio
                 $codigo = Str::random(8);
@@ -57,8 +70,16 @@ class CardGiftUserController extends Controller
             $cardGiftUser->code = $codigo;
             $cardGiftUser->exist = $cardGift->value;
             $cardGiftUser->save();
+            // variablespara el correo
+            $client_email = $user->professional ? $user->professional->email : $user->client->email;
+            $client_name = $user->professional ? $user->professional->name.' '.$user->professional->surname.' '.$user->professional->second_surname : $user->client->name.' '.$user->client->surname.''.$user->client->second_surname;
+            $code = $codigo;
+            $value_card = $cardGift->value;
+            $expiration_date = $data['expiration_date'];
+
 
             ///Aqui enviar codido por correo $user->email
+            $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
 
             return response()->json(['msg' => 'Tarjeta de regalo correctamente al almacén'], 200);
         } catch (\Throwable $th) {
