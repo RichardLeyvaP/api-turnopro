@@ -121,78 +121,39 @@ class ProfessionalService
         })->get();
         Log::info($professionals);
         $current_date = Carbon::now();
-        /*foreach ($professionals as $professional) {
-            $reservations = $professional->reservations()
-                ->whereDate('data', $current_date)
-                ->where('start_time', '<=', $current_date->format('Y-m-d H:i:s')) // Corregido el operador de comparación
-                ->orderBy('start_time')
-                ->get();
-            Log::info($reservations);
-        
-            $firstValidReservation = null;
-        
-            $count = count($reservations);
-            
-            for ($i = 0; $i < $count - 1; $i++) {
-                $startTime1 = strtotime($reservations[$i]->final_hour);
-                $startTime2 = strtotime($reservations[$i + 1]->start_time);
-            
-                $differenceInMinutes = ($startTime2 - $startTime1) / 60;
-            
-                if ($differenceInMinutes >= 20) {
-                    $firstValidReservation = $reservations[$i];
-                    break; // Detener el bucle una vez que se encuentra la primera reserva válida
-                }
-            }
-            
-            if ($firstValidReservation === null) {
-                // No hay reservas válidas, establece la hora de inicio como null o alguna valor predeterminado
-                $professional->start_time = "08:00:00"; // o cualquier valor predeterminado que desees
-            } else {
-                $professional->start_time = $firstValidReservation->final_hour;
-            }
-        }*/
+        Log::info($current_date);
         foreach ($professionals as $professional) {
             $reservations = $professional->reservations()
                 ->whereDate('data', $current_date)
-                ->where('start_time', '<=', $current_date->format('Y-m-d H:i:s'))
+                ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
                 ->orderBy('start_time')
                 ->get();
         
-            $firstValidReservation = null;
             $count = count($reservations);
-            
-            if ($count > 0) {
-                for ($i = 0; $i < $count - 1; $i++) {
-                    $startTime1 = strtotime($reservations[$i]->final_hour);
-                    $startTime2 = strtotime($reservations[$i + 1]->start_time);
-                
-                    $differenceInMinutes = ($startTime2 - $startTime1) / 60;
-                
-                    if ($differenceInMinutes >= 20) {
-                        $firstValidReservation = $reservations[$i];
-                        break;
+        
+            if ($count == 0) {
+                $professional->start_time = '08:00:00';
+            } else {
+                $validReservationFound = false;
+        
+                foreach ($reservations as $reservation) {
+                    $startTime = strtotime($reservation->start_time);
+                    $finalHour = strtotime($reservation->final_hour);
+                    $currentTime = time();
+        
+                    // Comprobar si la reserva cumple con las condiciones
+                    if ($finalHour > $currentTime && ($startTime >= $currentTime || $startTime < $finalHour)) {
+                        if ($count == 1 || ($startTime - $currentTime) >= ($totaltime * 60)) {
+                            $professional->start_time = $reservation->final_hour;
+                            $validReservationFound = true;
+                            break;
+                        }
                     }
                 }
-                
-                // Asegurémonos de incluir la última reserva también si es válida
-                if ($firstValidReservation === null) {
-                    $firstValidReservation = $reservations[$count - 1];
-                }
-            }
-            
-            // Verificar si $firstValidReservation no es nulo antes de acceder a sus propiedades
-            if ($firstValidReservation !== null) {
-                $professional->start_time = $firstValidReservation->final_hour;
-            } else {
-                // Si no hay reservas válidas para este profesional, establecer start_time según condiciones
-                if ($count == 0) {
-                    // No hay reservas para este profesional en el día, establecer hora de inicio predeterminada
-                    $professional->start_time = '08:00:00';
-                } else {
-                    // Todas las reservas no cumplen con el criterio de tiempo mínimo entre ellas
-                    // Establecer start_time a null
-                    $professional->start_time = null;
+        
+                // Si ninguna reserva cumple con las condiciones, establecer start_time en vacío
+                if (!$validReservationFound) {
+                    $professional->start_time = 'Sin horario disponible';
                 }
             }
         }
