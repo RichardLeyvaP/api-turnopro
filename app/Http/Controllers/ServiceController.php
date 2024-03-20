@@ -109,12 +109,13 @@ class ServiceController extends Controller
                 'simultaneou' => 'required|boolean',
                 'price_service' => 'required|numeric',
                 'type_service' => 'required',
-                'profit_percentaje' => 'nullable|numeric',
+                'profit_percentaje' => 'nullable',
                 'duration_service' => 'required|numeric',
                 'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
             ]);
-
+            Log::info($request->profit_percentaje);
+            $filename = "services/default.png";
             $service = Service::find($data['id']);
             if($service->image_service != $request['image_service'])
                 {
@@ -124,11 +125,16 @@ class ServiceController extends Controller
                     }                    
                     $service->image_service = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
                 }
+                else{
+                    $service->image_service = $filename;
+                }
+                if($service->profit_percentaje){
+                    $service->profit_percentaje = $request->profit_percentaje;
+                }
             $service->name = $data['name'];
             $service->simultaneou = $data['simultaneou'];
             $service->price_service = $data['price_service'];
-            $service->type_service = $data['type_service'];
-            $service->profit_percentaje = $data['profit_percentaje'];
+            $service->type_service = $data['type_service'];            
             $service->duration_service = $data['duration_service'];
             $service->service_comment = $data['service_comment'];
             $service->save();

@@ -44,6 +44,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\RevenueController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
@@ -66,6 +67,8 @@ use Illuminate\Support\Facades\File;
 Route::post('/register_client', [UserController::class, 'register_client']);
 Route::post('/register_professional', [UserController::class, 'register_professional']);
 Route::post('/login', [UserController::class, 'login']);
+Route::post('/login-phone', [UserController::class, 'login_phone']); //para l APK
+Route::get('/login-phone-get-branch', [UserController::class, 'login_phone_get_branch']);//login para la apk
 Route::get('/usuario', [UserController::class, 'index']);
 Route::get('qrCode', [UserController::class, 'qrCode']);
 Route::get('reactive-password', [UserController::class, 'reactive_password']);
@@ -450,6 +453,12 @@ Route::get('/revenue-show', [RevenueController::class, 'show']);
 Route::post('/revenue', [RevenueController::class, 'store']);
 Route::put('/revenue', [RevenueController::class, 'update']);
 Route::post('/revenue-destroy', [RevenueController::class, 'destroy']);
+
+Route::get('/finance', [FinanceController::class, 'index']);
+Route::get('/finance-show', [FinanceController::class, 'show']);
+Route::post('/finance', [FinanceController::class, 'store']);
+Route::put('/finance', [FinanceController::class, 'update']);
+Route::post('/finance-destroy', [FinanceController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

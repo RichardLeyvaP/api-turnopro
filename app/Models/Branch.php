@@ -69,6 +69,10 @@ class Branch extends Model
         return $this->HasMany(Notification::class);
     }
 
+    public function finances(){
+        return $this->HasMany(Finance::class);
+    }
+
     public function boxes(){
         return $this->hasOne(Box::class);
     }
