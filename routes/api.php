@@ -13,7 +13,6 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessTypesController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\ChargeController;
-use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientProfessionalController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StoreController;
@@ -43,6 +42,9 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\RevenueController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
@@ -436,6 +438,18 @@ Route::get('/associated-show', [AssociatedController::class, 'show']);
 Route::post('/associated', [AssociatedController::class, 'store']);
 Route::put('/associated', [AssociatedController::class, 'update']);
 Route::post('/associated-destroy', [AssociatedController::class, 'destroy']);
+
+Route::get('/expense', [ExpenseController::class, 'index']);
+Route::get('/expense-show', [ExpenseController::class, 'show']);
+Route::post('/expense', [ExpenseController::class, 'store']);
+Route::put('/expense', [ExpenseController::class, 'update']);
+Route::post('/expense-destroy', [ExpenseController::class, 'destroy']);
+
+Route::get('/revenue', [RevenueController::class, 'index']);
+Route::get('/revenue-show', [RevenueController::class, 'show']);
+Route::post('/revenue', [RevenueController::class, 'store']);
+Route::put('/revenue', [RevenueController::class, 'update']);
+Route::post('/revenue-destroy', [RevenueController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
