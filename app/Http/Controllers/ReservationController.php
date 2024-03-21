@@ -291,30 +291,6 @@ class ReservationController extends Controller
                 'branch_id' => 'nullable'
             ]);
             if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
-                /*Log::info("Branch");
-                $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
-                $end = now()->endOfWeek();
-                Log::info('$start');
-                Log::info($start);
-                Log::info('$end');
-                Log::info($end);
-                $business = Business::find($data['business_id']);
-                $reservations = Branch::find($data['branch_id'])->with(['reservations' => function ($query) use ($start, $end) {
-                    $query->whereBetween('data', [$start, $end]);
-                }])->get()
-                    ->flatMap(function ($branch) {
-                        return $branch->reservations->groupBy(function ($reservation) {
-                            $date = new DateTime($reservation->data);
-                            return $date->format('w'); // Agrupa por día de la semana (0 para domingo, 1 para lunes, etc.)
-                        });
-                    })
-                    ->map(function ($reservationsByDay) {
-                        return count($reservationsByDay);
-                    })
-                    ->toArray();
-                // Llenar los días faltantes con 0
-                $fullWeek = array_fill_keys(range(0, 6), 0);
-                $reservations = array_replace($fullWeek, $reservations);*/
 
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
                 $end = now()->endOfWeek();
@@ -334,7 +310,8 @@ class ReservationController extends Controller
             // Contar las reservaciones por día
             $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
             foreach ($uniqueReservations as $reservation) {
-                $dayOfWeek = (new DateTime($reservation->data))->format('w');
+                $reservationDate = new DateTime($reservation->data);
+                $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
                 $reservationsByDay[$dayOfWeek]++;
             }
             
@@ -361,7 +338,8 @@ class ReservationController extends Controller
             // Contar las reservaciones por día
             $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
             foreach ($uniqueReservations as $reservation) {
-                $dayOfWeek = (new DateTime($reservation->data))->format('w');
+                $reservationDate = new DateTime($reservation->data);
+                $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
                 $reservationsByDay[$dayOfWeek]++;
             }
             

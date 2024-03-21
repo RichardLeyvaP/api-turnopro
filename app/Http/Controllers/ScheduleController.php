@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ScheduleController extends Controller
 {
@@ -85,18 +86,30 @@ class ScheduleController extends Controller
         Log::info("store");
         Log::info($request);
         try {
-            $SchedSchedule_data = $request->validate([
+            /*$SchedSchedule_data = $request->validate([
+                'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'),   
+                'start_time' => 'nullable',
+                'closing_time' => 'nullable',
+                'branch_id' => 'required|numeric',
+            ]);*/
+
+            $validator = Validator::make($request->all(), [
                 'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'),   
                 'start_time' => 'nullable',
                 'closing_time' => 'nullable',
                 'branch_id' => 'required|numeric',
             ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
 
             $SchedSchedule = new Schedule();
-            $SchedSchedule->day = $SchedSchedule_data['day'];            
-            $SchedSchedule->start_time = $SchedSchedule_data['start_time'];
-            $SchedSchedule->closing_time = $SchedSchedule_data['closing_time'];
-            $SchedSchedule->branch_id = $SchedSchedule_data['branch_id'];
+            $SchedSchedule->day = $request->day;            
+            $SchedSchedule->start_time = $request->start_time;
+            $SchedSchedule->closing_time = $request->closing_time;
+            $SchedSchedule->branch_id = $request->branch_id;
             $SchedSchedule->save();
 
             return response()->json(['msg' => 'Horario insertado correctamente'], 200);
