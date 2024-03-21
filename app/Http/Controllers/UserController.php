@@ -286,19 +286,23 @@ class UserController extends Controller
                             //}
                         //}
                         })->values()->first();
-                    }
-                    //return $branch[0]['branch_id'];
-                    Log::info("obtener el usuario");
-                    Log::info($user->professional->branchRules);
-                    if ($user->professional->branchRules) {
-                        $branchRules = Branch::find($request->branch_id);
-                        $professional = Professional::find($user->professional->id);
-                        $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now())->get();
-                        Log::info($professionalRules);
-                        if (count($professionalRules)) {
-                            $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
-                            Log::info($branchRulesId);
-                            $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+
+                        Log::info($user->professional->branchRules);
+                        if($user->professional->charge_id == 1 || $user->professional->charge_id == 7){
+                            //return $user->professional->branchRules->where('branch_id', $request->branch_id);
+                        if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
+                            $branchRules = Branch::find($request->branch_id);
+                            $professional = Professional::find($user->professional->id);
+                            $professionalRules = $professional->branchRules()
+                            ->where('branch_id', $request->branch_id)
+                            ->get()->map->pivot->where('data', Carbon::now()->toDateString());
+                            Log::info($professionalRules);
+                            if (count($professionalRules) == 0) {
+                                $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
+                                Log::info($branchRulesId);
+                                $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+                            }
+                        }
                         }
                     }
                     //return $branch;
@@ -314,7 +318,7 @@ class UserController extends Controller
                         'professional_id' => $user->professional ? ($user->professional->id) : 0,
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
                         'client_id' => $user->client ? ($user->client->id) : 0,
-                        'branch_id' => $user->professional->branches ? $branch[0]['branch_id'] : 0,
+                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'useTechnical' => $branch ? $branch['useTechnical'] : 0,
                         'token' => $user->createToken('auth_token')->plainTextToken,
@@ -382,18 +386,24 @@ class UserController extends Controller
                             //}
                         //}
                         })->values()->first();}
-                    }
-                    Log::info("obtener el usuario");
-                    Log::info($user->professional->branchRules);
-                    if ($user->professional->branchRules) {
-                        $branchRules = Branch::find($request->branch_id);
-                        $professional = Professional::find($user->professional->id);
-                        $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now())->get();
-                        Log::info($professionalRules);
-                        if (count($professionalRules)) {
-                            $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
-                            Log::info($branchRulesId);
-                            $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+
+                        //reglas de convivencia
+                        Log::info($user->professional->branchRules);
+                        if($user->professional->charge_id == 1 || $user->professional->charge_id == 7){
+                            //return $user->professional->branchRules->where('branch_id', $request->branch_id);
+                        if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
+                            $branchRules = Branch::find($request->branch_id);
+                            $professional = Professional::find($user->professional->id);
+                            $professionalRules = $professional->branchRules()
+                            ->where('branch_id', $request->branch_id)
+                            ->get()->map->pivot->where('data', Carbon::now()->toDateString());
+                            Log::info($professionalRules);
+                            if (count($professionalRules) == 0) {
+                                $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
+                                Log::info($branchRulesId);
+                                $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+                            }
+                        }
                         }
                     }
                     //return $branch;

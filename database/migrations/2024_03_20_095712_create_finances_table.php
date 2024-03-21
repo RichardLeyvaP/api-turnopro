@@ -16,7 +16,7 @@ return new class extends Migration
             $table->date('data');
             $table->string('operation');
             $table->integer('control');
-            $table->decimal('amount', 8, 2);
+            $table->decimal('amount', 14, 2);
             $table->string('comment')->nullable();
             $table->string('file');
 
