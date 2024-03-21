@@ -73,6 +73,10 @@ class ProfessionalService
                 $type = 0;
                 $name = '';
                 $professional_id = 0;
+            }else{
+                $type = 3;
+                $name = $professionals->name.' '.$professionals->surname.' '.$professionals->second_surname;
+                $professional_id = $professionals->id;
             }
             return [
                 'name' => $name,

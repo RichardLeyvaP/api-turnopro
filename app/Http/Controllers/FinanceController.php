@@ -168,4 +168,37 @@ class FinanceController extends Controller
             return response()->json(['msg' => 'Error al eliminar el producto'], 500);
         }
     }
+
+    public function revenue_expense_analysis(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable'
+            ]);
+            Log::info($data);
+            $finance = Finance::find($data['id']);
+            
+            if($request->hasFile('file'))
+                {
+                    $destination=public_path("storage\\".$finance->file);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }                 
+                    $filename = $finance->operation.'-'.$finance->data.'.'.$request->file('file')->extension();   
+                    $finance->file = $request->file('file')->storeAs('finances',$filename,'public');
+                }
+           $finance->control = $data['control'];
+            $finance->operation = $data['operation'];
+            $finance->amount = $data['amount'];
+            $finance->comment = $data['comment'];
+            $finance->expense_id = $data['expense_id'];
+            $finance->revenue_id = $data['revenue_id'];
+            $finance->save();
+            return response()->json(['msg' => 'Operación editada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage().'Error al insertar el producto'], 500);
+        }
+    }
 }
