@@ -285,7 +285,7 @@ class UserController extends Controller
                             ];
                             //}
                         //}
-                        })->values();
+                        })->values()->first();
                     }
                     //return $branch[0]['branch_id'];
                     Log::info("obtener el usuario");
@@ -315,8 +315,8 @@ class UserController extends Controller
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
                         'client_id' => $user->client ? ($user->client->id) : 0,
                         'branch_id' => $user->professional->branches ? $branch[0]['branch_id'] : 0,
-                        'nameBranch' => $branch ? $branch[0]['nameBranch'] : "",
-                        'useTechnical' => $branch ? $branch[0]['useTechnical'] : 0,
+                        'nameBranch' => $branch ? $branch['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;
@@ -365,6 +365,7 @@ class UserController extends Controller
                     Log::info("Pass correct");
                     //return $user->professional->id;
                     $business = Business::where('id', $user->professional->business_id)->get();
+                    $user->professional->branches;
                     if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
                         if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
@@ -380,7 +381,7 @@ class UserController extends Controller
                             ];
                             //}
                         //}
-                        })->values();}
+                        })->values()->first();}
                     }
                     Log::info("obtener el usuario");
                     Log::info($user->professional->branchRules);
@@ -408,9 +409,9 @@ class UserController extends Controller
                         'professional_id' => $user->professional ? ($user->professional->id) : 0,
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
                         'client_id' => $user->client ? ($user->client->id) : 0,
-                        'branch_id' => $user->professional->branches ? $branch[0]['branch_id'] : 0,
-                        'nameBranch' => $branch ? $branch[0]['nameBranch'] : "",
-                        'useTechnical' => $branch ? $branch[0]['useTechnical'] : 0,
+                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
+                        'nameBranch' => $branch ? $branch['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;
