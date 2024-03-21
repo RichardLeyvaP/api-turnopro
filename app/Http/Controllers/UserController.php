@@ -291,7 +291,7 @@ class UserController extends Controller
                     Log::info("obtener el usuario");
                     Log::info($user->professional->branchRules);
                     if ($user->professional->branchRules) {
-                        $branchRules = Branch::find($branch[0]['branch_id']);
+                        $branchRules = Branch::find($request->branch_id);
                         $professional = Professional::find($user->professional->id);
                         $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now())->get();
                         Log::info($professionalRules);
