@@ -84,6 +84,14 @@ class BranchProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $services = $request->input('services');
+            $professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
+
+                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('branchServices', function ($query) use ($services) {
+                $query->whereIn('service_id', $services);
+            }, '=', count($services))->whereHas('charge', function ($query) {
+                $query->where('id', 1);
+            })->get();
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
 
@@ -93,9 +101,9 @@ class BranchProfessionalController extends Controller
             }, '=', count($services))->whereHas('charge', function ($query) {
                 $query->where('id', 1);*/
             /*})->get();*/
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-            })->where('charge_id', 1)->get();
+            })->where('charge_id', 1)->get();*/
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
                      
             /*Log::info("Dado una branch devuelve los professionales que trabajan en ella");
