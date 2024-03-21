@@ -462,18 +462,25 @@ class UserController extends Controller
                 'branch_id' => 'required|numeric',
                 'email' => 'required|email',
             ]);
+            $professional_workplace = $request->hasFile('professionals');
+            /*this.getProfesional = {
+                professional_id: this.professionalId,
+                workplace_id: newArrayPlaces[0],
+                places:0,
+      }*/
             $professional = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->with(['user', 'charge', 'branches'])->where('email', $data['email'])->first();
             if ($professional) {
-                $workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->pluck('workplace_id');
+                //$workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->pluck('workplace_id');
                 $datos = [
                     'id' => $professional->user->id,
                     'userName' => $professional->user->name,
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
                     'email' => $professional->email,
                     'branch_id' => $professional->branches->first()->value('id'),
-                    'workplace_id' => $workplace_id,
+                    'professionals' => $professional_workplace,
+                    //'workplace_id' => $workplace_id,
                     'hora' => Carbon::now()->format('H:i:s')
                 ];
                 $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
