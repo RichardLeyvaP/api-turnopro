@@ -273,9 +273,9 @@ class UserController extends Controller
                     $business = Business::where('id', $user->professional->business_id)->get();
                     if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
-                        $branch = $user->professional->branches->map(function ($branch) use ($request){
-                            if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
-                                if($request->branch_id === $branch->id){
+                        $branch = $user->professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
+                            //if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
+                                //if($request->branch_id == $branch->id){
                             return [
                                 'branch_id' => $branch->id,
                                 'nameBranch' => $branch->name,
@@ -283,14 +283,15 @@ class UserController extends Controller
                                 'business_id' => $branch->business->id,
                                 'nameBusiness' => $branch->business->name
                             ];
-                            }
-                        }
-                        })->first();
+                            //}
+                        //}
+                        })->values();
                     }
+                    //return $branch[0]['branch_id'];
                     Log::info("obtener el usuario");
                     Log::info($user->professional->branchRules);
                     if ($user->professional->branchRules) {
-                        $branchRules = Branch::find($branch['branch_id']);
+                        $branchRules = Branch::find($branch[0]['branch_id']);
                         $professional = Professional::find($user->professional->id);
                         $professionalRules = $professional->branchRules()->wherePivot('data', Carbon::now())->get();
                         Log::info($professionalRules);
@@ -313,9 +314,9 @@ class UserController extends Controller
                         'professional_id' => $user->professional ? ($user->professional->id) : 0,
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
                         'client_id' => $user->client ? ($user->client->id) : 0,
-                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
-                        'nameBranch' => $branch ? $branch['nameBranch'] : "",
-                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
+                        'branch_id' => $user->professional->branches ? $branch[0]['branch_id'] : 0,
+                        'nameBranch' => $branch ? $branch[0]['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch[0]['useTechnical'] : 0,
                         'token' => $user->createToken('auth_token')->plainTextToken,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;

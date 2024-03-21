@@ -109,9 +109,10 @@ class TailService {
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
         })->whereNot('attended', [2])->get();
-        $branchTails = $tails->map(function ($tail){
+        $branchTails = $tails->map(function ($tail) use ($branch_id){
            // Log::info($tail->updated_at->format('Y-m-d H:i:s'));
-           
+           $branch_id1 = $tail->reservation->car->clientProfessional->professional->branches->value('id');
+                if($branch_id1 == $branch_id){           
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
@@ -132,9 +133,14 @@ class TailService {
                     $orderData->where('is_product', false);
                       })*/
                 //'total_services' => count($tail->reservation->car->orders)
-            ];
+            ];}
         })->sortBy('start_time')->values();
 
+        if(!$branchTails->value('reservation_id'))
+           {
+            Log::info('no hay id');
+            $branchTails = [];
+           }
         return $branchTails;
     }
 

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('operation');
             $table->integer('control');
             $table->decimal('amount', 8, 2);
-            $table->string('comment');
+            $table->string('comment')->nullable();
             $table->string('file');
 
             $table->unsignedBigInteger('branch_id');

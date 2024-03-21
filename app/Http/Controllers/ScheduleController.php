@@ -44,13 +44,35 @@ class ScheduleController extends Controller
         }
     }
 
+    public function show_front(Request $request)
+    {
+        try {
+            $SchedSchedule_data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $i = 0;
+             $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, start_time,  closing_time, branch_id")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')")->get()->map(function ($query) use (&$i){
+                return [
+                    'id' => $query->id,
+                    'day' => $query->day,
+                    'start_time' => $query->start_time,
+                    'closing_time' => $query->closing_time,
+                    'branch_id' => $query->branch_id
+                ];
+            });
+            return response()->json(['Schedules' =>$schules], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar Horario"], 500);
+        }
+    }
+
     public function show_schedule_branch(Request $request)//buscar por id branch
     {
          try {
              $SchedSchedule_data = $request->validate([
                  'branch_id' => 'required|numeric'//este es el id de la branch
              ]);
-             $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, start_time,  closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')")->get();
+             $schules = Schedule::where('branch_id', $SchedSchedule_data['branch_id'])->selectRaw("id, day, start_time,  closing_time, branch_id")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')")->get();
              return response()->json(['Schedules' => $schules], 200, [], JSON_NUMERIC_CHECK);
          } catch (\Throwable $th) {
              return response()->json(['msg' => "Error al mostrar Horario"], 500);
@@ -80,7 +102,7 @@ class ScheduleController extends Controller
             return response()->json(['msg' => 'Horario insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar Horario'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al insertar Horario'], 500);
         }
     }
 
@@ -92,7 +114,7 @@ class ScheduleController extends Controller
             Log::info($request);
             $SchedSchedule_data = $request->validate([
                 'id' => 'required|numeric',
-                'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'), 
+                'day' => 'required|max:50|', 
                 'start_time' => 'nullable',
                 'closing_time' => 'nullable',
                 'branch_id' => 'required|numeric',
@@ -109,7 +131,7 @@ class ScheduleController extends Controller
             return response()->json(['msg' => 'Horario actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => 'Error al actualizar Horario'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 

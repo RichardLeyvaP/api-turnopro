@@ -457,7 +457,7 @@ Route::post('/revenue-destroy', [RevenueController::class, 'destroy']);
 Route::get('/finance', [FinanceController::class, 'index']);
 Route::get('/finance-show', [FinanceController::class, 'show']);
 Route::post('/finance', [FinanceController::class, 'store']);
-Route::put('/finance', [FinanceController::class, 'update']);
+Route::post('/finance-updated', [FinanceController::class, 'update']);
 Route::post('/finance-destroy', [FinanceController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
