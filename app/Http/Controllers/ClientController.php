@@ -257,7 +257,7 @@ class ClientController extends Controller
             ]);
 
             $currentDate = Carbon::now()->format('Y-m-d');
-            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+            if ($data['branch_id'] !=0) {
                 $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate){
                     $query->whereDate('data', $currentDate);
                 })->withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
@@ -291,7 +291,7 @@ class ClientController extends Controller
                 'branch_id' => 'nullable'
             ]);
             Log::info($data);
-            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+            if ($data['branch_id'] !=0) {
                 Log::info('es una branch');
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
@@ -304,17 +304,17 @@ class ClientController extends Controller
                     })->count();*/
                     if($query->reservations_count >= 12){
                         $frecuence = 'Fiel';
-                        Log::info('11111111');                        
+                        Log::info('Es Fiel');                        
                         Log::info($frecuence);
                     }
                     if($query->reservations_count >= 2){
                         $frecuence = 'Frecuente';
-                        Log::info('222222222222');  
+                        Log::info('Es Frecuente');  
                         Log::info($frecuence);
                     } 
                     else{
                         $frecuence = 'No Frecuente';
-                        Log::info('33333333333');                        
+                        Log::info('No es frecuente');                        
                         Log::info($frecuence);
                     }                    
                     return [
@@ -336,17 +336,17 @@ class ClientController extends Controller
                     })->count();*/
                     if($query->reservations_count >= 12){
                         $frecuence = 'Fiel';
-                        Log::info('11111111');                        
+                        Log::info('Es fiel');                        
                         Log::info($frecuence);
                     }
                     if($query->reservations_count >= 2){
                         $frecuence = 'Frecuente';
-                        Log::info('222222222222');  
+                        Log::info('Es frecuente');  
                         Log::info($frecuence);
                     } 
                     else{
                         $frecuence = 'No Frecuente';
-                        Log::info('33333333333');                        
+                        Log::info('No es frecuente');                        
                         Log::info($frecuence);
                     }                    
                     return [

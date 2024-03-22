@@ -44,9 +44,8 @@ class CarController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            Log::info('111111');
             Log::info($data['branch_id']);
-            if($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null'){
+            if($data['branch_id'] !=0){
                 Log::info("Branch"); 
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
                     $amount = $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query){
@@ -94,7 +93,7 @@ class CarController extends Controller
                         //return [$start, $end];
           $i=0;
           $day = 0;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
-                        if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+                        if ($data['branch_id'] !=0) {
                             Log::info('branchesssss');
                             $cars = Car::where('pay', 1)->whereHas('reservations', function ($query) use ($start, $end){
                                 $query->whereBetween('data', [$start, $end]);
@@ -162,7 +161,7 @@ class CarController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            if($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null'){
+            if($data['branch_id'] !=0){
                 Log::info("branch");
                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
                     $startOfMonth = now()->startOfMonth()->toDateString();

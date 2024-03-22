@@ -355,7 +355,7 @@ class UserController extends Controller
                 ], 400);
             }
             $branch = [
-                'branch_id' => null,
+                'branch_id' => 0,
                 'nameBranch' => null,
                 'useTechnical' => 0,
                 'business_id' => 0,
@@ -419,7 +419,7 @@ class UserController extends Controller
                         'professional_id' => $user->professional ? ($user->professional->id) : 0,
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
                         'client_id' => $user->client ? ($user->client->id) : 0,
-                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
+                        'branch_id' => $branch ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'useTechnical' => $branch ? $branch['useTechnical'] : 0,
                         'token' => $user->createToken('auth_token')->plainTextToken,

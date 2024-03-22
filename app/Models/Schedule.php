@@ -9,6 +9,8 @@ class Schedule extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['day', 'start_time', 'closing_time'];
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);

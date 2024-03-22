@@ -31,7 +31,7 @@ class ReservationService {
                 $clientprofessional->save();
             }
         $client_professional_id = $clientprofessional->id;
-            Log::info('7');
+            Log::info('Crear el carro');
             $car = new Car();
             $car->client_professional_id = $client_professional_id;
             $car->amount = 0.0;
@@ -97,7 +97,7 @@ class ReservationService {
                 $reservation->from_home = 1;
                 $reservation->car_id = $car->id;
                 $reservation->save();
-            Log::info('8');
+            Log::info('Crea la reservación');
             DB::commit();
             Log::info($reservation);
         return $reservation;

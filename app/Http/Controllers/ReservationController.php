@@ -144,16 +144,16 @@ class ReservationController extends Controller
             $user = User::where('email', $data['email_client'])->first();
             // Verificar si se encontró un usuario
             if ($user) {
-                Log::info("1");
+                Log::info("Encontro el ususario");
                 Log::info($user);
                 // Buscar el cliente
                 $client = Client::where('email', $data['email_client'])->first();
                 if ($client) {
-                    Log::info("2");
+                    Log::info("Buscar el cliente");
                     $id_client = $client->id;
                     $this->reservationService->store($data, $servs, $id_client);
                 } else {
-                    Log::info("4");
+                    Log::info("Si no existe registrarlo");
 
                     $client = new Client();
                     $client->name = $data['name_client'];
@@ -165,19 +165,19 @@ class ReservationController extends Controller
                     $client->save();
                     $id_client = $client->id;
 
-                    Log::info("5");
+                    Log::info("Id que tiene");
                     Log::info($id_client);
                     $this->reservationService->store($data, $servs, $id_client);
                 }
             } else {
-                Log::info("3");
+                Log::info("Crear Usuario");
                 // Crear Usuario
                 $user = User::create([
                     'name' => $data['name_client'],
                     'email' => $data['email_client'],
                     'password' => Hash::make($data['email_client'])
                 ]);
-                Log::info("4");
+                Log::info("Crear client");
 
                 $client = new Client();
                 $client->name = $data['name_client'];
@@ -189,7 +189,7 @@ class ReservationController extends Controller
                 $client->save();
                 $id_client = $client->id;
 
-                Log::info("5");
+                Log::info("Id que obtuvo");
                 Log::info($id_client);
                 $this->reservationService->store($data, $servs, $id_client);
             }
@@ -257,14 +257,20 @@ class ReservationController extends Controller
             ]);
             Log::info('dataaaaaaaaaa');
             Log::info($data);
-            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+            if ($data['branch_id'] != 0) {
                 Log::info("Branch");
                 $branch = Branch::find($data['branch_id']);
-                Log::info('222222222');
+                Log::info('Es una branch');
                 Log::info($branch);
-                $reservations = $branch->withCount(['reservations' => function ($query) {
+                $reservations =  Branch::where('id', $data['branch_id'])->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })->whereHas('reservations', function ($query) {
                     $query->whereDate('data', now()->toDateString());
-                }])->value('reservations_count');
+                })
+                    ->get()
+                    ->flatMap(function ($branch) use ($data) {
+                        return $branch->reservations->where('laravel_through_key', $data['branch_id'])->where('data', now()->toDateString());
+                    })->count();
             } else {
                 Log::info("Business");
                 $business = Business::find($data['business_id']);
@@ -273,7 +279,7 @@ class ReservationController extends Controller
                 }])->value('reservations_count');
             }
 
-            Log::info('rerwerewrererewrewrewrew');
+            Log::info('$reservations');
             Log::info($reservations);
             return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
@@ -285,40 +291,42 @@ class ReservationController extends Controller
     public function reservations_count_week(Request $request)
     {
         try {
-            Log::info("Entra a buscar una las reservations del dia");
+            Log::info("Entra a buscar una las reservations de la semana");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
-
+            if ($data['branch_id'] != 0) {
+                Log::info('Es una Sucursal');
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
                 $end = now()->endOfWeek();
                 //$business = Business::find($data['business_id']);
-                $reservations = Branch::find($data['branch_id'])
-                ->with(['reservations' => function ($query) use ($start, $end) {
-                    $query->whereBetween('data', [$start, $end]);
-                }])
-                ->get()
-                ->flatMap(function ($branch) use ($data) {
-                    return $branch->reservations->where('laravel_through_key', $data['branch_id']);
-                });
-            
-            // Inicializar un array para contabilizar las reservaciones por día
-            $reservationsByDay = array_fill(0, 7, 0);
-            
-            // Contar las reservaciones por día
-            $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
-            foreach ($uniqueReservations as $reservation) {
-                $reservationDate = new DateTime($reservation->data);
-                $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
-                $reservationsByDay[$dayOfWeek]++;
-            }
-            
-            // Llenar los días faltantes con 0
-            $fullWeek = array_replace(array_fill(0, 7, 0), $reservationsByDay);
-            
-            $reservations = $fullWeek;
+                $reservations = Branch::where('id', $data['branch_id'])->whereHas('reservations.car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                    ->with(['reservations' => function ($query) use ($start, $end, $data) {
+                        $query->whereBetween('data', [$start, $end]);
+                    }])
+                    ->get()
+                    ->flatMap(function ($branch) use ($data, $start, $end) {
+                        return $branch->reservations->where('laravel_through_key', $data['branch_id'])->whereBetween('data', [$start, $end]);
+                    });
+
+                // Inicializar un array para contabilizar las reservaciones por día
+                $reservationsByDay = array_fill(0, 7, 0);
+
+                // Contar las reservaciones por día
+                $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
+                foreach ($uniqueReservations as $reservation) {
+                    $reservationDate = new DateTime($reservation->data);
+                    $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
+                    $reservationsByDay[$dayOfWeek]++;
+                }
+
+                // Llenar los días faltantes con 0
+                $fullWeek = array_replace(array_fill(0, 7, 0), $reservationsByDay);
+
+                $reservations = $fullWeek;
             } else {
                 Log::info("Business");
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
@@ -327,26 +335,26 @@ class ReservationController extends Controller
                 $reservations = $business->branches()->with(['reservations' => function ($query) use ($start, $end) {
                     $query->whereBetween('data', [$start, $end]);
                 }])
-                ->get()
-                ->flatMap(function ($branch) use ($data) {
-                    return $branch->reservations;
-                });
-            
-            // Inicializar un array para contabilizar las reservaciones por día
-            $reservationsByDay = array_fill(0, 7, 0);
-            
-            // Contar las reservaciones por día
-            $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
-            foreach ($uniqueReservations as $reservation) {
-                $reservationDate = new DateTime($reservation->data);
-                $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
-                $reservationsByDay[$dayOfWeek]++;
-            }
-            
-            // Llenar los días faltantes con 0
-            $fullWeek = array_replace(array_fill(0, 7, 0), $reservationsByDay);
-            
-            $reservations = $fullWeek;
+                    ->get()
+                    ->flatMap(function ($branch) use ($data) {
+                        return $branch->reservations;
+                    });
+
+                // Inicializar un array para contabilizar las reservaciones por día
+                $reservationsByDay = array_fill(0, 7, 0);
+
+                // Contar las reservaciones por día
+                $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
+                foreach ($uniqueReservations as $reservation) {
+                    $reservationDate = new DateTime($reservation->data);
+                    $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
+                    $reservationsByDay[$dayOfWeek]++;
+                }
+
+                // Llenar los días faltantes con 0
+                $fullWeek = array_replace(array_fill(0, 7, 0), $reservationsByDay);
+
+                $reservations = $fullWeek;
             }
 
             $reservationsString = implode(',', $reservations);

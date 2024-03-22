@@ -132,13 +132,14 @@ class BranchProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $services = $request->input('services');
-            $professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
-
-                $query->where('branch_id', $data['branch_id']);
-            })->whereHas('branchServices', function ($query) use ($services) {
-                $query->whereIn('service_id', $services);
-            }, '=', count($services))->whereHas('charge', function ($query) {
-                $query->where('id', 1);
+            $professionals = Professional::where(function ($query) use ($services, $data) {
+                foreach ($services as $service) {
+                    $query->whereHas('branchServices', function ($q) use ($service, $data) {
+                        $q->where('service_id', $service)->where('branch_id', $data['branch_id']);
+                    });
+                }
+            })->whereHas('charge', function ($query) {
+                $query->where('name', 'like', '%Barbero%');
             })->get();
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {

@@ -122,7 +122,7 @@ class ProductController extends Controller
                 'branch_id' => 'nullable'
             ]);
            
-           if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+           if ($data['branch_id'] !=0) {
             Log::info('Es branch');
             $products = Product::withCount('orders')->whereHas('productStores', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
@@ -147,7 +147,7 @@ class ProductController extends Controller
                 'branch_id' => 'nullable'
             ]);
            Log::info('Obtener los cars');
-           if ($data['branch_id'] !== null  && strtolower($data['branch_id']) !== 'null') {
+           if ($data['branch_id'] !=0) {
             $products = ProductStore::where('product_exit', '<', 5)->where('branch_id', $data['branch_id'])->with('store', 'product')->get()->map(function ($query){
                 return [
                     'name' => $query->product->name,

@@ -63,7 +63,7 @@ class TailController extends Controller
         })->whereDate('data', $data['data'])->get();
 
             Log::info( $reservations);
-            Log::info( 'sisiisisis este es el resultado');
+            Log::info( 'muestra  el resultado');
 
             $differences = [];
         Log::info( "entra a a calcular la diferencia:");
@@ -113,7 +113,7 @@ class TailController extends Controller
             }])->whereDate('data', $data['data'])->get();
 
             Log::info( $tails);
-            Log::info( 'sisiisisis');
+            Log::info( 'muestra la cola');
 
             
                 } catch (\Throwable $th) {  

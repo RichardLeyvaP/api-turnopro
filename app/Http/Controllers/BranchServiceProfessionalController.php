@@ -65,9 +65,9 @@ class BranchServiceProfessionalController extends Controller
                 return [
                     'id' => $branchservprof->branch_service_id,
                     "name" => $branchservprof->branchService->service->name,
-                    "type_service" => $branchservprof->branchService->service->type_service,
+                    "type_service" => $branchservprof->type_service,
                     "image_service" => $branchservprof->branchService->service->image_service,
-                    "profit_percentaje" => $branchservprof->branchService->service->profit_percentaje,
+                    "profit_percentaje" => $branchservprof->percent,
                 ];
             });            
             return response()->json(['branchServices' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
@@ -111,14 +111,18 @@ class BranchServiceProfessionalController extends Controller
             $data = $request->validate([
                 'branch_service_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'percent' => 'required|numeric'
+                'percent' => 'nullable|numeric',
+                'type_service' => 'nullable'
             ]);
-
-            Log::info($data);
             $branchservice = BranchService::find($data['branch_service_id']);
             $professional = professional::find($data['professional_id']);
+            if($data['type_service'] == 'Regular'){
+                $data['percent'] = $branchservice->service->profit_percentaje;
+                $data['type_service'] = 'Regular';
+            }
+            Log::info($data);
 
-            $professional->branchservices()->attach($branchservice->id, ['percent' => $data['percent']]);
+            $professional->branchservices()->attach($branchservice->id, ['percent' => $data['percent'], 'type_service' => $data['type_service']]);
 
             //$psersonservice = new BranchServiceProfessional();
             //$psersonservice->branch_service_id = $data['branch_service_id'];
