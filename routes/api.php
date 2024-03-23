@@ -71,6 +71,7 @@ Route::post('/login-phone', [UserController::class, 'login_phone']); //para l AP
 Route::get('/login-phone-get-branch', [UserController::class, 'login_phone_get_branch']);//login para la apk
 Route::get('/usuario', [UserController::class, 'index']);
 Route::get('qrCode', [UserController::class, 'qrCode']);
+Route::get('qrCode-otros', [UserController::class, 'qrCodeOtros']);
 Route::get('reactive-password', [UserController::class, 'reactive_password']);
 Route::get('change_password', [UserController::class, 'change_password']);
 
