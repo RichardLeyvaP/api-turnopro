@@ -499,6 +499,50 @@ class UserController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error al ver los datos del usuario'], 500);
         }
     }
+    public function qrCodeOtros(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'email' => 'required|email',
+                'professional' => 'nullable'
+            ]);
+            //return $request->professionals;
+            /*this.getProfesional = {
+                professional_id: this.professionalId,
+                workplace_id: newArrayPlaces[0],
+                places:0,
+      }*/
+      Log::info('$request');
+      Log::info($request);
+      $professional_workplace = $data['professional'];
+            $professional = Professional::whereHas('branches', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })->with(['user', 'charge', 'branches'])->where('email', $data['email'])->first();
+            if ($professional) {
+                //$workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->pluck('workplace_id');
+                $datos = [
+                    'id' => $professional->user->id,
+                    'userName' => $professional->user->name,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'email' => $professional->email,
+                    'branch_id' => $professional->branches->first()->value('id'),
+                    'professional_id' => $professional_workplace['professional_id'],
+                    'workplace_id' => 0,
+                    'places' => [],
+                    //'workplace_id' => $workplace_id,
+                    'hora' => Carbon::now()->format('H:i:s')
+                ];
+                $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
+                $qrCodeBase64 = base64_encode($qrCode);
+                return $qrCodeBase64;
+            } else {
+                return response()->json(['msg' => 'Correo incorrecto o no es trabajador de esta sucursal'], 400);
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . 'Error al ver los datos del usuario'], 500);
+        }
+    }
 
     public function logout()
     {

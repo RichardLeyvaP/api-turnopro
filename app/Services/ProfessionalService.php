@@ -60,20 +60,21 @@ class ProfessionalService
         $professionals = Professional::where('email', $email)->first();
         Log::info($professionals);
         if ($professionals) {
-            if ($professionals->charge_id == 1) {
+            
+            if ($professionals->charge_id == 1) {//charge_id == 1
                 $type = 2;
                 $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                 $professional_id = $professionals->id;
             }
-            if ($professionals->charge_id == 7) {
+            if ($professionals->charge_id == 7) {//charge_id == 7
                 $type = 1;
                 $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                 $professional_id = $professionals->id;
             }
-            if ($professionals->charge_id != 1 && $professionals->charge_id != 7) {
+            if ($professionals->charge_id != 1 && $professionals->charge_id != 7) {//charge_id != 1 && charge_id != 7
                 $type = 0;
-                $name = '';
-                $professional_id = 0;
+                $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
+                $professional_id = $professionals->id;
             }
             return [
                 'name' => $name,
