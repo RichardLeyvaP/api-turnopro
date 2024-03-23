@@ -110,9 +110,10 @@ class ProfessionalService
     public function branch_professionals_service($branch_id, $services)
     {
         $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
-        
+
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $closing_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
+        $closingTime = strtotime($closing_time);
         Log::info($totaltime);
         //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
         $professionals = Professional::where(function ($query) use ($services, $branch_id) {
@@ -129,59 +130,47 @@ class ProfessionalService
         Log::info($current_date);
         $availableProfessionals = [];
         foreach ($professionals as $professional) {
-            $reservations = $professional->reservations()
+            $reservations = $professional->reservations()->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            })
                 ->whereDate('data', $current_date)
-                ->where('start_time', '<=', $current_date->format('Y-m-d H:i:s'))
+                ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
                 ->orderBy('start_time')
                 ->get();
 
-            $count = count($reservations);
-
-            if ($count == 0) {
-                $professional->start_time = date('H:i:s');
-                $availableProfessionals[] = $professional;
-            } else {
-                $validReservationFound = false;
+                if ($reservations->isEmpty()) {
+                    // Si no hay reservas, agregar el profesional con hora actual como tiempo de inicio
+                    $professional->start_time = $current_date->format('H:i:s');
+                    $availableProfessionals[] = $professional;
+                } else {
+                    $previousReservationEndTime = null;
 
                 foreach ($reservations as $reservation) {
                     $startTime = strtotime($reservation->start_time);
                     $finalHour = strtotime($reservation->final_hour);
                     $currentTime = time();
-
+                    
                     // Comprobar si la reserva cumple con las condiciones
-                    if ($finalHour > $currentTime && $startTime > $currentTime && ($count == 1 || ($startTime - $currentTime) >= ($totaltime * 60))) {
+                    if ($previousReservationEndTime === null && (($startTime-$previousReservationEndTime) >= ($totaltime * 60))) {
                         $professional->start_time = $reservation->final_hour;
-                        $validReservationFound = true;
+                        $availableProfessionals[] = $professional;
                         break;
                     }
+                    $previousReservationEndTime = strtotime($reservation->final_hour);
                 }
-
-                // Si ninguna reserva cumple con las condiciones, establecer start_time en vacío
-                //if (!$validReservationFound) {
-                //$professional->start_time = 'No tiene horario disponible';
-                //}
             }
         }
+        //return $availableProfessionals;
         $returnedProfessionals = [];
+        foreach ($availableProfessionals as $professional) {
+            $time = strtotime($professional->start_time);
+            if ($time<=$closingTime) {
+                // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
+                $returnedProfessionals[] = $professional;
+            }
+        }
 
-foreach ($availableProfessionals as $professional) {
-    // Convertir el tiempo de inicio a un objeto Carbon para facilitar la manipulación
-    $startTime = Carbon::parse($professional->start_time);
-    
-    // Calcular el tiempo final sumando la duración total del servicio
-    $endTime = $startTime->copy()->addMinutes($totaltime);
-
-    // Obtener el horario de cierre del día actual
-    $closingTimeOfDay = Carbon::parse($closing_time);
-
-    // Verificar si el tiempo final no excede el horario de cierre del día actual
-    if ($endTime->lte($closingTimeOfDay)) {
-        // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
-        $returnedProfessionals[] = $professional;
-    }
-}
-
-return $returnedProfessionals;
+        return $returnedProfessionals;
     }
 
 
