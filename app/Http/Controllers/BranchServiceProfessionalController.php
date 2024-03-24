@@ -169,12 +169,14 @@ class BranchServiceProfessionalController extends Controller
     public function branch_service_professionals(Request $request)
     {
         try {
-            Log::info("Entra a buscar los productos de un almacén");
+            Log::info("Entra a buscar los professionals que realizan servicio de una branch");
             $data = $request->validate([
                 'branch_service_id' => 'nullable|numeric'
             ]);
             $branchServices = BranchServiceProfessional::where('branch_service_id', $data['branch_service_id'])->whereHas('professional', function ($query){
-                $query->where('charge_id', 1);
+                $query->whereHas('charge', function ($query) {
+                    $query->where('name', 'like', '%Barbero%');
+                });
             })->get()->map(function ($branchService){
                 return [
                     'id' => $branchService->id,
@@ -230,7 +232,9 @@ class BranchServiceProfessionalController extends Controller
             $branchservprof = BranchServiceProfessional::where('branch_service_id', $data['branch_service_id'])->get();
             $branch_id = $branchservprof->first()->branchService->branch_id;
             $ids = $branchservprof->pluck('professional_id');
-            $professionals = Professional::whereNotIn('id', $ids)->where('charge_id', 1)->whereHas('branches', function ($query) use ($branch_id){
+            $professionals = Professional::whereNotIn('id', $ids)->whereHas('charge', function ($query) {
+                $query->where('name', 'like', '%Barbero%');
+            })->whereHas('branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->get()->map(function ($professional){
                 return [

@@ -388,6 +388,8 @@ class ProfessionalService
             return $professional;
         });
 
-        return $professionals->where('charge_id', 1)->values();
+        return $professionals->whereHas('charge', function ($query) {
+            $query->where('name', 'like', '%Barbero%');
+        })->values();
     }
 }

@@ -85,7 +85,9 @@ class BranchProfessionalController extends Controller
             ]);
             $professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-            })->where('charge_id', 1)->get();
+            })->whereHas('charge', function ($query){
+                $query->where('name', 'LIKE', '%Barbero%');
+            })->get();
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
 
@@ -188,7 +190,10 @@ class BranchProfessionalController extends Controller
             ]);
             $professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-            })->whereIn('charge_id', [1, 7])->get();
+            })->whereHas('charge', function ($query){
+                $query->where('name', 'LIKE', '%Barbero%')
+                      ->orWhere('name', 'LIKE', '%Tecnico%');
+            })->get();
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
