@@ -55,9 +55,11 @@ class ProfessionalService
         })->get();
     }
 
-    public function verifi_tec_prof($email)
+    public function verifi_tec_prof($email, $branch_id)
     {
-        $professionals = Professional::where('email', $email)->first();
+        $professionals = Professional::where('email', $email)->whereHas('branches', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })->first();
         Log::info($professionals);
         if ($professionals) {
             

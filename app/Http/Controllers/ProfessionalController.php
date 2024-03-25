@@ -360,9 +360,10 @@ class ProfessionalController extends Controller
 
             Log::info("entra a buscar cargo");
                 $data = $request->validate([
-                'email' => 'required|email'
+                'email' => 'required|email',
+                'branch_id' => 'required|numeric'
             ]);
-            $professionals = $this->professionalService->verifi_tec_prof($data['email']);
+            $professionals = $this->professionalService->verifi_tec_prof($data['email'], $data['branch_id']);
            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->get();
