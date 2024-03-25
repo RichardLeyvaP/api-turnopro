@@ -39,14 +39,14 @@ class RuleController extends Controller
                 'name' => 'required|max:50',
                 'description' => 'required|max:220',
                 'type' => 'required|max:50',
-                'automatic' => 'required'      
+                //'automatic' => 'required'      
             ]);
 
             $rule = new Rule();
             $rule->name =  $rule_data['name'];
             $rule->description =  $rule_data['description'];
             $rule->type =  $rule_data['type'];
-            $rule->automatic =  $rule_data['automatic'];
+            $rule->automatic =  0;
        
        
             $rule->save();
@@ -67,15 +67,15 @@ class RuleController extends Controller
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'description' => 'required|max:220',
-                'type' => 'required|max:50', 
-                'automatic' => 'required' 
+                'type' => 'required|max:50'//, 
+                //'automatic' => 'required' 
             ]);
             Log::info($request);
             $rule = Rule::find( $rule_data['id']);
             $rule->name =  $rule_data['name'];
             $rule->description =  $rule_data['description'];
             $rule->type =  $rule_data['type'];
-            $rule->automatic =  $rule_data['automatic'];
+            //$rule->automatic =  $rule_data['automatic'];
           
             $rule->save();
 
