@@ -125,7 +125,7 @@ class ProfessionalService
                 });
             }
         })->whereHas('charge', function ($query) {
-            $query->where('name', 'like', '%Barbero%');
+            $query->where('name', 'Barbero');
         })->get();
         Log::info($professionals);
         $current_date = Carbon::now();
@@ -391,7 +391,7 @@ class ProfessionalService
         });
 
         return $professionals->whereHas('charge', function ($query) {
-            $query->where('name', 'like', '%Barbero%');
+            $query->where('name', 'Barbero');
         })->values();
     }
 }
