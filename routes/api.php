@@ -462,6 +462,7 @@ Route::post('/finance', [FinanceController::class, 'store']);
 Route::post('/finance-updated', [FinanceController::class, 'update']);
 Route::post('/finance-destroy', [FinanceController::class, 'destroy']);
 Route::get('/revenue-expense-analysis', [FinanceController::class, 'revenue_expense_analysis']);//devolver las finanzas del año actual
+Route::get('/revenue-expense-details', [FinanceController::class, 'revenue_expense_details']);//devolver las finanzas detalladas del año actual
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

@@ -240,4 +240,67 @@ class FinanceController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
         }
     }
+
+    public function revenue_expense_details(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable'
+            ]);
+            //$currentYear = $data['year'];
+            $ingresos = Finance::where('operation', 'Ingreso')
+                    ->get()->map(function ($query){
+                        return [
+                            'data' => $query->data,
+                            'operation' => $query->operation,
+                            'ingreso' => $query->amount,
+                            'gasto' => '',
+                            'detailOperation' => $query->revenue->name,
+                        ];
+                    })->sortByDesc('data')->values();
+
+                    $totalIngresos = $ingresos->sum('ingreso');
+
+                    $ingresos->push((object)[
+                        'data' => '',
+                        'operation' => 'Total',
+                        'ingreso' => $totalIngresos,
+                        'gasto' => '',
+                        'detailOperation' => '',
+                    ]);
+
+                    $gastos = Finance::where('operation', 'Gasto')
+                    ->get()->map(function ($query){
+                        return [
+                            'data' => $query->data,
+                            'operation' => $query->operation,
+                            'ingreso' => '',
+                            'gasto' => $query->amount,
+                            'detailOperation' => $query->expense->name,
+                        ];
+                    })->sortByDesc('data')->values();
+
+                    $totalGastos = $gastos->sum('gasto');
+
+                    $gastos->push((object)[
+                        'data' => '',
+                        'operation' => 'Total',
+                        'ingreso' => '',
+                        'gasto' => $totalGastos,
+                        'detailOperation' => '',
+                    ]);
+
+                    $resultado = $ingresos->concat($gastos);
+
+                    // Devolvemos el resultado
+                    return response()->json(['finances'=> $resultado], 200);
+            
+            //return response()->json($result, 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
+        }
+    }
+
 }
