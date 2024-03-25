@@ -82,7 +82,13 @@ class ProfessionalWorkPlaceController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-            return $workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->value('workplace_id');
+            $workplace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query){
+                $query->where('busy', 1);
+            })->first();
+            if(!$workplace){
+                return 0;
+            }
+            return $workplace->workplace_id;
             //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
