@@ -92,7 +92,12 @@ class BoxCloseController extends Controller
             Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
            // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
-           $emails = Professional::whereIn('charge_id', [3, 4, 5])
+           return $emails = Professional::whereHas('charge', function ($query){
+            $query->where('name', 'LIKE', '%Administrador%')
+                  ->orWhere('name', 'LIKE', '%Encargado%')
+                  ->orWhere('name', 'LIKE', '%Administrador de Sucursal%')
+                  ->orWhere('name', 'LIKE', '%Coordinador%');
+        })/*whereIn('charge_id', [3, 4, 5, 12])*/
            ->pluck('email');
            $emailassociated = Associated::all()->pluck('email');
 
