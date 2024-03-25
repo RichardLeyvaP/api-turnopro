@@ -485,7 +485,7 @@ class UserController extends Controller
                     'branch_id' => $professional->branches->first()->value('id'),
                     'professional_id' => $professional_workplace['professional_id'],
                     'workplace_id' => $professional_workplace['workplace_id'],
-                    'places' => $professional_workplace['places'],
+                    'places' => $professional_workplace['places']==0?[]:$professional_workplace['places'],
                     //'workplace_id' => $workplace_id,
                     'hora' => Carbon::now()->format('H:i:s')
                 ];
