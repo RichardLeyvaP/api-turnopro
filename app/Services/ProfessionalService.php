@@ -159,30 +159,54 @@ foreach ($professionals as $professional) {
         $professional->start_time = $current_date->format('H:i:s');
         $availableProfessionals[] = $professional;
     } else {
-        $previousReservationEndTime = null;
+        $firstValidReservation = null;
+        
+            $count = count($reservations);
+            for ($i = 0; $i < $count - 1; $i++) {
+                $startTime1 = strtotime($reservations[$i]->final_hour);
+                $startTime2 = strtotime($reservations[$i + 1]->start_time);
+            
+                $differenceInMinutes = ($startTime2 - $startTime1) / 60;
+            
+                if ($differenceInMinutes >=  ($totalTiempo * 60)) {
+                    //$professional->start_time = $reservations[$i]->final_hour;
+                    $firstValidReservation = $reservations[$i];
+                    break; // Detener el bucle una vez que se encuentra la primera reserva válida
+                }
+            }
+            
+            if ($firstValidReservation === null) {
+                $firstValidReservation = $reservations[$count - 1];
+            }
+             // Verificar si $firstValidReservation no es nulo antes de acceder a sus propiedades
+             if ($firstValidReservation !== null) {
+                $professional->start_time = $firstValidReservation->final_hour;
+                $availableProfessionals[] = $professional;
+            }
+        //$previousReservationEndTime = null;
         //return (count($reservations));
-        $selectedEndTime = null;
+        /*$selectedEndTime = null;
 
-foreach ($reservations as $reservation) {
-    $startTime = strtotime($reservation->start_time);
-    $finalHour = strtotime($reservation->final_hour);
-    $currentTime = time();
-                    
-    // Verificar si la reserva cumple con las condiciones
-    if ($previousReservationEndTime === null || ($startTime - $previousReservationEndTime) >= ($totalTiempo * 60)) {
-        // Si no se ha seleccionado ninguna hora de finalización o la hora final de esta reserva es posterior a la seleccionada anteriormente
-        if ($selectedEndTime === null || $finalHour > $selectedEndTime) {
-            $selectedEndTime = $finalHour;
-        }
-    }
-    $previousReservationEndTime = strtotime($reservation->final_hour);
-}
-
-// Después de iterar sobre todas las reservas, si se seleccionó alguna hora final, asignarla al profesional
-if ($selectedEndTime !== null) {
-    $professional->start_time = date('H:i:s', $selectedEndTime);
-    $availableProfessionals[] = $professional;
-}
+        foreach ($reservations as $reservation) {
+            $startTime = strtotime($reservation->start_time);
+            $finalHour = strtotime($reservation->final_hour);
+            $currentTime = time();
+                            
+            // Verificar si la reserva cumple con las condiciones
+            if ($previousReservationEndTime === null || ($startTime - $previousReservationEndTime) >= ($totalTiempo * 60)) {
+                // Si no se ha seleccionado ninguna hora de finalización o la hora final de esta reserva es posterior a la seleccionada anteriormente
+                if ($selectedEndTime === null || $finalHour > $selectedEndTime) {
+                    $selectedEndTime = $finalHour;
+                }
+            }
+            $previousReservationEndTime = strtotime($reservation->final_hour);
+        }*/
+        
+        // Después de iterar sobre todas las reservas, si se seleccionó alguna hora final, asignarla al profesional
+        /*if ($selectedEndTime !== null) {
+            $professional->start_time = date('H:i:s', $selectedEndTime);
+            $availableProfessionals[] = $professional;
+        }*/
     }
 }
 
