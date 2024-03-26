@@ -485,7 +485,7 @@ class UserController extends Controller
                     'branch_id' => $professional->branches->first()->value('id'),
                     'professional_id' => $professional_workplace['professional_id'],
                     'workplace_id' => $professional_workplace['workplace_id'],
-                    'places' => $professional_workplace['places'],
+                    'places' => $professional_workplace['places']==0?[]:$professional_workplace['places'],
                     //'workplace_id' => $workplace_id,
                     'hora' => Carbon::now()->format('H:i:s')
                 ];
@@ -515,7 +515,6 @@ class UserController extends Controller
       }*/
       Log::info('$request');
       Log::info($request);
-      $professional_workplace = $data['professional'];
             $professional = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->with(['user', 'charge', 'branches'])->where('email', $data['email'])->first();
@@ -527,7 +526,7 @@ class UserController extends Controller
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
                     'email' => $professional->email,
                     'branch_id' => $professional->branches->first()->value('id'),
-                    'professional_id' => $professional_workplace['professional_id'],
+                    'professional_id' => $data['professional'],
                     'workplace_id' => 0,
                     'places' => [],
                     //'workplace_id' => $workplace_id,
