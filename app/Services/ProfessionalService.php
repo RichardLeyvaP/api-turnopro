@@ -142,7 +142,7 @@ $professionals = Professional::whereHas('branchServices', function ($query) use 
 $current_date = Carbon::now();
 
 $availableProfessionals = [];
-
+//return $current_date->format('Y-m-d H:i:s');
 // Verificar la disponibilidad de los profesionales
 foreach ($professionals as $professional) {
     $reservations = $professional->reservations()
@@ -150,13 +150,13 @@ foreach ($professionals as $professional) {
             $query->where('branch_id', $branch_id);
         })
         ->whereDate('data', $current_date)
-        ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
+        ->where('start_time', '<=', $current_date->format('H:i'))
         ->orderBy('start_time')
         ->get();
 
     if ($reservations->isEmpty()) {
         // Si no hay reservas, agregar el profesional con la hora actual como tiempo de inicio
-        $professional->start_time = $current_date->format('H:i:s');
+        $professional->start_time = $current_date->format('H:i');
         $availableProfessionals[] = $professional;
     } else {
         $firstValidReservation = null;
