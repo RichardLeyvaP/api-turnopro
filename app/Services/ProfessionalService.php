@@ -123,7 +123,82 @@ class ProfessionalService
 
     public function branch_professionals_service($branch_id, $services)
     {
-        $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
+        // Calcular el tiempo total del servicio
+$totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
+
+// Obtener el nombre del día en español
+$nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
+
+// Obtener la hora de cierre del establecimiento para el día actual
+$closingTime = strtotime(Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time'));
+
+// Obtener los profesionales que ofrecen los servicios seleccionados y son barberos
+$professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+    $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
+})->whereHas('charge', function ($query) {
+    $query->where('name', 'Barbero');
+})->get();
+
+$current_date = Carbon::now();
+
+$availableProfessionals = [];
+
+// Verificar la disponibilidad de los profesionales
+foreach ($professionals as $professional) {
+    $reservations = $professional->reservations()
+        ->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })
+        ->whereDate('data', $current_date)
+        ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
+        ->orderBy('start_time')
+        ->get();
+
+    if ($reservations->isEmpty()) {
+        // Si no hay reservas, agregar el profesional con la hora actual como tiempo de inicio
+        $professional->start_time = $current_date->format('H:i:s');
+        $availableProfessionals[] = $professional;
+    } else {
+        $previousReservationEndTime = null;
+        //return (count($reservations));
+        $selectedEndTime = null;
+
+foreach ($reservations as $reservation) {
+    $startTime = strtotime($reservation->start_time);
+    $finalHour = strtotime($reservation->final_hour);
+    $currentTime = time();
+                    
+    // Verificar si la reserva cumple con las condiciones
+    if ($previousReservationEndTime === null || ($startTime - $previousReservationEndTime) >= ($totalTiempo * 60)) {
+        // Si no se ha seleccionado ninguna hora de finalización o la hora final de esta reserva es posterior a la seleccionada anteriormente
+        if ($selectedEndTime === null || $finalHour > $selectedEndTime) {
+            $selectedEndTime = $finalHour;
+        }
+    }
+    $previousReservationEndTime = strtotime($reservation->final_hour);
+}
+
+// Después de iterar sobre todas las reservas, si se seleccionó alguna hora final, asignarla al profesional
+if ($selectedEndTime !== null) {
+    $professional->start_time = date('H:i:s', $selectedEndTime);
+    $availableProfessionals[] = $professional;
+}
+    }
+}
+
+// Filtrar los profesionales por la hora de cierre
+$returnedProfessionals = [];
+
+foreach ($availableProfessionals as $professional) {
+    $time = strtotime($professional->start_time);
+    if ($time <= $closingTime) {
+        // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
+        $returnedProfessionals[] = $professional;
+    }
+}
+
+return $returnedProfessionals;
+        /*$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
 
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $closing_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
@@ -184,7 +259,7 @@ class ProfessionalService
             }
         }
 
-        return $returnedProfessionals;
+        return $returnedProfessionals;*/
     }
 
 
