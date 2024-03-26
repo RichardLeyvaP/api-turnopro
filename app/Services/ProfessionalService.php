@@ -185,30 +185,6 @@ foreach ($professionals as $professional) {
                 $professional->start_time = $firstValidReservation->final_hour;
                 $availableProfessionals[] = $professional;
             }
-        //$previousReservationEndTime = null;
-        //return (count($reservations));
-        /*$selectedEndTime = null;
-
-        foreach ($reservations as $reservation) {
-            $startTime = strtotime($reservation->start_time);
-            $finalHour = strtotime($reservation->final_hour);
-            $currentTime = time();
-                            
-            // Verificar si la reserva cumple con las condiciones
-            if ($previousReservationEndTime === null || ($startTime - $previousReservationEndTime) >= ($totalTiempo * 60)) {
-                // Si no se ha seleccionado ninguna hora de finalización o la hora final de esta reserva es posterior a la seleccionada anteriormente
-                if ($selectedEndTime === null || $finalHour > $selectedEndTime) {
-                    $selectedEndTime = $finalHour;
-                }
-            }
-            $previousReservationEndTime = strtotime($reservation->final_hour);
-        }*/
-        
-        // Después de iterar sobre todas las reservas, si se seleccionó alguna hora final, asignarla al profesional
-        /*if ($selectedEndTime !== null) {
-            $professional->start_time = date('H:i:s', $selectedEndTime);
-            $availableProfessionals[] = $professional;
-        }*/
     }
 }
 
@@ -217,7 +193,7 @@ $returnedProfessionals = [];
 
 foreach ($availableProfessionals as $professional) {
     $time = strtotime($professional->start_time);
-    if ($time <= $closingTime) {
+    if ($time + ($totalTiempo * 60) <= $closingTime) {
         // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
         $returnedProfessionals[] = $professional;
     }
