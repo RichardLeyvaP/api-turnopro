@@ -162,7 +162,9 @@ foreach ($professionals as $professional) {
         $firstValidReservation = null;
         
             $count = count($reservations);
-            for ($i = 0; $i < $count - 1; $i++) {
+            Log::info('$count = count($reservations)');
+            Log::info($count = count($reservations));
+            for ($i = 0; $i < $count-1; $i++) {
                 $startTime1 = strtotime($reservations[$i]->final_hour);
                 $startTime2 = strtotime($reservations[$i + 1]->start_time);
             
