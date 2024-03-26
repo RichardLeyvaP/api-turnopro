@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Professional;
+use App\Models\Schedule;
 use App\Models\User;
 use App\Services\ImageService;
 use App\Services\ProfessionalService;
@@ -94,7 +95,10 @@ class ProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-        
+            $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
+            $start_time = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->value('start_time');
+            $startTime = strtotime($start_time);
+
             $professional = Professional::where('id', $data['professional_id'])
                 ->whereHas('branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
@@ -104,27 +108,43 @@ class ProfessionalController extends Controller
                 }])
                 ->first();
         
-            if ($professional) {
-                $reservations = $professional->reservations->map(function ($reservation) {
-                    $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
-                    $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-        
-                    $intervalos = [$startFormatted];
-                    $startTime = Carbon::parse($startFormatted);
-                    $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
-        
-                    $finalTime = Carbon::parse($finalFormatted);
-        
-                    // Agregar las horas intermedias de 15 en 15 minutos
-                    while ($startTime->addMinutes(15) <= $finalTime) {
-                        $intervalos[] = $startTime->format('H:i');
+                $current_time = Carbon::now();
+                $currentDateTime = Carbon::now();
+
+                // Verificar si hay reservas para este profesional y día
+                if ($professional) {
+                    // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
+                    $reservations = $professional->reservations->map(function ($reservation) use ($current_time, $startTime) {
+                        $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                        $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+                
+                        $intervalos = [$startFormatted];
+                        $startTime = Carbon::parse($startFormatted);
+                        $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
+                
+                        $finalTime = Carbon::parse($finalFormatted);
+                
+                        // Agregar las horas intermedias de 15 en 15 minutos
+                        while ($startTime->addMinutes(15) <= $finalTime) {
+                            $intervalos[] = $startTime->format('H:i');
+                        }
+                
+                        return $intervalos;
+                    })->flatten()->values()->all();
+                
+                    if ($currentDateTime->isToday()){
+                        // Verificar si la hora actual es menor que el primer start_time de las reservas del día
+    $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
+    if ($currentDateTime->lessThan($firstReservationStartTime)) {
+        $startTime = Carbon::parse($start_time);
+        while ($startTime->addMinutes(15) <= $currentDateTime) {
+            $reservations[] = $startTime->format('H:i');
+        }
+    }
                     }
-        
-                    return $intervalos;
-                })->flatten()->values()->all();
-            } else {
-                $reservations = [];
-            }
+                } else {
+                    $reservations = [];
+                }
         
             return response()->json(['reservations' => $reservations], 200);
         } catch (\Throwable $th) {

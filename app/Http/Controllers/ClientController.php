@@ -10,7 +10,9 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ClientController extends Controller
 {
@@ -151,23 +153,32 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         try {
-            $clients_data = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|max:50',
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15',
-                'user_id' => 'nullable|numeric'
+                //'user_id' => 'nullable|numeric'
             ]);
-
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $user = User::create([
+                'name' => $validator['name'],
+                'email' => $validator['email'],
+                'password' => Hash::make($validator['email'])
+            ]);
             $client = new Client();
-            $client->name = $clients_data['name'];
-            $client->surname = $clients_data['surname'];
-            $client->second_surname = $clients_data['second_surname'];
-            $client->email = $clients_data['email'];
-            $client->phone = $clients_data['phone'];
-            $client->user_id = $clients_data['user_id'];
-            $client->client_image = 'comments/default_profile.jpg';
+            $client->name = $validator['name'];
+            $client->surname = $validator['surname'];
+            $client->second_surname = $validator['second_surname'];
+            $client->email = $validator['email'];
+            $client->phone = $validator['phone'];
+            $client->user_id = $user->id;
+            //$client->client_image = 'comments/default.jpg';
             $client->save();
             Log::info($client);
           //  $filename = "image/default.png";
@@ -181,7 +192,7 @@ class ClientController extends Controller
             return response()->json(['msg' => 'Cliente insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar al Cliente'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al insertar al Cliente'], 500);
         }
     }
 
@@ -199,10 +210,11 @@ class ClientController extends Controller
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email',
                 'phone' => 'required|max:15',
-                'user_id' => 'required|numeric'
+                //'user_id' => 'required|numeric'
             ]);
             Log::info($request['client_image']);
             $client = Client::find($clients_data['id']);
+            if ($request->hasFile('client_image'))
             if ($client->client_image != $request['client_image']) {
                 $destination = public_path("storage\\" . $client->client_image);
                 if (File::exists($destination)) {
@@ -215,14 +227,14 @@ class ClientController extends Controller
             $client->second_surname = $clients_data['second_surname'];
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
-            $client->user_id = $clients_data['user_id'];
+            //$client->user_id = $clients_data['user_id'];
             //$client->client_image = $filename;
             $client->save();
 
             return response()->json(['msg' => 'Cliente actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => 'Error al actualizar el cliente'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al actualizar el cliente'], 500);
         }
     }
 

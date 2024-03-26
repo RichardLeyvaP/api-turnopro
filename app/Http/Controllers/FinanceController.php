@@ -249,7 +249,7 @@ class FinanceController extends Controller
                 'year' => 'nullable'
             ]);
             //$currentYear = $data['year'];
-            $ingresos = Finance::where('operation', 'Ingreso')
+            $ingresos = Finance::whereYear('data', $data['year'])->where('operation', 'Ingreso')
                     ->get()->map(function ($query){
                         return [
                             'data' => $query->data,
@@ -270,7 +270,7 @@ class FinanceController extends Controller
                         'detailOperation' => '',
                     ]);
 
-                    $gastos = Finance::where('operation', 'Gasto')
+                    $gastos = Finance::whereYear('data', $data['year'])->where('operation', 'Gasto')
                     ->get()->map(function ($query){
                         return [
                             'data' => $query->data,
