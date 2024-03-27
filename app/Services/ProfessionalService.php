@@ -243,7 +243,7 @@ class ProfessionalService
             // Si la hora actual es posterior al final del intervalo actual y 
             // no hay más intervalos después, devolvemos la última hora del intervalo actual
             if ($horaActualCarbon->gt($horaFinActual) && !isset($arrayIntervalos[$key + 1])) {
-                return $horaFinActual->format('H:i');
+                return $horaActual;
             }
     
             // Si hay intervalos posteriores, verificamos si el tiempo de servicio es menor que
