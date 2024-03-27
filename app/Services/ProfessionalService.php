@@ -192,8 +192,14 @@ class ProfessionalService
             $entrada = json_decode($reservations, true);
             //return $entrada[0];
             if($reservations->isEmpty()){
+                if(Carbon::now() < Carbon::parse($start_time)){
+                    $professional->start_time = Carbon::parse($start_time)->format('H:i');
+                $availableProfessionals[] = $professional;
+                }
+                else{
                 $professional->start_time = date('H:i');
                 $availableProfessionals[] = $professional;
+            }
             }else{
 
                 //$arrayHoras = $this->professional_reservations_time1($branch_id, $professional->id, $current_date);
