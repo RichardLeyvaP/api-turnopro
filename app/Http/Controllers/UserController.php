@@ -482,13 +482,14 @@ class UserController extends Controller
                     'userName' => $professional->user->name,
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
                     'email' => $professional->email,
-                    'branch_id' => $professional->branches->first()->value('id'),
+                    'branch_id' => $data['branch_id'],
                     'professional_id' => $professional_workplace['professional_id'],
                     'workplace_id' => $professional_workplace['workplace_id'],
                     'places' => $professional_workplace['places']==0?[]:$professional_workplace['places'],
                     //'workplace_id' => $workplace_id,
                     'hora' => Carbon::now()->format('H:i:s')
                 ];
+
                 $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
                 $qrCodeBase64 = base64_encode($qrCode);
                 return $qrCodeBase64;
@@ -525,7 +526,7 @@ class UserController extends Controller
                     'userName' => $professional->user->name,
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
                     'email' => $professional->email,
-                    'branch_id' => $professional->branches->first()->value('id'),
+                    'branch_id' => $data['branch_id'],
                     'professional_id' => $data['professional'],
                     'workplace_id' => 0,
                     'places' => [],
