@@ -120,7 +120,7 @@ class ProductStoreController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
-                $query->where('product_category_id', $data['id']);
+                $query->where('product_category_id', $data['id'])->where('status_product', 'En venta');
             })->where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->get();
             $productsArray = $productStores->map(function ($productStore) {
                 return [
@@ -139,7 +139,7 @@ class ProductStoreController extends Controller
             });
             return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
         }
     }
     public function update(Request $request)

@@ -48,13 +48,12 @@ class ProductController extends Controller
                 'description' => 'nullable|min:3',
                 'status_product' => 'required',
                 'purchase_price' => 'required|numeric',
-                'sale_price' => 'required|numeric',
+                'sale_price' => 'nullable',
                 'image_product' => 'nullable',
                 'product_category_id' => 'required|numeric'
-            ]);
-            
-            $product = new Product();
-            
+            ]);        
+                
+            $product = new Product();            
             $product->name = $product_data['name'];
             $product->reference = $product_data['reference'];
             $product->code = $product_data['code'];
@@ -218,13 +217,13 @@ class ProductController extends Controller
                 'description' => 'nullable|min:3',
                 'status_product' => 'required',
                 'purchase_price' => 'required|numeric',
-                'sale_price' => 'required|numeric',
+                'sale_price' => 'nullable',
                 'image_product' => 'nullable',
                 'product_category_id' => 'required|numeric'
             ]);
 
             $product = Product::find($product_data['id']);
-            if($product->image_product != $request['image_product'])
+            if($product->image_product != $request->image_product)
                 {
                     $destination=public_path("storage\\".$product->image_product);
                     if (File::exists($destination)) {
@@ -245,7 +244,7 @@ class ProductController extends Controller
             return response()->json(['msg' => 'Producto actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-        return response()->json(['msg' => 'Error al actualizar el producto'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al actualizar el producto'], 500);
         }
     }
     public function destroy(Request $request)
