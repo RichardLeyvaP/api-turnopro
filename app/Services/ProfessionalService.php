@@ -172,7 +172,7 @@ class ProfessionalService
         else{
         $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
-        })->whereHas('charge', function ($query) {
+        }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero');
         })->get();
 
@@ -371,9 +371,10 @@ class ProfessionalService
         // Obtener los profesionales que ofrecen los servicios seleccionados y son barberos
         $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
-        })->whereHas('charge', function ($query) {
+        }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero');
         })->get();
+        
 
         $current_date = Carbon::now();
 
