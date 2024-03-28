@@ -109,10 +109,7 @@ class TailService {
         })->whereHas('reservation.car.orders', function ($query){
             $query->where('is_product', false);
         })->whereNot('attended', [2])->get();
-        $branchTails = $tails->map(function ($tail) use ($branch_id){
-           // Log::info($tail->updated_at->format('Y-m-d H:i:s'));
-           $branch_id1 = $tail->reservation->car->clientProfessional->professional->branches->value('id');
-                if($branch_id1 == $branch_id){           
+        $branchTails = $tails->map(function ($tail) use ($branch_id){        
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
@@ -129,18 +126,10 @@ class TailService {
                 'clock' => $tail->clock, 
                 'timeClock' => $tail->timeClock, 
                 'detached' => $tail->detached, 
-                'total_services' => Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()/*$tail->reservation->car->orders->map(function ($orderData){
-                    $orderData->where('is_product', false);
-                      })*/
-                //'total_services' => count($tail->reservation->car->orders)
-            ];}
+                'total_services' => Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()
+               
+            ];
         })->sortBy('start_time')->values();
-
-        if(!$branchTails->value('reservation_id'))
-           {
-            Log::info('no hay id');
-            $branchTails = [];
-           }
         return $branchTails;
     }
 
