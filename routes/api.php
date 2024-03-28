@@ -195,6 +195,7 @@ Route::get('/branch-service-show', [ServiceController::class, 'branch_service_sh
 
 Route::get('/productstore', [ProductStoreController::class, 'index']);
 Route::get('/productstore-show', [ProductStoreController::class, 'show']);
+Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
 Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
@@ -223,6 +224,7 @@ Route::get('/professional_services', [BranchServiceProfessionalController::class
 Route::get('/store_professional_service', [BranchServiceProfessionalController::class, 'store_professional_service']);
 Route::get('/branch-service-professionals', [BranchServiceProfessionalController::class, 'branch_service_professionals']);//devolver los professionales que realizan un servicio en una sucursal
 Route::get('/services-professional-branch', [BranchServiceProfessionalController::class, 'services_professional_branch']);//devolver los servicios que realiza un professional en un abranch
+Route::get('/services-professional-branch-web', [BranchServiceProfessionalController::class, 'services_professional_branch_web']);//devolver los servicios que realiza un professional en un abranch
 Route::get('/services-professional-branch-free', [BranchServiceProfessionalController::class, 'services_professional_branch_free']);//devolver los servicios que no realiza un professional en un abranch
 Route::get('/professionals-branch-service', [BranchServiceProfessionalController::class, 'professionals_branch_service']);//devolver los professionales que no realizan un servicio en una sucursal
 

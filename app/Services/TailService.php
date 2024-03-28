@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 class TailService {
 
     public function cola_branch_data($branch_id){
-        $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
+        $tails = Tail::with(['reservation.car.orders.branchServiceProfessional.branchService' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         }])->whereIn('attended', [0,3])->get();
         $branchTails = $tails->map(function ($tail){
@@ -96,13 +96,13 @@ class TailService {
     }
 
     public function cola_branch_delete($branch_id){
-        $tails = Tail::whereHas('reservation.car.clientProfessional.professional.branchServices', function ($query) use ($branch_id){
+        $tails = Tail::whereHas('reservation.car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })->delete();
     }
 
     public function cola_branch_professional($branch_id, $professional_id){
-        $tails = Tail::whereHas('reservation.car.clientProfessional.professional.branches', function ($query) use ($branch_id){
+        $tails = Tail::whereHas('reservation.car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
@@ -160,7 +160,7 @@ class TailService {
     }
 
     public function type_of_service($branch_id, $professional_id){
-        $tails = Tail::with(['reservation.car.clientProfessional.professional.branchServices' => function ($query) use ($branch_id){
+        $tails = Tail::with(['reservation.car.orders.branchServiceProfessional.branchService' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         }])->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
@@ -185,7 +185,7 @@ class TailService {
     }
 
     public function cola_branch_capilar($branch_id){
-        $tails = Tail::with(['reservation.car.clientProfessional.professional.branches' => function ($query) use ($branch_id){
+        $tails = Tail::with(['reservation.car.orders.branchServiceProfessional.branchService' => function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         }])->orderBy('updated_at')->whereIn('attended', [4,5])->get();
         $branchTails = $tails->map(function ($tail){
@@ -213,9 +213,10 @@ class TailService {
         $professionals = Professional::whereHas('workplaces', function ($query) use ($places){
             $query->whereIn('workplace_id', $places);
         })->get()->value('id');
-        $tails = Tail::whereHas('reservation.car.clientProfessional.professional.workplaces', function ($query) use ($branch_id, $places){
+        $tails = Tail::whereHas('reservation.car.orders.branchServiceProfessional.professional.workplaces', function ($query) use ($branch_id, $places){
             $query->where('branch_id', $branch_id)->whereIn('workplace_id', $places);
         })->orderBy('updated_at')->whereIn('attended', [4])->get();
+        
         $branchTails = $tails->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
@@ -231,7 +232,7 @@ class TailService {
                 'attended' => $tail->attended
             ];
         })->values();
-
+        
         return $branchTails;
     }
 

@@ -240,6 +240,7 @@ class CarController extends Controller
                     'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
                     'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
                     'client_image' => $client->client_image,
+                    'professional_id' => $professional->id,
                     'image_url' => $professional->image_url,
                     'payment' => $car->payment
 
@@ -376,7 +377,7 @@ class CarController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
     
-                $orderDatas = Order::whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                $orderDatas = Order::whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                 })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
 

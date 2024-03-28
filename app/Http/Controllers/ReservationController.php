@@ -475,6 +475,10 @@ class ReservationController extends Controller
             $reservacion = Reservation::find($data['id']);
             $reservacion->cause = $request->cause;
             $reservacion->save();
+            $tail = Tail::where('reservation_id', $reservacion->id);
+            if($tail){
+                $tail->delete();
+            }
             $reservacion->delete();
 
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);

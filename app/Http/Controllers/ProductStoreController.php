@@ -112,6 +112,28 @@ class ProductStoreController extends Controller
         }
     }
 
+    public function product_show_web(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            Log::info("Entra a buscar los productos de la branch");
+            $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
+                $query->where('status_product', 'En venta');
+            })->where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->get()->map(function ($productStore) {
+                return [
+                    'id' => $productStore->id,
+                    'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
+                ];
+            });
+            return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
+        }
+    }
+
     public function category_products(Request $request)
     {
         try {
@@ -201,7 +223,7 @@ class ProductStoreController extends Controller
             return response()->json(['msg' => 'Operación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al desasociar el producto de este almacén'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al desasociar el producto de este almacén'], 500);
         }
     }
     public function move_product_store(Request $request)
@@ -221,41 +243,48 @@ class ProductStoreController extends Controller
             $productstoreM = new ProductStore();            
             $movementprodct = new MovementProduct();
             $productexist = Product::find($data['product_id']);
-            $storeexist = Store::find($data['store_id']);
-            $store = Store::find($data['store_idM']);
-            $productStoreExit = $storeexist->products()
+            $storeArebajar = Store::find($data['store_id']);
+            $storeASumar = Store::find($data['store_idM']);
+            $productStoreArebajar = $storeArebajar->products()
                 ->wherePivot('product_id', $productexist->id)
                 ->wherePivot('branch_id', $data['branch_id'])
                 ->first();
-                Log::info('Producto a restar');
-                Log::info($productStoreExit);
-            if ($productStoreExit) {
-                Log::info('tiene valor');
-                $productstoreE = ProductStore::where('id', $productStoreExit->pivot->id)->first();
+                Log::info('productStoreArebajar');
+                Log::info($productStoreArebajar);
+            if ($productStoreArebajar) {
+                Log::info('tiene valor productStoreArebajar');
+                $productstoreE = ProductStore::where('id', $productStoreArebajar->pivot->id)->first();
+                Log::info('$productstoreE productStoreArebajar');
+                Log::info($productstoreE);
                 $productstoreE->product_exit = $productstoreE->product_exit - $data['product_quantity'];
                 $productstoreE->product_quantity = $data['product_quantity'];
                 $productstoreE->save();
             }
             //sumar al nuevo store
-            $productStoreMov = $store->products()
+            $productStorestoreASumar = $storeASumar->products()
                 ->wherePivot('product_id', $productexist->id)
                 ->wherePivot('branch_id', $data['branch_idM'])
                 ->first();
-                Log::info('Producto A sumar');
-                Log::info($productStoreMov);
-            if ($productStoreMov) {
-                Log::info('tiene valor');
-                $productstoreM = ProductStore::where('id', $productStoreMov->pivot->id)->first();
+                Log::info('Producto A sumar productStorestoreASumar');
+                Log::info($productStorestoreASumar);
+            if ($productStorestoreASumar) {
+                Log::info('tiene valor productStorestoreASumar');
+                $productstoreM = ProductStore::where('id', $productStorestoreASumar->pivot->id)->first();
+                Log::info('$productstoreM productStorestoreASumar');
+                Log::info($productstoreM);
                 $productstoreM->product_exit = $productstoreM->product_exit + $data['product_quantity'];
                 $productstoreM->product_quantity = $data['product_quantity'];
                 $productstoreM->save();
             } else {
-                $store->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_idM']]);
+                Log::info('no existe ese producto en el almacen donde se va a recibir crear la relacion');
+                $storeASumar->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_idM']]);
+                Log::info('$productStorestoreASumar creado nuevo producto en el almacen');
+                $productStorestoreASumar = $storeASumar->products()
+                ->wherePivot('product_id', $productexist->id)
+                ->wherePivot('branch_id', $data['branch_idM'])
+                ->first();
+                Log::info($productStorestoreASumar);
             }
-            Log::info('$productStoreExit->product_exit');
-            Log::info($productStoreExit->product_exit); 
-            Log::info('$productstoreM->product_exit');
-            Log::info($productstoreM->product_exit); 
             //registro de movimiento de productos
             $movementprodct->data = Carbon::now();
             $movementprodct->product_id = $data['product_id'];
@@ -263,8 +292,8 @@ class ProductStoreController extends Controller
             $movementprodct->store_out_id = $data['store_id'];
             $movementprodct->branch_int_id = $data['branch_idM'];
             $movementprodct->store_int_id = $data['store_idM'];
-            $movementprodct->store_out_exit = $productStoreExit->pivot->product_exit;
-            $movementprodct->store_int_exit = $productStoreMov->pivot->product_exit;  
+            $movementprodct->store_out_exit = $productStoreArebajar->pivot->product_exit;
+            $movementprodct->store_int_exit = $productStorestoreASumar->pivot->product_exit;  
             $movementprodct->cant = $data['product_quantity'];
             $movementprodct->save();
             //todo pendiente para revisar importante

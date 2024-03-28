@@ -75,6 +75,31 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
     }
+    public function services_professional_branch_web(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $serviceModels = BranchServiceProfessional::whereHas('branchService.branch', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('professional', function ($query) use ($data){
+                $query->where('id', $data['professional_id']);
+            })->get()->map(function ($branchservprof) {
+                return [
+                    'id' => $branchservprof->id,
+                    "name" => $branchservprof->branchService->service->name,
+                    "type_service" => $branchservprof->type_service,
+                    "image_service" => $branchservprof->branchService->service->image_service,
+                    "profit_percentaje" => $branchservprof->percent,
+                ];
+            });            
+            return response()->json(['branchServicesPro' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
+        }
+    }
     public function professional_services(Request $request)
     {
         try {

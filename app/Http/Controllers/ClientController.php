@@ -253,6 +253,7 @@ class ClientController extends Controller
                 }
             }
             Client::destroy($clients_data['id']);
+            User::destroy($client->user_id);
 
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
