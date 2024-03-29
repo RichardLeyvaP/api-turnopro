@@ -16,7 +16,7 @@ class EnrollmentController extends Controller
         try {
             return response()->json(['enrollments' => Enrollment::with(['business'])->get()], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar las academias"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las academias"], 500);
         }
     }
 
@@ -54,7 +54,7 @@ class EnrollmentController extends Controller
             $data = $request->validate([
                 'business_id' => 'required|numeric'
             ]);
-            $enrollments = Enrollment::find($data['business_id'])->with(['business'])->get();
+            $enrollments = Enrollment::where('business_id', $data['business_id'])->with(['business'])->get();
             return response()->json(['enrollments' => $enrollments], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las academias"], 500);
