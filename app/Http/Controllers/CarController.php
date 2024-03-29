@@ -204,6 +204,8 @@ class CarController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);         
+            Log::info( "Esta es request");
+            Log::info( $request);
             Log::info( "Entra a buscar los carros");
             /*return $branch = Branch::where('id', $data['branch_id'])->whereHas('professionals', function ($query) use($data){
                 $query->whereDate('branch_id', $data['branch_id']);
@@ -215,14 +217,16 @@ class CarController extends Controller
             return $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->get();*/
-            $branch = Branch::find($data['branch_id'])->first();
+            $branch = Branch::where('id',$data['branch_id'])->first();
+            Log::info( "Esta es la sucursal");
+            Log::info( $branch);
             $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){
                 $query->whereDate('orders.data', Carbon::now());
-            })->whereHas('clientProfessional.professional.branches', function ($query) use ($data){
+            })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->get()->map(function ($car) use ($data){
-                $branch_id = $car->clientProfessional->professional->branches->value('id');
-                if($branch_id == $data['branch_id']){
+                //$branch_id = $car->clientProfessional->professional->branches->value('id');
+                //if($branch_id == $data['branch_id']){
                 $client = $car->clientProfessional->client;
                 $professional = $car->clientProfessional->professional;
                 $products = $car->orders->where('is_product', 1)->sum('price');
@@ -245,7 +249,7 @@ class CarController extends Controller
                     'payment' => $car->payment
 
                 ];
-                }
+                //}
             });
             /*$branch = Branch::find($data['branch_id'])->first();
             $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){

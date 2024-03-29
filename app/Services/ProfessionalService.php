@@ -182,12 +182,16 @@ class ProfessionalService
                 $query->where('branch_id', $branch_id);
             })
             ->whereDate('data', $current_date)
-            ->get()->map(function ($query){
+            ->get()
+            ->sortBy('start_time')
+            ->map(function ($query){
                 return [
                     'start_time' => $query->start_time,
                     'final_hour' => $query->final_hour
                 ];
             });
+            Log::info('$reservations');
+            Log::info($reservations);
             // Decodificar la entrada JSON a un array de objetos
             $entrada = json_decode($reservations, true);
             //return $entrada[0];
@@ -204,13 +208,14 @@ class ProfessionalService
 
                 //$arrayHoras = $this->professional_reservations_time1($branch_id, $professional->id, $current_date);
                 //return $arrayHoras;
-                $professional->start_time = $this->encontrarHoraDisponible($totalTiempo, Carbon::now()->format('H:i'), $entrada);
+                $professional->start_time = $this->encontrarHoraDisponible($totalTiempo, $entrada);
                 $availableProfessionals[] = $professional;
                 //break;
             }//else
         }//for
     }//else
         //return $availableProfessionals;
+       
         $returnedProfessionals = [];
 
             foreach ($availableProfessionals as $professional) {
@@ -220,14 +225,100 @@ class ProfessionalService
                     $returnedProfessionals[] = $professional;
                 }
             }
-
+            
             return $returnedProfessionals;
               
     }
 
 
     ///nuevo metodo
-    function encontrarHoraDisponible($timeService, $horaActual, $arrayIntervalos) {
+    function encontrarHoraDisponible($timeService, $arrayIntervalos) {
+        // Convertir la hora actual a un objeto Carbon para facilitar la comparación
+        //$horaActualCarbon = Carbon::createFromFormat('H:i', $horaActual);
+        $horaActual = Carbon::now();
+    
+        // Convertir la hora de inicio del primer intervalo a Carbon para comparar
+        //$primerIntervaloInicio = Carbon::createFromFormat('H:i:s', $arrayIntervalos[0]['start_time']);
+    
+        // Si la hora actual es menor que la del primer intervalo, devuelve la hora final del último intervalo
+        //if ($horaActualCarbon->lt($primerIntervaloInicio)) {
+            //return end($arrayIntervalos)['final_hour'];
+        //}
+            //$auxActual = $horaActual->addMinutes($timeService);
+            $i=0;
+            Log::info('$horaActual');
+            Log::info($horaActual);
+        foreach ($arrayIntervalos as $key => $intervalo) {
+            $auxActual = Carbon::now();
+            $horaInicioActual = Carbon::createFromFormat('H:i:s', $intervalo['start_time']);
+            $horaFinActual = Carbon::createFromFormat('H:i:s', $intervalo['final_hour']);
+            Log::info('horaInicioActual');
+            Log::info($horaInicioActual);
+            Log::info('horaFinActual');
+            Log::info($horaFinActual);
+            Log::info('horaActual');
+            Log::info($horaActual);
+            if($horaActual > $horaInicioActual && $horaActual > $horaFinActual){
+                continue;
+            }else{
+                $nuevaHora = $horaActual->copy()->addMinutes($timeService);
+                Log::info('$nuevaHora----');
+                Log::info($nuevaHora);
+                Log::info($horaInicioActual);
+                Log::info('horaFinActual');
+            if($nuevaHora <= $horaInicioActual){
+                Log::info('Respuesta 1');
+                return $horaActual->format('H:i');
+            }
+            else{
+                if($horaActual->between($horaInicioActual, $horaFinActual)){
+                    $horaActual = $horaFinActual;                    
+                Log::info($i++);
+                    continue;
+                }
+                             
+            else{
+                $horaActual = $horaFinActual; 
+            }
+            }
+            }
+    
+            /*// Si la hora actual está dentro del intervalo, continuamos al siguiente intervalo
+            if ($horaActualCarbon->between($horaInicioActual, $horaFinActual)) {
+                Log::info('Resp0');
+                continue;
+            }*/
+    
+            // Si la hora actual es posterior al final del intervalo actual y no hay más intervalos después, devolvemos la hora actual
+            /*if ($horaActualCarbon->gt($horaFinActual) && !isset($arrayIntervalos[$key + 1])) {
+                Log::info('Resp1');
+                return $horaActual;
+            }*/
+    
+            // Si hay intervalos posteriores, verificamos si el tiempo de servicio cabe y si el intervalo es mayor a la hora actual
+            /*if (isset($arrayIntervalos[$key + 1])) {
+                $horaInicioSiguiente = Carbon::createFromFormat('H:i:s', $arrayIntervalos[$key + 1]['start_time']);
+                $diferenciaMinutos = $horaInicioSiguiente->diffInMinutes($horaFinActual);
+                
+                if ($timeService <= $diferenciaMinutos && $horaInicioSiguiente->gt($horaActualCarbon)) {
+                    Log::info('Resp2');
+                    Log::info('horaInicioActual');
+                    Log::info($horaInicioActual);
+                    Log::info('horaFinActual');
+                    Log::info($horaFinActual);
+                    return $horaActual;
+                }
+            }*/
+        }//endForm   
+        Log::info('Respuesta 2');
+            Log::info($horaActual->format('H:i')); 
+               
+        return $horaActual->format('H:i');
+        //Log::info('Resp3');
+        // Si no se encuentra ninguna hora disponible, devolvemos la última hora del último intervalo
+        //return end($arrayIntervalos)['final_hour'];
+    }
+    /*function encontrarHoraDisponible($timeService, $horaActual, $arrayIntervalos) {
         // Convertir la hora actual a un objeto Carbon para facilitar la comparación
         $horaActualCarbon = Carbon::createFromFormat('H:i', $horaActual);
     
@@ -266,7 +357,7 @@ class ProfessionalService
         // Si no se encuentra ninguna hora disponible,
         // devolvemos la última hora del último intervalo
         return end($arrayIntervalos)['final_hour'];
-    }
+    }*/
     
     // Ejemplo de uso
     /*$timeService = 20;
