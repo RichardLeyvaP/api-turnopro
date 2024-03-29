@@ -318,6 +318,176 @@ class ProfessionalService
         // Si no se encuentra ninguna hora disponible, devolvemos la última hora del último intervalo
         //return end($arrayIntervalos)['final_hour'];
     }
+
+    //todo ESTA DE AQUI ES NUEVA, NUEVO METODO DE ENCONTRAR HORA DISPONIBLE RLP
+    
+    public function branch_professionals_serviceNew($branch_id, $services)
+    {
+        // Ejemplo de uso
+        //$timeService = 20;
+        //$horaActual = '15:00';
+        //$arrayHoras = ['10:25', '10:30', '11:00', '11:15', '11:30','14:30'];
+        $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
+        $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
+        $start_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
+        $closingTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
+        $current_date = Carbon::now()->format('Y-m-d');
+        $availableProfessionals = [];
+        //return Carbon::now()->addMinutes($totalTiempo);
+        if(Carbon::now()->addMinutes($totalTiempo) >  Carbon::parse($closingTime)){
+            return $availableProfessionals = [];
+        }
+        else{
+        $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+            $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
+        }, '=', count($services))->whereHas('charge', function ($query) {
+            $query->where('name', 'Barbero');
+        })->get();
+
+        foreach ($professionals as $professional) {
+            $reservations = $professional->reservations()
+            ->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id);
+            })
+            ->whereDate('data', $current_date)
+            ->get()
+            ->sortBy('start_time')
+            ->map(function ($query){
+                return [
+                    'start_time' => $query->start_time,
+                    'final_hour' => $query->final_hour
+                ];
+            });
+            Log::info('$reservations');
+            Log::info($reservations);
+            // Decodificar la entrada JSON a un array de objetos
+            $entrada = json_decode($reservations, true);
+            //return $entrada[0];
+            if($reservations->isEmpty()){
+                if(Carbon::now() < Carbon::parse($start_time)){
+                    $professional->start_time = Carbon::parse($start_time)->format('H:i');
+                $availableProfessionals[] = $professional;
+                }
+                else{
+                $professional->start_time = date('H:i');
+                $availableProfessionals[] = $professional;
+            }
+            }else{
+
+                //$arrayHoras = $this->professional_reservations_time1($branch_id, $professional->id, $current_date);
+                //return $arrayHoras;
+                $rangosHoras = $entrada;
+                $tiempoServicio = $totalTiempo;
+                $horaInicial = $start_time;
+                $horaFinal = $closingTime;
+                //$horaActual = Carbon::now()->format('H:i:s');
+                $horaActual = '08:30:60';
+                //
+                //
+                //
+                Log::info('$rangosHoras');
+            Log::info($rangosHoras); 
+             Log::info('$tiempoServicio');
+            Log::info($tiempoServicio);
+             Log::info('$horaInicial');
+            Log::info($horaInicial);
+             Log::info('$horaActual');
+            Log::info($horaActual);
+
+
+                $professional->start_time = $this->calcularHoraDisponible($horaInicial, $horaFinal, $rangosHoras, $tiempoServicio, $horaActual);
+                $availableProfessionals[] = $professional;
+                //break;
+            }//else
+        }//for
+    }//else
+        //return $availableProfessionals;
+       
+        $returnedProfessionals = [];
+
+            foreach ($availableProfessionals as $professional) {
+                $time = strtotime($professional->start_time);
+                if ($time + ($totalTiempo * 60) <= strtotime($closingTime)) {
+                    // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
+                    $returnedProfessionals[] = $professional;
+                }
+            }
+            
+            return $returnedProfessionals;
+              
+    }
+
+
+    //
+    //
+    //
+    //
+    public function calcularHoraDisponible($horaInicial, $horaFinal, $rangosHoras, $tiempoServicio, $horaActual)
+    {
+        // Convertir las horas a minutos para facilitar la comparación
+        $horaInicialMinutos = $this->convertirHoraAMinutos($horaInicial);
+        $horaFinalMinutos = $this->convertirHoraAMinutos($horaFinal);
+        $horaActualMinutos = $this->convertirHoraAMinutos($horaActual);
+
+        // Paso 1: Comprobar si la hora actual está dentro del rango inicial y final
+        if ($horaActualMinutos >= $horaInicialMinutos && $horaActualMinutos < $horaFinalMinutos) {
+            $horaInicialMinutos = $horaActualMinutos;
+        } else {
+            return 'No tiene horario disponible';
+        }
+
+        // Paso 2: Iterar sobre los rangos de horas
+        foreach ($rangosHoras as $rango) {
+            $horaIniMinutos = $this->convertirHoraAMinutos($rango['start_time']);
+            $horaFinMinutos = $this->convertirHoraAMinutos($rango['final_hour']);
+            Log::info('$horaIniMinutos');
+            Log::info($horaIniMinutos);
+            Log::info('$horaFinMinutos');
+            Log::info($horaFinMinutos);
+            Log::info('$horaInicialMinutos');
+            Log::info($horaInicialMinutos);
+
+            // Comprobar si la hora inicial está dentro del rango actual
+            if ($horaInicialMinutos < $horaIniMinutos) {
+                $resultHoras = $horaIniMinutos - $horaInicialMinutos;
+                if ($resultHoras >= $tiempoServicio) {
+                    Log::info('ESTOY ENTRANDO AQUI if 111if ($resultHoras >= $tiempoServicio) {');
+            Log::info($resultHoras - $tiempoServicio);
+                    return $this->convertirMinutosAHora($horaInicialMinutos);
+                } else {
+                    $horaInicialMinutos = $horaFinMinutos;
+                }
+            }
+        }
+
+        // Si no hay más rangos y la hora inicial está dentro del rango global
+        if ($horaInicialMinutos < $horaFinalMinutos) {
+            $resultHoras = $horaFinalMinutos - $horaInicialMinutos;
+            if ($resultHoras >= $tiempoServicio) {
+            Log::info('ESTOY ENTRANDO AQUI if2222 ($resultHoras >= $tiempoServicio)');
+            Log::info($resultHoras - $tiempoServicio);
+                
+                return $this->convertirMinutosAHora($horaInicialMinutos);
+            } else {
+                return 'No tiene horario disponible';
+            }
+        }
+
+        return 'No tiene horario disponible';
+    }
+
+    private function convertirHoraAMinutos($hora)
+    {
+        list($horas, $minutos) = explode(':', $hora);
+        return ($horas * 60) + $minutos;
+    }
+
+    private function convertirMinutosAHora($minutos)
+    {
+        $horas = floor($minutos / 60);
+        $minutos = $minutos % 60;
+        return sprintf('%02d:%02d', $horas, $minutos);
+    }
     /*function encontrarHoraDisponible($timeService, $horaActual, $arrayIntervalos) {
         // Convertir la hora actual a un objeto Carbon para facilitar la comparación
         $horaActualCarbon = Carbon::createFromFormat('H:i', $horaActual);

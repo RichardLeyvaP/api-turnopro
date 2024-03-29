@@ -285,6 +285,25 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
+    //todo ESTA DE AQUI ES OTRO METODO NUEVO DE HORARIOS DISPONIBLE
+
+    public function branch_professionals_serviceNew(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $servs = $request->input('services');
+            $professionals = $this->professionalService->branch_professionals_serviceNew($data['branch_id'], $servs);
+            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+           })->get();
+           */
+            return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+        }
+    }
 
     public function get_professionals_service(Request $request)
     {
