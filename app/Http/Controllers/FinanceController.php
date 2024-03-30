@@ -251,7 +251,53 @@ class FinanceController extends Controller
                 'year' => 'nullable'
             ]);
             //$currentYear = $data['year'];
-            $ingresos = Finance::whereYear('data', $data['year'])->where('operation', 'Ingreso')
+            if($request->mounth){
+                $ingresos = Finance::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where('operation', 'Ingreso')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => $query->amount,
+                        'gasto' => '',
+                        'detailOperation' => $query->revenue->name,
+                    ];
+                })->sortByDesc('data')->values();
+
+            $totalIngresos = $ingresos->sum('ingreso');
+                if($totalIngresos){
+            $ingresos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => $totalIngresos,
+                'gasto' => '',
+                'detailOperation' => '',
+            ]);}
+
+            $gastos = Finance::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where('operation', 'Gasto')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => '',
+                        'gasto' => $query->amount,
+                        'detailOperation' => $query->expense->name,
+                    ];
+                })->sortByDesc('data')->values();
+
+            $totalGastos = $gastos->sum('gasto');
+                if($totalGastos){
+            $gastos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => '',
+                'gasto' => $totalGastos,
+                'detailOperation' => '',
+            ]);}
+
+            $resultado = $ingresos->concat($gastos);
+            }
+            else {
+                $ingresos = Finance::whereYear('data', $data['year'])->where('operation', 'Ingreso')
                 ->get()->map(function ($query) {
                     return [
                         'data' => $query->data,
@@ -294,6 +340,8 @@ class FinanceController extends Controller
             ]);
 
             $resultado = $ingresos->concat($gastos);
+            }
+            
 
             // Devolvemos el resultado
             return response()->json(['finances' => $resultado], 200);
