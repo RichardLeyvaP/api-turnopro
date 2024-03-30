@@ -201,6 +201,7 @@ Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
 Route::get('/category_products', [ProductStoreController::class, 'category_products']);//dada una branch y una categiría devolver los pructos
 Route::post('/move-product-store', [ProductStoreController::class, 'move_product_store']);
+Route::get('/move-products', [ProductStoreController::class, 'movement_products']);//devolver los movientos de productos de una branch dada en eun añi dado
 
 Route::get('/branchstore', [BranchStoreController::class, 'index']);
 Route::get('/branchstore-show', [BranchStoreController::class, 'show']);
@@ -463,8 +464,9 @@ Route::get('/finance-show', [FinanceController::class, 'show']);
 Route::post('/finance', [FinanceController::class, 'store']);
 Route::post('/finance-updated', [FinanceController::class, 'update']);
 Route::post('/finance-destroy', [FinanceController::class, 'destroy']);
-Route::get('/revenue-expense-analysis', [FinanceController::class, 'revenue_expense_analysis']);//devolver las finanzas del año actual
-Route::get('/revenue-expense-details', [FinanceController::class, 'revenue_expense_details']);//devolver las finanzas detalladas del año actual
+Route::get('/revenue-expense-analysis', [FinanceController::class, 'revenue_expense_analysis']);//devolver las finanzas del año
+Route::get('/revenue-expense-details', [FinanceController::class, 'revenue_expense_details']);//devolver las finanzas detalladas del año
+Route::get('/details-operations', [FinanceController::class, 'details_operations']);//devolver las finanzas por detalle de operacion de un año
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

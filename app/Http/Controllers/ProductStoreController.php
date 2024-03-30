@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\MovementProduct;
 use App\Models\Product;
 use App\Models\ProductStore;
@@ -299,6 +300,58 @@ class ProductStoreController extends Controller
             //todo pendiente para revisar importante
             // $this->actualizarProductExit($productexist->id, $storeexist->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . 'Error al mover el producto a este almacén'], 500);
+        }
+    }
+
+    public function movement_products(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'required'
+            ]);
+            if($request->mounth){
+                $movement = MovementProduct::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where(function ($query) use($data){
+                    $query->orWhere('branch_out_id', $data['branch_id'])->orWhere('branch_int_id', $data['branch_id']);
+                })->get()->map(function ($query){
+                    $branchOut = Branch::where('id', $query->branch_out_id)->first();
+                    $storeOut = Store::where('id', $query->store_out_id)->first();
+                    $branchInt = Branch::where('id', $query->branch_int_id)->first();
+                    $storeInt = Store::where('id', $query->store_int_id)->first();
+                    $product = Product::where('id', $query->product_id)->first();
+                    return [
+                        'branchOut' => $branchOut->name,
+                        'storeOut' => $storeOut->address,
+                        'branchInt' => $branchInt->name,
+                        'storeInt' => $storeInt->address,
+                        'cant' => $query->cant,
+                        'data' => $query->data,
+                        'nameProduct' => $product->name
+                    ];
+                })->sortByDesc('data')->values();
+            }
+            else{
+            $movement = MovementProduct::whereYear('data', $data['year'])->where(function ($query) use($data){
+                $query->orWhere('branch_out_id', $data['branch_id'])->orWhere('branch_int_id', $data['branch_id']);
+            })->get()->map(function ($query){
+                $branchOut = Branch::where('id', $query->branch_out_id)->first();
+                $storeOut = Store::where('id', $query->store_out_id)->first();
+                $branchInt = Branch::where('id', $query->branch_int_id)->first();
+                $storeInt = Store::where('id', $query->store_int_id)->first();
+                $product = Product::where('id', $query->product_id)->first();
+                return [
+                    'branchOut' => $branchOut->name,
+                    'storeOut' => $storeOut->address,
+                    'branchInt' => $branchInt->name,
+                    'storeInt' => $storeInt->address,
+                    'cant' => $query->cant,
+                    'data' => $query->data,
+                    'nameProduct' => $product->name
+                ];
+            })->sortByDesc('data')->values();
+        }
+            return response()->json(['movimientos' => $movement], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . 'Error al mover el producto a este almacén'], 500);
         }

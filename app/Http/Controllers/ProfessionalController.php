@@ -443,7 +443,12 @@ class ProfessionalController extends Controller
                 'state' => 'required|numeric'
             ]);
             Log::info($request);
-
+            $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
+            if($userName){
+                return response()->json([
+                    'msg' => 'Usuario ya existe'
+                ], 400);
+            }
             $user = User::find($professionals_data['user_id']);
             $user->name = $professionals_data['user'];
             $user->email = $professionals_data['email'];

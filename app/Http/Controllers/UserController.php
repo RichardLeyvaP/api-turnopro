@@ -56,6 +56,7 @@ class UserController extends Controller
                     'msg' => $validator->errors()->all()
                 ], 400);
             }
+
             $user = User::create([
                 'name' => $request->user,
                 'email' => $request->email,
@@ -96,6 +97,12 @@ class UserController extends Controller
                 'image_url' => 'nullable'
             ]);
             if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $userName = User::where('name', $request->user)->first();
+            if($userName){
                 return response()->json([
                     'msg' => $validator->errors()->all()
                 ], 400);
