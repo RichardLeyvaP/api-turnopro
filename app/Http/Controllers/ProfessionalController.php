@@ -319,7 +319,7 @@ class ProfessionalController extends Controller
             $ganancias = $this->professionalService->professionals_ganancias($data);
             return response()->json(['earningByDay' => $ganancias], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
+            return response()->json(['msg' => $th->getMessage()."Profssional no obtuvo ganancias en este período"], 500);
         }
     }
 

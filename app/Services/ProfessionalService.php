@@ -610,13 +610,13 @@ class ProfessionalService
         $i = 0;
         $day = $data['day'] - 1; //en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
 
-        $cars = Car::whereHas('clientProfessional', function ($query) use ($data) {
-            $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            });
-        })->whereHas('orders', function ($query) use ($data) {
-            $query->whereBetween('data', [$data['startDate'], Carbon::parse($data['endDate'])->addDay()]);
-        })->with('orders')->get()->map(function ($car) {
+        $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('orders', function ($query) use ($data){
+            $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
+        })->whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
+        })->get()->map(function ($car) {
             return [
                 'date' => $car->orders->value('data'),
                 'earnings' => $car->amount
@@ -644,12 +644,12 @@ class ProfessionalService
     public function professionals_ganancias_branch_date($data)
     {
         Log::info('Obtener los cars');
-        $cars = Car::whereHas('clientProfessional', function ($query) use ($data) {
-            $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            });
+        $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
         })->whereHas('orders', function ($query) {
             $query->whereDate('data', Carbon::now());
+        })->whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
         })->get();
         $services = 0;
         $products = 0;
@@ -658,13 +658,20 @@ class ProfessionalService
             $services = $services + count($car->orders->where('is_product', 0));
             $products = $products + count($car->orders->where('is_product', 1));
         }
-        $orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
+        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Especial');
+        })->whereHas('car.clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
+        })->whereDate('data', Carbon::now())->get();
+        /*$orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
             $query->whereHas('branchService', function ($query) use ($data) {
                 $query->WhereHas('service', function ($query) {
                     $query->where('type_service', 'Especial');
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
-        })->whereDate('data', Carbon::now())->get();
+        })->whereDate('data', Carbon::now())->get();*/
         $totalClients = $cars->count();
         return $result = [
             'Monto Generado' => round($cars->sum('amount'), 2),
@@ -686,12 +693,19 @@ class ProfessionalService
     public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
     {
         Log::info('Obtener los cars');
-        $cars = Car::whereHas('clientProfessional', function ($query) use ($data) {
+        /*$cars = Car::whereHas('clientProfessional', function ($query) use ($data) {
             $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             });
         })->whereHas('orders', function ($query) use ($startDate, $endDate) {
             $query->whereBetWeen('data', [$startDate, $endDate]);
+        })->get();*/
+        $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('orders', function ($query) use ($data, $startDate, $endDate){
+            $query->whereBetWeen('data', [$startDate, $endDate]);
+        })->whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
         })->get();
         $services = 0;
         $products = 0;
@@ -700,12 +714,19 @@ class ProfessionalService
             $services = $services + count($car->orders->where('is_product', 0));
             $products = $products + count($car->orders->where('is_product', 1));
         }
-        $orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
+        /*$orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
             $query->whereHas('branchService', function ($query) use ($data) {
                 $query->WhereHas('service', function ($query) {
                     $query->where('type_service', 'Especial');
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
+        })->whereBetWeen('data', [$startDate, $endDate])->get();*/
+        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Especial');
+        })->whereHas('car.clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
         })->whereBetWeen('data', [$startDate, $endDate])->get();
         $totalClients = $cars->count();
         return $result = [
@@ -728,12 +749,19 @@ class ProfessionalService
     public function professionals_ganancias_branch_month($data, $mes, $year)
     {
         Log::info('Obtener los cars');
-        $cars = Car::whereHas('clientProfessional', function ($query) use ($data) {
+        /*$cars = Car::whereHas('clientProfessional', function ($query) use ($data) {
             $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             });
         })->whereHas('orders', function ($query) use ($mes, $year) {
             $query->whereMonth('data', $mes)->whereYear('data', $year);
+        })->get();*/
+        $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('orders', function ($query) use ($data, $mes, $year){
+            $query->whereMonth('data', $mes)->whereYear('data', $year);
+        })->whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
         })->get();
         $services = 0;
         $products = 0;
@@ -742,12 +770,19 @@ class ProfessionalService
             $services = $services + count($car->orders->where('is_product', 0));
             $products = $products + count($car->orders->where('is_product', 1));
         }
-        $orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
+        /*$orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
             $query->whereHas('branchService', function ($query) use ($data) {
                 $query->WhereHas('service', function ($query) {
                     $query->where('type_service', 'Especial');
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
+        })->whereMonth('data', $mes)->whereYear('data', $year)->get();*/
+        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id']);
+        })->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Especial');
+        })->whereHas('car.clientProfessional', function ($query) use ($data){
+            $query->where('professional_id', $data['professional_id']);
         })->whereMonth('data', $mes)->whereYear('data', $year)->get();
         Log::info($orders);
         $totalClients = $cars->count();

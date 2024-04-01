@@ -125,9 +125,9 @@ class ReservationService {
          }
          Log::info("client_history 2");
        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
-            $query->whereHas('professional.branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->where('client_id', $data['client_id']);
+            $query->where('client_id', $data['client_id']);
+        })->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
         })->get();
         Log::info("client_history 3");
         if(!$reservations){
@@ -146,9 +146,9 @@ class ReservationService {
         }
         if ($reservations->count()>=12) {
             $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
-                $query->whereHas('professional.branches', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                })->where('client_id', $data['client_id']);
+                $query->where('client_id', $data['client_id']);
+            })->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
             })->whereYear('data', Carbon::now()->year)->count();
         }
         elseif($reservations->count()>= 3){
@@ -160,10 +160,10 @@ class ReservationService {
         //$client = Client::find($data['client_id']);
         Log::info("client_history 5");
        $reservationids = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
-        $query->whereHas('professional.branches', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-        })->where('client_id', $data['client_id']);
-        })->orderByDesc('data')->take(3)->get()->pluck('car_id');
+        $query->where('client_id', $data['client_id']);
+    })->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data){
+        $query->where('branch_id', $data['branch_id']);
+    })->orderByDesc('data')->take(3)->get()->pluck('car_id');
         Log::info("client_history 6");
         $services = Service::withCount(['orders'=> function ($query) use ($data, $reservationids){
             $query->whereHas('car.clientProfessional', function ($query) use ($data){

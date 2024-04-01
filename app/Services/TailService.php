@@ -55,8 +55,10 @@ class TailService {
     }
 
     public function tail_branch_attended($branch_id){
-        $branch = Branch::where('id', $branch_id)->whereHas('tails', function ($query) {
-            $query->whereIn('attended', [1, 5, 11, 111, 4]);
+        $branch = Branch::where('id', $branch_id)->whereHas('tails', function ($query) use ($branch_id){
+            $query->whereIn('attended', [1, 5, 11, 111, 4])->whereHas('reservation.car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id){
+                $query->where('branch_id', $branch_id);
+            });
         })->get()->flatMap(function ($branch) {
             return $branch->tails->filter(function ($tail) {
                 // Add the condition to filter tails based on the 'attended' attribute
