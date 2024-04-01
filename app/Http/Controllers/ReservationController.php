@@ -456,7 +456,7 @@ class ReservationController extends Controller
             ]);
             $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data) {
+            })->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);

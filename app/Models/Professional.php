@@ -57,7 +57,7 @@ class Professional extends Model
     }
 
     public function orders(){
-        return $this->hasManyDeep(Order::class, [ClientProfessional::class, Car::class]);
+        return $this->hasManyThrough(Order::class, BranchServiceProfessional::class);
     }
 
     public function workplaces(){

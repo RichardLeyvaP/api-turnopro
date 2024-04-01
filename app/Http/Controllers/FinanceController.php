@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Expense;
 use App\Models\Finance;
+use App\Models\Revenue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
@@ -187,12 +189,12 @@ class FinanceController extends Controller
                     ->whereMonth('data', $index + 1)
                     ->selectRaw('COALESCE(SUM(CASE WHEN expense_id IS NOT NULL THEN amount ELSE 0 END), 0) as total_expenses,
                                  COALESCE(SUM(CASE WHEN revenue_id IS NOT NULL THEN amount ELSE 0 END), 0) as total_revenues')
-                                 ->get();
-            
+                    ->get();
+
                 $totalExpenses = $financeData->sum('total_expenses');
                 $totalRevenues = $financeData->sum('total_revenues');
                 $difference = $totalRevenues - $totalExpenses;
-            
+
                 return (object)[
                     'month' => $monthName,
                     'total_expenses' => $totalExpenses,
@@ -200,12 +202,12 @@ class FinanceController extends Controller
                     'difference' => $difference
                 ];
             });
-            
+
             // Calcular totales
             $totalExpenses = $finances->sum('total_expenses');
             $totalRevenues = $finances->sum('total_revenues');
             $totalDifference = $finances->sum('difference');
-            
+
             // Agregar la fila de totales
             $finances->push((object)[
                 'month' => 'Total',
@@ -249,53 +251,101 @@ class FinanceController extends Controller
                 'year' => 'nullable'
             ]);
             //$currentYear = $data['year'];
-            $ingresos = Finance::whereYear('data', $data['year'])->where('operation', 'Ingreso')
-                    ->get()->map(function ($query){
-                        return [
-                            'data' => $query->data,
-                            'operation' => $query->operation,
-                            'ingreso' => $query->amount,
-                            'gasto' => '',
-                            'detailOperation' => $query->revenue->name,
-                        ];
-                    })->sortByDesc('data')->values();
-
-                    $totalIngresos = $ingresos->sum('ingreso');
-
-                    $ingresos->push((object)[
-                        'data' => '',
-                        'operation' => 'Total',
-                        'ingreso' => $totalIngresos,
+            if($request->mounth){
+                $ingresos = Finance::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where('operation', 'Ingreso')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => $query->amount,
                         'gasto' => '',
-                        'detailOperation' => '',
-                    ]);
+                        'detailOperation' => $query->revenue->name,
+                    ];
+                })->sortByDesc('data')->values();
 
-                    $gastos = Finance::whereYear('data', $data['year'])->where('operation', 'Gasto')
-                    ->get()->map(function ($query){
-                        return [
-                            'data' => $query->data,
-                            'operation' => $query->operation,
-                            'ingreso' => '',
-                            'gasto' => $query->amount,
-                            'detailOperation' => $query->expense->name,
-                        ];
-                    })->sortByDesc('data')->values();
+            $totalIngresos = $ingresos->sum('ingreso');
+                if($totalIngresos){
+            $ingresos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => $totalIngresos,
+                'gasto' => '',
+                'detailOperation' => '',
+            ]);}
 
-                    $totalGastos = $gastos->sum('gasto');
-
-                    $gastos->push((object)[
-                        'data' => '',
-                        'operation' => 'Total',
+            $gastos = Finance::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where('operation', 'Gasto')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
                         'ingreso' => '',
-                        'gasto' => $totalGastos,
-                        'detailOperation' => '',
-                    ]);
+                        'gasto' => $query->amount,
+                        'detailOperation' => $query->expense->name,
+                    ];
+                })->sortByDesc('data')->values();
 
-                    $resultado = $ingresos->concat($gastos);
+            $totalGastos = $gastos->sum('gasto');
+                if($totalGastos){
+            $gastos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => '',
+                'gasto' => $totalGastos,
+                'detailOperation' => '',
+            ]);}
 
-                    // Devolvemos el resultado
-                    return response()->json(['finances'=> $resultado], 200);
+            $resultado = $ingresos->concat($gastos);
+            }
+            else {
+                $ingresos = Finance::whereYear('data', $data['year'])->where('operation', 'Ingreso')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => $query->amount,
+                        'gasto' => '',
+                        'detailOperation' => $query->revenue->name,
+                    ];
+                })->sortByDesc('data')->values();
+
+            $totalIngresos = $ingresos->sum('ingreso');
+
+            $ingresos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => $totalIngresos,
+                'gasto' => '',
+                'detailOperation' => '',
+            ]);
+
+            $gastos = Finance::whereYear('data', $data['year'])->where('operation', 'Gasto')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => '',
+                        'gasto' => $query->amount,
+                        'detailOperation' => $query->expense->name,
+                    ];
+                })->sortByDesc('data')->values();
+
+            $totalGastos = $gastos->sum('gasto');
+
+            $gastos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => '',
+                'gasto' => $totalGastos,
+                'detailOperation' => '',
+            ]);
+
+            $resultado = $ingresos->concat($gastos);
+            }
             
+
+            // Devolvemos el resultado
+            return response()->json(['finances' => $resultado], 200);
+
             //return response()->json($result, 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -303,4 +353,178 @@ class FinanceController extends Controller
         }
     }
 
+    public function details_operations(Request $request)
+    {
+        $data = $request->validate([
+            'branch_id' => 'required|numeric',
+            'year' => 'nullable'
+        ]);
+        $currentYear = $data['year'];
+
+        $monthsNames = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+
+        $revenues = collect($monthsNames)->map(function ($monthName, $index) use ($currentYear, $data) {
+            $financeData = Finance::whereYear('data', $currentYear)
+                ->where('branch_id', $data['branch_id'])
+                ->where('operation', 'Ingreso')
+                ->whereMonth('data', $index + 1)
+                ->with('revenue') // Asegúrate de cargar la relación revenue
+                ->get();
+
+            $revenueNames = Revenue::pluck('name')->toArray(); // Obtener todos los nombres de revenue
+
+            $revenuesByType = $financeData->groupBy('revenue.name')->map->sum('amount'); // Agrupa y suma los ingresos por tipo de operación
+
+            // Completar los totales para los tipos de ingresos que no están presentes en este mes
+            foreach ($revenueNames as $revenueName) {
+                if (!isset($revenuesByType[$revenueName])) {
+                    $revenuesByType[$revenueName] = 0;
+                }
+            }
+
+            // Calcular el total de ingresos para este mes
+            $totalRevenue = collect($revenuesByType)->sum();
+
+            return (object)[
+                'month' => $monthName,
+                'total_revenues' => $revenuesByType,
+                'total_revenue' => $totalRevenue, // Agregar el total de ingresos para este mes
+            ];
+        });
+
+        // Inicializar un array para almacenar los datos reestructurados
+        $tableRevenue = [];
+        // Inicializar un array para almacenar los totales por mes
+        $monthTotals = array_fill_keys($monthsNames, 0);
+        // Iterar sobre los datos de revenues
+        foreach ($revenues as $revenue) {
+            // Crear una fila para cada tipo de operación (revenue)
+            foreach ($revenue->total_revenues as $revenueType => $revenueAmount) {
+                // Verificar si ya existe una fila para este tipo de operación
+                if (!isset($tableRevenue[$revenueType])) {
+                    // Si no existe, crear una nueva fila con el nombre del tipo de operación
+                    $tableRevenue[$revenueType] = [
+                        'tipo' => 'Ingresos',
+                        'operacion' => $revenueType,
+                        // Inicializar los montos de los meses en 0
+                    ];
+                    // Inicializar los montos de los meses en 0
+                    foreach ($monthsNames as $month) {
+                        $tableRevenue[$revenueType][$month] = 0;
+                    }
+                }
+                // Asignar el monto de ingreso al mes correspondiente en la fila
+                $tableRevenue[$revenueType][$revenue->month] = $revenueAmount;
+        
+                // Actualizar el total del mes
+                $monthTotals[$revenue->month] += $revenueAmount;
+            }
+        }
+        
+        // Crear la fila del total por meses de manera dinámica
+        $totalRowRevenue = [
+            'tipo' => 'Ingresos',
+            'operacion' => 'Total',
+        ];
+        
+        // Asignar los totales por mes a la fila
+        foreach ($monthsNames as $month) {
+            $totalRowRevenue[$month] = $monthTotals[$month];
+        }
+        
+        // Agregar la fila del total por meses al final del array de datos
+        $tableRevenue['Total'] = $totalRowRevenue;
+        
+        // Transformar los datos en una colección de objetos para usar en Vue.js
+        $tableRevenueCollection = collect($tableRevenue)->values()->all();
+
+        //-----------Gastos-------------
+        $expenses = collect($monthsNames)->map(function ($monthName, $index) use ($currentYear, $data) {
+            $expenseData = Finance::whereYear('data', $currentYear)
+                ->where('branch_id', $data['branch_id'])
+                ->where('operation', 'Gasto')
+                ->whereMonth('data', $index + 1)
+                ->with('expense') // Asegúrate de cargar la relación expense
+                ->get();
+
+            $expenseNames = Expense::pluck('name')->toArray(); // Obtener todos los nombres de expense
+
+            $expensesByType = $expenseData->groupBy('expense.name')->map->sum('amount'); // Agrupa y suma los gastos por tipo de operación
+
+            // Completar los totales para los tipos de gastos que no están presentes en este mes
+            foreach ($expenseNames as $expenseName) {
+                if (!isset($expensesByType[$expenseName])) {
+                    $expensesByType[$expenseName] = 0;
+                }
+            }
+
+            // Calcular el total de gastos para este mes
+            $totalExpense = collect($expensesByType)->sum();
+
+            return (object)[
+                'month' => $monthName,
+                'total_expenses' => $expensesByType,
+                'total_expense' => $totalExpense, // Agregar el total de gastos para este mes
+            ];
+        });
+
+        // Inicializar un array para almacenar los datos reestructurados
+        $tableExpense = [];
+        // Inicializar un array para almacenar los totales por mes
+        $monthTotals = array_fill_keys($monthsNames, 0);
+        // Iterar sobre los datos de revenues
+        foreach ($expenses as $expense) {
+            // Crear una fila para cada tipo de operación (revenue)
+            foreach ($expense->total_expenses as $expenseType => $expenseAmount) {
+                // Verificar si ya existe una fila para este tipo de operación
+                if (!isset($tableExpense[$expenseType])) {
+                    // Si no existe, crear una nueva fila con el nombre del tipo de operación
+                    $tableExpense[$expenseType] = [
+                        'tipo' => 'Gastos',
+                        'operacion' => $expenseType,
+                        // Inicializar los montos de los meses en 0
+                    ];
+                    // Inicializar los montos de los meses en 0
+                    foreach ($monthsNames as $month) {
+                        $tableExpense[$expenseType][$month] = 0;
+                    }
+                }
+                // Asignar el monto de ingreso al mes correspondiente en la fila
+                $tableExpense[$expenseType][$expense->month] = $expenseAmount;
+        
+                // Actualizar el total del mes
+                $monthTotals[$expense->month] += $expenseAmount;
+            }
+        }
+        
+        // Crear la fila del total por meses de manera dinámica
+        $totalRowExpense = [
+            'tipo' => 'Gastos',
+            'operacion' => 'Total',
+        ];
+        
+        // Asignar los totales por mes a la fila
+        foreach ($monthsNames as $month) {
+            $totalRowExpense[$month] = $monthTotals[$month];
+        }
+        // Agregar la fila del total por meses al final del array de datos
+        $tableExpense['Total'] = $totalRowExpense;
+        
+        $tableExpenseCollection = collect($tableExpense)->values()->all();
+        
+        return $tableFinance = array_merge_recursive($tableRevenueCollection, $tableExpenseCollection);
+
+// Transformar los datos en una colección de objetos para usar en Vue.js
+//$tableFinanceCollection = collect($tableFinance)->values()->all();
+
+// Devolver los datos de ingresos y gastos en un mismo array
+///return $tableFinanceCollection;
+        // Transformar los datos en una colección de objetos para usar en Vue.js
+
+        //return $tableRevenueCollection->concat($tableExpenseCollection);
+    }
 }

@@ -338,7 +338,7 @@ class ProfessionalController extends Controller
             $ganancias = $this->professionalService->professionals_ganancias($data);
             return response()->json(['earningByDay' => $ganancias], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Profssional no obtuvo ganancias en este período"], 500);
+            return response()->json(['msg' => $th->getMessage()."Profssional no obtuvo ganancias en este período"], 500);
         }
     }
 
@@ -462,7 +462,12 @@ class ProfessionalController extends Controller
                 'state' => 'required|numeric'
             ]);
             Log::info($request);
-
+            $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
+            if($userName){
+                return response()->json([
+                    'msg' => 'Usuario ya existe'
+                ], 400);
+            }
             $user = User::find($professionals_data['user_id']);
             $user->name = $professionals_data['user'];
             $user->email = $professionals_data['email'];
