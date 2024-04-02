@@ -105,13 +105,13 @@ class OrderController extends Controller
                     'name' => $order->is_product ? $order->productStore->product->name : $order->branchServiceProfessional->branchService->service->name,
                     'image' => $order->is_product ? $order->productStore->product->image_product : $order->branchServiceProfessional->branchService->service->image_service,
                     'price' => $order->price,
-                    'category' => $order->is_product ? $order->productStore->product->productCategory->name : $order->branchServiceProfessional->branchService->service->type_service,
+                    'category' => $order->is_product ? $order->productStore->product->productCategory->name : $order->branchServiceProfessional->type_service,
                 ];
             });
             return response()->json(['orders' => $orders], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
-            return response()->json(['msg' => "Error al mostrar las orders"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las orders"], 500);
         }
     }
 
