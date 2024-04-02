@@ -390,6 +390,7 @@ class CarController extends Controller
                 return [
                     'id' => $orderData->id,
                     'profesional_id' => $orderData->car->clientProfessional->professional->id,
+                    'reservation_id' => $orderData->car->reservation->id,
                     'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
                     'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
                     'hora' => $orderData->updated_at->Format('g:i:s A'),                    
