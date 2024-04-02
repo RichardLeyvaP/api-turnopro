@@ -395,6 +395,7 @@ class CarController extends Controller
                     'hora' => $orderData->updated_at->Format('g:i:s A'),                    
                     'nameProduct' => $orderData->productStore->product->name,
                     'nameService' => null,
+                    'duration_service' => null,
                     'is_product' => $orderData->is_product,
                     'updated_at' => $orderData->updated_at->toDateString()
                 ];
@@ -408,6 +409,7 @@ class CarController extends Controller
                     'hora' => $orderData->updated_at->Format('g:i:s A'),
                     'nameProduct' => null,
                     'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                    'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
                     'is_product' => (int)$orderData->is_product,
                     'updated_at' => $orderData->updated_at->toDateString()
                 ];
