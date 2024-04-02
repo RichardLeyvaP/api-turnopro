@@ -423,7 +423,7 @@ Route::get('/arriving-late-branch-date', [RecordController::class, 'arriving_lat
 Route::get('/arriving-late-branch-month', [RecordController::class, 'arriving_late_branch_month']);
 Route::get('/arriving-late-branch-periodo', [RecordController::class, 'arriving_late_branch_periodo']);
 Route::get('/arriving-late-professional-date', [RecordController::class, 'arriving_late_professional_date']);
-Route::get('/arriving-late-professional-periodo', [RecordController::class, 'arriving_late_professional_periodo']);
+Route::get('/arriving-late-branch-periodo', [RecordController::class, 'arriving_late_professional_periodo']);
 Route::get('/arriving-late-professional-month', [RecordController::class, 'arriving_late_professional_month']);
 Route::get('/arriving-branch-date', [RecordController::class, 'arriving_branch_date']);
 Route::get('/arriving-branch-month', [RecordController::class, 'arriving_branch_month']);
