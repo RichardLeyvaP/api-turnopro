@@ -38,13 +38,17 @@ class RecordController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-
+            $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
+            if(!$record){                
             $record = new Record();
             $record->professional_id = $data['professional_id'];
             $record->branch_id = $data['branch_id'];
             $record->start_time = Carbon::now();
-            $record->save();
+            $record->save();            
             return response()->json(['msg' => 'Record creado correctamente'], 200);
+            }else{                
+            return response()->json(['msg' => 'Ya registro entrada en el dia de hoy'], 200);
+            }
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => 'Error al crear un record'], 500);
