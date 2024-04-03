@@ -94,7 +94,8 @@ class UserController extends Controller
                 'email' => 'required|max:50|email|unique:professionals',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
-                'image_url' => 'nullable'
+                'image_url' => 'nullable',
+                'retention' => 'nullable'
             ]);
             if ($validator->fails()) {
                 return response()->json([
@@ -125,6 +126,7 @@ class UserController extends Controller
             $professional->charge_id = $request['charge_id'];
             $professional->user_id = $user->id;
             $professional->state = 0;
+            $professional->retention = $request['retention'];
             $professional->save();
 
             $filename = "professionals/default.jpg";

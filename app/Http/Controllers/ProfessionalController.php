@@ -43,6 +43,7 @@ class ProfessionalController extends Controller
                     'charge_id' => $professional->charge_id,
                     'user' => $professional->user->name,
                     'charge' => $professional->charge->name,
+                    'retention' => $professional->retention,
                 ];
             });
             return response()->json(['professionals' => $professionals], 200);
@@ -459,7 +460,8 @@ class ProfessionalController extends Controller
                 'charge_id' => 'required|numeric',
                 'user_id' => 'required|numeric',
                 'user' => 'required|string',
-                'state' => 'required|numeric'
+                'state' => 'required|numeric',
+                'retention' => 'required|numeric'
             ]);
             Log::info($request);
             $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
@@ -488,6 +490,8 @@ class ProfessionalController extends Controller
             $professional->phone = $professionals_data['phone'];
             $professional->charge_id = $professionals_data['charge_id'];
             $professional->state = $professionals_data['state'];
+            $professional->retention = $professionals_data['retention'];
+            
             //$professional->image_url = $filename;
             $professional->save();
 

@@ -207,16 +207,6 @@ class CarController extends Controller
             Log::info( "Esta es request");
             Log::info( $request);
             Log::info( "Entra a buscar los carros");
-            /*return $branch = Branch::where('id', $data['branch_id'])->whereHas('professionals', function ($query) use($data){
-                $query->whereDate('branch_id', $data['branch_id']);
-            })->first()->with(['cars' => function ($query) use ($data){
-                $query->whereHas('clientProfessional.professional.branches', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                });
-            }])->first();
-            return $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->get();*/
             $branch = Branch::where('id',$data['branch_id'])->first();
             Log::info( "Esta es la sucursal");
             Log::info( $branch);
@@ -225,8 +215,6 @@ class CarController extends Controller
             })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->get()->map(function ($car) use ($data){
-                //$branch_id = $car->clientProfessional->professional->branches->value('id');
-                //if($branch_id == $data['branch_id']){
                 $client = $car->clientProfessional->client;
                 $professional = $car->clientProfessional->professional;
                 $products = $car->orders->where('is_product', 1)->sum('price');
@@ -251,41 +239,6 @@ class CarController extends Controller
                 ];
                 //}
             });
-            /*$branch = Branch::find($data['branch_id'])->first();
-            $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){
-                $query->whereDate('orders.data', Carbon::now());
-            })->get()->map(function ($car){
-                $client = $car->clientProfessional->client;
-                $professional = $car->clientProfessional->professional;
-                $products = $car->orders->where('is_product', 1)->sum('price');
-                $services = $car->orders->where('is_product', 0)->sum('price');
-                return [
-                    'id' => $car->id,
-                    'client_professional_id' => $car->client_professional_id,
-                    'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
-                    'tip' => $car->tip,
-                    'pay' => $car->pay,
-                    'active' => $car->active,
-                    'product' => $products,
-                    'service' => $services,
-                    'technical_assistance' => $car->technical_assistance * 5000,
-                    'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
-                    'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
-                    'client_image' => $client->client_image,
-                    'image_url' => $professional->image_url,
-                    'payment' => $car->payment
-
-                ];
-            });*/
-            /*$car = Car::whereHas('branch', function ($query) use ($data){
-                $query->where('id', $data['branch_id']);
-            })->with('clientProfessional.client', 'clientProfessional.professional')->get();*/
-            //$car = Car::with('clientProfessional.client', 'clientProfessional.professional')->get();
-           if(!$cars->value('id'))
-           {
-            Log::info('no hay id');
-            $cars = [];
-           }
             return response()->json(['cars' => $cars], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
