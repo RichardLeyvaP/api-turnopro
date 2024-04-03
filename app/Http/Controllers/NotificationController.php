@@ -44,6 +44,32 @@ class NotificationController extends Controller
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Notificacion creada correctamente"], 500);
        }
+    } 
+    
+    public function store2(Request $request)
+    {
+        Log::info('Entra a registrar las notificaciones');
+        try {
+            $data = $request->validate([
+               'professional_id' => 'required|numeric',
+               'branch_id' => 'required|numeric',
+               'tittle' => 'required|string',
+               'description' => 'required|string'
+           ]);
+           
+           $professional = Professional::find($data['professional_id']);
+           $branch = Branch::find($data['branch_id']);
+           $notification = new Notification();
+            $notification->professional_id = $professional->id;
+            $notification->tittle = $data['tittle'];
+            $notification->description = $data['description'];
+            $notification->state = 3;
+            $branch->notifications()->save($notification);
+                
+           return response()->json(['msg' => 'Notifications creada correctamente desde Coordinador o Responsable '], 200);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."Notificacion no fue creada dio error "], 500);
+       }
     }
 
     public function show(Request $request)
@@ -145,6 +171,29 @@ class NotificationController extends Controller
            return response()->json(['msg' => $th->getMessage()."Estado de la nitificacion modificado correctamente"], 500);
        }
     }
+    public function update2(Request $request)
+    {
+        Log::info('Modificar el estado de una notificacion');
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
+                'id' => 'required|numeric',
+            ]);
+    
+            $branch = Branch::find($data['branch_id']);
+            $professional = Professional::find($data['professional_id']);
+            $branch->notifications()
+                   ->where('professional_id', $professional->id)
+                   ->where('id', $data['id']) // Verifica también el ID
+                   ->update(['state' => 0]);
+            
+            return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Estado de la notificacion modificado correctamente"], 500);
+        }
+    }
+    
 
     public function destroy(Request $request)
     {
