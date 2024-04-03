@@ -354,7 +354,9 @@ Route::get('/notification', [NotificationController::class, 'index']);
 Route::get('/notification-show', [NotificationController::class, 'show']);
 Route::get('/notification-professional', [NotificationController::class, 'professional_show']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
 Route::post('/notification', [NotificationController::class, 'store']);
+Route::post('/notification2', [NotificationController::class, 'store2']);
 Route::put('/notification', [NotificationController::class, 'update']);
+Route::put('/notification2', [NotificationController::class, 'update2']);
 Route::post('/notification-destroy', [NotificationController::class, 'destroy']);
 
 Route::get('/payment', [PaymentController::class, 'index']);
