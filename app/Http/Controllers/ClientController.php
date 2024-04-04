@@ -274,8 +274,8 @@ class ClientController extends Controller
                 $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate){
                     $query->whereDate('data', $currentDate);
                 })->withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
-                    $query->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
-                        $query->where('branch_id', $data['branch_id']);
+                    $query->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($currentDate, $data){
+                        $query->where('branch_id', $data['branch_id'])->whereDate('data', $currentDate);
                     });
                 })->has('reservations', '>', 3)->get();
             }else{
