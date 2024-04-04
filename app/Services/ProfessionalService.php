@@ -990,12 +990,14 @@ class ProfessionalService
     public function professionals_state($branch_id)
     {
         $time = 20;
-        $branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
+        //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
         $currentTime = Carbon::now();
         $endTimeThreshold = $currentTime->copy()->addMinutes(20);
 
-        $professionals = Professional::whereHas('branches', function ($query) use ($branchId) {
-            $query->where('branch_id', $branchId);
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })->whereHas('charge', function ($query){
+            $query->where('name', 'Barbero');
         })->where(function ($query) use ($endTimeThreshold) {
             $query->orWhereDoesntHave('tails')
                 ->orWhereHas('tails', function ($subquery) {
@@ -1014,8 +1016,6 @@ class ProfessionalService
             return $professional;
         });
 
-        return $professionals->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero');
-        })->values();
+        return $professionals;
     }
 }
