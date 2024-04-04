@@ -726,17 +726,17 @@ class BranchService
             })->whereHas('clientProfessional', function ($query) use ($professional){
                 $query->where('professional_id', $professional->id);
             })->get(); 
-            $amount = $cars->map(function ($car){
-                return $car->orders->sum(function ($order) {
-                                return $order->is_product ? $order->price : $order->percent_win;
-                            });
-            })->sum() * 0.45;
-            $tip = $cars->sum('tip') * 0.8;
+            $retention = $professional->retention;
+            $winProfessional =$cars->sum(function ($car){
+                return $car->orders->sum('percent_win');
+            });
+            $retentionPorcent = round($winProfessional * ($retention /100));
+            $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                'amount' => $amount,
-                'tip' => $tip,
-                'total' => $amount + $tip,
+                'amount' => $winProfessional,
+                'tip' => $winTips,
+                'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
         })->sortByDesc('total')->values();
@@ -789,17 +789,17 @@ class BranchService
             })->whereHas('clientProfessional', function ($query) use ($professional){
                 $query->where('professional_id', $professional->id);
             })->get(); 
-            $amount = $cars->map(function ($car){
-                return $car->orders->sum(function ($order) {
-                                return $order->is_product ? $order->price : $order->percent_win;
-                            });
-            })->sum() * 0.45;
-            $tip = $cars->sum('tip') * 0.8;
+            $retention = $professional->retention;
+            $winProfessional =$cars->sum(function ($car){
+                return $car->orders->sum('percent_win');
+            });
+            $retentionPorcent = round($winProfessional * ($retention /100));
+            $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                'amount' => $amount,
-                'tip' => $tip,
-                'total' => $amount + $tip,
+                'amount' => $winProfessional,
+                'tip' => $winTips,
+                'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
         })->sortByDesc('total')->values();
@@ -844,17 +844,17 @@ class BranchService
             })->whereHas('clientProfessional', function ($query) use ($professional){
                 $query->where('professional_id', $professional->id);
             })->get(); 
-            $amount = $cars->map(function ($car){
-                return $car->orders->sum(function ($order) {
-                                return $order->is_product ? $order->price : $order->percent_win;
-                            });
-            })->sum() * 0.45;
-            $tip = $cars->sum('tip') * 0.8;
+            $retention = $professional->retention;
+            $winProfessional =$cars->sum(function ($car){
+                return $car->orders->sum('percent_win');
+            });
+            $retentionPorcent = round($winProfessional * ($retention /100));
+            $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                'amount' => $amount,
-                'tip' => $tip,
-                'total' => $amount + $tip,
+                'amount' => $winProfessional,
+                'tip' => $winTips,
+                'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
         })->sortByDesc('total')->values();
