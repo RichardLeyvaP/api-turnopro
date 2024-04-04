@@ -45,7 +45,7 @@ class CommentController extends Controller
             $comment->look = $data['look'];
             $comment->save();
             
-            $filename = "ccomments/default_profile.jpg";
+            $filename = "comments/default.jpg";
             if ($request->hasFile('client_look')) {
                 $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
              }
@@ -111,7 +111,7 @@ class CommentController extends Controller
                 'look' => 'required'
             ]); 
             $comment = Comment::find($data['id']);
-            if ($comment->client_look) {
+            /*if ($comment->client_look) {
                 $destination=public_path("storage\\".$comment->image_url);
                     if (File::exists($destination)) {
                         File::delete($destination);
@@ -119,6 +119,16 @@ class CommentController extends Controller
                 }
                 if ($request->hasFile('client_look')) {
                     $filename =$request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+                }*/
+                $filename = $comment->client_look;
+                if ($request->hasFile('client_look')) {
+                    if($comment->client_look != 'comments/default.jpg'){
+                    $destination = public_path("storage\\" . $comment->client_look);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }              
+                        $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+                    }
                 }
             $comment->look = $data['look'];
             $comment->client_look = $filename;
@@ -141,14 +151,14 @@ class CommentController extends Controller
                 'id' => 'required'
             ]); 
             $comment = Comment::find($data['id']);
-            if ($comment->client_look != "comments/default_profile.jpg") {
+            if ($comment->client_look != "comments/default.jpg") {
                 $destination=public_path("storage\\".$comment->client_look);
                     if (File::exists($destination)) {
                         File::delete($destination);
                     }
                 }
                 $client = Client::find($comment->clientProfessional->client->id);
-            $client->client_image = "comments/default_profile.jpg";
+            $client->client_image = "comments/default.jpg";
             $client->save();
                 Comment::destroy($data['id']);
             return response()->json(['msg' => 'Comment eliminado correctamente'], 200);

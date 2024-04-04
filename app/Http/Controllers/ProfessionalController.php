@@ -476,11 +476,13 @@ class ProfessionalController extends Controller
             $user->save();
 
             $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url != $request['image_url']) {
+            if ($request->hasFile('image_url')) {
+                if($professional->image_url != 'professionals/default.jpg'){
                 $destination = public_path("storage\\" . $professional->image_url);
                 if (File::exists($destination)) {
                     File::delete($destination);
                 }
+                }    
                 $professional->image_url = $request->file('image_url')->storeAs('professionals', $professional->id . '.' . $request->file('image_url')->extension(), 'public');
             }
             $professional->name = $professionals_data['name'];

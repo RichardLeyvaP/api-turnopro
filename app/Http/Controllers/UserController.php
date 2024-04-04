@@ -70,7 +70,7 @@ class UserController extends Controller
             $client->email = $validator['email'];
             $client->phone = $validator['phone'];
             $client->user_id = $user->id;
-            $client->client_image = 'comments/default_profile.jpg';
+            $client->client_image = 'comments/default.jpg';
             $client->save();
 
             return response()->json([

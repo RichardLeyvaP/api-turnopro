@@ -63,7 +63,7 @@ class CourseController extends Controller
             $course->theoretical_percentage = $data['theoretical_percentage'];
             $course->save();
             Log::info($course);
-            $filename = "image/default.png"; 
+            $filename = "courses/default.jpg"; 
             if ($request->hasFile('course_image')) {
                $filename = $request->file('course_image')->storeAs('courses',$course->id.'.'.$request->file('course_image')->extension(),'public');
             }
@@ -118,12 +118,13 @@ class CourseController extends Controller
            
             Log::info($request['course_image']);
             $course = Course::find($data['id']);
-            if($course->course_image != $request['course_image'])
-                {
-                    $destination=public_path("storage\\".$course->course_image);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }                    
+            if ($request->hasFile('course_image')) {
+                if($course->course_image != 'courses/default.jpg'){
+                $destination = public_path("storage\\" . $course->course_image);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }            
+            }                      
                     $course->course_image = $request->file('course_image')->storeAs('courses',$course->id.'.'.$request->file('course_image')->extension(),'public');
                 }
             $course->name = $data['name'];
@@ -159,7 +160,7 @@ class CourseController extends Controller
                 'id' => 'required|numeric'
             ]);
             $course = Course::find($data['id']);
-            if ($course->course_image != "image/default.png") {
+            if ($course->course_image != "courses/default.jpg") {
                 $destination=public_path("storage\\".$course->course_image);
                     if (File::exists($destination)) {
                         File::delete($destination);

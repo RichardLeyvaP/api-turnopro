@@ -48,7 +48,7 @@ class StudentController extends Controller
             $student->phone = $data['phone'];
             $student->save();
             Log::info($student);
-            $filename = "image/default.png"; 
+            $filename = "students/default.jpg"; 
             if ($request->hasFile('student_image')) {
                $filename = $request->file('student_image')->storeAs('students',$student->id.'.'.$request->file('student_image')->extension(),'public');
             }
@@ -103,12 +103,13 @@ class StudentController extends Controller
             ]);
             Log::info($request['student_image']);
             $student = Student::find($data['id']);
-            if($student->student_image != $request['student_image'])
-                {
-                    $destination=public_path("storage\\".$student->student_image);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }                    
+            if ($request->hasFile('student_image')) {
+                if($student->student_image != 'students/default.jpg'){
+                $destination = public_path("storage\\" . $student->student_image);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }
+                }                      
                     $student->student_image = $request->file('student_image')->storeAs('students',$student->id.'.'.$request->file('student_image')->extension(),'public');
                 }
             $student->name = $data['name'];
@@ -137,7 +138,7 @@ class StudentController extends Controller
                 'id' => 'required|numeric'
             ]);
             $student = Student::find($data['id']);
-            if ($student->student_image != "image/default.png") {
+            if ($student->student_image != "students/default.jpg") {
                 $destination=public_path("storage\\".$student->student_image);
                     if (File::exists($destination)) {
                         File::delete($destination);

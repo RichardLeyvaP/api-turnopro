@@ -51,7 +51,7 @@ class CardGiftController extends Controller
             $cardGift->name = $data['name'];
             $cardGift->save();
             Log::info($cardGift);
-            $filename = "image/default.png"; 
+            $filename = "cardgifts/default.jpg"; 
             if ($request->hasFile('image_cardgift')) {
                $filename = $request->file('image_cardgift')->storeAs('cardgifts',$cardGift->id.'.'.$request->file('image_cardgift')->extension(),'public');
             }
@@ -119,14 +119,15 @@ class CardGiftController extends Controller
             'id' => 'required|numeric'
         ]);
         $cardGift = CardGift::find($data['id']);
-        if($cardGift->image_cardgift != $request['image_cardgift'])
-            {
-                $destination=public_path("storage\\".$cardGift->image_cardgift);
-                if (File::exists($destination)) {
-                    File::delete($destination);
-                }                    
+        if ($request->hasFile('image_cardgift')) {
+            if($cardGift->image_cardgift != 'cardgifts/default.jpg'){
+            $destination = public_path("storage\\" . $cardGift->image_cardgift);
+            if (File::exists($destination)) {
+                File::delete($destination);
+            }              
                 $cardGift->image_cardgift = $request->file('image_cardgift')->storeAs('cardgifts',$cardGift->id.'.'.$request->file('image_cardgift')->extension(),'public');
             }
+        }
         $cardGift->value = $data['value'];
         $cardGift->name = $data['name'];
         $cardGift->save();
@@ -148,7 +149,7 @@ class CardGiftController extends Controller
                 'id' => 'required|numeric'
             ]);
             $cardGift = CardGift::find($data['id']);
-            if ($cardGift->image_cardgift != "image/default.png") {
+            if ($cardGift->image_cardgift != "cardgifts/default.jpg") {
                 $destination=public_path("storage\\".$cardGift->image_cardgift);
                     if (File::exists($destination)) {
                         File::delete($destination);

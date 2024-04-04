@@ -64,7 +64,7 @@ class ProductController extends Controller
             $product->product_category_id = $product_data['product_category_id'];
             $product->save();
 
-            $filename = "products/default.png";
+            $filename = "products/default.jpg";
             if ($request->hasFile('image_product')) {
                 $filename = $request->file('image_product')->storeAs('products',$product->id.'.'.$request->file('image_product')->extension(),'public');
             }
@@ -223,12 +223,13 @@ class ProductController extends Controller
             ]);
 
             $product = Product::find($product_data['id']);
-            if($product->image_product != $request->image_product)
-                {
-                    $destination=public_path("storage\\".$product->image_product);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }                    
+            if ($request->hasFile('image_product')) {
+                if($product->image_product != 'products/default.jpg'){
+                $destination = public_path("storage\\" . $product->image_product);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }
+                }                 
                     $product->image_product = $request->file('image_product')->storeAs('products',$product->id.'.'.$request->file('image_product')->extension(),'public');
                 }
             $product->name = $product_data['name'];
