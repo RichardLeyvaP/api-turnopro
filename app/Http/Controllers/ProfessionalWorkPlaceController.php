@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Record;
 use App\Models\Workplace;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -79,16 +80,45 @@ class ProfessionalWorkPlaceController extends Controller
         try {             
             Log::info( "Entra a buscar el puestos de trabajo de un professionals");
             $data = $request->validate([
-                'professional_id' => 'required|numeric'
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-            $workplace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query){
-                $query->where('busy', 1);
+            $workplace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data){
+                $query->where('busy', 1)->where('branch_id', $data['branch_id']);
             })->first();
             if(!$workplace){
                 return 0;
             }
             return $workplace->workplace_id;
+            //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
+        }
+    }
+
+    public function workplace_professional_day(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar el puesto de trabajo de un professionals");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $professional = Professional::find($data['professional_id']);
+            $workplace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data){
+                $query->where('busy', 1)->where('branch_id', $data['branch_id']);
+            })->first();
+            $record = Record::where('professional_id', $professional->id)->whereDate('start_time', Carbon::now())->where('branch_id', $data['branch_id'])->first();
+            
+            return $entrada = [
+                'workplace_id' => $workplace->workplace_id,
+                'workplace_name' => $workplace->workplace->name,
+                'time' => Carbon::createFromFormat('Y-m-d H:i:s', $record->start_time)->format('H:i:s')
+            ];
+            //return $workplace->workplace_id;
             //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  

@@ -345,7 +345,8 @@ Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::clas
 Route::post('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'store']);
 Route::put('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'update']);
 Route::post('/professionalworkplace-destroy', [ProfessionalWorkPlaceController::class, 'destroy']);
-Route::get('/workplace-show-professional', [ProfessionalWorkPlaceController::class, 'workplace_show_professional']);//dato un professional devolver el puesto de trabajo en el que esta en el dia
+Route::get('/workplace-show-professional', [ProfessionalWorkPlaceController::class, 'workplace_show_professional']);//dato un professional devolver el puesto de trabajo en el que esta en el dia en una branch
+Route::get('/workplace-professional-day', [ProfessionalWorkPlaceController::class, 'workplace_professional_day']);//dato un professional devolver el puesto de trabajo en el que esta en el dia en una branch, y la hora en que entro
 
 Route::get('/comment', [CommentController::class, 'index']);
 Route::get('/comment-show', [CommentController::class, 'show']);
