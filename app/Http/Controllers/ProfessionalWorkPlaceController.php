@@ -80,6 +80,28 @@ class ProfessionalWorkPlaceController extends Controller
         try {             
             Log::info( "Entra a buscar el puestos de trabajo de un professionals");
             $data = $request->validate([
+                'professional_id' => 'required|numeric'
+            ]);
+            $professional = Professional::find($data['professional_id']);
+            $workplace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query){
+                $query->where('busy', 1);
+            })->first();
+            if(!$workplace){
+                return 0;
+            }
+            return $workplace->workplace_id;
+            //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
+        }
+    }
+    public function workplace_show_professional2(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar el puestos de trabajo de un professionals");
+            $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
