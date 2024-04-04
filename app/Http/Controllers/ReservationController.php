@@ -260,10 +260,13 @@ class ReservationController extends Controller
             Log::info($data);
             if ($data['branch_id'] != 0) {
                 Log::info("Branch");
-                $branch = Branch::find($data['branch_id']);
-                Log::info('Es una branch');
-                Log::info($branch);
-                $reservations =  Branch::where('id', $data['branch_id'])->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
+                $reservations = Reservation::whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })->whereDate('data', now()->toDateString())->count();
+                //$branch = Branch::find($data['branch_id']);
+                //Log::info('Es una branch');
+                //Log::info($branch);
+                /*$reservations =  Branch::where('id', $data['branch_id'])->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })->whereHas('reservations', function ($query) {
                     $query->whereDate('data', now()->toDateString());
@@ -271,13 +274,10 @@ class ReservationController extends Controller
                     ->get()
                     ->flatMap(function ($branch) use ($data) {
                         return $branch->reservations->where('laravel_through_key', $data['branch_id'])->where('data', now()->toDateString());
-                    })->count();
+                    })->count();*/
             } else {
                 Log::info("Business");
-                $business = Business::find($data['business_id']);
-                $reservations = $business->branches()->withCount(['reservations' => function ($query) {
-                    $query->whereDate('data', now()->toDateString());
-                }])->value('reservations_count');
+                $reservations = Reservation::whereDate('data', now()->toDateString())->count();
             }
 
             Log::info('$reservations');
@@ -302,7 +302,7 @@ class ReservationController extends Controller
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
                 $end = now()->endOfWeek();
                 //$business = Business::find($data['business_id']);
-                $reservations = Branch::where('id', $data['branch_id'])->whereHas('reservations.car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+                /*$reservations = Branch::where('id', $data['branch_id'])->whereHas('reservations.car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })
                     ->with(['reservations' => function ($query) use ($start, $end, $data) {
@@ -311,16 +311,19 @@ class ReservationController extends Controller
                     ->get()
                     ->flatMap(function ($branch) use ($data, $start, $end) {
                         return $branch->reservations->where('laravel_through_key', $data['branch_id'])->whereBetween('data', [$start, $end]);
-                    });
+                    });*/
+                    $reservations = Reservation::whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })->whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->get();
 
                 // Inicializar un array para contabilizar las reservaciones por día
                 $reservationsByDay = array_fill(0, 7, 0);
 
                 // Contar las reservaciones por día
-                $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
-                foreach ($uniqueReservations as $reservation) {
+                //$uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
+                foreach ($reservations as $reservation) {
                     $reservationDate = new DateTime($reservation->data);
-                    $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
+                    $dayOfWeek = ($reservationDate->format('N') + 5) % 7; // Ajuste para que el lunes sea el día 0
                     $reservationsByDay[$dayOfWeek]++;
                 }
 
@@ -332,7 +335,8 @@ class ReservationController extends Controller
                 Log::info("Business");
                 $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
                 $end = now()->endOfWeek();
-                $business = Business::find($data['business_id']);
+                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->get();
+                /*$business = Business::find($data['business_id']);
                 $reservations = $business->branches()->with(['reservations' => function ($query) use ($start, $end) {
                     $query->whereBetween('data', [$start, $end]);
                 }])
@@ -340,15 +344,15 @@ class ReservationController extends Controller
                     ->flatMap(function ($branch) use ($data) {
                         return $branch->reservations;
                     });
-
+*/
                 // Inicializar un array para contabilizar las reservaciones por día
                 $reservationsByDay = array_fill(0, 7, 0);
 
                 // Contar las reservaciones por día
-                $uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
-                foreach ($uniqueReservations as $reservation) {
+                //$uniqueReservations = $reservations->unique('id'); // Eliminar duplicados por ID de reserva
+                foreach ($reservations as $reservation) {
                     $reservationDate = new DateTime($reservation->data);
-                    $dayOfWeek = ($reservationDate->format('N') + 6) % 7; // Ajuste para que el lunes sea el día 0
+                    $dayOfWeek = ($reservationDate->format('N') + 5) % 7; // Ajuste para que el lunes sea el día 0
                     $reservationsByDay[$dayOfWeek]++;
                 }
 
