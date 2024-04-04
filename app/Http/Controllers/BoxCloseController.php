@@ -13,7 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\SendEmailService;
-
+use App\Services\TraceService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Message;
 
@@ -23,11 +23,14 @@ class BoxCloseController extends Controller
      * Display a listing of the resource.
      */
     private SendEmailService $sendEmailService;
-    public function __construct(SendEmailService $sendEmailService )
+    private TraceService $traceService;
+    public function __construct(SendEmailService $sendEmailService, TraceService $traceService)
     {
-       
+
         $this->sendEmailService = $sendEmailService;
+        $this->traceService = $traceService;
     }
+
     public function index()
     {
         //
@@ -46,6 +49,7 @@ class BoxCloseController extends Controller
      */
     public function store(Request $request)
     {
+
         try {
 
             Log::info("Editar");
@@ -64,14 +68,12 @@ class BoxCloseController extends Controller
             ]);
             Log::info($data);
             $box = Box::find($data['box_id']);
-            $branch = Branch::whereHas('boxes', function ($query) use ($box){
-                $query->where('boxes.id', $box->id);
-            })->with('business')->first();
+            $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = BoxClose::where('box_id', $box->id)->first();
-            if (!$boxClose) {                
-             $boxClose = new BoxClose();
-            }           
-            
+            if (!$boxClose) {
+                $boxClose = new BoxClose();
+            }
+
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $data['totalMount'];
@@ -86,47 +88,60 @@ class BoxCloseController extends Controller
             $boxClose->totalCardGif = $data['totalCardGif'];
             $boxClose->data = Carbon::now();
             $boxClose->save();
+
+            $trace = [
+                'branch' => $branch->name,
+                'cashier' => $request->nameProfessional,
+                'client' => '',
+                'amount' => $data['totalMount'],
+                'operation' => 'Cierre de Caja',
+                'details' => '',
+                'description' => ''
+            ];
+            $this->traceService->store($trace);
+            Log::info('$trace');
+            Log::info($trace);
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
-           // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
-           return $emails = Professional::whereHas('charge', function ($query){
-            $query->where('name', 'Administrador')
-                  ->orWhere('name', 'Encargado')
-                  ->orWhere('name', 'Administrador de Sucursal')
-                  ->orWhere('name', 'Coordinador');
-        })/*whereIn('charge_id', [3, 4, 5, 12])*/
-           ->pluck('email');
-           $emailassociated = Associated::all()->pluck('email');
+            // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
+            return $emails = Professional::whereHas('charge', function ($query) {
+                $query->where('name', 'Administrador')
+                    ->orWhere('name', 'Encargado')
+                    ->orWhere('name', 'Administrador de Sucursal')
+                    ->orWhere('name', 'Coordinador');
+            })/*whereIn('charge_id', [3, 4, 5, 12])*/
+                ->pluck('email');
+            $emailassociated = Associated::all()->pluck('email');
 
-           $mergedEmails = $emails->merge($emailassociated);
-             // Supongamos que tienes 5 direcciones de correo electrónico en un array
+            $mergedEmails = $emails->merge($emailassociated);
+            // Supongamos que tienes 5 direcciones de correo electrónico en un array
             //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
-           $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
+            $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
 
 
 
-            //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
-            /*
-            Log::info("Generar PDF");
-$pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
-$reporte = $pdf->output(); // Convertir el PDF en una cadena
-Log::info($reporte);
+                        //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
+                        /*
+                        Log::info("Generar PDF");
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
+            $reporte = $pdf->output(); // Convertir el PDF en una cadena
+            Log::info($reporte);
 
-// Adjuntar el PDF al correo electrónico
-Mail::send([], [], function (Message $message) use ($reporte) {
-    $message->to('richardleyvap1991@gmail.com')
-            ->subject('Asunto del correo')
-            ->attachData($reporte, 'Cierre-caja.pdf');
-});
-*/
-            
+            // Adjuntar el PDF al correo electrónico
+            Mail::send([], [], function (Message $message) use ($reporte) {
+                $message->to('richardleyvap1991@gmail.com')
+                        ->subject('Asunto del correo')
+                        ->attachData($reporte, 'Cierre-caja.pdf');
+            });
+            */
+
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-        return response()->json(['msg' => $th->getMessage().'Error al cerrar la caja el pago'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al cerrar la caja el pago'], 500);
         }
     }
 

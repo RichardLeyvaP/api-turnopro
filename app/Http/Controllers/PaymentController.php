@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Car;
 use App\Models\CardGift;
 use App\Models\CardGiftUser;
+use App\Services\TraceService;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
+    private TraceService $traceService;
+    
+    public function __construct(TraceService $traceService)
+    {
+         $this->traceService = $traceService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -59,9 +67,7 @@ class PaymentController extends Controller
             ]);
             Log::info($data);
             $car = Car::find($data['car_id']);            
-           $branch = Branch::whereHas('cars', function ($query) use ($car){
-                $query->where('cars.id', $car->id);
-            })->first();
+           $branch = Branch::where('id', $request->branch_id)->first();
             Log::info($branch);
             $payment = Payment::where('car_id', $data['car_id'])->first();
             if (!$payment) {
@@ -111,7 +117,18 @@ class PaymentController extends Controller
                 $box->existence = $box->existence + $data['cash'];
             }
             $box->save();
-
+            $trace = [
+                'branch' => $branch->name,
+                'cashier' => $request->nameProfessional,
+                'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift']+$data['tip'],
+                'operation' => 'Paga Carro',
+                'details' => '',
+                'description' => ''
+            ];
+            $this->traceService->store($trace);
+            Log::info('$trace');
+            Log::info($trace);
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

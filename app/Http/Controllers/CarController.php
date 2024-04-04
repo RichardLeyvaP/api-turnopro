@@ -9,6 +9,7 @@ use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\CarService;
+use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,10 +18,12 @@ use Illuminate\Support\Facades\DB;
 class CarController extends Controller
 {
     private CarService $carService;
+    private TraceService $traceService;
     
-    public function __construct(CarService $carService)
+    public function __construct(CarService $carService, TraceService $traceService)
     {
          $this->carService = $carService;
+         $this->traceService = $traceService;
     }
 
     public function index()
@@ -144,7 +147,7 @@ class CarController extends Controller
                         }
                         
         
-    //Log::info($branches);
+        //Log::info($branches);
             
             return response()->json( $array, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
@@ -591,9 +594,20 @@ class CarController extends Controller
         $data = $request->validate([
             'id' => 'required|numeric'
         ]);
-
-            $car = Car::find($data['id']);
-            $car->delete();
+        
+        $car = Car::find($data['id']);
+        $branch = Branch::where('id', $request->branch_id)->first();
+        $trace = [
+            'branch' => $branch->name,
+            'cashier' => $request->nameProfessional,
+            'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+            'amount' => $car->amount,
+            'operation' => 'Elimina Carro',
+            'details' => '',
+            'description' => ''
+        ];
+        $this->traceService->store($trace);
+            //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

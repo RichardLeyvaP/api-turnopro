@@ -4,12 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Box;
 use App\Models\Branch;
+use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class BoxController extends Controller
 {
+
+    private TraceService $traceService;
+    
+    public function __construct(TraceService $traceService)
+    {
+         $this->traceService = $traceService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -74,7 +83,36 @@ class BoxController extends Controller
             $box->cashFound = $data['cashFound'];
             $box->data = Carbon::now();
             $box->save();
-
+            if($data['extraction'] != 0){
+                $trace = [
+                    'branch' => $branch->name,
+                    'cashier' => $request->nameProfessional,
+                    'client' => '',
+                    'amount' => $data['extraction'],
+                    'operation' => 'Extracción de la caja',
+                    'details' => '',
+                    'description' => ''
+                ];                
+                $this->traceService->store($trace);
+                Log::info('$trace extrae');
+                Log::info($trace);
+            }
+            if($data['cashFound'] != 0){
+                $trace = [
+                    'branch' => $branch->name,
+                    'cashier' => $request->nameProfessional,
+                    'client' => '',
+                    'amount' => $data['cashFound'],
+                    'operation' => 'Actualización de la caja',
+                    'details' => '',
+                    'description' => ''
+                ];
+                $this->traceService->store($trace);
+                Log::info('$trace actualiza');
+                Log::info($trace);
+            }
+            Log::info('$trace');
+            Log::info($trace);
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

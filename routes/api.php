@@ -46,6 +46,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\RevenueController;
+use App\Http\Controllers\TraceController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
@@ -255,8 +256,11 @@ Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth
 Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-show', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
+Route::post('/order-web', [OrderController::class, 'store_web']); //para registrar en traces la operacion que realiza
 Route::put('/order', [OrderController::class, 'update']);
+Route::put('/order-web', [OrderController::class, 'update_web']); //para registrar en traces la operacion que realiza
 Route::post('/order-destroy', [OrderController::class, 'destroy']);
+Route::post('/order-destroy-web', [OrderController::class, 'destroy_web']);//para registrar en traces la operacion que realiza
 Route::get('/sales_periodo_branch', [OrderController::class, 'sales_periodo_branch']);
 
 Route::get('/reservation', [ReservationController::class, 'index']);
@@ -471,6 +475,11 @@ Route::get('/revenue-expense-analysis', [FinanceController::class, 'revenue_expe
 Route::get('/revenue-expense-details', [FinanceController::class, 'revenue_expense_details']);//devolver las finanzas detalladas del año
 Route::get('/details-operations', [FinanceController::class, 'details_operations']);//devolver las finanzas por detalle de operacion de un año
 Route::get('/details-operations-month', [FinanceController::class, 'details_operations_month']);//devolver las finanzas por detalle de operacion de un mes
+
+Route::get('/traces-branch-day', [TraceController::class, 'traces_branch_day']);
+Route::get('/traces-branch-month', [TraceController::class, 'traces_branch_month']);
+Route::get('/traces-branch-periodo', [TraceController::class, 'traces_branch_periodo']);
+
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
