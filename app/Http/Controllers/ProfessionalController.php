@@ -76,6 +76,28 @@ class ProfessionalController extends Controller
         }
     }
 
+    public function show_autocomplete_branch(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->with('user', 'charge')->get()->map(function ($professional) {
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'image_url' => $professional->image_url
+
+                ];
+            });
+            return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar el professional"], 500);
+        }
+    }
+
     public function show(Request $request)
     {
         try {

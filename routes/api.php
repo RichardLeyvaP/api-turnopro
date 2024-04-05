@@ -47,6 +47,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\TraceController;
+use App\Http\Controllers\VacationController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
@@ -94,6 +95,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/professional', [ProfessionalController::class, 'index']);
 Route::get('/professional-show', [ProfessionalController::class, 'show']);
 Route::get('/professional-show-autocomplete', [ProfessionalController::class, 'show_autocomplete']);
+Route::get('/professional-show-autocomplete-branch', [ProfessionalController::class, 'show_autocomplete_branch']);//mostrar solo los professionals de una branch dada
 Route::post('/professional', [ProfessionalController::class, 'store']);
 Route::post('/professional-update', [ProfessionalController::class, 'update']);
 Route::post('/professional-destroy', [ProfessionalController::class, 'destroy']);
@@ -131,8 +133,6 @@ Route::post('/business', [BusinessController::class, 'store']);
 Route::put('/business', [BusinessController::class, 'update']);
 Route::post('/business-destroy', [BusinessController::class, 'destroy']);
 Route::get('/business-winner', [BusinessController::class, 'business_winner']);//Ganancias por negocioscompany_close_car
-
-
 
 Route::get('/business-type', [BusinessTypesController::class, 'index']);
 Route::get('/business-type-show', [BusinessTypesController::class, 'show']);
@@ -482,6 +482,11 @@ Route::get('/traces-branch-day', [TraceController::class, 'traces_branch_day']);
 Route::get('/traces-branch-month', [TraceController::class, 'traces_branch_month']);
 Route::get('/traces-branch-periodo', [TraceController::class, 'traces_branch_periodo']);
 
+Route::get('/vacation', [VacationController::class, 'index']);
+Route::get('/vacation-show', [VacationController::class, 'show']);
+Route::post('/vacation', [VacationController::class, 'store']);
+Route::put('/vacation', [VacationController::class, 'update']);
+Route::post('/vacation-destroy', [VacationController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

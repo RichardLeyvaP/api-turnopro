@@ -82,6 +82,10 @@ class Professional extends Model
         return $this->hasMany(Record::class);
     }
     
+    public function vacations()
+    {
+        return $this->hasMany(Vacation::class);
+    }
 
     protected $table = "professionals";
 }
