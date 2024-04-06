@@ -18,11 +18,11 @@ class VacationController extends Controller
             $vacations = Vacation::with(['professional'])->get()->map(function ($vacation) {
                 return [
                     'id' => $vacation->id,
+                    'professional_id' => $vacation->professional->id,
                     'name' => $vacation->professional->name . ' ' . $vacation->professional->surname . ' ' . $vacation->professional->second_surname,
                     'image_url' => $vacation->professional->image_url,
                     'startDate' => $vacation->startDate,
                     'endDate' => $vacation->endDate
-
                 ];
             });
             return response()->json(['vacations' => $vacations], 200, [], JSON_NUMERIC_CHECK);
@@ -74,6 +74,7 @@ class VacationController extends Controller
             })->get()->map(function ($vacation) {
                 return [
                     'id' => $vacation->id,
+                    'professional_id' => $vacation->professional->id,
                     'name' => $vacation->professional->name . ' ' . $vacation->professional->surname . ' ' . $vacation->professional->second_surname,
                     'image_url' => $vacation->professional->image_url,
                     'startDate' => $vacation->startDate,

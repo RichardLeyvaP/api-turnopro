@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Professional;
 use App\Models\Service;
+use App\Models\Vacation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class BranchProfessionalController extends Controller
@@ -134,7 +136,7 @@ class BranchProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $services = $request->input('services');
-            $professionals = Professional::where(function ($query) use ($services, $data) {
+            $professionals1 = Professional::where(function ($query) use ($services, $data) {
                 foreach ($services as $service) {
                     $query->whereHas('branchServices', function ($q) use ($service, $data) {
                         $q->where('service_id', $service)->where('branch_id', $data['branch_id']);
@@ -143,6 +145,23 @@ class BranchProfessionalController extends Controller
             })->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero');
             })->get();
+
+            foreach($professionals1 as $professional1){
+                $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('endDate', '>=', Carbon::now())->first();
+                Log::info($vacation);
+                if ($vacation == null) {
+                    Log::info('vacio');
+                    $professional1->startDate = null;
+                    $professional1->endDate = null;
+                    $professionals[] = $professional1;
+                } 
+                else{
+                    Log::info('datos');
+                    $professional1->startDate = $vacation->startDate;
+                    $professional1->endDate = $vacation->endDate;
+                    $professionals[] = $professional1;
+                }
+            }
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
 
