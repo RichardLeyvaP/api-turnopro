@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Schedule;
 use App\Models\Service;
+use App\Models\Vacation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -165,16 +166,27 @@ class ProfessionalService
         $closingTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
         $current_date = Carbon::now()->format('Y-m-d');
         $availableProfessionals = [];
+        $fechaDada = Carbon::now()->format('Y-m-d');
         //return Carbon::now()->addMinutes($totalTiempo);
         if(Carbon::now()->addMinutes($totalTiempo) >  Carbon::parse($closingTime)){
             return $availableProfessionals = [];
         }
         else{
-        $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+        $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero');
         })->get();
+        foreach($professionals1 as $professional1){
+            $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
+            ->whereDate('endDate', '>=', $fechaDada)
+            ->first();
+            Log::info($vacation);
+            if (!$vacation) {
+                //Log::info();
+                $professionals[] = $professional1;
+            } 
+        }
 
         foreach ($professionals as $professional) {
             $reservations = $professional->reservations()
