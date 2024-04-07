@@ -33,6 +33,21 @@ class StoreController extends Controller
         }
     }
 
+    public function store_academy_show(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'enrollment_id' => 'required|numeric'
+            ]);
+            Log::info("entra a buscar los stores de una academia");
+            return response()->json(['stores' => Store::whereHas('enrollments', function ($query) use ($data){
+                $query->where('enrollment_id', $data['enrollment_id']);
+            })->get()], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar el almacén"], 500);
+        }
+    }
+
     public function store(Request $request)
     {
 

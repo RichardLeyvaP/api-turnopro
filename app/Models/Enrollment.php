@@ -22,4 +22,8 @@ class Enrollment extends Model
     public function finances(){
         return $this->HasMany(Finance::class);
     }
+
+    public function stores(){
+        return $this->belongsToMany(Store::class, 'enrollment_store')->withTimestamps();
+    }
 }

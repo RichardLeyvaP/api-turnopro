@@ -54,30 +54,49 @@ class ProductStoreController extends Controller
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
                 'product_quantity' => 'required|numeric',
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'nullable',
+                'enrollment_id' => 'nullable'
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
             ]);
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
+            Log::info($request->has('branch_id'));
             //$productstore = $store->products()->wherePivot('product_id', $product->id)->first();
-            $productStore = $store->products()
+            if($request->has('branch_id') && $data['branch_id'] != null){
+            $productStoreBranch = $store->products()
                 ->wherePivot('product_id', $product->id)
                 ->wherePivot('branch_id', $data['branch_id'])
                 ->first();
-            if ($productStore) {
+            if ($productStoreBranch) {
                 Log::info('tiene valor');
-                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
+                $productstore = ProductStore::where('id', $productStoreBranch->pivot->id)->first();
                 $productstore->product_exit += $data['product_quantity'];
                 $productstore->product_quantity = $data['product_quantity'];
                 $productstore->save();
             } else {
                 $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_id']]);
             }
-            return response()->json(['msg' => 'Producto asignado correctamente al almacén'], 200);
+            }
+            else{
+                $productStoreAcademy = $store->products()
+                ->wherePivot('product_id', $product->id)
+                ->wherePivot('enrollment_id', $data['enrollment_id'])
+                ->first();
+            if ($productStoreAcademy) {
+                Log::info('tiene valor');
+                $productstore = ProductStore::where('id', $productStoreAcademy->pivot->id)->first();
+                $productstore->product_exit += $data['product_quantity'];
+                $productstore->product_quantity = $data['product_quantity'];
+                $productstore->save();
+            } else {
+                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'enrollment_id' => $data['enrollment_id']]);
+            } 
+            }
+            return response()->json(['msg' => 'Producto asignado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al asignar el producto a este almacén'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
 
@@ -88,7 +107,39 @@ class ProductStoreController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
-            $productStore = ProductStore::where('branch_id', $data['branch_id'])->with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query) {
+            $productStore = ProductStore::where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
+                return [
+                    'id' => $query->id,
+                    //'product_quantity' => $query->product_quantity,
+                    'product_exit' => $query->product_exit,
+                    'product_id' => $query->product_id,
+                    'store_id' => $query->store_id,
+                    'name' => $query->product->name,
+                    'reference' => $query->product->reference,
+                    'code' => $query->product->code,
+                    'status_product' => $query->product->status_product,
+                    'sale_price' => $query->product->sale_price,
+                    'purchase_price' => $query->product->purchase_price,
+                    'image_product' => $query->product->image_product,
+                    'direccionStore' => $query->store->address,
+                    'storetReference' => $query->store->reference
+                ];
+            });
+            return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
+        }
+    }
+
+    public function academy_show(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'enrollment_id' => 'required|numeric'
+            ]);
+            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
+            $productStore = ProductStore::where('enrollment_id', $data['enrollment_id'])->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
                     //'product_quantity' => $query->product_quantity,
@@ -123,6 +174,29 @@ class ProductStoreController extends Controller
             $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
                 $query->where('status_product', 'En venta');
             })->where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->get()->map(function ($productStore) {
+                return [
+                    'id' => $productStore->id,
+                    'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
+                ];
+            });
+            return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
+        }
+    }
+    
+
+    public function product_show_academy_web(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'enrollment_id' => 'required|numeric'
+            ]);
+            Log::info("Entra a buscar los productos de la academia");
+            $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
+                $query->where('status_product', 'En venta');
+            })->where('enrollment_id', $data['enrollment_id'])->where('product_exit', '>', 0)->get()->map(function ($productStore) {
                 return [
                     'id' => $productStore->id,
                     'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
@@ -173,7 +247,8 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
-                'branch_id' => 'required|numeric',
+                'branch_id' => 'nullable',
+                'enrollment_id' => 'nullable',
                 'product_quantity' => 'required|numeric',
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
@@ -181,6 +256,7 @@ class ProductStoreController extends Controller
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
             //$productstore = $store->products()->wherePivot('product_id', $product->id)->first();
+            if($request->has('branch_id') && $data['branch_id'] != null){
             $productStore = $store->products()
                 ->wherePivot('product_id', $product->id)
                 ->wherePivot('branch_id', $data['branch_id'])
@@ -192,10 +268,24 @@ class ProductStoreController extends Controller
                 $productstore->product_quantity = $data['product_quantity'];
                 $productstore->save();
             }
-            return response()->json(['msg' => 'Asignación actualizada correctamente al almacén'], 200);
+            }
+            else{
+                $productStore = $store->products()
+                ->wherePivot('product_id', $product->id)
+                ->wherePivot('enrollment_id', $data['enrollment_id'])
+                ->first();
+            if ($productStore) {
+                Log::info('tiene valor');
+                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
+                $productstore->product_exit = $data['product_quantity'];
+                $productstore->product_quantity = $data['product_quantity'];
+                $productstore->save();
+            }
+            }
+            return response()->json(['msg' => 'Asignación actualizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el producto a este almacén'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
 
@@ -207,11 +297,13 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'nullable',
+                'enrollment_id' => 'nullable'
             ]);
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
-            $productStore = $store->products()
+            if($request->has('branch_id') && $data['branch_id'] != null){
+                $productStore = $store->products()
                 ->wherePivot('product_id', $product->id)
                 ->wherePivot('branch_id', $data['branch_id'])
                 ->first();
@@ -221,10 +313,24 @@ class ProductStoreController extends Controller
                 $productstore->product_exit = 0;
                 $productstore->save();
             }
+            }
+            else{
+                $productStore = $store->products()
+                ->wherePivot('product_id', $product->id)
+                ->wherePivot('enrollment_id', $data['enrollment_id'])
+                ->first();
+            if ($productStore) {
+                Log::info('tiene valor');
+                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
+                $productstore->product_exit = 0;
+                $productstore->save();
+            }
+            }
+            
             return response()->json(['msg' => 'Operación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage().'Error al desasociar el producto de este almacén'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
     public function move_product_store(Request $request)

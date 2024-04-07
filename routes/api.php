@@ -43,6 +43,7 @@ use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\EnrollmentStoreController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\RevenueController;
@@ -155,6 +156,7 @@ Route::get('/company-close-car', [BranchController::class, 'company_close_cars']
 
 Route::get('/store', [StoreController::class, 'index']);
 Route::get('/store-show', [StoreController::class, 'show']);
+Route::get('/store-academy-show', [StoreController::class, 'store_academy_show']);
 Route::post('/store', [StoreController::class, 'store']);
 Route::put('/store', [StoreController::class, 'update']);
 Route::post('/store-destroy', [StoreController::class, 'destroy']);
@@ -197,13 +199,15 @@ Route::get('/branch-service-show', [ServiceController::class, 'branch_service_sh
 
 Route::get('/productstore', [ProductStoreController::class, 'index']);
 Route::get('/productstore-show', [ProductStoreController::class, 'show']);
+Route::get('/productstore-academy-show', [ProductStoreController::class, 'academy_show']);//devuelve los productos por almacenes de una academia
 Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
+Route::get('/productstore-show-academy-web', [ProductStoreController::class, 'product_show_academy_web']);//dada una branch devuelve los productos de los almacenes que hay en el
 Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
 Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
 Route::get('/category_products', [ProductStoreController::class, 'category_products']);//dada una branch y una categiría devolver los pructos
 Route::post('/move-product-store', [ProductStoreController::class, 'move_product_store']);
-Route::get('/move-products', [ProductStoreController::class, 'movement_products']);//devolver los movientos de productos de una branch dada en eun añi dado
+Route::get('/move-products', [ProductStoreController::class, 'movement_products']);//devolver los movientos de productos de una branch dada en eun año dado
 
 Route::get('/branchstore', [BranchStoreController::class, 'index']);
 Route::get('/branchstore-show', [BranchStoreController::class, 'show']);
@@ -487,6 +491,12 @@ Route::get('/vacation-show', [VacationController::class, 'show']);
 Route::post('/vacation', [VacationController::class, 'store']);
 Route::put('/vacation', [VacationController::class, 'update']);
 Route::post('/vacation-destroy', [VacationController::class, 'destroy']);
+
+Route::get('/enrollmentstore', [EnrollmentStoreController::class, 'index']);
+Route::get('/enrollmentstore-show', [EnrollmentStoreController::class, 'show']);
+Route::post('/enrollmentstore', [EnrollmentStoreController::class, 'store']);
+Route::put('/enrollmentstore', [EnrollmentStoreController::class, 'update']);
+Route::post('/enrollmentstore-destroy', [EnrollmentStoreController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
