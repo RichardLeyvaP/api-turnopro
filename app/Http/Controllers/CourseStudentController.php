@@ -157,6 +157,38 @@ class CourseStudentController extends Controller
         }
     }
 
+    public function course_students_product_show(Request $request)
+    {
+        try {
+            Log::info("Dado una curso devuelve los estudiantes matriculados");
+            $data = $request->validate([
+                'course_id' => 'required|numeric'
+            ]);
+              // Obtiene los estudiantes inscritos en el curso especificado, incluyendo los datos adicionales
+         
+              $course = Course::with(['students'])->find($data[ 'course_id']);
+        
+            if (!$course) {
+                return response()->json(['message' => 'Curso no encontrado'], 404);
+            }
+        
+            // Opcional: Transformar la estructura de los datos si es necesario
+            $students = $course->students->map(function ($student) {
+                return [
+                    'id' => $student->id, 
+                    'name' => $student->name.' '.$student->surname.' '.$student->second_surname, // Asume que tus estudiantes tienen un campo 'name'
+                    'student_image' => $student->student_image,
+                ];
+            });
+            
+            return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      */

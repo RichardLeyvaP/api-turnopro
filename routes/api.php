@@ -46,6 +46,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\EnrollmentStoreController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\ProductSaleController;
 use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\TraceController;
 use App\Http\Controllers\VacationController;
@@ -200,6 +201,7 @@ Route::get('/branch-service-show', [ServiceController::class, 'branch_service_sh
 Route::get('/productstore', [ProductStoreController::class, 'index']);
 Route::get('/productstore-show', [ProductStoreController::class, 'show']);
 Route::get('/productstore-academy-show', [ProductStoreController::class, 'academy_show']);//devuelve los productos por almacenes de una academia
+Route::get('/products-academy-show', [ProductStoreController::class, 'products_academy_show']);//devuelve los productos por almacenes de una academia para autocomplete
 Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
 Route::get('/productstore-show-academy-web', [ProductStoreController::class, 'product_show_academy_web']);//dada una branch devuelve los productos de los almacenes que hay en el
 Route::post('/productstore', [ProductStoreController::class, 'store']);
@@ -421,6 +423,7 @@ Route::post('/course-destroy', [CourseController::class, 'destroy']);
 
 Route::get('/course-student', [CourseStudentController::class, 'index']);
 Route::get('/course-student-show', [CourseStudentController::class, 'show']);
+Route::get('/course-student-product-show', [CourseStudentController::class, 'course_students_product_show']);
 Route::post('/course-student', [CourseStudentController::class, 'store']);
 Route::post('/course-student-landing', [CourseStudentController::class, 'store_landing']);
 Route::post('/course-student-update', [CourseStudentController::class, 'update']);
@@ -497,6 +500,12 @@ Route::get('/enrollmentstore-show', [EnrollmentStoreController::class, 'show']);
 Route::post('/enrollmentstore', [EnrollmentStoreController::class, 'store']);
 Route::put('/enrollmentstore', [EnrollmentStoreController::class, 'update']);
 Route::post('/enrollmentstore-destroy', [EnrollmentStoreController::class, 'destroy']);
+
+Route::get('/productsale', [ProductSaleController::class, 'index']);
+Route::get('/productsale-show', [ProductSaleController::class, 'show']);
+Route::post('/productsale', [ProductSaleController::class, 'store']);
+Route::put('/productsale', [ProductSaleController::class, 'update']);
+Route::post('/productsale-destroy', [ProductSaleController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

@@ -164,6 +164,28 @@ class ProductStoreController extends Controller
         }
     }
 
+    public function products_academy_show(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'enrollment_id' => 'required|numeric'
+            ]);
+            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
+            $productStore = ProductStore::where('enrollment_id', $data['enrollment_id'])->where('product_exit', '>', 0)->whereHas('product', function ($query){
+                $query->where('status_product', 'En venta');
+            })->with('product', 'store')->get()->map(function ($query) {
+                return [
+                    'id' => $query->id,
+                    //'product_quantity' => $query->product_quantity,
+                    'name' => $query->product->name.' ('.'Almacén:'.$query->store->address.')'                ];
+            });
+            return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
+        }
+    }
+
     public function product_show_web(Request $request)
     {
         try {

@@ -12,4 +12,9 @@ class Student extends Model
     public function courses(){
         return $this->belongsToMany(Course::class)->withTimestamps();
     }
+
+    public function productsales()
+    {
+        return $this->hasMany(ProductSale::class);
+    }
 }

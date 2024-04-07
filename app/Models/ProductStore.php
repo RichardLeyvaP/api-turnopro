@@ -14,6 +14,11 @@ class ProductStore extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function productsales()
+    {
+        return $this->hasMany(ProductSale::class);
+    }
+
     public function product()
     {
     return $this->belongsTo(Product::class);

@@ -73,7 +73,7 @@ class CourseController extends Controller
             return response()->json(['msg' => 'Curso creado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al crear al Curso'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 
