@@ -28,5 +28,9 @@ class Business extends Model
     {
         return $this->hasMany(CardGift::class);
     }
+
+    public function finances(){
+        return $this->HasMany(Finance::class);
+    }
     
 }

@@ -38,10 +38,15 @@ class FinanceController extends Controller
                 'operation' => 'required|string',
                 'amount' => 'required|numeric',
                 'comment' => 'nullable|string',
-                'branch_id' => 'required|numeric',
+                'branch_id' => 'nullable',
+                'business_id' => 'nullable',
+                'type' => 'required|string',
+                'enrollment_id' => 'nullable',
                 'expense_id' => 'nullable',
-                'revenue_id' => 'nullable'
+                'revenue_id' => 'nullable',
+
             ]);
+            Log::info($data);
             $data['data'] = Carbon::now()->format('Y-m-d');
             Log::info($request->file('file'));
             if ($request->hasFile('file')) {
@@ -59,6 +64,9 @@ class FinanceController extends Controller
             $finance->amount = $data['amount'];
             $finance->comment = $data['comment'];
             $finance->branch_id = $data['branch_id'];
+            $finance->business_id = $data['business_id'];
+            $finance->enrollment_id = $data['enrollment_id'];
+            $finance->type = $data['type'];
             $finance->expense_id = $data['expense_id'];
             $finance->revenue_id = $data['revenue_id'];
             $finance->data = $data['data'];
@@ -79,29 +87,82 @@ class FinanceController extends Controller
         try {
             Log::info("Entra a buscar las finanzas de una branch");
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'nullable|numeric',
+                'business_id' => 'nullable',
+                'type' => 'required|string',
+                'enrollment_id' => 'nullable'
             ]);
-            $finances = Finance::where('branch_id', $data['branch_id'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
-                return [
-                    'id' => $query->id,
-                    'data' => $query->data,
-                    'control' => $query->control,
-                    'operation' => $query->operation,
-                    'amount' => $query->amount,
-                    'expense' => $query->expense ? $query->amount : '',
-                    'revenue' => $query->revenue ? $query->amount : '',
-                    'comment' => $query->comment,
-                    'file' => $query->file,
-                    'branch_id' => $query->branch_id,
-                    'expense_id' => $query->expense_id,
-                    'revenue_id' => $query->revenue_id,
-                    'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                ];
-            });
+            if($data['type'] == 'Negocio'){
+                $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'data' => $query->data,
+                        'control' => $query->control,
+                        'operation' => $query->operation,
+                        'amount' => $query->amount,
+                        'expense' => $query->expense ? $query->amount : '',
+                        'revenue' => $query->revenue ? $query->amount : '',
+                        'comment' => $query->comment,
+                        'file' => $query->file,
+                        'branch_id' => $query->branch_id,
+                        'business_id' => $query->business_id,
+                        'enrollment_id' => $query->enrollment_id,
+                        'expense_id' => $query->expense_id,
+                        'revenue_id' => $query->revenue_id,
+                        'type' => $query->type,
+                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                    ];
+                });
+            }
+            elseif ($data['type'] == 'Sucursal'){
+                $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'data' => $query->data,
+                        'control' => $query->control,
+                        'operation' => $query->operation,
+                        'amount' => $query->amount,
+                        'expense' => $query->expense ? $query->amount : '',
+                        'revenue' => $query->revenue ? $query->amount : '',
+                        'comment' => $query->comment,
+                        'file' => $query->file,
+                        'branch_id' => $query->branch_id,
+                        'business_id' => $query->business_id,
+                        'enrollment_id' => $query->enrollment_id,
+                        'expense_id' => $query->expense_id,
+                        'revenue_id' => $query->revenue_id,
+                        'type' => $query->type,
+                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                    ];
+                });
+            }
+            else{
+                $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'data' => $query->data,
+                        'control' => $query->control,
+                        'operation' => $query->operation,
+                        'amount' => $query->amount,
+                        'expense' => $query->expense ? $query->amount : '',
+                        'revenue' => $query->revenue ? $query->amount : '',
+                        'comment' => $query->comment,
+                        'file' => $query->file,
+                        'branch_id' => $query->branch_id,
+                        'business_id' => $query->business_id,
+                        'enrollment_id' => $query->enrollment_id,
+                        'expense_id' => $query->expense_id,
+                        'revenue_id' => $query->revenue_id,
+                        'type' => $query->type,
+                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                    ];
+                });
+            }
+            
             return response()->json(['finances' => $finances], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => "Error interno del sistema"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
         }
     }
 
@@ -117,9 +178,12 @@ class FinanceController extends Controller
                 'operation' => 'required|string',
                 'amount' => 'required|numeric',
                 'comment' => 'nullable|string',
-                'branch_id' => 'required|numeric',
+                'branch_id' => 'nullable',
+                'business_id' => 'nullable',
+                'type' => 'required|string',
+                'enrollment_id' => 'nullable',
                 'expense_id' => 'nullable',
-                'revenue_id' => 'nullable'
+                'revenue_id' => 'nullable',
             ]);
             Log::info($data);
             $finance = Finance::find($data['id']);

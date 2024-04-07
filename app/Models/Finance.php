@@ -24,6 +24,15 @@ class Finance extends Model
         return $this->belongsTo(Revenue::class);
     }
 
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function enrollment()
+    {
+        return $this->belongsTo(Enrollment::class);
+    }
     protected $casts = [
         'amount' => 'double',
         'control' => 'integer'

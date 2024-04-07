@@ -18,4 +18,8 @@ class Enrollment extends Model
     {
         return $this->hasMany(Course::class);
     }
+
+    public function finances(){
+        return $this->HasMany(Finance::class);
+    }
 }
