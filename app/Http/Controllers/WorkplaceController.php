@@ -178,6 +178,11 @@ class WorkplaceController extends Controller
         }
     }
 
+    public function resetWorkplaces()
+    {
+        Workplace::query()->update(['busy' => 0, 'select' => 0]);
 
+        return response()->json(['msg' => 'Puestos de Trabajo actualizados correctamente'], 200);
+    }
 
 }

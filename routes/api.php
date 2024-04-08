@@ -312,6 +312,7 @@ Route::get('/branch_workplaces_busy', [WorkplaceController::class, 'branch_workp
 Route::get('/branch_workplaces_select', [WorkplaceController::class, 'branch_workplaces_select']);//mostrar los pestos de trabajo disponibles para atender al tecnico
 Route::get('/update-state-prof-workplace', [WorkplaceController::class, 'update_state_prof']);//pasar el puesto de trabajo del professional a disponible
 Route::get('/update-state-tec-workplace', [WorkplaceController::class, 'update_state_tec']);//pasar el puesto de trabajo del tecnico a disponible
+Route::get('/workplace-reset', [WorkplaceController::class, 'resetWorkplaces']);//pasar los puestos de trabajo a 0
 
 Route::get('/schedule', [ScheduleController::class, 'index']);
 Route::get('/schedule-show', [ScheduleController::class, 'show']);
