@@ -421,6 +421,8 @@ Route::get('/course-show', [CourseController::class, 'show']);
 Route::post('/course', [CourseController::class, 'store']);
 Route::post('/course-update', [CourseController::class, 'update']);
 Route::post('/course-destroy', [CourseController::class, 'destroy']);
+Route::get('/calculate-course-earnings', [CourseController::class, 'calculateCourseEarnings']);//devolver los ingresos por cursos
+Route::get('/calculate-course-earnings-enrollment', [CourseController::class, 'calculateCourseEarningsEnrollment']);//devolver los ingresos por cursos de una academia dada
 
 Route::get('/course-student', [CourseStudentController::class, 'index']);
 Route::get('/course-student-show', [CourseStudentController::class, 'show']);

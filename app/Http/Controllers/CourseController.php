@@ -173,4 +173,75 @@ class CourseController extends Controller
             return response()->json(['msg' => 'Error al eliminar el Curso'], 500);
         }
     }
+
+    public function calculateCourseEarnings(Request $request)  {
+
+        try { 
+            $cursos = Course::with('students.productSales')->get()->map(function ($curso){
+                $sumaProduct = 0;
+                $sumpayment = 0;
+                // Iterar a través de los estudiantes del curso
+                foreach ($curso->students as $student) {
+                    // Iterar a través de las ventas de productos de este estudiante
+                    foreach ($student->productSales as $productSale) {
+                        // Sumar el precio del producto vendido
+                        $sumaProduct += $productSale->price;
+                    }
+                }
+                // Sumar el total_payment de la tabla pivot course_student
+                $sumpayment = $curso->students()->sum('total_payment');
+    
+                return [
+                    'curso' => $curso->name, 
+                    'total_payment' => $sumpayment,
+                    'price' => $sumaProduct, // Ganancia sin contar el total_payment
+                    'total' => $sumpayment + $sumaProduct, // Ganancia total incluyendo total_payment
+                ];
+            });
+            return response()->json($cursos, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+
+            return response()->json(['msg' => "Error al mostrar los cursos"], 500);
+        }
+        // Obtener todos los cursos con sus estudiantes y ventas de productos cargados
+        
+    }
+
+    public function calculateCourseEarningsEnrollment(Request $request)  {
+
+        try {             
+            $data = $request->validate([
+                'enrollment_id' => 'required|numeric'
+            ]);
+            $cursos = Course::where('enrollment_id', $data['enrollment_id'])->with('students.productSales')->get()->map(function ($curso){
+                $sumaProduct = 0;
+                $sumpayment = 0;
+                // Iterar a través de los estudiantes del curso
+                foreach ($curso->students as $student) {
+                    // Iterar a través de las ventas de productos de este estudiante
+                    foreach ($student->productSales as $productSale) {
+                        // Sumar el precio del producto vendido
+                        $sumaProduct += $productSale->price;
+                    }
+                }
+                // Sumar el total_payment de la tabla pivot course_student
+                $sumpayment = $curso->students()->sum('total_payment');
+    
+                return [
+                    'curso' => $curso->name, 
+                    'total_payment' => $sumpayment,
+                    'price' => $sumaProduct, // Ganancia sin contar el total_payment
+                    'total' => $sumpayment + $sumaProduct, // Ganancia total incluyendo total_payment
+                ];
+            });
+            return response()->json($cursos, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+
+            return response()->json(['msg' => "Error al mostrar los cursos"], 500);
+        }
+        // Obtener todos los cursos con sus estudiantes y ventas de productos cargados
+        
+    }
 }

@@ -81,7 +81,7 @@ class ProductSaleController extends Controller
                     'student_id' => $query->student_id,
                     'data' => $query->data
                 ];
-            })->sortByDesc('data');
+            })->sortByDesc('data')->values();
             return response()->json(['productsales' => $productStudent], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
