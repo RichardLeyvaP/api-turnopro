@@ -288,6 +288,7 @@ Route::get('/tail', [TailController::class, 'index']);
 Route::put('/tail', [TailController::class, 'update']);
 Route::get('/tail_up', [TailController::class, 'tail_up']);
 Route::get('/cola_branch_data', [TailController::class, 'cola_branch_data']); //dado un branch_id devolver la cola de esa branch
+Route::get('/cola_branch_data2', [TailController::class, 'cola_branch_data2']); //dado un branch_id devolver la cola de esa branch que estan en attended 3
 Route::get('/cola_branch_professional', [TailController::class, 'cola_branch_professional']); //dado un branch_id  y un professional_id devolver la cola de esa branch
 Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar la cola
 Route::get('/cola_branch_delete', [TailController::class, 'cola_branch_delete']); //vaciar la cola de una branch_id
