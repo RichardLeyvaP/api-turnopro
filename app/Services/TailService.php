@@ -172,7 +172,7 @@ class TailService {
                 'clock' => $tail->clock, 
                 'timeClock' => $tail->timeClock, 
                 'detached' => $tail->detached, 
-                'total_services' => Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()
+                'total_services' => Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()
                
             ];
         })->sortBy('start_time')->values();

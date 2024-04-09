@@ -106,7 +106,7 @@ class CarController extends Controller
           $day = 0;//en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
                         if ($data['branch_id'] !=0) {
                             Log::info('branchesssss');
-                            $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
+                            $cars = Car::whereHas('reservations', function ($query) use ($start, $end, $data){
                                 $query->whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('branch_id', $data['branch_id']);
                             })->get()->map(function ($car){
                                     return [
@@ -184,7 +184,7 @@ class CarController extends Controller
                 });*/
                 $startOfMonth = now()->startOfMonth()->toDateString();
                     $endOfMonth = now()->endOfMonth()->toDateString();
-                $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 });
             
@@ -500,7 +500,7 @@ class CarController extends Controller
             ]);
             
             $client_professional_id = ClientProfessional::where('professional_id', $data['professional_id'])->where('client_id', $data['client_id'])->value('id');
-            $orderServicesDatas = Order::whereHas('car.reservations')->whereRelation('car', 'client_professional_id', '=', $client_professional_id)->where('is_product', false)->orderBy('updated_at', 'desc')->get();
+            $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'client_professional_id', '=', $client_professional_id)->where('is_product', false)->orderBy('updated_at', 'desc')->get();
             $services = $orderServicesDatas->map(function ($orderData){
                 return [
                       'data_reservation' => $orderData->car->reservations->data,
@@ -529,7 +529,7 @@ class CarController extends Controller
                 'car_id' => 'required|numeric'
             ]);
             
-            $orderServicesDatas = Order::whereHas('car.reservations')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
+            $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
             $services = $orderServicesDatas->map(function ($orderData){
                 return [
                      'name' => $orderData->branchServiceProfessional->branchService->service->name,
