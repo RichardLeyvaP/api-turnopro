@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\CourseStudent;
+use App\Models\Finance;
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -142,6 +144,7 @@ class CourseStudentController extends Controller
                     'student_image' => $student->student_image,
                     'email' => $student->email, 
                     'phone' => $student->phone, 
+                    'course_id' => $student->pivot->course_id,
                     'reservation_payment' => $student->pivot->reservation_payment,
                     'total_payment' => $student->pivot->total_payment,
                     'enrollment_confirmed' => $student->pivot->enrollment_confirmed,
@@ -206,6 +209,7 @@ class CourseStudentController extends Controller
                 'image_url' => 'nullable',
             ]);
             $student = Student::find($data['student_id']);
+            $totalAnt = $student->courses()->wherePivot('course_id', $data['course_id'])->value('total_payment');
             $filename = "image/default.png"; 
             if ($request->hasFile('image_url')) {
                 Log::info("tiene una imagen");
@@ -221,8 +225,46 @@ class CourseStudentController extends Controller
 
             $student->courses()->syncWithoutDetaching([
                 $data['course_id'] => $atributosParaActualizar,
-            ]);          
-          
+            ]); 
+
+            //agregar a Finanzas
+            $course = Course::find($data['course_id']);  
+            //return $course->enrollment_id;       
+            $finance = Finance::where('enrollment_id', $course->enrollment_id)->where('revenue_id', 3)->whereDate('data', Carbon::now())->first();
+            if($finance){
+                Log::info('existe');
+                if($totalAnt != $data['total_payment']){
+                    $finance->amount = $finance->amount - $totalAnt;
+                    $finance->save();
+                }
+                $finance->operation = 'Ingreso';
+                $finance->amount = $finance->amount + $data['total_payment'];
+                $finance->comment = 'Ingreso por matrícula de estudiante en curso';
+                $finance->enrollment_id = $course->enrollment_id;
+                $finance->type = 'Academia';
+                $finance->revenue_id = 3;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->save();
+            }
+            else{
+                Log::info('no existe');
+                $finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
+                if($finance){
+                    $control = $finance->control;
+                }
+                $finance = new Finance();
+                $finance->control = $control+1;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $data['total_payment'];
+                $finance->comment = 'Matriculado en Curso';
+                $finance->enrollment_id = $course->enrollment_id;
+                $finance->type = 'Academia';
+                $finance->revenue_id = 3;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->save();
+            }
 
             return response()->json(['msg' => 'Estudiante actualizado correctamente'], 200);
         } catch (\Throwable $th) {

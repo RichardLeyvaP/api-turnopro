@@ -176,7 +176,7 @@ class ProductStoreController extends Controller
             })->with('product', 'store')->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
-                    //'product_quantity' => $query->product_quantity,
+                    'product_exit' => $query->product_exit,
                     'name' => $query->product->name.' ('.'Almacén:'.$query->store->address.')'                ];
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);

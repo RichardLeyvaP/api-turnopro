@@ -147,18 +147,22 @@ class BranchProfessionalController extends Controller
             })->get();
 
             foreach($professionals1 as $professional1){
-                $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('endDate', '>=', Carbon::now())->first();
+                $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('endDate', '>=', Carbon::now())->get();
                 Log::info($vacation);
                 if ($vacation == null) {
                     Log::info('vacio');
-                    $professional1->startDate = null;
-                    $professional1->endDate = null;
+                    $professional1->vacations = null;
+                    //$professional1->endDate = null;
                     $professionals[] = $professional1;
                 } 
                 else{
                     Log::info('datos');
-                    $professional1->startDate = $vacation->startDate;
-                    $professional1->endDate = $vacation->endDate;
+                    $professional1->vacations = $vacation->map(function ($query){
+                        return [
+                            'startDate' => $query->startDate,                            
+                            'endDate' => $query->endDate,                            
+                        ];
+                    });
                     $professionals[] = $professional1;
                 }
             }

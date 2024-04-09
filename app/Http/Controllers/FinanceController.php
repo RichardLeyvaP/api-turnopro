@@ -114,7 +114,7 @@ class FinanceController extends Controller
                     ];
                 });
             }
-            elseif ($data['type'] == 'Sucursal'){
+            if ($data['type'] == 'Sucursal'){
                 $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
                     return [
                         'id' => $query->id,
@@ -136,7 +136,7 @@ class FinanceController extends Controller
                     ];
                 });
             }
-            else{
+            if ($data['type'] == 'Academia'){
                 $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
                     return [
                         'id' => $query->id,
@@ -157,6 +157,28 @@ class FinanceController extends Controller
                         'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
                     ];
                 });
+            }
+            if ($data['type'] == 'Todas'){
+                $finances = Finance::with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'data' => $query->data,
+                        'control' => $query->control,
+                        'operation' => $query->operation,
+                        'amount' => $query->amount,
+                        'expense' => $query->expense ? $query->amount : '',
+                        'revenue' => $query->revenue ? $query->amount : '',
+                        'comment' => $query->comment,
+                        'file' => $query->file,
+                        'branch_id' => $query->branch_id,
+                        'business_id' => $query->business_id,
+                        'enrollment_id' => $query->enrollment_id,
+                        'expense_id' => $query->expense_id,
+                        'revenue_id' => $query->revenue_id,
+                        'type' => $query->type,
+                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                    ];
+                })->sortByDesc('data')->values();
             }
             
             return response()->json(['finances' => $finances], 200);

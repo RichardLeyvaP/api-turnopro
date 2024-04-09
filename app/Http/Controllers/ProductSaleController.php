@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Finance;
 use App\Models\ProductSale;
 use App\Models\ProductStore;
 use Illuminate\Http\Request;
@@ -35,20 +36,64 @@ class ProductSaleController extends Controller
             Log::info($data);
 
             $productstore = ProductStore::find($data['id']);
-            $productstore->product_quantity = 1;
-            $productstore->product_exit = $productstore->product_exit - 1;
+            $productstore->product_quantity = $data['cant'];
+            $productstore->product_exit = $productstore->product_exit - $data['cant'];
             $productstore->save();
 
             $price = $productstore->product->value('sale_price');
-
-            $productSale = new ProductSale();
-            $productSale->product_store_id = $data['id'];
-            $productSale->student_id = $data['student_id'];
-            $productSale->enrollment_id = $data['enrollment_id'];
-            $productSale->cant = $data['cant'];
-            $productSale->price = $price;
-            $productSale->data = Carbon::now();
-            $productSale->save();
+            Log::info($price);
+            $productSale = ProductSale::where('enrollment_id', $data['enrollment_id'])->where('product_store_id', $data['id'])->where('student_id', $data['student_id'])->whereDate('data', Carbon::now())->first();
+            
+            if ($productSale) {
+                Log::info('Existe');
+                Log::info($productSale);
+                $productSale->cant = $productSale->cant + $data['cant'];
+                $productSale->price = $productSale->price + $price*$data['cant'];
+                $productSale->save();
+            }
+            else{
+                $productSale = new ProductSale();
+                $productSale->product_store_id = $data['id'];
+                $productSale->student_id = $data['student_id'];
+                $productSale->enrollment_id = $data['enrollment_id'];
+                $productSale->cant = $data['cant'];
+                $productSale->price = $price*$data['cant'];
+                $productSale->data = Carbon::now();
+                $productSale->save();
+            }
+            //$productSale = new ProductSale();
+            //agregar a finanzas a ingresos
+            $finance = Finance::where('enrollment_id', $data['enrollment_id'])->where('revenue_id', 4)->whereDate('data', Carbon::now())->first();
+            if($finance){
+                Log::info('existe');
+                $finance->operation = 'Ingreso';
+                $finance->amount = $finance->amount + $price*$data['cant'];
+                $finance->comment = 'Venta de Productos';
+                $finance->enrollment_id = $data['enrollment_id'];
+                $finance->type = 'Academia';
+                $finance->revenue_id = 4;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->save();
+            }
+            else{
+                Log::info('no existe');
+                $finance = Finance::where('enrollment_id', $data['enrollment_id'])->orderByDesc('control')->first();
+                if($finance){
+                    $control = $finance->control;
+                }
+                $finance = new Finance();
+                $finance->control = $control+1;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $price*$data['cant'];
+                $finance->comment = 'Venta de Productos';
+                $finance->enrollment_id = $data['enrollment_id'];
+                $finance->type = 'Academia';
+                $finance->revenue_id = 4;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->save();
+            }
             
              return response()->json(['msg' =>'Producto asigando correctamente',], 200);
         } catch (\Throwable $th) {
@@ -64,10 +109,11 @@ class ProductSaleController extends Controller
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
-                'enrollment_id' => 'required|numeric'
+                'enrollment_id' => 'required|numeric',
+                'student_id' => 'required|numeric'
             ]);
             Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
-            $productStudent = ProductSale::where('enrollment_id', $data['enrollment_id'])->whereHas('student.courses', function ($query) use ($data){
+            $productStudent = ProductSale::where('enrollment_id', $data['enrollment_id'])->where('student_id', $data['student_id'])->whereHas('student.courses', function ($query) use ($data){
                 $query->where('course_id', $data['course_id']);
             })->with(['productStore.product', 'productStore.store'])->get()->map(function ($query) {
                 return [
@@ -76,8 +122,9 @@ class ProductSaleController extends Controller
                     'store_id' => $query->productstore->store_id,
                     'nameProduct' => $query->productstore->product->name,
                     'price' => $query->price,
+                    'cant' => $query->cant,
                     'image_product' => $query->productstore->product->image_product,
-                    'nameStudent' => $query->student->name.' '.$query->student->surname.' '.$query->student->second_surname,
+                    //'nameStudent' => $query->student->name.' '.$query->student->surname.' '.$query->student->second_surname,
                     'student_id' => $query->student_id,
                     'data' => $query->data
                 ];
@@ -102,7 +149,7 @@ class ProductSaleController extends Controller
      */
     public function destroy(Request $request)
     {
-        Log::info("Compra de Productos");
+        Log::info("Eliminacion de compra de Productos");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -111,13 +158,24 @@ class ProductSaleController extends Controller
             Log::info($data);
             $productSale = ProductSale::find($data['id']);
             $productstore = ProductStore::where('id', $productSale->product_store_id)->first();
-            $productstore->product_quantity = 1;
-            $productstore->product_exit = $productstore->product_exit + 1;
+            $productstore->product_quantity = $productSale->cant;
+            $productstore->product_exit = $productstore->product_exit + $productSale->cant;
             $productstore->save();
-
+            $finance = Finance::where('enrollment_id', $productSale->enrollment_id)->whereDate('data', $productSale->data)->orderByDesc('control')->first();
+            if($finance){
+                Log::info('existe');
+                $temp = $finance->amount - $productSale->price;
+                if($temp <= 0){
+                    $finance->delete();
+                }else{
+                    $finance->amount = $temp;
+                    $finance->save();
+                }
+                
+            }
             $productSale->delete();
             
-             return response()->json(['msg' =>'Producto asigando correctamente',], 200);
+             return response()->json(['msg' =>'Producto desasigando correctamente',], 200);
         } catch (\Throwable $th) {
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
