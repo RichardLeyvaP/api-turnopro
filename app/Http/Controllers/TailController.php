@@ -157,6 +157,21 @@ class TailController extends Controller
                     return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);
                 } 
     }
+    public function cola_branch_data2(Request $request)
+    {
+        try { 
+            
+            Log::info( "Mostarr la cola del dia de una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            
+            return response()->json(['tail' => $this->tailService->cola_branch_data($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);
+                } 
+    }
     public function tail_branch_attended(Request $request)
     {
         try { 
