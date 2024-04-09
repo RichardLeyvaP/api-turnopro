@@ -60,10 +60,8 @@ class CarController extends Controller
                     })->sum('technical_assistance') * 5000;
                     return $amount;
                 });*/
-                $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->whereHas('reservations', function ($query){
-                    $query->whereDate('data', now()->toDateString());
+                $cars = Car::whereHas('reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id'])->whereDate('data', now()->toDateString());
                 });
             
                 return response()->json($cars->sum('amount')+$cars->sum('tip')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
@@ -109,10 +107,8 @@ class CarController extends Controller
                         if ($data['branch_id'] !=0) {
                             Log::info('branchesssss');
                             $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
-                                $query->whereDate('data', '>=', $start)->whereDate('data', '<=', $end);
-                            })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
-                                    $query->where('branch_id', $data['branch_id']);
-                                })->get()->map(function ($car){
+                                $query->whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('branch_id', $data['branch_id']);
+                            })->get()->map(function ($car){
                                     return [
                                         'date' => $car->reservations->data,
                                         'earnings' => $car->amount + $car->tip + ($car->technical_assistance * 5000)
@@ -188,10 +184,8 @@ class CarController extends Controller
                 });*/
                 $startOfMonth = now()->startOfMonth()->toDateString();
                     $endOfMonth = now()->endOfMonth()->toDateString();
-                $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->whereHas('reservations', function ($query) use ($startOfMonth, $endOfMonth){
-                    $query->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
+                $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                    $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 });
             
                 return response()->json($cars->sum('amount')+$cars->sum('tip')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
@@ -239,7 +233,7 @@ class CarController extends Controller
             Log::info( $branch);
             $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){
                 $query->whereDate('orders.data', Carbon::now());
-            })->whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($data){
+            })->whereHas('reservation', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->get()->map(function ($car) use ($data){
                 $client = $car->clientProfessional->client;
@@ -361,7 +355,7 @@ class CarController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
     
-                $orderDatas = Order::whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data){
+                $orderDatas = Order::whereHas('car.reservation', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                 })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
 
@@ -412,9 +406,9 @@ class CarController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
                 $orderDatas = Order::whereHas('car.clientProfessional', function ($query) use ($data){
-                    $query->where('professional_id', $data['professional_id'])->whereHas('professional.branches', function ($query) use ($data){
-                        $query->where('branch_id', $data['branch_id']);
-                    });
+                    $query->where('professional_id', $data['professional_id']);
+                })->whereHas('car.reservation', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
                 })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
 
            $car = $orderDatas->map(function ($orderData){

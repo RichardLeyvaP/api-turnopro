@@ -87,7 +87,7 @@ class OrderService {
                 'total_sale' => $total,
             ];
         });
-    return $products;
+        return $products;
     }
 
     public function sales_periodo_service($data){

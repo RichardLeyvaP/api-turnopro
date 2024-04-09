@@ -238,9 +238,7 @@ class ReservationController extends Controller
             ]);
             $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->whereHas('car.clientProfessional.professional.branchServices', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            })->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
+            })->where('branch_id', $data['branch_id'])->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -260,9 +258,7 @@ class ReservationController extends Controller
             Log::info($data);
             if ($data['branch_id'] != 0) {
                 Log::info("Branch");
-                $reservations = Reservation::whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->whereDate('data', now()->toDateString())->count();
+                $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', now()->toDateString())->count();
                 //$branch = Branch::find($data['branch_id']);
                 //Log::info('Es una branch');
                 //Log::info($branch);
@@ -312,9 +308,7 @@ class ReservationController extends Controller
                     ->flatMap(function ($branch) use ($data, $start, $end) {
                         return $branch->reservations->where('laravel_through_key', $data['branch_id'])->whereBetween('data', [$start, $end]);
                     });*/
-                    $reservations = Reservation::whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
-                        $query->where('branch_id', $data['branch_id']);
-                    })->whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->get();
+                    $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->get();
 
                 // Inicializar un array para contabilizar las reservaciones por día
                 $reservationsByDay = array_fill(0, 7, 0);
@@ -459,10 +453,8 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
+            $reservations = Reservation::where('branch_id', $data['branch_id'])->WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
