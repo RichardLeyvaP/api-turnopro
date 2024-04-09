@@ -95,6 +95,7 @@ class ReservationService {
                 $reservation->total_time = sprintf('%02d:%02d:%02d', floor($total_time/60),$total_time%60,0);
                 $reservation->data = $data['data'];
                 $reservation->from_home = 1;
+                $reservation->branch_id = $data['branch_id'];
                 $reservation->car_id = $car->id;
                 $reservation->save();
             Log::info('Crea la reservación');
