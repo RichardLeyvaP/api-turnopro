@@ -353,6 +353,7 @@ class CarController extends Controller
                     'professional_id' => $car->clientProfessional->professional->id,
                     'branch_id' => $car->reservation->branch_id,
                     'data' => $car->reservation->data,
+                    'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($car->reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
                     'attendedClient' => 1,
                     'services' => $ordersServices,
                     'totalServices' => $retention ? $car->orders->sum('percent_win') - $car->orders->sum('percent_win') * ($retention/100) : $car->orders->sum('percent_win'),
@@ -364,6 +365,7 @@ class CarController extends Controller
                 'professional_id' => $cars[0]['professional_id'],
                 'branch_id' => $cars[0]['branch_id'],
                 'data' => $cars[0]['data'],
+                'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana
                 'attendedClient' => $cars->sum('attendedClient'),
                 'services' => $cars->sum('services'),
                 'totalServices' => $cars->sum('totalServices'),
