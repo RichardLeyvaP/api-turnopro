@@ -41,8 +41,8 @@ class ProfessionalPaymentController extends Controller
 
             // Guardar el modelo
             $professionalPayment->save();
-            
-            if ($data['type'] != 'Adelanto') {
+            Log::info($request->input('car_ids'));
+            if ($request->input('car_ids')) {
                 // Actualizar carros con professional_payment_id
                 Log::info('entra a pago los carros');
                 $carIds = $request->input('car_ids');

@@ -397,7 +397,7 @@ class CarController extends Controller
                     'id' => $car->id,
                     'professional_id' => $car->clientProfessional->professional->id,
                     'clientName' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname,
-                    'client_image' => $car->clientProfessional->client->client_image,
+                    'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',
                     'branch_id' => $car->reservation->branch_id,
                     'data' => $car->reservation->data,
                     'attendedClient' => 1,
@@ -434,7 +434,7 @@ class CarController extends Controller
                 return [
                     'id' => $car->id,
                     'clientName' => $car->clientProfessional->client->name." ".$car->clientProfessional->client->surname,
-                    'client_image' => $car->clientProfessional->client->client_image,                        
+                    'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',                        
                     'data' => $car->reservation->data.' '.$car->reservation->start_time,
                     'time' => $car->reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
