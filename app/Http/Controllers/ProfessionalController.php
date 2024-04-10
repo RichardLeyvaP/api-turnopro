@@ -273,6 +273,27 @@ class ProfessionalController extends Controller
         }
     }
 
+    public function branch_professionals_web(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+           })->get()->map(function ($query){
+            return [
+                'id' => $query->id,
+                'name' => $query->name.' '.$query->surname.' '.$query->second_surname
+            ];
+           });
+           
+            return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+        }
+    }
+
     public function branch_professionals_service(Request $request)
     {
         try {

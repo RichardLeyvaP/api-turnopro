@@ -387,7 +387,7 @@ class CarController extends Controller
                'branch_id' => 'required|numeric'
            ]);
            $retention = Professional::where('id', $data['professional_id'])->first()->retention/100;
-           $cars = Car::whereHas('reservation', function ($query) use ($data){
+           $cars = Car::where('professional_payment_id', Null)->whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
@@ -407,7 +407,7 @@ class CarController extends Controller
                     'amountGenerate' => $car->amount + $car->tip
                 ];
            });
-           return response()->json(['car' => $cars], 200);
+           return response()->json($cars, 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
        }
@@ -433,7 +433,8 @@ class CarController extends Controller
                 })->get();
                 return [
                     'id' => $car->id,
-                    'clientName' => $car->clientProfessional->client->name." ".$car->clientProfessional->client->surname,                    
+                    'clientName' => $car->clientProfessional->client->name." ".$car->clientProfessional->client->surname,
+                    'client_image' => $car->clientProfessional->client->client_image,                        
                     'data' => $car->reservation->data.' '.$car->reservation->start_time,
                     'time' => $car->reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),

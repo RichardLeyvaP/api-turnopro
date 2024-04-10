@@ -7,6 +7,7 @@ use App\Models\ProfessionalPayment;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ProfessionalPaymentController extends Controller
@@ -31,7 +32,6 @@ class ProfessionalPaymentController extends Controller
                 'amount' => 'required|numeric',
                 'type' => 'required|string',
             ]);
-
             $professionalPayment = new ProfessionalPayment();
             $professionalPayment->branch_id = $data['branch_id'];
             $professionalPayment->professional_id = $data['professional_id'];
@@ -41,10 +41,11 @@ class ProfessionalPaymentController extends Controller
 
             // Guardar el modelo
             $professionalPayment->save();
-
-            if ($professionalPayment->type != 'Adelanto') {
+            
+            if ($data['type'] != 'Adelanto') {
                 // Actualizar carros con professional_payment_id
-                $carIds = $request->input('car_ids', []);
+                Log::info('entra a pago los carros');
+                $carIds = $request->input('car_ids');
                 Car::whereIn('id', $carIds)->update(['professional_payment_id' => $professionalPayment->id]);
             }
 
@@ -96,12 +97,37 @@ class ProfessionalPaymentController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProfessionalPayment $professionalPayment)
+    public function branch_payment_show(Request $request)
     {
-        //
+        try {
+            $request->validate([
+                'branch_id' => 'required|exists:branches,id',
+            ]);
+
+            $branchId = $request->branch_id;
+
+            $payments = ProfessionalPayment::where('branch_id', $branchId)
+                                          ->get()->map(function ($query){
+                                            return [
+                                                'id' => $query->id,
+                                                'branch_id ' =>$query->branch_id,
+                                                'professional_id' => $query->professional_id,
+                                                'nameProfessional' => $query->professional->name.' '.$query->professional->surname.' '.$query->professional->second_surname,
+                                                'image_url' => $query->professional->image_url,
+                                                'date' => $query->date,
+                                                'type' => $query->type,
+                                                'amount' => $query->amount
+                                            ];
+                                          });
+
+            return response()->json($payments, 200);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -115,8 +141,26 @@ class ProfessionalPaymentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProfessionalPayment $professionalPayment)
+    public function destroy(Request $request)
     {
-        //
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+            // Buscar el pago de profesional a eliminar
+            $professionalPayment = ProfessionalPayment::findOrFail($data['id']);
+
+            // Buscar y actualizar los carros asociados para establecer el campo professional_payment_id en null
+            Car::where('professional_payment_id', $data['id'])->update(['professional_payment_id' => null]);
+
+            // Eliminar el pago de profesional
+            $professionalPayment->delete();
+
+            return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
     }
 }

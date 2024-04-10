@@ -105,6 +105,7 @@ Route::post('/professional-destroy', [ProfessionalController::class, 'destroy'])
 Route::get('/professionals_branch', [ProfessionalController::class, 'professionals_branch']);
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 Route::get('/branch_professionals', [ProfessionalController::class, 'branch_professionals']);
+Route::get('/branch_professionals_web', [ProfessionalController::class, 'branch_professionals_web']); //devolver los professionales de una branch
 Route::get('/professionals_ganancias_branch', [ProfessionalController::class, 'professionals_ganancias_branch']); //Obtener Monto total de un professionals en una branch y un periodo dado
 Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
@@ -520,6 +521,7 @@ Route::get('/professional-payment-show', [ProfessionalPaymentController::class, 
 Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
 Route::put('/professional-payment', [ProfessionalPaymentController::class, 'update']);
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
+Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']);//devolver de una branch los pagos realizado a los professionals
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
