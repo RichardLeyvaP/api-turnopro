@@ -404,7 +404,8 @@ class CarController extends Controller
                     'services' => $ordersServices,
                     'totalServices' => $retention ? $car->orders->sum('percent_win') - $car->orders->sum('percent_win') * ($retention/100) : $car->orders->sum('percent_win'),
                     'clientAleator' => $car->select_professional,
-                    'amountGenerate' => $car->amount + $car->tip
+                    'amountGenerate' => $car->amount + $car->tip,
+                    'tip' => $car->tip * 0.80
                 ];
            });
            return response()->json($cars, 200);
