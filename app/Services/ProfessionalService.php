@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Car;
 use App\Models\Order;
 use App\Models\Professional;
+use App\Models\ProfessionalWorkPlace;
 use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\Vacation;
@@ -1050,7 +1051,18 @@ class ProfessionalService
         })->get();
 
         // Convertir el campo telefono a string
-        $professionals->map(function ($professional) {
+        $professionals->map(function ($professional) use($branch_id){
+            $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($branch_id){
+                $query->where('busy', 1)->where('branch_id', $branch_id);
+            })->first();
+            Log::info($workplaceProfessional);
+            if(!$workplaceProfessional){
+                $professional->position = '';
+            }
+            else{
+                $professional->position = $workplaceProfessional->workplace->name;
+            }
+            //return $workplace->workplace_id;
             $professional->phone = (string)$professional->phone;
             return $professional;
         });
