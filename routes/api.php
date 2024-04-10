@@ -33,6 +33,7 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProfessionalPaymentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\ReservationController;
@@ -258,6 +259,9 @@ Route::get('/car_services', [CarController::class, 'car_services']); //dado una 
 Route::get('/cars-winner-day', [CarController::class, 'cars_sum_amount']);//Dado un business devolver las ganancial del dia
 Route::get('/cars-winner-week', [CarController::class, 'cars_sum_amount_week']);//Dado un business devolver las ganancial de la semana
 Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial del mes
+Route::get('/professional-car', [CarController::class, 'professional_car']);//Ganancias del professionals en una branch por dias
+Route::get('/professional-car-date', [CarController::class, 'professional_car_date']);//Detalles del carro
+Route::get('/professional-car-notpay', [CarController::class, 'professional_car_notpay']);//Detalles del carro
 
 Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-show', [OrderController::class, 'show']);
@@ -510,6 +514,12 @@ Route::get('/productsale-show', [ProductSaleController::class, 'show']);
 Route::post('/productsale', [ProductSaleController::class, 'store']);
 Route::put('/productsale', [ProductSaleController::class, 'update']);
 Route::post('/productsale-destroy', [ProductSaleController::class, 'destroy']);
+
+Route::get('/professional-payment', [ProfessionalPaymentController::class, 'index']);
+Route::get('/professional-payment-show', [ProfessionalPaymentController::class, 'show']);
+Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
+Route::put('/professional-payment', [ProfessionalPaymentController::class, 'update']);
+Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

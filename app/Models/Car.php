@@ -38,6 +38,11 @@ class Car extends Model
         return $this->hasOne(Payment::class);
     }
 
+    public function professionalPayment()
+    {
+        return $this->belongsTo(ProfessionalPayment::class, 'professional_payment_id');
+    }
+
     protected $casts = [
         'amount' => 'double'
     ];

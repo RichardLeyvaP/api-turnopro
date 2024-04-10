@@ -90,4 +90,9 @@ class Branch extends Model
     {
         return $this->hasMany(Reservation::class);
     }
+
+    public function professionalPayments()
+    {
+        return $this->hasMany(ProfessionalPayment::class, 'branch_id');
+    }
 }

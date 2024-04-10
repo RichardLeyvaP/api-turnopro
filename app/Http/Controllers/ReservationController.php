@@ -138,6 +138,11 @@ class ReservationController extends Controller
             } else {
                 $data['select_professional'] = 1;
             }
+            if ($request->has('from_home')) {
+                $data['from_home'] = $request->from_home;
+            } else {
+                $data['from_home'] = 1;
+            }
             $servs = $request->input('services');
             $id_client = 0;
             //1-Verificar que el usuario no este registrado

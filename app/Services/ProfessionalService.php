@@ -1049,24 +1049,27 @@ class ProfessionalService
                         ->orWhereNull('start_time');
                 });
         })->get();
-
+        $professionalFree = [];
         // Convertir el campo telefono a string
-        $professionals->map(function ($professional) use($branch_id){
-            $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($branch_id){
+       // Iterar sobre los profesionales
+    foreach ($professionals as $professional) {
+        // Convertir el campo teléfono a string
+        $professional->phone = (string)$professional->phone;
+
+        // Verificar la disponibilidad del profesional en su lugar de trabajo
+        $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
+            ->whereDate('data', Carbon::now())
+            ->whereHas('workplace', function ($query) use ($branch_id){
                 $query->where('busy', 1)->where('branch_id', $branch_id);
             })->first();
-            Log::info($workplaceProfessional);
-            if(!$workplaceProfessional){
-                $professional->position = '';
-            }
-            else{
-                $professional->position = $workplaceProfessional->workplace->name;
-            }
-            //return $workplace->workplace_id;
-            $professional->phone = (string)$professional->phone;
-            return $professional;
-        });
 
-        return $professionals;
+        // Si el profesional no está ocupado en su lugar de trabajo, agrégalo a la lista de profesionales libres
+        if($workplaceProfessional){  
+            $professional->position = $workplaceProfessional->workplace->name;
+            $professionalFree[] = $professional;
+        }
+    }
+
+        return $professionalFree;
     }
 }

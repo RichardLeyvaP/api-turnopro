@@ -94,7 +94,7 @@ class ReservationService {
                 $reservation->final_hour = Carbon::parse($data['start_time'])->addMinutes($total_time)->toTimeString();
                 $reservation->total_time = sprintf('%02d:%02d:%02d', floor($total_time/60),$total_time%60,0);
                 $reservation->data = $data['data'];
-                $reservation->from_home = 1;
+                $reservation->from_home = $data['from_home'];
                 $reservation->branch_id = $data['branch_id'];
                 $reservation->car_id = $car->id;
                 $reservation->save();
