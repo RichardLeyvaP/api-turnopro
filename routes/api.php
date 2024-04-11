@@ -158,7 +158,9 @@ Route::get('/show-business', [BranchController::class, 'show_business']);
 Route::get('/company-close-car', [BranchController::class, 'company_close_cars']);//Cierre de caja de la compañia por branch
 
 Route::get('/store', [StoreController::class, 'index']);
+Route::get('/store-show-notin', [StoreController::class, 'show_NotIn']);
 Route::get('/store-show', [StoreController::class, 'show']);
+Route::get('/store-show-branch', [StoreController::class, 'show_branch']);
 Route::get('/store-academy-show', [StoreController::class, 'store_academy_show']);
 Route::post('/store', [StoreController::class, 'store']);
 Route::put('/store', [StoreController::class, 'update']);

@@ -113,9 +113,9 @@ class ProductSaleController extends Controller
                 'student_id' => 'required|numeric'
             ]);
             Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
-            $productStudent = ProductSale::where('enrollment_id', $data['enrollment_id'])->where('student_id', $data['student_id'])->whereHas('student.courses', function ($query) use ($data){
+            $productStudent = ProductSale::whereHas('student.courses', function ($query) use ($data){
                 $query->where('course_id', $data['course_id']);
-            })->with(['productStore.product', 'productStore.store'])->get()->map(function ($query) {
+            })->where('enrollment_id', $data['enrollment_id'])->where('student_id', $data['student_id'])->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
                     'product_id' => $query->productstore->product_id,

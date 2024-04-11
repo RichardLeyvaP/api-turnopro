@@ -232,10 +232,8 @@ class CarController extends Controller
             $branch = Branch::where('id',$data['branch_id'])->first();
             Log::info( "Esta es la sucursal");
             Log::info( $branch);
-            $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('orders', function ($query){
-                $query->whereDate('orders.data', Carbon::now());
-            })->whereHas('reservation', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
+            $cars = $branch->cars()->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->whereHas('reservation', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
             })->get()->map(function ($car) use ($data){
                 $client = $car->clientProfessional->client;
                 $professional = $car->clientProfessional->professional;

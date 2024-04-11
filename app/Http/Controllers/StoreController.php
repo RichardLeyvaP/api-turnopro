@@ -21,6 +21,29 @@ class StoreController extends Controller
     public function show(Request $request)
     {
         try {
+            Log::info("entra a buscar los stores de una branch");
+            return response()->json(['stores' => Store::all()], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar el almacén"], 500);
+        }
+    }
+
+    public function show_NotIn(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'store_id' => 'required|numeric'
+            ]);
+            Log::info("entra a buscar los stores de una branch");
+            return response()->json(['stores' => Store::where('id', '!=',$data['store_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar el almacén"], 500);
+        }
+    }
+
+    public function show_branch(Request $request)
+    {
+        try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
