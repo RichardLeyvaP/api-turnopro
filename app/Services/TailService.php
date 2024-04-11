@@ -82,7 +82,7 @@ class TailService {
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $reservation->car->clientProfessional->client_id,
                 'professional_id' => $reservation->car->clientProfessional->professional_id,
-                'professional_name ' => $professional->name." ".$professional->surname,
+                'professional_name' => $professional->name." ".$professional->surname,
                 'client_name' => $client->name." ".$client->surname, 
                 'attended' => $tail->attended,
                 'time' => Carbon::parse($tail->updated_at)->format('H:i:s')
