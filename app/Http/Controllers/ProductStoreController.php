@@ -247,7 +247,7 @@ class ProductStoreController extends Controller
         })->where('product_exit', '>', 0)->get()->map(function ($productStore) {
                 return [
                     'id' => $productStore->id,
-                    'product_exit' => $query->product_exit,
+                    'product_exit' => $productStore->product_exit,
                     'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
                 ];
             });
