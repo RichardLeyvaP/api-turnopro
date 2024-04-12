@@ -15,7 +15,7 @@ class Product extends Model
     }
 
     public function stores(){
-        return $this->belongsToMany(Store::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification', 'branch_id', 'enrollment_id','id')->withTimestamps();
+        return $this->belongsToMany(Store::class, 'product_store')->withPivot('product_quantity','product_exit','number_notification', 'stock_depletion','id')->withTimestamps();
     }
 
     public function orders(){

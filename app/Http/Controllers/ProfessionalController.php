@@ -319,6 +319,8 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $servs = $request->input('services');
+            Log::info('$servs');
+            Log::info($servs);
             $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
             /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);

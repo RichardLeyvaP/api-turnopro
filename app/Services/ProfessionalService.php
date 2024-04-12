@@ -206,7 +206,7 @@ class ProfessionalService
             } 
         }
 
-        foreach ($professionals as $professional) {
+        foreach ($professionals1 as $professional) {
             $reservations = $professional->reservations()->where('branch_id', $branch_id)
             /*->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);

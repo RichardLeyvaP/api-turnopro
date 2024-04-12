@@ -27,6 +27,7 @@ class ProductStoreController extends Controller
                     'product_exit' => $query->product_exit,
                     'product_id' => $query->product_id,
                     'store_id' => $query->store_id,
+                    'stock_depletion' => $query->stock_depletion,
                     'name' => $query->product->name,
                     'reference' => $query->product->reference,
                     'code' => $query->product->code,
@@ -35,7 +36,7 @@ class ProductStoreController extends Controller
                     'purchase_price' => $query->product->purchase_price,
                     'image_product' => $query->product->image_product,
                     'direccionStore' => $query->store->address,
-                    'storetReference' => $query->store->reference
+                    'storetReference' => $query->store->reference,                    
                 ];
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
@@ -53,8 +54,8 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
-                'product_quantity' => 'required|numeric'
-                //'branch_id' => 'nullable',
+                'product_quantity' => 'required|numeric',
+                'stock_depletion' => 'required|numeric',
                 //'enrollment_id' => 'nullable'
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
@@ -69,11 +70,11 @@ class ProductStoreController extends Controller
                 //$productstore->product_quantity = $data['product_quantity'];
                 //$productstore->save();
                 $existencia = $data['product_quantity'] + $productstore->pivot['product_exit'];
-                $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$existencia]);
+                $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$existencia, 'stock_depletion' => $data['stock_depletion']]);
             }
             else
             {
-                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity']]);
+                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
             }
             //
             /*if($request->has('branch_id') && $data['branch_id'] != null){
@@ -121,6 +122,7 @@ class ProductStoreController extends Controller
                     'product_exit' => $query->product_exit,
                     'product_id' => $query->product_id,
                     'store_id' => $query->store_id,
+                    'stock_depletion' => $query->stock_depletion,
                     'name' => $query->product->name,
                     'reference' => $query->product->reference,
                     'code' => $query->product->code,
@@ -153,6 +155,7 @@ class ProductStoreController extends Controller
                     'product_exit' => $query->product_exit,
                     'product_id' => $query->product_id,
                     'store_id' => $query->store_id,
+                    'stock_depletion' => $query->stock_depletion,
                     'name' => $query->product->name,
                     'reference' => $query->product->reference,
                     'code' => $query->product->code,
@@ -187,6 +190,7 @@ class ProductStoreController extends Controller
                     'product_exit' => $query->product_exit,
                     'product_id' => $query->product_id,
                     'store_id' => $query->store_id,
+                    'stock_depletion' => $query->stock_depletion,
                     'name' => $query->product->name,
                     'reference' => $query->product->reference,
                     'code' => $query->product->code,
@@ -243,6 +247,7 @@ class ProductStoreController extends Controller
         })->where('product_exit', '>', 0)->get()->map(function ($productStore) {
                 return [
                     'id' => $productStore->id,
+                    'product_exit' => $query->product_exit,
                     'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
                 ];
             });
@@ -324,6 +329,7 @@ class ProductStoreController extends Controller
                 //'branch_id' => 'nullable'//,
                 //'enrollment_id' => 'nullable',
                 'product_quantity' => 'required|numeric',
+                'stock_depletion' => 'required|numeric'
                 //'product_exit' => 'required|numeric',
                 //'number_notification' => 'nullable|numeric'
             ]);
@@ -336,11 +342,11 @@ class ProductStoreController extends Controller
                 //$productstore->product_quantity = $data['product_quantity'];
                 //$productstore->save();
                 //$existencia = $data['product_quantity'] + $productstore->pivot['product_exit'];
-                $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity']]);
+                $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
             }
             else
             {
-                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity']]);
+                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
             }
             /*if($request->has('branch_id') && $data['branch_id'] != null){
             $productStore = $store->products()

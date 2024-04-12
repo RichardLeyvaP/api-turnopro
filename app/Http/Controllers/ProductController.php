@@ -141,13 +141,12 @@ class ProductController extends Controller
     public function product_stock(Request $request)
     {
         try {
-            $data = $request->validate([
-                'business_id' => 'required|numeric',
-                'branch_id' => 'nullable'
-            ]);
-           Log::info('Obtener los cars');
-           if ($data['branch_id'] !=0) {
-            $products = ProductStore::where('product_exit', '<', 5)->where('branch_id', $data['branch_id'])->with('store', 'product')->get()->map(function ($query){
+            /*$data = $request->validate([
+                'business_id' => 'required|numeric'
+            ]);*/
+           Log::info('Obtener los productos');
+           /*if ($data['branch_id'] !=0) {
+            $products = ProductStore::where('product_exit', '<', 'stock_depletion')->where('branch_id', $data['branch_id'])->with('store', 'product')->get()->map(function ($query){
                 return [
                     'name' => $query->product->name,
                     'stock' => $query->product_exit,
@@ -158,18 +157,19 @@ class ProductController extends Controller
                 ];
             });
            }
-           else {
-            $products = ProductStore::where('product_exit', '<', 5)->with('store', 'product')->get()->map(function ($query){
+           else {*/
+            $products = ProductStore::whereRaw('product_exit < stock_depletion')->with('store', 'product')->get()->map(function ($query){
                 return [
                     'name' => $query->product->name,
                     'stock' => $query->product_exit,
+                    'stock_depletion' => $query->stock_depletion,
                     'reference' =>$query->product->reference,
                     'code' => $query->product->code,
-                    'store' => $query->store->address,
-                    'nameBranch' => $query->store->branches()->first()->value('name')
+                    'store' => $query->store->address//,
+                    //'nameBranch' => $query->store->branches()->first()->value('name')
                 ];
             });
-           }
+           //}
         
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
