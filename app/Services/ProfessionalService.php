@@ -64,13 +64,12 @@ class ProfessionalService
                 'phone' => $query->phone,
                 'created_at' => $query->created_at,
                 'updated_at' => $query->updated_at,
-                'charge_id' => $query->charge_id,
+                'charge_id' => $query->charge->name,
                 'user_id' => $query->user_id,
                 'state' => $query->state,
                 'image_url' => $query->image_url,
                 'business_id' => $query->business_id,
-                'retention' => $query->retention,
-                'charge' => $query->charge->name,
+                'retention' => $query->retention
             ];
         });
     }
