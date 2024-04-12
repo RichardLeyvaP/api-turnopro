@@ -717,9 +717,9 @@ class BranchService
     public function branch_professionals_winner_date($branch_id)
     {
         return $professionals = Professional::whereHas('charge', function ($query){
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get()->map(function ($professional) use ($branch_id){
-            $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($branch_id) {
+            $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
             })->whereHas('orders', function ($query) {
                 $query->whereDate('data', Carbon::now());
@@ -780,9 +780,9 @@ class BranchService
     {
 
         return $professionals = Professional::whereHas('charge', function ($query){
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get()->map(function ($professional) use ($month, $year, $branch_id){
-            $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($branch_id) {
+            $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
             })->whereHas('orders', function ($query) use ($month, $year) {
                 $query->whereMonth('data', $month)->whereYear('data', $year);
@@ -837,8 +837,8 @@ class BranchService
         return $professionals = Professional::whereHas('charge', function ($query){
             $query->where('name', 'Barbero');
         })->get()->map(function ($professional) use ($branch_id, $startDate, $endDate){
-            $cars = Car::whereHas('orders.branchServiceProfessional.branchService', function ($query) use ($branch_id, $startDate, $endDate) {
-                $query->where('branch_id', $branch_id);
+            $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
+                $query->where('branch_id', $branch_id)->orWhere('name', 'Barbero y Encargado');
             })->whereHas('orders', function ($query) use ($startDate, $endDate){
                 $query->whereBetween('data', [$startDate, $endDate]);
             })->whereHas('clientProfessional', function ($query) use ($professional){

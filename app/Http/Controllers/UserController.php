@@ -297,7 +297,7 @@ class UserController extends Controller
                         })->values()->first();
 
                         Log::info($user->professional->branchRules);
-                        if($user->professional->charge_id == 1 || $user->professional->charge_id == 7){
+                        if($user->professional->charge->name == 'Barbero' || $user->professional->charge->name == 'Tecnico' || $user->professional->charge->name == 'Barbero y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                         if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
                             $branchRules = Branch::find($request->branch_id);
@@ -398,7 +398,7 @@ class UserController extends Controller
 
                         //reglas de convivencia
                         Log::info($user->professional->branchRules);
-                        if($user->professional->charge_id == 1 || $user->professional->charge_id == 7){
+                        if($user->professional->charge->name == 'Barbero' || $user->professional->charge->name == 'Tecnico' || $user->professional->charge->name == 'Barbero y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                         if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
                             $branchRules = Branch::find($request->branch_id);

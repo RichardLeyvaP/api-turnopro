@@ -20,9 +20,13 @@ trait ProductExitTrait
         $branch = $store->branches()->value('branches.id');
         $professional = Professional::whereHas('branches', function ($query) use ($branch){
             $query->where('branch_id', [$branch]);
-          })->whereIn('charge_id', [3,4,5])->get()->pluck('email')->toArray();
+          })->whereHas('charge', function ($query) {
+            $query->where('name', 'Administrador')
+                ->orWhere('name', 'Encargado')
+                ->orWhere('name', 'Administrador de Sucursal');
+        })/*->whereIn('charge_id', [3,4,5])*/->get()->pluck('email')->toArray();
         // Verificar si el nuevo valor es menor que 5 y registrar un log
-        if ($productstoreexist->product_exit < 5) {
+        if ($productstoreexist->product_exit < $productstoreexist->stock_depletion) {
             Log::info('Producto con product_exit menor que 5:', ['product' => $product, 'store' => $store, 'product_exit' => $productstoreexist->product_exit, 'Professionals_Emails[]' => $professional,'branches[id]' => $branch]);
             // Puedes agregar aquí cualquier otra acción que necesites realizar
         }
