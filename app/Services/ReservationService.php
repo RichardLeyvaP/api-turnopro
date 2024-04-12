@@ -162,16 +162,12 @@ class ReservationService {
         Log::info("client_history 6");
         $services = Service::withCount(['orders'=> function ($query) use ($data, $reservationids){
             $query->whereHas('car.clientProfessional', function ($query) use ($data){
-                $query->whereHas('professional.branches', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                })->where('client_id', $data['client_id']);
+                $query->where('client_id', $data['client_id']);
             })->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
         $products = Product::withCount(['orders' => function ($query) use ($data, $reservationids){
             $query->whereHas('car.clientProfessional', function ($query) use ($data){
-                $query->whereHas('professional.branches', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                })->where('client_id', $data['client_id']);
+                $query->where('client_id', $data['client_id']);
             })->whereIn('car_id', $reservationids)->where('is_product', 1);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){

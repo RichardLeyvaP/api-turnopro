@@ -345,7 +345,7 @@ class CarController extends Controller
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->get()->map(function($car) use ($retention){
+           })->where('professional_payment_id', '!=', NULL)->get()->map(function($car) use ($retention){
                 $ordersServices = count($car->orders->where('is_product', 0));
                 return [
                     'professional_id' => $car->clientProfessional->professional->id,
@@ -354,7 +354,7 @@ class CarController extends Controller
                     'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($car->reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
                     'attendedClient' => 1,
                     'services' => $ordersServices,
-                    'totalServices' => $retention ? $car->orders->sum('percent_win') - $car->orders->sum('percent_win') * ($retention/100) : $car->orders->sum('percent_win'),
+                    'totalServices' => $retention ? $car->orders->sum('percent_win') - ($car->orders->sum('percent_win') * $retention/100) : $car->orders->sum('percent_win') + $car->tip * 0.80,
                     'clientAleator' => $car->select_professional,
                     'amountGenerate' => $car->amount + $car->tip
                 ];
@@ -384,7 +384,7 @@ class CarController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-           $retention = Professional::where('id', $data['professional_id'])->first()->retention/100;
+           $retention = Professional::where('id', $data['professional_id'])->first()->retention;
            $cars = Car::where('professional_payment_id', Null)->whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
@@ -400,7 +400,7 @@ class CarController extends Controller
                     'data' => $car->reservation->data,
                     'attendedClient' => 1,
                     'services' => $ordersServices,
-                    'totalServices' => $retention ? $car->orders->sum('percent_win') - $car->orders->sum('percent_win') * ($retention/100) : $car->orders->sum('percent_win'),
+                    'totalServices' => $retention ? $car->orders->sum('percent_win') - ($car->orders->sum('percent_win') * $retention/100) : $car->orders->sum('percent_win') + $car->tip * 0.80,
                     'clientAleator' => $car->select_professional,
                     'amountGenerate' => $car->amount + $car->tip,
                     'tip' => $car->tip * 0.80
@@ -437,8 +437,8 @@ class CarController extends Controller
                     'data' => $car->reservation->data.' '.$car->reservation->start_time,
                     'time' => $car->reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
-                    'amountTotal' => $car->orders->where('is_product', 0)->sum('price'),
-                    'amountWin' => $retention ? $car->orders->sum('percent_win') - $car->orders->sum('percent_win') * ($retention/100) : $car->orders->sum('percent_win'),
+                    'amountTotal' => $car->amount + $car->tip,
+                    'amountWin' =>$retention ? $car->orders->sum('percent_win') - ($car->orders->sum('percent_win') * $retention/100) : $car->orders->sum('percent_win') + $car->tip * 0.80,
                     'choice' => $car->select_professional ? 'Seleccionado' : 'aleatorio',
                     'serviceSpecial' => $ServicesSpecial->count(),
                     'SpecialAmount' => $ServicesSpecial->sum('percent_win')
