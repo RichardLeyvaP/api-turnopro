@@ -54,7 +54,25 @@ class ProfessionalService
     {
         return $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
-        })->get();
+        })->get()->map(function ($query) {
+            return [
+                'id' => $query->id,
+                'name' => $query->name,
+                'surname' => $query->surname,
+                'second_surname' => $query->second_surname,
+                'email' => $query->email,
+                'phone' => $query->phone,
+                'created_at' => $query->created_at,
+                'updated_at' => $query->updated_at,
+                'charge_id' => $query->charge_id,
+                'user_id' => $query->user_id,
+                'state' => $query->state,
+                'image_url' => $query->image_url,
+                'business_id' => $query->business_id,
+                'retention' => $query->retention,
+                'charge' => $query->charge->name,
+            ];
+        });
     }
 
     public function verifi_tec_prof($email, $branch_id)
