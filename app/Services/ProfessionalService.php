@@ -81,19 +81,24 @@ class ProfessionalService
         })->first();
         Log::info($professionals);
         if ($professionals) {
-            if( ($professionals->charge_id == 1) || ($professionals->charge_id == 7) || ($professionals->charge_id == 3) || ($professionals->charge_id == 12))
+            if( ($professionals->charge->name == 'Barbero') || ($professionals->charge->name == 'Tecnico') || ($professionals->charge->name == 'Encargado') || ($professionals->charge->name == 'Coordinador')  || ($professionals->charge->name == 'Barbero y Encargado'))
             {
-                if ($professionals->charge_id == 1) {//charge_id == 1
+                if ($professionals->charge->name == 'Barbero') {//charge_id == 1
                     $type = 2;
                     $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                     $professional_id = $professionals->id;
                 }
-                if ($professionals->charge_id == 7) {//charge_id == 7
+                if ($professionals->charge->name == 'Tecnico') {//charge_id == 7
                     $type = 1;
                     $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                     $professional_id = $professionals->id;
                 }
-                if ($professionals->charge_id == 3 || $professionals->charge_id == 12) {//charge_id != 1 && charge_id != 7
+                if ($professionals->charge->name == 'Barbero y Encargado') {//charge_id == 7
+                    $type = 3;
+                    $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
+                    $professional_id = $professionals->id;
+                }
+                if ($professionals->charge->name == 'Encargado' || $professionals->charge->name == 'Coordinador') {//charge_id != 1 && charge_id != 7
                     $type = 0;
                     $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                     $professional_id = $professionals->id;
