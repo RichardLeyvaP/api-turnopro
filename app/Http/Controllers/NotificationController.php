@@ -29,7 +29,8 @@ class NotificationController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric',
                'tittle' => 'required|string',
-               'description' => 'required|string'
+               'description' => 'required|string',
+               'type' => 'required|string'
            ]);
            
            $professional = Professional::find($data['professional_id']);
@@ -38,6 +39,7 @@ class NotificationController extends Controller
             $notification->professional_id = $professional->id;
             $notification->tittle = $data['tittle'];
             $notification->description = $data['description'];
+            $notification->type = $data['type'];
             $branch->notifications()->save($notification);
                 
            return response()->json(['msg' => 'Notifications creada correctamente'], 200);
@@ -54,7 +56,8 @@ class NotificationController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric',
                'tittle' => 'required|string',
-               'description' => 'required|string'
+               'description' => 'required|string',
+               'type' => 'required|string'
            ]);
            
            $professional = Professional::find($data['professional_id']);
@@ -64,6 +67,7 @@ class NotificationController extends Controller
             $notification->tittle = $data['tittle'];
             $notification->description = $data['description'];
             $notification->state = 3;
+            $notification->type = $data['type'];
             $branch->notifications()->save($notification);
                 
            return response()->json(['msg' => 'Notifications creada correctamente desde Coordinador o Responsable '], 200);
@@ -90,6 +94,7 @@ class NotificationController extends Controller
                     'description' => $query->description,
                     'professionalName' => $query->professional->name.' '.$query->professional->surname.' '.$query->professional->surname,
                     'state' => $query->state,
+                    'type' => $query->type,
                     'created_at' => $query->created_at->format('Y-m-d h:i:s A'),
                     'updated_at' => $query->updated_at->format('Y-m-d h:i:s A')
                 ];
@@ -139,6 +144,7 @@ class NotificationController extends Controller
             'tittle' => $query->tittle,
             'description' => $query->description,
             'state' => $query->state,
+            'type' => $query->type,
             'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
             'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
         ];
