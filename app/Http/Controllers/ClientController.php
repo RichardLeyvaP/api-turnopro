@@ -269,15 +269,32 @@ class ClientController extends Controller
                 'branch_id' => 'nullable'
             ]);
 
-            $currentDate = Carbon::now()->format('Y-m-d');
+            $currentDate = Carbon::now();
             if ($data['branch_id'] !=0) {
-                $clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate, $data) {
+                $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate, $data) {
+                    $query->where('branch_id', $data['branch_id'])
+                          ->whereDate('data', $currentDate);
+                })
+                ->whereHas('reservations', function ($query) {
+                    $query->groupBy('client_id')
+                          ->havingRaw('COUNT(*) > 3');
+                })
+                ->get();
+                /*$clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate, $data) {
                         $query->where('branch_id', $data['branch_id'])->whereDate('data', $currentDate);
-                }])->has('reservations', '>', 3)->get();
+                }])->has('reservations', '>', 3)->get();*/
             }else{
-                $clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate){
+                $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate, $data) {
                     $query->whereDate('data', $currentDate);
-                }])->has('reservations', '>', 3)->get();
+                })
+                ->whereHas('reservations', function ($query) {
+                    $query->groupBy('client_id')
+                          ->havingRaw('COUNT(*) > 3');
+                })
+                ->get();
+                /*$clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate){
+                    $query->whereDate('data', $currentDate);
+                }])->has('reservations', '>', 3)->get();*/
             }
             /*
             $query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
