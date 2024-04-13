@@ -271,17 +271,13 @@ class ClientController extends Controller
 
             $currentDate = Carbon::now()->format('Y-m-d');
             if ($data['branch_id'] !=0) {
-                $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate){
-                    $query->whereDate('data', $currentDate);
-                })->withCount('reservations')->whereHas('reservations', function ($query) use ($currentDate, $data) {
-                    $query->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($currentDate, $data){
+                $clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate, $data) {
                         $query->where('branch_id', $data['branch_id'])->whereDate('data', $currentDate);
-                    });
-                })->has('reservations', '>', 3)->get();
+                }])->has('reservations', '>', 3)->get();
             }else{
-                $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate){
+                $clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate){
                     $query->whereDate('data', $currentDate);
-                })->withCount('reservations')->has('reservations', '>', 3)->get();
+                }])->has('reservations', '>', 3)->get();
             }
             /*
             $query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
@@ -306,11 +302,11 @@ class ClientController extends Controller
             Log::info($data);
             if ($data['branch_id'] !=0) {
                 Log::info('es una branch');
-                $clientesConMasDeTresReservas = Client::withCount('reservations')->whereHas('reservations.car.clientProfessional.professional.branches', function ($query) use ($data) {
+                $clientesConMasDeTresReservas = Client::withCount(['reservations' => function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id']);
                     ///});
-                })->get()->map(function ($query){
+                }])->get()->map(function ($query){
                     /*$yearCant = 0;
                     $yearCant = $query->whereHas('reservations', function ($query){
                         $query->whereYear('data', Carbon::now()->format('Y'));
