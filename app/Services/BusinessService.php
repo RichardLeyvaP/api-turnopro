@@ -22,9 +22,9 @@ class BusinessService
            $total_tip = 0;
            $technical_assistance = 0;
            foreach ($business as $busine) {
-            $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($busine){
+            $cars = Car::/*whereHas('reservation.branch', function ($query) use ($busine){
                     $query->where('business_id', $busine->id);
-            })->whereHas('orders', function ($query) use ($month, $year){
+            })->*/whereHas('reservation', function ($query) use ($month, $year){
                 $query->whereMonth('data', $month)->whereYear('data', $year);
                 })->get()->map(function ($car){
                     return [
@@ -62,10 +62,10 @@ class BusinessService
            $total_tip = 0;
            $technical_assistance = 0;
            foreach ($business as $busine) {
-            $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($busine){
+            $cars = Car::/*whereHas('reservation.branch', function ($query) use ($busine){
                     $query->where('business_id', $busine->id);
-            })->whereHas('orders', function ($query) use ($startDate ,$endDate){
-                $query->whereBetWeen('data', [$startDate ,$endDate]);
+            })->*/whereHas('reservation', function ($query) use ($startDate ,$endDate){
+                $query->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);//$query->whereBetWeen('data', [$startDate ,$endDate]);
                 })->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
@@ -103,9 +103,9 @@ class BusinessService
            $technical_assistance = 0;
            $data= Carbon::now()->toDateString();
            foreach ($business as $busine) {
-            $cars = Car::whereHas('clientProfessional.professional.branches', function ($query) use ($busine){
+            $cars = Car::/*whereHas('reservation.branch', function ($query) use ($busine){
                     $query->where('branch_id', $busine->id);
-            })->whereHas('orders', function ($query) use ($data){
+            })->*/whereHas('reservation', function ($query) use ($data){
                 $query->whereDate('data', $data);
                 })->get()->map(function ($car){
                     return [

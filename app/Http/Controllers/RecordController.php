@@ -122,7 +122,7 @@ class RecordController extends Controller
             ]);
             $llegadasTardias = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
-                ->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()
                 ->filter(function ($registro) use ($data) {
                     // Obtiene el nombre del día de la semana en español
@@ -457,7 +457,7 @@ class RecordController extends Controller
             $professionalId = Professional::find($data['professional_id']);
             if ($branchId && $professionalId) {
                 $llegadasTardias = Record::with('professional')->where('branch_id', $branchId->id)->where('professional_id', $professionalId->id)
-                ->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
                     ->get()
                     ->filter(function ($registro) {
                         // Obtiene el nombre del día de la semana en español
@@ -605,7 +605,7 @@ class RecordController extends Controller
             ]);
             $llegadasTardias = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
-                ->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()
                 ->filter(function ($registro) use ($data) {
                     // Obtiene el nombre del día de la semana en español
