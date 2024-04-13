@@ -179,7 +179,8 @@ class BranchController extends Controller
                 'address' => 'required|max:50',
                 'business_id' => 'required|numeric',
                 'business_type_id' => 'required|numeric',
-                'useTechnical' => 'required|numeric'
+                'useTechnical' => 'required|numeric',
+                'location' => 'nullable'
             ]);
 
             $branch = new Branch();
@@ -189,6 +190,7 @@ class BranchController extends Controller
             $branch->business_id = $branch_data['business_id'];
             $branch->business_type_id = $branch_data['business_type_id'];
             $branch->useTechnical = $branch_data['useTechnical'];
+            $branch->location = $branch_data['location'];
             $branch->save();
             $filename = "branches/default.jpg";
             if ($request->hasFile('image_data')) {
@@ -216,7 +218,8 @@ class BranchController extends Controller
                 'address' => 'required|max:50',
                 'business_id' => 'required|numeric',
                 'business_type_id' => 'required|numeric',
-                'useTechnical' => 'required|numeric'
+                'useTechnical' => 'required|numeric',
+                'location' => 'nullable'
             ]);
             Log::info($branch_data);
             $branch = Branch::find($branch_data['id']);
@@ -235,12 +238,13 @@ class BranchController extends Controller
             $branch->business_id = $branch_data['business_id'];
             $branch->business_type_id = $branch_data['business_type_id'];
             $branch->useTechnical = $branch_data['useTechnical'];
+            $branch->location = $branch_data['location'];
             $branch->save();
 
             return response()->json(['msg' => 'Sucursal actualizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-            return response()->json(['msg' => $th->getMessage().'Error interno del sistema123k3'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 

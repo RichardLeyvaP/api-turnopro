@@ -415,7 +415,7 @@ Route::get('/card-gift-user-show-value', [CardGiftUserController::class, 'show_v
 Route::get('/enrollment', [EnrollmentController::class, 'index']);
 Route::get('/enrollment-show', [EnrollmentController::class, 'show']);
 Route::post('/enrollment', [EnrollmentController::class, 'store']);
-Route::put('/enrollment', [EnrollmentController::class, 'update']);
+Route::post('/enrollment-updated', [EnrollmentController::class, 'update']);
 Route::post('/enrollment-destroy', [EnrollmentController::class, 'destroy']);
 
 Route::get('/student', [StudentController::class, 'index']);
@@ -539,7 +539,7 @@ Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) 
     $response->header("Content-Type", $type);
 
     return $response;
-})->where(['folder' => 'professionals|clients|comments|products|services|branches|image|pdfs|licenc', 'filename' => '.*']);
+})->where(['folder' => 'professionals|clients|comments|products|services|branches|image|pdfs|licenc|enrollments', 'filename' => '.*']);
 
 
 

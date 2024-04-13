@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Branch;
 use App\Models\BranchService;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
@@ -125,14 +126,27 @@ class ReservationService {
                  ];   
          }
          Log::info("client_history 2");
-       $reservations = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
+       /*$reservations = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
             $query->where('client_id', $data['client_id']);
-        })->get();
+        })->get();*/
+        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
+            $query->where('client_id', $data['client_id']);
+        })->orderByDesc('data')->get();
+        $tempBranch = $reservations->first();
+        $branch_id = $tempBranch->branch_id;
+        if ($branch_id) {           
+        $branchName = Branch::where('id', $branch_id)->first()->value('name');
+        }
+        else{
+            $branchName = ''; 
+        }
         Log::info("client_history 3");
         if(!$reservations){
             Log::info("client_history 4");
            return  $result = [
                 'clientName' => '', 
+                'professionalName' => '',
+                'branchName' => '',
                 'imageLook' => 'comments/default_profile.jpg',
                 'image_url' => 'professionals/default_profile.jpg',             
                 'cantVisit' => 0,
@@ -144,7 +158,10 @@ class ReservationService {
                 ];   
         }
         if ($reservations->count()>=12) {
-            $fiel = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
+            /*$fiel = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
+                $query->where('client_id', $data['client_id']);
+            })->whereYear('data', Carbon::now()->year)->count();*/
+            $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
                 $query->where('client_id', $data['client_id']);
             })->whereYear('data', Carbon::now()->year)->count();
         }
@@ -156,7 +173,10 @@ class ReservationService {
         }
         //$client = Client::find($data['client_id']);
         Log::info("client_history 5");
-       $reservationids = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
+    /*$reservationids = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
+        $query->where('client_id', $data['client_id']);
+    })->orderByDesc('data')->take(3)->get()->pluck('car_id');*/
+       $reservationids = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
         $query->where('client_id', $data['client_id']);
     })->orderByDesc('data')->take(3)->get()->pluck('car_id');
         Log::info("client_history 6");
@@ -178,6 +198,7 @@ class ReservationService {
             $result = [
                 'clientName' => $client->name." ".$client->surname, 
                 'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname,
+                'branchName' => $branchName,
                 'image_url' => $comment->clientProfessional->professional->image_url ? $comment->clientProfessional->professional->image_url : 'professionals/default_profile.jpg',
                 'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
                 'cantVisit' => $reservations->count(),

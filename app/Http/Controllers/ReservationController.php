@@ -494,7 +494,7 @@ class ReservationController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric',
+                //'branch_id' => 'required|numeric',
                 'client_id' => 'required|numeric'
             ]);
             $history = $this->reservationService->client_history($data);
