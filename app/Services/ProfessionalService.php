@@ -198,7 +198,7 @@ class ProfessionalService
         $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get();
         foreach($professionals1 as $professional1){
             $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
