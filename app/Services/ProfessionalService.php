@@ -376,7 +376,7 @@ class ProfessionalService
         $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get();
 
         foreach ($professionals as $professional) {
@@ -668,7 +668,7 @@ class ProfessionalService
         $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get();
         
 
@@ -1059,7 +1059,7 @@ class ProfessionalService
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->whereHas('charge', function ($query){
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->where(function ($query) use ($endTimeThreshold) {
             $query->orWhereDoesntHave('tails')
                 ->orWhereHas('tails', function ($subquery) {

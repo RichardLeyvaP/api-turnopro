@@ -835,7 +835,7 @@ class BranchService
     public function branch_professionals_winner_periodo($branch_id, $startDate, $endDate)
     {
         return $professionals = Professional::whereHas('charge', function ($query){
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get()->map(function ($professional) use ($branch_id, $startDate, $endDate){
             $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
                 $query->where('branch_id', $branch_id)->orWhere('name', 'Barbero y Encargado');
