@@ -200,7 +200,7 @@ class BranchServiceProfessionalController extends Controller
             ]);
             $branchServices = BranchServiceProfessional::where('branch_service_id', $data['branch_service_id'])->whereHas('professional', function ($query){
                 $query->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero');
+                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
                 });
             })->get()->map(function ($branchService){
                 return [
@@ -258,7 +258,7 @@ class BranchServiceProfessionalController extends Controller
             $branch_id = $branchservprof->first()->branchService->branch_id;
             $ids = $branchservprof->pluck('professional_id');
             $professionals = Professional::whereNotIn('id', $ids)->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero');
+                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
             })->whereHas('branches', function ($query) use ($branch_id){
                 $query->where('branch_id', $branch_id);
             })->get()->map(function ($professional){
@@ -278,7 +278,7 @@ class BranchServiceProfessionalController extends Controller
     public function branch_service_professional($data)
     {
         try {
-            Log::info("Entra a buscar los productos de un almacén");
+            Log::info("Asignar");
             $branchServiceProfessional = BranchServiceProfessional::where('branch_service_id', $data['branch_service_id'])->where('professional_id', $data['professional_id'])->first();
             if (!$branchServiceProfessional) {
                 $branchServiceProfessional = new BranchServiceProfessional();
