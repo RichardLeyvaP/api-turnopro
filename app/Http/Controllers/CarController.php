@@ -136,7 +136,7 @@ class CarController extends Controller
             }*/
                         } else {
                             $cars = Car::whereHas('reservations', function ($query) use ($start, $end){
-                                $query->whereBetween('data', [$start, $end]);
+                                $query->whereDate('data', '>=', $start)->whereDate('data', '<=', $end);
                             })->get()->map(function ($car){
                                     return [
                                         'date' => $car->reservations->data,
