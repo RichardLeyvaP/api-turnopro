@@ -180,9 +180,14 @@ class WorkplaceController extends Controller
 
     public function resetWorkplaces()
     {
+        try{
         Workplace::query()->update(['busy' => 0, 'select' => 0]);
 
         return response()->json(['msg' => 'Puestos de Trabajo actualizados correctamente'], 200);
+    } catch (\Throwable $th) {
+        Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+    }
     }
 
 }

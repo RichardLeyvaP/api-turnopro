@@ -33,6 +33,7 @@ class SendMailController extends Controller
 
 public function sendMessage(Request $request)
 {
+    try{
     Log::info("sendMessage Whatsapp1");
    // $url = env('WHATSAPP_API_URL');
     $url = 'https://graph.facebook.com/v18.0/113984608247982/messages';
@@ -56,10 +57,15 @@ public function sendMessage(Request $request)
     Log::info("sendMessage Whatsapp2");
     Log::info((string) $response->getBody());
     return response()->json(json_decode((string) $response->getBody(), true));
+    } catch (\Throwable $th) {  
+        Log::error($th);
+        return response()->json(['msg' => "Error interno del sistema"], 500);
+    }
 }
 
 public function emailBoxClosure($client_email,$type)
     {
+        try{
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'cierrecaja';       
 
@@ -68,6 +74,10 @@ public function emailBoxClosure($client_email,$type)
               Log::info($client_email);
               $mail = new Send_mail($logoUrl, '$client_name','$data_reservation',$template,'$start_time','$branch_name',$type);
               $this->sendEmail($client_email,$mail);
+            } catch (\Throwable $th) {  
+                Log::error($th);
+                return response()->json(['msg' => "Error interno del sistema"], 500);
+            }
 
 
 }

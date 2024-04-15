@@ -24,6 +24,7 @@ class BranchServiceProfessionalController extends Controller
     }
     public function store_professional_service(Request $request)
     {
+        try {
         $request->validate([
             'branch_service_ids' => 'required|array',
             'branch_service_ids.*' => 'exists:branch_service,id',
@@ -49,6 +50,9 @@ class BranchServiceProfessionalController extends Controller
         DB::table('branch_service_professional')->insert($dataToInsert);
 
         return response()->json(['message' => 'Asociaciones actualizadas con éxito'], 200);
+    } catch (\Throwable $th) {
+        return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+    }
     }
     public function services_professional_branch(Request $request)
     {

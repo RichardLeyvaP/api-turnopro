@@ -172,18 +172,18 @@ class ScheduleController extends Controller
             Log::info($data);
             $branch = Branch::find($data['branch_id']);
 
-// Iteramos sobre los horarios proporcionados
-foreach ($data['schedule'] as $scheduleData) {
-    $day = $scheduleData['day'];
-    $startTime = $scheduleData['start_time'];
-    $closingTime = $scheduleData['closing_time'];
+            // Iteramos sobre los horarios proporcionados
+            foreach ($data['schedule'] as $scheduleData) {
+                $day = $scheduleData['day'];
+                $startTime = $scheduleData['start_time'];
+                $closingTime = $scheduleData['closing_time'];
 
-    // Actualizamos o creamos el registro
-    $branch->schedule()->updateOrCreate(
-        ['day' => $day],
-        ['start_time' => $startTime, 'closing_time' => $closingTime]
-    );
-}
+                // Actualizamos o creamos el registro
+                $branch->schedule()->updateOrCreate(
+                    ['day' => $day],
+                    ['start_time' => $startTime, 'closing_time' => $closingTime]
+                );
+            }
             /*$SchedSchedule_data = $request->validate([
                 'id' => 'required|numeric',
                 'day' => 'required|max:50|',

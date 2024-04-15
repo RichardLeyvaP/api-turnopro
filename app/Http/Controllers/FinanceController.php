@@ -444,6 +444,7 @@ class FinanceController extends Controller
 
     public function details_operations(Request $request)
     {
+        try {
         $data = $request->validate([
             'branch_id' => 'required|numeric',
             'year' => 'nullable'
@@ -607,6 +608,7 @@ class FinanceController extends Controller
         
         return $tableFinance = array_merge_recursive($tableRevenueCollection, $tableExpenseCollection);
 
+
         // Transformar los datos en una colección de objetos para usar en Vue.js
         //$tableFinanceCollection = collect($tableFinance)->values()->all();
 
@@ -615,9 +617,13 @@ class FinanceController extends Controller
                 // Transformar los datos en una colección de objetos para usar en Vue.js
 
                 //return $tableRevenueCollection->concat($tableExpenseCollection);
+            } catch (\Throwable $th) {
+                return response()->json(['msg' => 'Error interno del sistema'], 500);
+            }
     }
     public function details_operations_month(Request $request)
     {
+        try{
         $data = $request->validate([
             'branch_id' => 'required|numeric',
             'year' => 'nullable',
@@ -791,5 +797,8 @@ class FinanceController extends Controller
                 // Transformar los datos en una colección de objetos para usar en Vue.js
 
                 //return $tableRevenueCollection->concat($tableExpenseCollection);
+            } catch (\Throwable $th) {
+                return response()->json(['msg' => 'Error interno del sistema'], 500);
+            }
     }
 }
