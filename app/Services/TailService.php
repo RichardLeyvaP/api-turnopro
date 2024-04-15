@@ -179,7 +179,7 @@ class TailService {
         $tail->attended = $attended;
         $tail->save();
         if ($attended == 5) {
-            $car = Car::whereHas('reservations', function ($query) use ($reservation_id){
+            $car = Car::whereHas('reservation', function ($query) use ($reservation_id){
                 $query->where('id', $reservation_id);
             })->first();
             $car->technical_assistance = $car->technical_assistance + 1;
@@ -198,13 +198,16 @@ class TailService {
             $query->where('is_product', false);
         })->where('attended', 1)->get();
         if (count($tails) > 3) {
+            Log::info('$tails>3');
             return false;
         }elseif (count($tails) < 1) {
+            Log::info('$tails<1');
             return true;
         }
         else {
+            Log::info('else');
             foreach ($tails as $tail) {            
-            foreach ($tail->reservation->car->orders as $orderData) {
+            foreach ($tail->reservation->car->orders->where('is_product', false) as $orderData) { 
                 if ($orderData->branchServiceProfessional->branchService->service->simultaneou == 1) {
                     return true;
                 }
