@@ -497,7 +497,7 @@ class BranchService
                     'tip' => $car->tip,
                     'product' => $products,
                     'service' => $services,
-                    'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                    'total' => $car->amount + $car->technical_assistance * 5000
                 ];
             });
             $result[$i]['name'] = $branch->name;
@@ -729,7 +729,7 @@ class BranchService
             $winProfessional =$cars->sum(function ($car){
                 return $car->orders->sum('percent_win');
             });
-            $retentionPorcent = round($winProfessional * ($retention /100));
+            $retentionPorcent = round($winProfessional * $retention /100);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
@@ -845,7 +845,7 @@ class BranchService
             $winProfessional =$cars->sum(function ($car){
                 return $car->orders->sum('percent_win');
             });
-            $retentionPorcent = round($winProfessional * ($retention /100));
+            $retentionPorcent = round($winProfessional * $retention /100);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
