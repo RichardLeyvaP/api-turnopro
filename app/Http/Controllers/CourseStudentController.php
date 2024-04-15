@@ -209,7 +209,7 @@ class CourseStudentController extends Controller
                 'image_url' => 'nullable',
             ]);
             $student = Student::find($data['student_id']);
-            $totalAnt = $student->courses()->wherePivot('course_id', $data['course_id'])->value('total_payment');
+           $totalAnt = $student->courses()->wherePivot('course_id', $data['course_id'])->value('total_payment');
             $filename = "image/default.png"; 
             if ($request->hasFile('image_url')) {
                 Log::info("tiene una imagen");
@@ -228,7 +228,8 @@ class CourseStudentController extends Controller
             ]); 
 
             //agregar a Finanzas
-            $course = Course::find($data['course_id']);  
+           $course = Course::find($data['course_id']);  
+           
             //return $course->enrollment_id;       
             $finance = Finance::where('enrollment_id', $course->enrollment_id)->where('revenue_id', 3)->whereDate('data', Carbon::now())->first();
             if($finance){
@@ -249,12 +250,12 @@ class CourseStudentController extends Controller
             }
             else{
                 Log::info('no existe');
-                $finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
+                /*$finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
                 if($finance){
                     $control = $finance->control;
-                }
+                }*/
                 $finance = new Finance();
-                $finance->control = $control+1;
+                $finance->control = 1;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['total_payment'];
                 $finance->comment = 'Matriculado en Curso';
