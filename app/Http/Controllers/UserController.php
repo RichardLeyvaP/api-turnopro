@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\Client;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Record;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -553,9 +554,16 @@ class UserController extends Controller
         }
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
+            $record->end_time = Carbon::now();
+            $record->save();
             auth()->user()->tokens()->delete();
             return response()->json([
                 "msg" => "Session cerrada correctamente"

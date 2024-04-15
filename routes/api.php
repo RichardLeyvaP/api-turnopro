@@ -82,7 +82,7 @@ Route::get('change_password', [UserController::class, 'change_password']);
 
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
-    Route::get('logout', [UserController::class, 'logout']);
+    Route::post('logout', [UserController::class, 'logout']);
 });
 Route::get('/time', function () {
     //return now(); // Devuelve la hora actual.
