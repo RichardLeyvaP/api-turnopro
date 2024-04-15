@@ -475,7 +475,7 @@ class ProfessionalController extends Controller
 
             Log::info("entra a buscar cargo");
             $data = $request->validate([
-                'email' => 'required|email',
+                'email' => 'required',
                 'branch_id' => 'required|numeric'
             ]);
             $professionals = $this->professionalService->verifi_tec_prof($data['email'], $data['branch_id']);

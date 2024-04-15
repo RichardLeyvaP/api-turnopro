@@ -229,7 +229,7 @@ class CourseStudentController extends Controller
 
             //agregar a Finanzas
            $course = Course::find($data['course_id']);  
-           
+           //$finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
             //return $course->enrollment_id;       
             $finance = Finance::where('enrollment_id', $course->enrollment_id)->where('revenue_id', 3)->whereDate('data', Carbon::now())->first();
             if($finance){
@@ -250,15 +250,19 @@ class CourseStudentController extends Controller
             }
             else{
                 Log::info('no existe');
-                /*$finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
-                if($finance){
-                    $control = $finance->control;
-                }*/
+                $finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
+                if($finance !== null && !$finance->isEmpty())
+                    {
+                        $control = $finance->control+1;
+                    }
+                    else {
+                        $control = 1;
+                    }
                 $finance = new Finance();
-                $finance->control = 1;
+                $finance->control = $control;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['total_payment'];
-                $finance->comment = 'Matriculado en Curso';
+                $finance->comment = 'Ingreso por matrícula de estudiante en curso';
                 $finance->enrollment_id = $course->enrollment_id;
                 $finance->type = 'Academia';
                 $finance->revenue_id = 3;
