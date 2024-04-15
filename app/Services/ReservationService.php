@@ -115,8 +115,10 @@ class ReservationService {
             return  $result = [
                  'clientName' => null,
                  'professionalName' => null,
-                 'image_url' => 'professionals/default_profile.jpg',
-                 'imageLook' => 'comments/default_profile.jpg',             
+                 'branchName' => '',
+                 'image_data' => '',
+                 'image_url' => '',
+                 'imageLook' => '',             
                  'cantVisit' => 0,
                  'endLook' => '',
                  'lastDate' => '',
@@ -132,6 +134,22 @@ class ReservationService {
         $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
             $query->where('client_id', $data['client_id']);
         })->orderByDesc('data')->get();
+        if(!$reservations){
+            return  $result = [
+                'clientName' => '', 
+                'professionalName' => '',
+                'branchName' => '',
+                'image_data' => '',
+                'imageLook' => '',
+                'image_url' => '',             
+                'cantVisit' => 0,
+                'endLook' => '',
+                'lastDate' => '',
+                'frecuencia' => 0,
+                'services' =>  [],
+                'products' => []
+                ];   
+        }
         $tempBranch = $reservations->first();
         $branch_id = $tempBranch->branch_id;
         if ($branch_id) {           
@@ -147,8 +165,9 @@ class ReservationService {
                 'clientName' => '', 
                 'professionalName' => '',
                 'branchName' => '',
-                'imageLook' => 'comments/default_profile.jpg',
-                'image_url' => 'professionals/default_profile.jpg',             
+                'image_data' => '',
+                'imageLook' => '',
+                'image_url' => '',             
                 'cantVisit' => 0,
                 'endLook' => '',
                 'lastDate' => '',
@@ -194,16 +213,17 @@ class ReservationService {
             $query->where('client_id', $client->id);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         
-        if ($comment && $comment->clientProfessional) {
+        if ($comment && $comment->clientProfessional && $reservations) {
             $result = [
                 'clientName' => $client->name." ".$client->surname, 
                 'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname,
                 'branchName' => $branchName,
+                'image_data' => $tempBranch->image_data ? $tempBranch->image_data : 'branches/default.jpg',
                 'image_url' => $comment->clientProfessional->professional->image_url ? $comment->clientProfessional->professional->image_url : 'professionals/default_profile.jpg',
                 'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',             
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
-                'lastDate' => Carbon::parse($comment->data)->format('d/m/Y'),
+                'lastDate' => $tempBranch->data,
                 'frecuencia' => $fiel ? $fiel : $frecuencia,
                 'services' => $services->map(function ($service) use ($cantMaxService){
                     return [
@@ -238,7 +258,7 @@ class ReservationService {
               ];
         } else {
             // Manejar la situación cuando el objeto es nulo
-            $clientProfessional = ClientProfessional::where('client_id', $data['client_id'])->first();
+            /*$clientProfessional = ClientProfessional::where('client_id', $data['client_id'])->first();
 
 if ($clientProfessional) {
     $professional = $clientProfessional->professional;   
@@ -281,7 +301,20 @@ if ($clientProfessional) {
                     ];
                 }),
                 'cantMaxService' => $services->max('orders_count')
-              ];
+              ];*/
+              return  $result = [
+                'clientName' => '', 
+                'professionalName' => '',
+                'branchName' => '',
+                'imageLook' => 'comments/default_profile.jpg',
+                'image_url' => 'professionals/default_profile.jpg',             
+                'cantVisit' => 0,
+                'endLook' => '',
+                'lastDate' => '',
+                'frecuencia' => 0,
+                'services' =>  [],
+                'products' => []
+                ];   
         }
         
           Log::info("client_history 7");

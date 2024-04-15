@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Business;
 use App\Models\Car;
 use App\Models\Client;
+use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -406,11 +407,15 @@ class ClientController extends Controller
             ]);
             Log::info($data);
                 Log::info('es una branch');
+                
                 $clientesConMasDeTresReservas = Client::withCount(['reservations' => function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
                     ///});
-                }])->get()->map(function ($query){
+                }])->get()->map(function ($query) use ($data){
+                    $reservation = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->whereHas('car.clientProfessional', function ($reservation) use ($query){
+                        $reservation->where('client_id', $query->id);
+                    })->orderByDesc('data')->first();
                     /*$yearCant = 0;
                     $yearCant = $query->whereHas('reservations', function ($query){
                         $query->whereYear('data', Carbon::now()->format('Y'));
@@ -437,7 +442,7 @@ class ClientController extends Controller
                         'client_image' =>$query->client_image,
                         'frecuence' =>  $frecuence,
                         'cant_visist' => $query->reservations_count,
-                        //'year' => $yearCant
+                        'data' => $reservation ? $reservation->data : 'No ha sido atendido'
                     ];
                 });
             

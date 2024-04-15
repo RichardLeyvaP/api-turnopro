@@ -96,7 +96,7 @@ class BoxCloseController extends Controller
                 'client' => '',
                 'amount' => $data['totalMount'],
                 'operation' => 'Cierre de Caja',
-                'details' => '',
+                'details' => 'Ingreso diario',
                 'description' => ''
             ];
             $this->traceService->store($trace);

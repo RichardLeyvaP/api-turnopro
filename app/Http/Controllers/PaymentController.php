@@ -121,10 +121,10 @@ class PaymentController extends Controller
                 'branch' => $branch->name,
                 'cashier' => $request->nameProfessional,
                 'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
-                'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift']+$data['tip'],
+                'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift'],
                 'operation' => 'Paga Carro',
-                'details' => '',
-                'description' => ''
+                'details' => 'Carro: '.$car->id,
+                'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
             ];
             $this->traceService->store($trace);
             Log::info('$trace');
