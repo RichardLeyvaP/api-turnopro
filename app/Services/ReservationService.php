@@ -188,8 +188,8 @@ class ReservationService
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         Log::info('$reservations');
         Log::info($reservations);
-        if ($comment && $comment->clientProfessional && $reservations) {
-
+        if ($reservations !== null && !$reservations->isEmpty()) {
+            Log::info('Tiene Reserva');
             $tempBranch = $reservations->first();
             $branch_id = $tempBranch->branch_id;
             if ($branch_id) {
