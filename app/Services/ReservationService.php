@@ -131,7 +131,7 @@ class ReservationService {
        /*$reservations = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
             $query->where('client_id', $data['client_id']);
         })->get();*/
-        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
+       $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data){
             $query->where('client_id', $data['client_id']);
         })->orderByDesc('data')->get();
         if(!$reservations){
@@ -149,14 +149,6 @@ class ReservationService {
                 'services' =>  [],
                 'products' => []
                 ];   
-        }
-        $tempBranch = $reservations->first();
-        $branch_id = $tempBranch->branch_id;
-        if ($branch_id) {           
-        $branchName = Branch::where('id', $branch_id)->first()->value('name');
-        }
-        else{
-            $branchName = ''; 
         }
         Log::info("client_history 3");
         if(!$reservations){
@@ -214,6 +206,15 @@ class ReservationService {
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         
         if ($comment && $comment->clientProfessional && $reservations) {
+            
+        $tempBranch = $reservations->first();
+        $branch_id = $tempBranch->branch_id;
+        if ($branch_id) {           
+        $branchName = Branch::where('id', $branch_id)->first()->value('name');
+        }
+        else{
+            $branchName = ''; 
+        }
             $result = [
                 'clientName' => $client->name." ".$client->surname, 
                 'professionalName' => $comment->clientProfessional->professional->name.' '.$comment->clientProfessional->professional->surname,

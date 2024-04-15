@@ -122,8 +122,10 @@ class ProductController extends Controller
            
            //if ($data['branch_id'] !=0) {
             Log::info('Es branch');
-            $products = Product::withCount('orders')->whereHas('productStores', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+            $products = Product::withCount(['orders' => function ($query){
+                $query->whereDate('data', Carbon::now());
+            }])->whereHas('productStores', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
             })->orderByDesc('orders_count')->get();
            //}
            /*else {
