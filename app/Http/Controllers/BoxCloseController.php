@@ -7,6 +7,7 @@ use App\Models\Box;
 use App\Models\BoxClose;
 use App\Models\Branch;
 use App\Models\CloseBox;
+use App\Models\Finance;
 use App\Models\Professional;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -101,6 +102,26 @@ class BoxCloseController extends Controller
             $this->traceService->store($trace);
             Log::info('$trace');
             Log::info($trace);
+            //Agregar a tabla de ingresos
+            $finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 5)->whereDate('data', Carbon::now())->first();
+                            Log::info('no existe');
+                $finance = Finance::where('branch_id', $branch->id)->orderByDesc('control')->first();
+                if($finance){
+                    $control = $finance->control;
+                }
+                $finance = new Finance();
+                $finance->control = $control+1;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $data['totalMount'];
+                $finance->comment = 'Ingreso diario';
+                $finance->branch_id = $branch->id;
+                $finance->type = 'Sucursal';
+                $finance->revenue_id = 5;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->save();
+            //end agregar a tabla de ingresos
+            
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena

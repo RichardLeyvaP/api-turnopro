@@ -82,7 +82,8 @@ class OrderController extends Controller
                 'car_id' => 'required|numeric',
                 'product_id' => 'required|numeric',
                 'service_id' => 'required|numeric',
-                'type' => 'required'
+                'type' => 'required',
+                'cant' => 'required'
 
             ]);
             $car = Car::find($data['car_id']);            
@@ -304,9 +305,11 @@ class OrderController extends Controller
             Log::info($car);
             if ($order->is_product) {                
             Log::info("Es producto");
+            
                 $productstore = ProductStore::find($order->product_store_id);
-                $productstore->product_quantity = 1;
-                $productstore->product_exit = $productstore->product_exit + 1;
+                $cant = $order->price / $productstore->product->sale_price;
+                $productstore->product_quantity = $cant;
+                $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
                 $trace = [
                     'branch' => $branch->name,
@@ -360,7 +363,7 @@ class OrderController extends Controller
             return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info("Eliminar orden:$th");
-            return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
 }

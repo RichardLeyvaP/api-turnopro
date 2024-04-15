@@ -65,10 +65,15 @@ class StudentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show()
+    public function show(Request $request)
     {
         try {
-            $students = Student::all()->map(function ($student){
+            $data = $request->validate([
+                'course_id' => 'required|numeric'
+            ]);
+            $students = Student::whereDoesntHave('courses', function ($query) use ($data){
+                $query->where('course_id', $data['course_id']);
+            })->get()->map(function ($student){
                 return [
                     'id' => $student->id,
                     'name' => $student->name.' '.$student->surname.' '.$student->second_surname,
@@ -76,9 +81,17 @@ class StudentController extends Controller
 
                 ];
             });
+            /*$students = Student::all()->map(function ($student){
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name.' '.$student->surname.' '.$student->second_surname,
+                    'client_image' => $student->student_image
+
+                ];
+            });*/
             return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar el estudiante"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar el estudiante"], 500);
         }
     }
 

@@ -22,7 +22,7 @@ class OrderService {
             $car = Car::findOrFail($data['car_id']);
             $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $sale_price = $productStore->product()->first()->sale_price;
-                    $car->amount = $car->amount + $sale_price;
+                    $car->amount = $car->amount + $sale_price * $data['cant'];
                     $car->save();
                 $car_id = $car->id;
                     //rebajar la existencia
@@ -38,7 +38,7 @@ class OrderService {
                  $order->branch_service_professional_id = null;
                  $order->data = Carbon::now();
                  $order->is_product = true;
-                 $order->price = $sale_price;               
+                 $order->price = $sale_price*$data['cant'];               
                  $order->request_delete = false;
                  $order->save();
         return $order;

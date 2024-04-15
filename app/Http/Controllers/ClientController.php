@@ -396,6 +396,62 @@ class ClientController extends Controller
         }
     }
 
+    public function clients_frecuence_periodo(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'nullable',
+                'startDate' => 'nullable',
+                'endDate' => 'nullable'
+            ]);
+            Log::info($data);
+                Log::info('es una branch');
+                $clientesConMasDeTresReservas = Client::withCount(['reservations' => function ($query) use ($data) {
+                    ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
+                    ///});
+                }])->get()->map(function ($query){
+                    /*$yearCant = 0;
+                    $yearCant = $query->whereHas('reservations', function ($query){
+                        $query->whereYear('data', Carbon::now()->format('Y'));
+                    })->count();*/
+                    if($query->reservations_count >= 12){
+                        $frecuence = 'Fiel';
+                        Log::info('Es Fiel');                        
+                        Log::info($frecuence);
+                    }
+                    if($query->reservations_count >= 2){
+                        $frecuence = 'Frecuente';
+                        Log::info('Es Frecuente');  
+                        Log::info($frecuence);
+                    } 
+                    else{
+                        $frecuence = 'No Frecuente';
+                        Log::info('No es frecuente');                        
+                        Log::info($frecuence);
+                    }                    
+                    return [
+                        'name' => $query->name.' '.$query->surname.' ' .$query->second_surname,
+                        'email' =>$query->email,
+                        'phone' =>$query->phone,
+                        'client_image' =>$query->client_image,
+                        'frecuence' =>  $frecuence,
+                        'cant_visist' => $query->reservations_count,
+                        //'year' => $yearCant
+                    ];
+                });
+            
+            
+
+            //$cantidadClientes = $clientesConMasDeTresReservas->count();
+
+            return response()->json($clientesConMasDeTresReservas, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
+        }
+    }
+
+
 
     public function client_email_phone(Request $request)
     {

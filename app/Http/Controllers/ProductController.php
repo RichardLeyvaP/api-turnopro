@@ -117,24 +117,56 @@ class ProductController extends Controller
     {
         try {
             $data = $request->validate([
-                'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
            
-           if ($data['branch_id'] !=0) {
+           //if ($data['branch_id'] !=0) {
             Log::info('Es branch');
             $products = Product::withCount('orders')->whereHas('productStores', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
+            $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
             })->orderByDesc('orders_count')->get();
-           }
-           else {
+           //}
+           /*else {
             Log::info('bussines');
             $products = Product::withCount('orders')->orderByDesc('orders_count')->get();
-           }
+           }*/
         
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
+           return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
+       }
+    }
+
+    public function product_mostSold_periodo(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'nullable',
+                'startDate' => 'nullable',
+                'endDate' => 'nullable'
+            ]);
+           
+           //if ($data['branch_id'] !=0) {
+            Log::info('Es branch');
+            $products = Product::withCount(['orders' => function ($query) use ($data){
+                $query->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
+            }])->whereHas('productStores', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+            })->orderByDesc('orders_count')->get();
+            /*return $products = Product::whereHas(['orders' => function ($query) use ($data){
+                $query->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->whereHas('car.reservation', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                });
+            }])->get();*/
+           /*}
+           else {
+            Log::info('bussines');
+            $products = Product::withCount('orders')->orderByDesc('orders_count')->get();
+           }*/
+        
+          return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
+       } catch (\Throwable $th) {
+           return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
        }
     }
 

@@ -456,7 +456,7 @@ class RecordController extends Controller
             $branchId = Branch::find($data['branch_id']);
             $professionalId = Professional::find($data['professional_id']);
             if ($branchId && $professionalId) {
-                $llegadasTardias = Record::with('professional')->where('branch_id', $branchId->id)->where('professional_id', $professionalId->id)
+                $llegadasTardias = Record::where('branch_id', $branchId->id)->where('professional_id', $professionalId->id)
                 ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
                     ->get()
                     ->filter(function ($registro) {
@@ -603,7 +603,7 @@ class RecordController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
             ]);
-            $llegadasTardias = Record::withCount('professional')->with('professional')
+            $llegadasTardias = Record::withCount('professional')
                 ->where('branch_id', $data['branch_id'])
                 ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()

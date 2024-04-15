@@ -129,6 +129,7 @@ Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplet
 Route::get('/client-frecuente', [ClientController::class, 'client_frecuente']);///dado una business devolver la cantidad de visitas a por branch
 Route::get('/client-email-phone', [ClientController::class, 'client_email_phone']);///dado un numero de telefono o un email devolver si es client
 Route::get('/clients-frecuence-state', [ClientController::class, 'clients_frecuence_state']);///dado una business o branch devolver la cantidad de visitas a por clientes
+Route::get('/clients-frecuence-periodo', [ClientController::class, 'clients_frecuence_periodo']);///dado una business o branch devolver la cantidad de visitas a por clientes
 
 
 Route::get('/business', [BusinessController::class, 'index']);
@@ -192,7 +193,8 @@ Route::post('/product-update', [ProductController::class, 'update']);
 Route::post('/product-destroy', [ProductController::class, 'destroy']);
 Route::get('/product_mostSold_date', [ProductController::class, 'product_mostSold_date']);
 Route::get('/but-product', [ProductController::class, 'but_product']);//optener los productos mas vendidos
-Route::get('/product-mostSold', [ProductController::class, 'product_mostSold']);//optener los productos mas vendidos por branch o bussines
+Route::get('/product-mostSold', [ProductController::class, 'product_mostSold']);//optener los productos mas vendidos 
+Route::get('/product-mostSold-periodo', [ProductController::class, 'product_mostSold_periodo']);//optener los productos mas vendidos en un período dado
 Route::get('/product-stock', [ProductController::class, 'product_stock']);//optener los productos cuya existencia es menor a una definida
 
 Route::get('/service', [ServiceController::class, 'index']);

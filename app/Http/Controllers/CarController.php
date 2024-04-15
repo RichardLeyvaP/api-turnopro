@@ -65,7 +65,7 @@ class CarController extends Controller
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', now()->toDateString());
                 });
             
-                return response()->json($cars->sum('amount')+$cars->sum('tip')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
+                return response()->json($cars->sum('amount')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
             }else{      
                 Log::info("Businesssss");          
             $business = Business::find($data['business_id']);            
@@ -82,7 +82,7 @@ class CarController extends Controller
             $cars = Car::whereHas('reservations', function ($query){
                 $query->whereDate('data', now()->toDateString());
             });            
-            return response()->json($cars->sum('amount')+$cars->sum('tip')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
+            return response()->json($cars->sum('amount')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -112,7 +112,7 @@ class CarController extends Controller
                             })->get()->map(function ($car){
                                     return [
                                         'date' => $car->reservations->data,
-                                        'earnings' => $car->amount + $car->tip + ($car->technical_assistance * 5000)
+                                        'earnings' => $car->amount + ($car->technical_assistance * 5000)
                                     ];
                                 });
                                 for($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++){
@@ -140,7 +140,7 @@ class CarController extends Controller
                             })->get()->map(function ($car){
                                     return [
                                         'date' => $car->reservations->data,
-                                        'earnings' => $car->amount + $car->tip + ($car->technical_assistance * 5000)
+                                        'earnings' => $car->amount + ($car->technical_assistance * 5000)
                                     ];
                                 });
                                 for($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++){
@@ -189,7 +189,7 @@ class CarController extends Controller
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 });
             
-                return response()->json($cars->sum('amount')+$cars->sum('tip')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
+                return response()->json($cars->sum('amount')+$cars->sum('technical_assistance')*5000, 200, [], JSON_NUMERIC_CHECK);
             }else{
                 Log::info("businesss");
                 /*$business = Business::find($data['business_id']);
@@ -727,7 +727,7 @@ class CarController extends Controller
             'cashier' => $request->nameProfessional,
             'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
             'amount' => $car->amount,
-            'operation' => 'Elimina Carro',
+            'operation' => 'Elimina Carro: '.$car->id,
             'details' => '',
             'description' => ''
         ];
