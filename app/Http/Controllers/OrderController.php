@@ -57,6 +57,7 @@ class OrderController extends Controller
                 'type' => 'required'
 
             ]);
+            $data['cant'] = 1;
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 $order = $this->orderService->product_order_store($data);
              }

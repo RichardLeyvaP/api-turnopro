@@ -281,7 +281,9 @@ class ProfessionalController extends Controller
             ]);
             $professionals = Professional::whereHas('branches', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
-           })->get()->map(function ($query){
+           })->whereHas('charge', function ($query) {
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+        })->get()->map(function ($query){
             return [
                 'id' => $query->id,
                 'name' => $query->name.' '.$query->surname.' '.$query->second_surname

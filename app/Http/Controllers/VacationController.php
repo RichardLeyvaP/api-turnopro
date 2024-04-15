@@ -21,6 +21,7 @@ class VacationController extends Controller
                     'professional_id' => $vacation->professional->id,
                     'name' => $vacation->professional->name . ' ' . $vacation->professional->surname . ' ' . $vacation->professional->second_surname,
                     'image_url' => $vacation->professional->image_url,
+                    'description' => $vacation->description,
                     'startDate' => $vacation->startDate,
                     'endDate' => $vacation->endDate
                 ];
@@ -42,13 +43,15 @@ class VacationController extends Controller
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'startDate' => 'required|date',
-                'endDate' => 'required|date'
+                'endDate' => 'required|date',
+                'description' => 'nullable'
             ]);
 
             $vacacion = new Vacation();
             $vacacion->professional_id = $data['professional_id'];
             $vacacion->startDate = $data['startDate'];
             $vacacion->endDate = $data['endDate'];
+            $vacacion->description = $data['description'];
             $vacacion->save();
            
             return response()->json(['msg' => 'Vacaciones registrada correctamente'], 200);
@@ -77,6 +80,7 @@ class VacationController extends Controller
                     'professional_id' => $vacation->professional->id,
                     'name' => $vacation->professional->name . ' ' . $vacation->professional->surname . ' ' . $vacation->professional->second_surname,
                     'image_url' => $vacation->professional->image_url,
+                    'description' => $vacation->description,
                     'startDate' => $vacation->startDate,
                     'endDate' => $vacation->endDate
 
@@ -102,13 +106,15 @@ class VacationController extends Controller
                 'id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
                 'startDate' => 'required|date',
-                'endDate' => 'required|date'
+                'endDate' => 'required|date',
+                'description' => 'nullable'
             ]);
 
             $vacacion = Vacation::where('id', $data['id'])->first();
             $vacacion->professional_id = $data['professional_id'];
             $vacacion->startDate = $data['startDate'];
             $vacacion->endDate = $data['endDate'];
+            $vacacion->description = $data['description'];
             $vacacion->save();
            
             return response()->json(['msg' => 'Vacaciones actualizadas correctamente'], 200);
