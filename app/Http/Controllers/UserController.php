@@ -470,7 +470,7 @@ class UserController extends Controller
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
-                'email' => 'required|email',
+                'email' => 'required',
                 'professional' => 'nullable'
             ]);
             //return $request->professionals;
@@ -484,7 +484,9 @@ class UserController extends Controller
       $professional_workplace = $data['professional'];
             $professional = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->with(['user', 'charge', 'branches'])->where('email', $data['email'])->first();
+            })->with(['user', 'charge', 'branches'])->whereHas('user', function ($query) use ($data){
+            $query->where('name', $data['email']);
+        })->first();
             if ($professional) {
                 //$workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->pluck('workplace_id');
                 $datos = [
