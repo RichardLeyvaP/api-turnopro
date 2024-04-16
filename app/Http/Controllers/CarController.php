@@ -719,7 +719,6 @@ class CarController extends Controller
         $data = $request->validate([
             'id' => 'required|numeric'
         ]);
-        
         $car = Car::find($data['id']);
         $branch = Branch::where('id', $request->branch_id)->first();
         $trace = [
@@ -729,7 +728,7 @@ class CarController extends Controller
             'amount' => $car->amount,
             'operation' => 'Elimina Carro: '.$car->id,
             'details' => '',
-            'description' => ''
+            'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
         ];
         $this->traceService->store($trace);
             //$car->delete();
