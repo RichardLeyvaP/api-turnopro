@@ -39,6 +39,7 @@ class OrderService {
                  $order->data = Carbon::now();
                  $order->is_product = true;
                  $order->price = $sale_price*$data['cant'];               
+                 $order->cant = $data['cant'];               
                  $order->request_delete = false;
                  $order->save();
         return $order;

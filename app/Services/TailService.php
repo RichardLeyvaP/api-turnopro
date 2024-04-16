@@ -23,7 +23,7 @@ class TailService {
         Log::info($tails1);
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        })->whereIn('attended', [0,3])->get()->map(function ($tail){
+        })->whereIn('attended', [0,3,33])->get()->map(function ($tail){
             Log::info($tail);
                 $reservation = $tail->reservation;
                 Log::info('reservacion');
@@ -63,7 +63,7 @@ class TailService {
     public function cola_branch_data2($branch_id){
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        })->where('attended', 3)->get()->map(function ($tail){
+        })->where('attended', [3,33])->get()->map(function ($tail){
             Log::info($tail);
                 $reservation = $tail->reservation;
                 Log::info('reservacion');

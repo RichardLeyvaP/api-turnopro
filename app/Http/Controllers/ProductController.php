@@ -119,9 +119,67 @@ class ProductController extends Controller
             $data = $request->validate([
                 'branch_id' => 'nullable'
             ]);
-           
+            $products = Product::with(['orders' => function ($query) {
+                $query->selectRaw('SUM(price) as total_sale_price')
+                    ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
+            }, 'productSales' => function ($query) {
+                $query->selectRaw('SUM(cant) as total_cant')
+                    ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
+            }])->whereHas('productStores', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+                })
+            ->get()
+            ->map(function ($product) {
+                $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                $total_cant = $product->productSales->isEmpty() ? 0 : $product->productSales->first()->total_cant;
+                
+                // Calcular el valor total de ventas y sumarle total_cant
+                $total_sales = $total_sale_price + $total_cant;
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'reference' => $product->reference,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product,
+                    'product_category_id' => $product->product_category_id,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                    'orders_count' => $total_sales,
+                ];
+            })->sortByDesc('orders_count')->values();
+        
+        //return $products;
+            ///}
+            /*return $products = Product::with(['orders' => function ($query) {
+                $query->selectRaw('SUM((price / sale_price) * sale_price) as total_sale_price');
+            }])
+            ->withSum('productsales', 'cant')
+            ->get();*/
+        
+            /*$products = Product::withCount(['orders', 'productSales'])
+            ->get()->map(function ($query){
+                return [
+                    'id' => $query->id,
+                    'name' => $query->name,
+                    'reference' => $query->reference,
+                    'code' => $query->code,
+                    'description' => $query->description,
+                    'status_product' => $query->status_product,
+                    'purchase_price' => $query->purchase_price,
+                    'sale_price' => $query->sale_price,
+                    'image_product' => $query->image_product,
+                    'product_category_id' => $query->product_category_id,
+                    'created_at' => $query->created_at,
+                    'updated_at' => $query->updated_at,
+                    'orders_count' => $query->orders_count,
+                ];
+            });*/
            //if ($data['branch_id'] !=0) {
-            Log::info('Es branch');
+            /*Log::info('Es branch');
             $products = Product::withCount(['orders' => function ($query){
                 $query->whereDate('data', Carbon::now());
             }])->whereHas('productStores', function ($query) use ($data){
@@ -147,10 +205,41 @@ class ProductController extends Controller
                 'startDate' => 'nullable',
                 'endDate' => 'nullable'
             ]);
-           
+            $products = Product::with(['orders' => function ($query) use($data){
+                $query->selectRaw('SUM(cant) as total_sale_price')
+                    ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']); // Agrupar por el ID del producto en la tabla intermedia
+            }, 'productSales' => function ($query) {
+                $query->selectRaw('SUM(cant) as total_cant')
+                    ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
+            }])->whereHas('productStores', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+                })
+            ->get()
+            ->map(function ($product) {
+                $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                $total_cant = $product->productSales->isEmpty() ? 0 : $product->productSales->first()->total_cant;
+                
+                // Calcular el valor total de ventas y sumarle total_cant
+                $total_sales = $total_sale_price + $total_cant;
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'reference' => $product->reference,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product,
+                    'product_category_id' => $product->product_category_id,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                    'orders_count' => $total_sales,
+                ];
+            })->sortByDesc('orders_count')->values();
            //if ($data['branch_id'] !=0) {
-            Log::info('Es branch');
-            $products = Product::withCount(['orders' => function ($query) use ($data){
+            /*Log::info('Es branch');
+            /*$products = Product::withCount(['orders' => function ($query) use ($data){
                 $query->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
             }])->whereHas('productStores', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);

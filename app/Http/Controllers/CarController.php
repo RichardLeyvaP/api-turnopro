@@ -345,7 +345,7 @@ class CarController extends Controller
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->where('professional_payment_id', '!=', NULL)->get()->map(function($car) use ($retention){
+           })->where('pay', 1)->where('professional_payment_id', '!=', NULL)->get()->map(function($car) use ($retention){
                 $ordersServices = count($car->orders->where('is_product', 0));
                 return [
                     'professional_id' => $car->clientProfessional->professional->id,
@@ -389,7 +389,7 @@ class CarController extends Controller
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->get()->map(function($car) use ($retention){
+           })->where('pay', 1)->get()->map(function($car) use ($retention){
                 $ordersServices = count($car->orders->where('is_product', 0));
                 return [
                     'id' => $car->id,

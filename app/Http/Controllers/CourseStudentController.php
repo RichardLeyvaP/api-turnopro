@@ -251,7 +251,7 @@ class CourseStudentController extends Controller
             else{
                 Log::info('no existe');
                 $finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
-                if($finance !== null && !$finance->isEmpty())
+                if($finance)
                     {
                         $control = $finance->control+1;
                     }
