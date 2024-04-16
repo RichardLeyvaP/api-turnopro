@@ -261,7 +261,7 @@ class OrderController extends Controller
                 $productstore->product_quantity = 1;
                 $productstore->product_exit = $productstore->product_exit + 1;
                 $productstore->save();
-                $trace = [
+                /*$trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
                     'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
@@ -270,7 +270,7 @@ class OrderController extends Controller
                     'details' => $order->productStore->product->name,
                     'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
                 ];
-                $this->traceService->store($trace);
+                $this->traceService->store($trace);*/
                 //todo pendiente para revisar importante
                // $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
@@ -285,7 +285,7 @@ class OrderController extends Controller
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
                 $reservation->save();
-                $trace = [
+                /*$trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
                     'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
@@ -294,7 +294,7 @@ class OrderController extends Controller
                     'details' => $order->branchServiceProfessional->branchService->service->name,
                     'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
                 ];
-                $this->traceService->store($trace);
+                $this->traceService->store($trace);*/
             }
             $order->delete();
             if($car->amount = $car->amount - $order->price)
