@@ -252,7 +252,7 @@ class OrderController extends Controller
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
-            $branch = Branch::where('id', $car->reservation->branch_id)->first();
+            //$branch = Branch::where('id', $car->reservation->branch_id)->first();
             Log::info($order);
             Log::info($car);
             if ($order->is_product == 1) {                
