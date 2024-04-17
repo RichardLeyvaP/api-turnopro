@@ -241,16 +241,32 @@ class TailService {
     }
 
     public function cola_branch_tecnico($branch_id, $professional_id){
-        $workplace = Professional::find($professional_id)->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->withPivot('id', 'places')->get()->map->pivot;
+        /*$workplace = Professional::find($professional_id)->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->withPivot('id', 'places')->get()->map->pivot;
         $places = json_decode($workplace->value('places'), true);
         $professionals = Professional::whereHas('workplaces', function ($query) use ($places){
             $query->whereIn('workplace_id', $places);
-        })->get()->value('id');
-        $tails = Tail::whereHas('reservation.car.orders.branchServiceProfessional.professional.workplaces', function ($query) use ($branch_id, $places){
-            $query->where('branch_id', $branch_id)->whereIn('workplace_id', $places);
-        })->orderBy('updated_at')->whereIn('attended', [4])->get();
-        
-        $branchTails = $tails->map(function ($tail){
+        })->get()->value('id');*/
+        $workplace = Professional::find($professional_id)
+            ->workplaces()
+            ->wherePivot('data', Carbon::now()->format('Y-m-d'))
+            ->withPivot('places')
+            ->first();
+
+        if ($workplace) {
+            $places = json_decode($workplace->pivot->places, true);
+
+            $professionals = Professional::whereHas('workplaces', function ($query) use ($places) {
+                $query->whereIn('workplace_id', $places)->whereDate('data', Carbon::now()->format('Y-m-d'));
+            })->pluck('id');
+            } else {
+                // Manejar caso donde no se encuentra el lugar de trabajo
+                $professionals = [];
+            }
+        $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $professionals){
+            $query->where('branch_id', $branch_id)->whereHas('car.clientProfessional', function ($query) use ($professionals){
+                $query->whereIn('professional_id', $professionals);
+            });
+        })->orderBy('updated_at')->whereIn('attended', [4])->get()->map(function ($tail){
             return [
                 'reservation_id' => $tail->reservation->id,
                 'car_id' => $tail->reservation->car_id,
@@ -266,7 +282,7 @@ class TailService {
             ];
         })->values();
         
-        return $branchTails;
+        return $tails;
     }
 
     public function reasigned_client($data){
