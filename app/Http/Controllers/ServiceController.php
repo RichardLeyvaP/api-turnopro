@@ -115,9 +115,23 @@ class ServiceController extends Controller
                 'service_comment' => 'nullable|min:3'
             ]);
             Log::info($request->profit_percentaje);
-            $filename = "services/default.png";
+            //$filename = "services/default.png";
             $service = Service::find($data['id']);
-            if($service->image_service != $request['image_service'])
+            if ($request->hasFile('image_service')) {
+                if($service->image_service != 'services/default.jpg'){
+                $destination = public_path("storage\\" . $service->image_service);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }
+                }    
+                $service->image_service = $request->file('image_service')->storeAs('services', $service->id . '.' . $request->file('image_service')->extension(), 'public');
+            }
+            /*if($request->hasFile('image_service')){
+                Log::info('$request->hasFile(image_service)');
+                Log::info($request->hasFile('image_service'));
+                Log::info('$request->hasFile(image_service)');
+                Log::info($request->hasFile('image_service'));
+            if($service->image_service != $data['image_service'])
                 {
                     $destination=public_path("storage\\".$service->image_service);
                     if (File::exists($destination)) {
@@ -125,9 +139,10 @@ class ServiceController extends Controller
                     }                    
                     $service->image_service = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
                 }
-                else{
-                    $service->image_service = $filename;
-                }
+            }*/
+                //else{
+                   // $service->image_service = $filename;
+                //}
                 if($service->profit_percentaje){
                     $service->profit_percentaje = $request->profit_percentaje;
                 }

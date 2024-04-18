@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Models\Branch;
 use App\Models\Car;
 use App\Models\Client;
+use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Reservation;
 use App\Models\Tail;
 use App\Models\Comment;
+use App\Models\ProfessionalWorkPlace;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -147,8 +149,6 @@ class TailService {
             $query->where('branch_id', $branch_id);
         })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
-        })->whereHas('reservation.car.orders', function ($query){
-            $query->where('is_product', false);
         })->whereNot('attended', [2])->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id){        
             return [
@@ -182,7 +182,26 @@ class TailService {
             $car = Car::whereHas('reservation', function ($query) use ($reservation_id){
                 $query->where('id', $reservation_id);
             })->first();
+            Log::info('$car->id');
+            Log::info($car->id);
+            $professional = ClientProfessional::whereHas('cars', function ($query) use ($car){
+                $query->where('id', $car->id);
+            })->first()->professional_id;
+            Log::info('$professional->id');
+            Log::info($professional);
+            $workplaceId = ProfessionalWorkPlace::where('professional_id', $professional)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
+                $query->where('busy', 1)->where('select', 1);
+            })->first()->workplace_id;
+            Log::info('$workplace->id');
+            Log::info($workplaceId);
+            $tecnicoId = ProfessionalWorkplace::where('data', Carbon::today())
+    ->whereJsonContains('places', $workplaceId)
+    ->value('professional_id');
+            Log::info('$tecnicoId->id');
+            Log::info($tecnicoId);
+            
             $car->technical_assistance = $car->technical_assistance + 1;
+            $car->tecnico_id = $tecnicoId;
             $car->save();
             
             Log::info($car);
@@ -194,8 +213,6 @@ class TailService {
             $query->where('branch_id', $branch_id);
         }])->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
-        })->whereHas('reservation.car.orders', function ($query){
-            $query->where('is_product', false);
         })->where('attended', 1)->get();
         if (count($tails) > 3) {
             Log::info('$tails>3');

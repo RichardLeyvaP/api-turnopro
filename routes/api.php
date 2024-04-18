@@ -265,7 +265,9 @@ Route::get('/cars-winner-day', [CarController::class, 'cars_sum_amount']);//Dado
 Route::get('/cars-winner-week', [CarController::class, 'cars_sum_amount_week']);//Dado un business devolver las ganancial de la semana
 Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial del mes
 Route::get('/professional-car', [CarController::class, 'professional_car']);//Ganancias del professionals en una branch por dias
+Route::get('/tecnico-car', [CarController::class, 'tecnico_car']);//Ganancias del tecninco en una branch por dias
 Route::get('/professional-car-date', [CarController::class, 'professional_car_date']);//Detalles del carro
+Route::get('/tecnico-car-date', [CarController::class, 'tecnico_car_date']);//Detalles del carro 
 Route::get('/professional-car-notpay', [CarController::class, 'professional_car_notpay']);//Detalles del carro
 
 Route::get('/order', [OrderController::class, 'index']);

@@ -221,7 +221,7 @@ class ClientController extends Controller
                 if (File::exists($destination)) {
                     File::delete($destination);
                 }
-                $client->client_image = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
+                $client->client_image = $request->file('client_image')->storeAs('comments', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];

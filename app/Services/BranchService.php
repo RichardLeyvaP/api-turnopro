@@ -725,11 +725,11 @@ class BranchService
             })->whereHas('clientProfessional', function ($query) use ($professional){
                 $query->where('professional_id', $professional->id);
             })->get(); 
-            $retention = $professional->retention;
+            $retention = number_format($professional->retention/100, 2);
             $winProfessional =$cars->sum(function ($car){
                 return $car->orders->sum('percent_win');
             });
-            $retentionPorcent = round($winProfessional * $retention /100);
+            $retentionPorcent = round($winProfessional * $retention);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
@@ -841,11 +841,11 @@ class BranchService
             })->whereHas('clientProfessional', function ($query) use ($professional){
                 $query->where('professional_id', $professional->id);
             })->get(); 
-            $retention = $professional->retention;
+            $retention = number_format($professional->retention/100, 2);
             $winProfessional =$cars->sum(function ($car){
                 return $car->orders->sum('percent_win');
             });
-            $retentionPorcent = round($winProfessional * $retention /100);
+            $retentionPorcent = round($winProfessional * $retention);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
             return [
                 'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
