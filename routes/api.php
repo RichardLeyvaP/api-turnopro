@@ -38,7 +38,7 @@ use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\SendMailController;
+use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
@@ -528,6 +528,8 @@ Route::post('/professional-payment', [ProfessionalPaymentController::class, 'sto
 Route::put('/professional-payment', [ProfessionalPaymentController::class, 'update']);
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
 Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']);//devolver de una branch los pagos realizado a los professionals
+
+Route::get('/professional-branch-notif-queque', [AssistantController::class, 'professional_branch_notif_queque']);//dado un professional devolver la cola del dia y las notificaciones
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
