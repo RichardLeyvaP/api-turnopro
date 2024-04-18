@@ -345,7 +345,7 @@ class CarController extends Controller
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->where('pay', 1)->where('professional_payment_id', '!=', NULL)->get()->map(function($car) use ($retention){
+           })->where('pay', 1)/*->where('professional_payment_id', '!=', NULL)*/->get()->map(function($car) use ($retention){
                 $ordersServices = count($car->orders->where('is_product', 0));
                 return [
                     'professional_id' => $car->clientProfessional->professional->id,
@@ -488,7 +488,8 @@ class CarController extends Controller
                     'amountWin' =>$retention ? $car->orders->sum('percent_win') - (($car->orders->sum('percent_win') + $car->tip * 0.80) * $retention) : $car->orders->sum('percent_win') + $car->tip * 0.80,
                     'choice' => $car->select_professional ? 'Seleccionado' : 'aleatorio',
                     'serviceSpecial' => $ServicesSpecial->count(),
-                    'SpecialAmount' => $ServicesSpecial->sum('percent_win')
+                    'SpecialAmount' => $ServicesSpecial->sum('percent_win'),
+                    'pay' => $car->professional_payment_id ? $car->professional_payment_id : 0
                     /*'attendedClient' => 1,
                     'services' => $ordersServices,
                     'totalServices' => $car->orders->sum('percent_win'),
