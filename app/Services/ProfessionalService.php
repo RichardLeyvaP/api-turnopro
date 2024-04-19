@@ -982,13 +982,12 @@ class ProfessionalService
             $query->whereMonth('data', $mes)->whereYear('data', $year);
         })->get();*/
         $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
-        $cars = Car::whereHas('reservation', function ($query) use ($data) {
-            $query->where('branch_id', $data['branch_id']);
-        })->whereHas('orders', function ($query) use ($data, $mes, $year){
-            $query->whereMonth('data', $mes)->whereYear('data', $year);
+        $cars = Car::whereHas('reservation', function ($query) use ($data, $mes, $year) {
+            $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
         })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
         })->get();
+
         $services = 0;
         $products = 0;
         $totalClients = 0;
