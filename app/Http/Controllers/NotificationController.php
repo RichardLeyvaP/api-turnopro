@@ -135,6 +135,7 @@ class NotificationController extends Controller
             // ->values();
             $notifications = $branch->notifications()
     ->where('professional_id', $professional->id)
+    ->whereDate('created_at', Carbon::now())
     ->get()
     ->map(function ($query) {
         return [
