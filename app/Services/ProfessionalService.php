@@ -945,7 +945,7 @@ class ProfessionalService
             $query->where('type_service', 'Especial');
         })->whereHas('car.clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-        })->whereBetWeen('data', [$startDate, $endDate])->get();
+        })->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->get();
         $totalClients = $cars->count();
         $amountGenral = round($cars->sum('amount'), 2);
         $winProfessional =$cars->sum(function ($car){
@@ -1003,7 +1003,7 @@ class ProfessionalService
                 })->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id']);
         })->whereMonth('data', $mes)->whereYear('data', $year)->get();*/
-        $orders = Order::whereHas('reservation', function ($query) use ($data) {
+        $orders = Order::whereHas('car.reservation', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id']);
         })->whereHas('branchServiceProfessional', function ($query) {
             $query->where('type_service', 'Especial');
