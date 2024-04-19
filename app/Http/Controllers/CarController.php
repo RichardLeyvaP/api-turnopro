@@ -431,7 +431,7 @@ class CarController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-           $retention = Professional::where('id', $data['professional_id'])->first()->retention;
+           $retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
            $cars = Car::where('professional_payment_id', Null)->whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
@@ -447,7 +447,7 @@ class CarController extends Controller
                     'data' => $car->reservation->data,
                     'attendedClient' => 1,
                     'services' => $ordersServices,
-                    'totalServices' => $retention ? $car->orders->sum('percent_win') - ($car->orders->sum('percent_win') * $retention/100) : $car->orders->sum('percent_win') + $car->tip * 0.80,
+                    'totalServices' => $retention ? $car->orders->sum('percent_win') - ($car->orders->sum('percent_win') * $retention) : $car->orders->sum('percent_win') + $car->tip * 0.80,
                     'clientAleator' => $car->select_professional,
                     'amountGenerate' => $car->amount + $car->tip,
                     'tip' => $car->tip * 0.80
