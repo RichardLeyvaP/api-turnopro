@@ -489,7 +489,7 @@ class CarController extends Controller
                     'choice' => $car->select_professional ? 'Seleccionado' : 'aleatorio',
                     'serviceSpecial' => $ServicesSpecial->count(),
                     'SpecialAmount' => $ServicesSpecial->sum('percent_win'),
-                    'pay' => $car->professional_payment_id ? (int)$car->professional_payment_id : (int)0
+                    'pay' => $car->professional_payment_id ? $car->professional_payment_id : 0
                     /*'attendedClient' => 1,
                     'services' => $ordersServices,
                     'totalServices' => $car->orders->sum('percent_win'),
