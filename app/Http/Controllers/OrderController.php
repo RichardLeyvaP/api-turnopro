@@ -193,6 +193,66 @@ class OrderController extends Controller
         }
     }
 
+    public function update2(Request $request)
+    {
+        Log::info("Actualizar orden");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'request_delete' => 'required|boolean',
+                 'id_branch' => 'required|numeric'
+            ]);
+            
+            
+            $order = Order::find($data['id']);
+            $order->request_delete = $data['request_delete'];
+            $order->save();
+            
+             $orderDatas = Order::whereHas('car.reservation', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
+
+           $car = $orderDatas->map(function ($orderData){
+            if ($orderData->is_product == true) {
+                return [
+                    'id' => $orderData->id,
+                    'profesional_id' => $orderData->car->clientProfessional->professional->id,
+                    'reservation_id' => $orderData->car->reservation->id,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'hora' => $orderData->updated_at->Format('g:i:s A'),                    
+                    'nameProduct' => $orderData->productStore->product->name,
+                    'nameService' => null,
+                    'duration_service' => null,
+                    'is_product' => $orderData->is_product,
+                    'updated_at' => $orderData->updated_at->toDateString()
+                ];
+            }
+            else {
+                return [
+                    'id' => $orderData->id,
+                    'profesional_id' => $orderData->car->clientProfessional->professional->id,
+                    'reservation_id' => $orderData->car->reservation->id,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'hora' => $orderData->updated_at->Format('g:i:s A'),
+                    'nameProduct' => null,
+                    'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
+                    'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
+                    'is_product' => (int)$orderData->is_product,
+                    'updated_at' => $orderData->updated_at->toDateString()
+                ];
+            }
+           });
+    
+            return response()->json(['carOrderDelete' => $car], 200);
+         
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
+        }
+    }
+
     public function update_web(Request $request)
     {
         Log::info("Actualizar orden");

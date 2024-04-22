@@ -51,6 +51,7 @@ use App\Http\Controllers\ProductSaleController;
 use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\TraceController;
 use App\Http\Controllers\VacationController;
+use App\Http\Controllers\OperationTipController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
@@ -98,6 +99,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/professional', [ProfessionalController::class, 'index']);
 Route::get('/professional-show', [ProfessionalController::class, 'show']);
 Route::get('/professional-show-autocomplete', [ProfessionalController::class, 'show_autocomplete']);
+Route::get('/professional-show-autocomplete-Notin', [ProfessionalController::class, 'show_autocomplete_Notin']);
 Route::get('/professional-show-autocomplete-branch', [ProfessionalController::class, 'show_autocomplete_branch']);//mostrar solo los professionals de una branch dada
 Route::post('/professional', [ProfessionalController::class, 'store']);
 Route::post('/professional-update', [ProfessionalController::class, 'update']);
@@ -106,6 +108,7 @@ Route::get('/professionals_branch', [ProfessionalController::class, 'professiona
 Route::get('/professionals_ganancias', [ProfessionalController::class, 'professionals_ganancias']);
 Route::get('/branch_professionals', [ProfessionalController::class, 'branch_professionals']);
 Route::get('/branch_professionals_web', [ProfessionalController::class, 'branch_professionals_web']); //devolver los professionales de una branch
+Route::get('/branch_professionals_cashier', [ProfessionalController::class, 'branch_professionals_cashier']); //devolver los cajeros (a) de una branch
 Route::get('/professionals_ganancias_branch', [ProfessionalController::class, 'professionals_ganancias_branch']); //Obtener Monto total de un professionals en una branch y un periodo dado
 Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
 Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
@@ -275,6 +278,7 @@ Route::get('/order-show', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::post('/order-web', [OrderController::class, 'store_web']); //para registrar en traces la operacion que realiza
 Route::put('/order', [OrderController::class, 'update']);
+Route::put('/order2', [OrderController::class, 'update2']);
 Route::put('/order-web', [OrderController::class, 'update_web']); //para registrar en traces la operacion que realiza
 Route::post('/order-destroy', [OrderController::class, 'destroy']);
 Route::post('/order-destroy-web', [OrderController::class, 'destroy_web']);//para registrar en traces la operacion que realiza
@@ -522,12 +526,17 @@ Route::post('/productsale', [ProductSaleController::class, 'store']);
 Route::put('/productsale', [ProductSaleController::class, 'update']);
 Route::post('/productsale-destroy', [ProductSaleController::class, 'destroy']);
 
-Route::get('/professional-payment', [ProfessionalPaymentController::class, 'index']);
 Route::get('/professional-payment-show', [ProfessionalPaymentController::class, 'show']);
 Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
-Route::put('/professional-payment', [ProfessionalPaymentController::class, 'update']);
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
 Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']);//devolver de una branch los pagos realizado a los professionals
+
+Route::get('/operation-tip-show', [OperationTipController::class, 'show']);
+Route::post('/operation-tip', [OperationTipController::class, 'store']);
+Route::post('/operation-tip-destroy', [OperationTipController::class, 'destroy']);
+Route::get('/operation-tip-show', [OperationTipController::class, 'operation_tip_show']);//devolver de una branch los pagos realizado a los cajeros
+Route::get('/operation-tip-periodo', [OperationTipController::class, 'operation_tip_periodo']);//devolver de una branch los pagos realizado a los cajeros en un periodo dado
+Route::get('/cashier-car-notpay', [OperationTipController::class, 'cashier_car_notpay']);//Detalles del carro
 
 Route::get('/professional-branch-notif-queque', [AssistantController::class, 'professional_branch_notif_queque']);//dado un professional devolver la cola del dia y las notificaciones
 

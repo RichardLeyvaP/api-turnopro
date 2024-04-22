@@ -28,7 +28,7 @@ class OrderService {
                     //rebajar la existencia
                 $productstore = ProductStore::find($data['product_id']);
                 $productstore->product_quantity = 1;
-                $productstore->product_exit = $productstore->product_exit - 1;
+                $productstore->product_exit = $productstore->product_exit - $data['cant'];
                 $productstore->save();
                 //todo pendiente para revisar importante
                 //$this->actualizarProductExit($productstore->product_id, $productstore->store_id);            

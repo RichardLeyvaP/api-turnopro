@@ -198,9 +198,9 @@ class BranchService
         }])->orderByDesc('orders_count')->first();
         foreach ($cars as $car) {
             if ($car->select_professional == 1) {
-                $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
+                $seleccionado = $seleccionado + 1;
             } else {
-                $aleatorio = $aleatorio + $car->orders->where('is_product', 0)->count();
+                $aleatorio = $aleatorio + 1;
             }
             $totalservices = $totalservices + count($car->orders->where('is_product', 0));
             $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
@@ -369,9 +369,9 @@ class BranchService
         }])->orderByDesc('orders_count')->first();
         foreach ($cars as $car) {
             if ($car->select_professional == 1) {
-                $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
+                $seleccionado = $seleccionado + 1;
             } else {
-                $aleatorio = $aleatorio + $car->orders->where('is_product', 0)->count();
+                $aleatorio = $aleatorio + 1;
             }
             $totalservices = $totalservices + count($car->orders->where('is_product', 0));
             $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
@@ -734,45 +734,14 @@ class BranchService
             return [
                 'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
                 'amount' => $winProfessional,
-                'tip' => $winTips,
+                'retention' => $retentionPorcent,
+                'tip' => round($cars->sum('tip'), 2),
+                'tip80' => $winTips,
                 'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
         })->sortByDesc('total')->values();
-        /*return $resultados = Professional::with(['branchServiceProfessional.orders' => function ($query) {
-            $query->whereDate('data', Carbon::now());
-        }])->whereHas('branches', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })
-            ->get()->map(function ($professional) {
-                return [
-                    'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                    'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
-                    'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
-                        return $clientProfessional->cars->filter(function ($car) {
-                            return $car->orders->isNotEmpty();
-                        })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? 
-                    round(
-                        (
-                            $professional->orders->sum(function ($order) {
-                                return $order->is_product ? $order->price : $order->percent_win;
-                            }) * 0.45
-                        ) +
-                        (
-                            $professional->clientProfessionals->map(function ($clientProfessional) {
-                                return $clientProfessional->cars->filter(function ($car) {
-                                    return $car->orders->isNotEmpty();
-                                })->sum('tip') * 0.8;
-                            }))->sum(), 2) 
-                    : 0,
-        
-                    'total_cars' => $professional->reservations()
-                    ->whereDate('data', Carbon::now())
-                    ->count(),
-                ];
-            })->sortByDesc('total')->values();*/
+       
     }
 
     /*public function branch_professionals_winner_month($branch_id, $month, $year)
@@ -850,45 +819,13 @@ class BranchService
             return [
                 'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
                 'amount' => $winProfessional,
-                'tip' => $winTips,
+                'retention' => $retentionPorcent,
+                'tip' => round($cars->sum('tip'), 2),
+                'tip80' => $winTips,
                 'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
         })->sortByDesc('total')->values();
-        /*return $resultados = Professional::with(['orders' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('data', [$startDate, $endDate]);
-        }, 'clientProfessionals.cars.orders' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('data', [$startDate, $endDate]);
-        }])->whereHas('branches', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })
-            ->get()->map(function ($professional)  use ($startDate, $endDate) {
-                return [
-                    'name' => $professional->name . " " . $professional->surname . " " . $professional->second_surname,
-                    'amount' => $professional->orders ? round($professional->orders->sum('price') * 0.45, 2) : 0,
-                    'tip' => $professional->orders ? round(($professional->clientProfessionals->map(function ($clientProfessional) {
-                        return $clientProfessional->cars->filter(function ($car) {
-                            return $car->orders->isNotEmpty();
-                        })->sum('tip') * 0.8;
-                    }))->sum(), 2) : 0,
-                    'total' => $professional->orders ? 
-                    round(
-                        (
-                            $professional->orders->sum(function ($order) {
-                                return $order->is_product ? $order->price : $order->percent_win;
-                            }) * 0.45
-                        ) +
-                        (
-                            $professional->clientProfessionals->map(function ($clientProfessional) {
-                                return $clientProfessional->cars->filter(function ($car) {
-                                    return $car->orders->isNotEmpty();
-                                })->sum('tip') * 0.8;
-                            }))->sum(), 2) 
-                    : 0,
-                    'total_cars' => $professional->reservations()
-                    ->whereBetween('data', [$startDate, $endDate])
-                    ->count(),
-                ];
-            })->sortByDesc('total')->values();*/
+        
     }
 }

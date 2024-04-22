@@ -865,43 +865,44 @@ class ProfessionalService
         $services = 0;
         $products = 0;
         $totalClients = 0;
-        foreach ($cars as $car) {
-            $services = $services + count($car->orders->where('is_product', 0));
-            $products = $products + count($car->orders->where('is_product', 1));
-        }
-        $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
-            $query->where('type_service', 'Especial');
-        })->get();
-        /*$orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
-            $query->whereHas('branchService', function ($query) use ($data) {
-                $query->WhereHas('service', function ($query) {
-                    $query->where('type_service', 'Especial');
-                })->where('branch_id', $data['branch_id']);
-            })->where('professional_id', $data['professional_id']);
-        })->whereDate('data', Carbon::now())->get();*/
-        $totalClients = $cars->count();
-        $amountGenral = round($cars->sum('amount'), 2);
-        $winProfessional =$cars->sum(function ($car){
-            return $car->orders->sum('percent_win');
-        });
-        $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
-        $winTips =  round($cars->sum('tip') * 0.80, 2);
-        return $result = [
-            'Monto Generado' => $amountGenral, //suma productos y servicios
-            'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
-            'Retención' => $retention, //monto generado percent_win % calculando la retención
-            'Propina' => round($cars->sum('tip'), 2),
-            'Propina 80%' => $winTips,
-            'Ganancia Total Barbero' => $winProfessional-$retentionPorcent+$winTips, //ganancia barbero - retencion + propinas 80%
-            'Servicios Realizados' => $services,
-            'Productos Vendidos' => $products,
-            'Servicios Regulares' => $services - $orders->count(),
-            'Servicios Especiales' => $orders->count(),
-            'Monto Especial' => round($orders->sum('percent_win'), 2),
-            'Clientes Atendidos' => $totalClients,
-            'Seleccionado' => $cars->where('select_professional', 1)->count(),
-            'Aleatorio' => $cars->where('select_professional', 0)->count()
-        ];
+       //foreach ($cars as $car) {
+        $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
+        $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
+        $services = $orderServ->count();
+        //$services = $services + count($car->orders->where('is_product', 0));
+        //$products = $products + count($car->orders->where('is_product', 1));
+        $products = $orderProd->sum('cant');
+    //}
+    $ServiceEspecial = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+        $query->where('type_service', 'Especial');
+    })->get();
+    $ServiceRegular = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+        $query->where('type_service', 'Regular');
+    })->get();
+    $totalClients = $cars->count();
+    $amountGenral = round($cars->sum('amount'), 2);
+    /*$winProfessional =$cars->sum(function ($car){
+        return $car->orders->sum('percent_win');
+    });*/
+    $winProfessional = $orderServ->sum('percent_win');
+    $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
+    $winTips =  round($cars->sum('tip') * 0.80, 2);
+    return $result = [
+        'Monto Generado' => $amountGenral, //suma productos y servicios
+        'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
+        'Retención' => $winProfessional * $retention, //monto generado percent_win % calculando la retención
+        'Propina' => round($cars->sum('tip'), 2),
+        'Propina 80%' => $winTips,
+        'Ganancia Total Barbero' => $winProfessional-$retentionPorcent+$winTips, //ganancia barbero - retencion + propinas 80%
+        'Servicios Realizados' => $services,
+        'Productos Vendidos' => $products,
+        'Servicios Regulares' => $ServiceRegular->count(),
+        'Servicios Especiales' => $ServiceEspecial->count(),
+        'Monto Especial' => round($ServiceEspecial->sum('percent_win'), 2),
+        'Clientes Atendidos' => $totalClients,
+        'Seleccionado' => $cars->where('select_professional', 1)->count(),
+        'Aleatorio' => $cars->where('select_professional', 0)->count()
+    ];
     }
 
     public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
@@ -924,39 +925,40 @@ class ProfessionalService
         $services = 0;
         $products = 0;
         $totalClients = 0;
-        foreach ($cars as $car) {
-            $services = $services + count($car->orders->where('is_product', 0));
-            $products = $products + count($car->orders->where('is_product', 1));
-        }
-        /*$orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
-            $query->whereHas('branchService', function ($query) use ($data) {
-                $query->WhereHas('service', function ($query) {
-                    $query->where('type_service', 'Especial');
-                })->where('branch_id', $data['branch_id']);
-            })->where('professional_id', $data['professional_id']);
-        })->whereBetWeen('data', [$startDate, $endDate])->get();*/
-        $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+        //foreach ($cars as $car) {
+            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
+            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
+            $services = $orderServ->count();
+            //$services = $services + count($car->orders->where('is_product', 0));
+            //$products = $products + count($car->orders->where('is_product', 1));
+            $products = $orderProd->sum('cant');
+        //}
+        $ServiceEspecial = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
             $query->where('type_service', 'Especial');
+        })->get();
+        $ServiceRegular = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Regular');
         })->get();
         $totalClients = $cars->count();
         $amountGenral = round($cars->sum('amount'), 2);
-        $winProfessional =$cars->sum(function ($car){
+        /*$winProfessional =$cars->sum(function ($car){
             return $car->orders->sum('percent_win');
-        });
+        });*/
+        $winProfessional = $orderServ->sum('percent_win');
         $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
         $winTips =  round($cars->sum('tip') * 0.80, 2);
         return $result = [
             'Monto Generado' => $amountGenral, //suma productos y servicios
             'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
-            'Retención' => $retention, //monto generado percent_win % calculando la retención
+            'Retención' => $winProfessional * $retention, //monto generado percent_win % calculando la retención
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => $winTips,
             'Ganancia Total Barbero' => $winProfessional-$retentionPorcent+$winTips, //ganancia barbero - retencion + propinas 80%
             'Servicios Realizados' => $services,
             'Productos Vendidos' => $products,
-            'Servicios Regulares' => $services - $orders->count(),
-            'Servicios Especiales' => $orders->count(),
-            'Monto Especial' => round($orders->sum('percent_win'), 2),
+            'Servicios Regulares' => $ServiceRegular->count(),
+            'Servicios Especiales' => $ServiceEspecial->count(),
+            'Monto Especial' => round($ServiceEspecial->sum('percent_win'), 2),
             'Clientes Atendidos' => $totalClients,
             'Seleccionado' => $cars->where('select_professional', 1)->count(),
             'Aleatorio' => $cars->where('select_professional', 0)->count()
@@ -983,40 +985,40 @@ class ProfessionalService
         $services = 0;
         $products = 0;
         $totalClients = 0;
-        foreach ($cars as $car) {
-            $services = $services + count($car->orders->where('is_product', 0));
-            $products = $products + count($car->orders->where('is_product', 1));
-        }
-        /*$orders = Order::whereHas('branchServiceProfessional', function ($query) use ($data) {
-            $query->whereHas('branchService', function ($query) use ($data) {
-                $query->WhereHas('service', function ($query) {
-                    $query->where('type_service', 'Especial');
-                })->where('branch_id', $data['branch_id']);
-            })->where('professional_id', $data['professional_id']);
-        })->whereMonth('data', $mes)->whereYear('data', $year)->get();*/
-        $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+        //foreach ($cars as $car) {
+            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
+            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
+            $services = $orderServ->count();
+            //$services = $services + count($car->orders->where('is_product', 0));
+            //$products = $products + count($car->orders->where('is_product', 1));
+            $products = $orderProd->sum('cant');
+        //}
+        $ServiceEspecial = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
             $query->where('type_service', 'Especial');
         })->get();
-        Log::info($orders);
+        $ServiceRegular = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Regular');
+        })->get();
         $totalClients = $cars->count();
         $amountGenral = round($cars->sum('amount'), 2);
-        $winProfessional =$cars->sum(function ($car){
+        /*$winProfessional =$cars->sum(function ($car){
             return $car->orders->sum('percent_win');
-        });
+        });*/
+        $winProfessional = $orderServ->sum('percent_win');
         $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
         $winTips =  round($cars->sum('tip') * 0.80, 2);
         return $result = [
             'Monto Generado' => $amountGenral, //suma productos y servicios
             'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
-            'Retención' => $retention, //monto generado percent_win % calculando la retención
+            'Retención' => $winProfessional * $retention, //monto generado percent_win % calculando la retención
             'Propina' => round($cars->sum('tip'), 2),
             'Propina 80%' => $winTips,
             'Ganancia Total Barbero' => $winProfessional-$retentionPorcent+$winTips, //ganancia barbero - retencion + propinas 80%
             'Servicios Realizados' => $services,
             'Productos Vendidos' => $products,
-            'Servicios Regulares' => $services - $orders->count(),
-            'Servicios Especiales' => $orders->count(),
-            'Monto Especial' => round($orders->sum('percent_win'), 2),
+            'Servicios Regulares' => $ServiceRegular->count(),
+            'Servicios Especiales' => $ServiceEspecial->count(),
+            'Monto Especial' => round($ServiceEspecial->sum('percent_win'), 2),
             'Clientes Atendidos' => $totalClients,
             'Seleccionado' => $cars->where('select_professional', 1)->count(),
             'Aleatorio' => $cars->where('select_professional', 0)->count()

@@ -68,9 +68,9 @@ class ReservationService
             Log::info("Crear ordenes");
             Log::info('$branchServiceProfessional->percent');
             Log::info($branchServiceProfessional->percent);
-            $porcent = $service->price_service * $branchServiceProfessional->percent / 100;
-            Log::info('$porcent');
-            Log::info($porcent);
+            $percent = number_format($branchServiceProfessional->percent / 100, 2);
+            Log::info('$percent');
+            Log::info($percent);
             $branch_service_professional_id = $branchServiceProfessional->id;
             $order = new Order();
             $order->car_id = $car->id;
@@ -79,7 +79,7 @@ class ReservationService
             $order->data = $data['data'];
             $order->is_product = false;
             //logica de porciento de ganancia
-            $order->percent_win = $service->price_service * $branchServiceProfessional->percent / 100;
+            $order->percent_win = $service->price_service * $percent;
             $order->price = $service->price_service;
             $order->request_delete = false;
             $order->save();
@@ -178,11 +178,18 @@ class ReservationService
                 $query->where('client_id', $data['client_id']);
             })->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-        $products = Product::withCount(['orders' => function ($query) use ($data, $reservationids) {
-            $query->whereHas('car.clientProfessional', function ($query) use ($data) {
-                $query->where('client_id', $data['client_id']);
-            })->whereIn('car_id', $reservationids)->where('is_product', 1);
-        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
+
+        $products = Product::with(['orders' => function ($query) use ($data, $reservationids) {
+            $query->selectRaw('SUM(cant) as total_sale_price')
+                ->groupBy('product_store.product_id')
+                ->whereHas('car.clientProfessional', function ($query) use ($data) {
+                    $query->where('client_id', $data['client_id']);
+                })
+                ->whereIn('car_id', $reservationids)
+                ->where('is_product', 1); // Agrupar por el ID del producto en la tabla intermedia
+        }])
+        ->whereHas('orders') // Filtrar solo los productos que tienen pedidos asociados
+        ->get();
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
             $query->where('client_id', $client->id);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
@@ -223,6 +230,7 @@ class ReservationService
                     ];
                 }),
                 'products' => $products->map(function ($product) {
+                    $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
@@ -234,7 +242,7 @@ class ReservationService
                         'sale_price' => $product->sale_price,
                         'created_at' => $product->created_at,
                         'updated_at' => $product->updated_at,
-                        'cant' => $product->orders_count
+                        'cant' => $total_sale_price
                     ];
                 }),
                 'cantMaxService' => $services->max('orders_count')

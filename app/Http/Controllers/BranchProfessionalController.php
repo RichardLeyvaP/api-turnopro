@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\Professional;
 use App\Models\Service;
 use App\Models\Vacation;

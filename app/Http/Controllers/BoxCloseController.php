@@ -106,11 +106,15 @@ class BoxCloseController extends Controller
             $finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 5)->whereDate('data', Carbon::now())->first();
                             Log::info('no existe');
                 $finance = Finance::where('branch_id', $branch->id)->orderByDesc('control')->first();
-                if($finance){
-                    $control = $finance->control;
-                }
+                if($finance !== null)
+                    {
+                        $control = $finance->control+1;
+                    }
+                    else {
+                        $control = 1;
+                    }
                 $finance = new Finance();
-                $finance->control = $control+1;
+                $finance->control = $control;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['totalMount'];
                 $finance->comment = 'Ingreso diario';

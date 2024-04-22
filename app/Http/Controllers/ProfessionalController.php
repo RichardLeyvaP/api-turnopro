@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BranchProfessional;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Professional;
@@ -59,6 +60,30 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar las professionales"], 500);
         }
     }*/
+    public function show_autocomplete_Notin(Request $request)
+    {
+        try {             
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $branchProfessionals = BranchProfessional::where('branch_id', $data['branch_id'])->get()->pluck('professional_id');
+            $professionals = Professional::whereNotin('id', $branchProfessionals)->with('charge')->get()->map(function ($professional) {
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'image_url' => $professional->image_url
+
+                ];
+            });
+                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+        }
+    }
+    
     public function show_autocomplete(Request $request)
     {
         try {
@@ -66,7 +91,8 @@ class ProfessionalController extends Controller
                 return [
                     'id' => $professional->id,
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
-                    'image_url' => $professional->image_url
+                    'image_url' => $professional->image_url,
+                    'charge' => $professional->charge->name
 
                 ];
             });
@@ -284,6 +310,30 @@ class ProfessionalController extends Controller
            })/*->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })*/->get()->map(function ($query){
+            return [
+                'id' => $query->id,
+                'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
+                'charge' => $query->charge->name
+            ];
+           });
+           
+            return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
+        }
+    }
+
+    public function branch_professionals_cashier(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+           })->whereHas('charge', function ($query) {
+            $query->where('name', 'Cajero (a)');
+        })->get()->map(function ($query){
             return [
                 'id' => $query->id,
                 'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
