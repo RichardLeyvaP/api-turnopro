@@ -40,12 +40,11 @@ class OperationTipController extends Controller
                 'type' => 'required|string',
             ]);
             $operationTip = OperationTip::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->first();
-            if($operationTip !== null){
+            if ($operationTip !== null) {
                 $operationTip->amount = $operationTip->amount + $data['amount'];
                 $operationTip->coffe_percent = $operationTip->coffe_percent + $data['coffe_percent'];
                 $operationTip->save();
-            }
-            else{
+            } else {
                 $operationTip = new OperationTip();
                 $operationTip->branch_id = $data['branch_id'];
                 $operationTip->professional_id = $data['professional_id'];
@@ -64,18 +63,16 @@ class OperationTipController extends Controller
                 Car::whereIn('id', $carIds)->update(['operation_tip_id' => $operationTip->id]);
             }
             $finance = Finance::where('branch_id', $data['branch_id'])->where('revenue_id', 6)->whereDate('data', Carbon::now())->first();
-            if($finance !== null){
+            if ($finance !== null) {
                 $finance->amount = $finance->amount + $data['coffe_percent'];
                 $finance->save();
-            }else{
+            } else {
                 $finance = Finance::where('branch_id', $data['branch_id'])->orderByDesc('control')->first();
-                if($finance)
-                    {
-                        $control = $finance->control+1;
-                    }
-                    else {
-                        $control = 1;
-                    }
+                if ($finance) {
+                    $control = $finance->control + 1;
+                } else {
+                    $control = 1;
+                }
                 $finance = new Finance();
                 $finance->control = $control;
                 $finance->operation = 'Ingreso';
@@ -84,11 +81,11 @@ class OperationTipController extends Controller
                 $finance->branch_id = $data['branch_id'];
                 $finance->type = 'Sucursal';
                 $finance->revenue_id = 6;
-                $finance->data = Carbon::now();                
+                $finance->data = Carbon::now();
                 $finance->file = '';
                 $finance->save();
             }
-            
+
             return response()->json($operationTip, 201);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
@@ -114,18 +111,18 @@ class OperationTipController extends Controller
             $branchId = $request->branch_id;
 
             $payments = OperationTip::where('professional_id', $professionalId)
-                                          ->where('branch_id', $branchId)
-                                          ->get()->map(function ($query){
-                                            return [
-                                                'id' => $query->id,
-                                                'branch_id ' =>$query->branch_id,
-                                                'professional_id' => $query->professional_id,
-                                                'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
-                                                'type' => $query->type,
-                                                'coffe_percent' => $query->coffe_percent,
-                                                'amount' => $query->amount
-                                            ];
-                                          });
+                ->where('branch_id', $branchId)
+                ->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'branch_id ' => $query->branch_id,
+                        'professional_id' => $query->professional_id,
+                        'date' => $query->date . ' ' . Carbon::parse($query->created_at)->format('H:i:s'),
+                        'type' => $query->type,
+                        'coffe_percent' => $query->coffe_percent,
+                        'amount' => $query->amount
+                    ];
+                });
 
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
@@ -147,20 +144,20 @@ class OperationTipController extends Controller
             $branchId = $request->branch_id;
 
             $payments = OperationTip::where('branch_id', $branchId)
-                                          ->get()->map(function ($query){
-                                            return [
-                                                'id' => $query->id,
-                                                'branch_id ' =>$query->branch_id,
-                                                'professional_id' => $query->professional_id,
-                                                'nameProfessional' => $query->professional->name.' '.$query->professional->surname.' '.$query->professional->second_surname,
-                                                'image_url' => $query->professional->image_url,
-                                                'date' => $query->date,
-                                                'type' => $query->type,
-                                                'coffe_percent' => $query->coffe_percent,
-                                                'amount' => $query->amount
-                                            ];
-                                          });
-
+                ->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'branch_id ' => $query->branch_id,
+                        'professional_id' => $query->professional_id,
+                        'nameProfessional' => $query->professional->name . ' ' . $query->professional->surname . ' ' . $query->professional->second_surname,
+                        'image_url' => $query->professional->image_url,
+                        'date' => $query->date,
+                        'type' => $query->type,
+                        'coffe_percent' => $query->coffe_percent,
+                        'amount' => $query->amount
+                    ];
+                });
+           
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
@@ -183,20 +180,40 @@ class OperationTipController extends Controller
             $branchId = $request->branch_id;
 
             $payments = OperationTip::where('branch_id', $branchId)->whereDate('date', '>=', $request->startDate)->whereDate('date', '<=', $request->endDate)
-                                          ->get()->map(function ($query){
-                                            return [
-                                                'id' => $query->id,
-                                                'branch_id ' =>$query->branch_id,
-                                                'professional_id' => $query->professional_id,
-                                                'nameProfessional' => $query->professional->name.' '.$query->professional->surname.' '.$query->professional->second_surname,
-                                                'image_url' => $query->professional->image_url,
-                                                'date' => $query->date,
-                                                'type' => $query->type,
-                                                'coffe_percent' => $query->coffe_percent,
-                                                'amount' => $query->amount
-                                            ];
-                                          });
+                ->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'branch_id ' => $query->branch_id,
+                        'professional_id' => $query->professional_id,
+                        'nameProfessional' => $query->professional->name . ' ' . $query->professional->surname . ' ' . $query->professional->second_surname,
+                        'image_url' => $query->professional->image_url,
+                        'date' => $query->date,
+                        'type' => $query->type,
+                        'coffe_percent' => $query->coffe_percent,
+                        'amount' => $query->amount
+                    ];
+                });
 
+                // Calcular totales
+            $totalCoffePercent = $payments->sum('coffe_percent');
+            $totalAmount = $payments->sum('amount');
+                if($totalAmount){
+            // Agregar fila de total
+            $totalRow = [
+                'id' => '',
+                'branch_id' => '',
+                'professional_id' => '',
+                'nameProfessional' => 'Total',
+                'image_url' => '',
+                'date' => '',
+                'type' => '',
+                'coffe_percent' => $totalCoffePercent,
+                'amount' => $totalAmount
+            ];
+
+            $payments->push($totalRow);
+                }
+           
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
@@ -211,12 +228,12 @@ class OperationTipController extends Controller
     {
         try {
             $data = $request->validate([
-               'branch_id' => 'required|numeric'
-           ]);
-           //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
-           $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->where('pay', 1)->where('tip', '>', 0)->get()->map(function($car){
+                'branch_id' => 'required|numeric'
+            ]);
+            //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
+            $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })->where('pay', 1)->where('tip', '>', 0)->get()->map(function ($car) {
                 //$ordersServices = count($car->orders->where('is_product', 0));
                 //$orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 //$tipProfessional = $car->tip * 0.80;
@@ -226,9 +243,9 @@ class OperationTipController extends Controller
                 return [
                     'id' => $car->id,
                     'professional_id' => $car->clientProfessional->professional->id,
-                    'clientName' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname,
+                    'clientName' => $car->clientProfessional->client->name . ' ' . $car->clientProfessional->client->surname,
                     'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',
-                    'professionalName' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname,
+                    'professionalName' => $car->clientProfessional->professional->name . ' ' . $car->clientProfessional->professional->surname,
                     'image_url' => $car->clientProfessional->professional->image_url,
                     'branch_id' => $car->reservation->branch_id,
                     'data' => $car->reservation->data,
@@ -236,11 +253,11 @@ class OperationTipController extends Controller
                     'tipCashier' => $tipCashier,
                     'tipCoffe' => $tipCoffe
                 ];
-           });
-           return response()->json($cars, 200);
-       } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
-       }
+            });
+            return response()->json($cars, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
+        }
     }
 
     /**
@@ -259,7 +276,7 @@ class OperationTipController extends Controller
         //
     }
 
-  
+
     public function destroy(Request $request)
     {
         try {
@@ -271,20 +288,19 @@ class OperationTipController extends Controller
 
             // Buscar y actualizar los carros asociados para establecer el campo professional_payment_id en null
             Car::where('operation_tip_id', $data['id'])->update(['operation_tip_id' => null]);
-            
+
             $finance = Finance::where('branch_id', $operationTip->branch_id)->where('revenue_id', 6)->whereDate('data', $operationTip->date)->first();
-            if($finance !== null){
-                $amount = $finance->amount -$operationTip->coffe_percent;
-                if($amount <= 0){
+            if ($finance !== null) {
+                $amount = $finance->amount - $operationTip->coffe_percent;
+                if ($amount <= 0) {
                     $finance->delete();
-                }
-                else{
+                } else {
                     $finance->amount = $amount;
                     $finance->save();
                 }
             }
-           
-            
+
+
             // Eliminar el pago de profesional
             $operationTip->delete();
             return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);

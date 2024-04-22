@@ -18,11 +18,11 @@ use Illuminate\Support\Facades\Log;
 class TailService {
 
     public function cola_branch_data($branch_id){
-        $tails1 = Tail::whereHas('reservation', function ($query) use ($branch_id){
+        /*$tails1 = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        })->get();
+        })->get();*/
         Log::info('Cola de una branch');
-        Log::info($tails1);
+        //Log::info($tails1);
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })->whereIn('attended', [0,3,33])->get()->map(function ($tail){
@@ -41,17 +41,17 @@ class TailService {
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
             return [
-                'reservation_id' => $tail->reservation->id,
-                'car_id' => $tail->reservation->car_id,
-                'from_home' => $tail->reservation->from_home,
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
+                'from_home' => $reservation->from_home,
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'professional_name' => $professional->name." ".$professional->surname,
-                'client_id' => $reservation->car->clientProfessional->client_id,
-                'professional_id' => $reservation->car->clientProfessional->professional_id,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
                 'professional_state' => $professional->state,
                 'attended' => $tail->attended,
                 'puesto' => $workplace ? $workplace->name : null,
@@ -76,14 +76,14 @@ class TailService {
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
             return [
-                'reservation_id' => $tail->reservation->id,
-                'car_id' => $tail->reservation->car_id,
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
                 'total_time' => $reservation->total_time,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
-                'client_id' => $reservation->car->clientProfessional->client_id,
-                'professional_id' => $reservation->car->clientProfessional->professional_id,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
                 'professional_name' => $professional->name." ".$professional->surname,
                 'client_name' => $client->name." ".$client->surname, 
                 'attended' => $tail->attended,
@@ -126,8 +126,8 @@ class TailService {
                     'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                     'professional_name' => $professional->name . " " . $professional->surname  . " " . $professional->second_surname,
                     'image_url' => $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg",
-                    'client_id' => $reservation->car->clientProfessional->client_id,
-                    'professional_id' => $reservation->car->clientProfessional->professional_id,
+                    'client_id' => $client->id,
+                    'professional_id' => $professional->id,
                     'professional_state' => $professional->state,
                     'attended' => $tail->attended,
                     'puesto' => $workplace ? $workplace->name : null,
@@ -150,24 +150,27 @@ class TailService {
         })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
         })->whereNot('attended', [2])->get();
-        $branchTails = $tails->map(function ($tail) use ($branch_id){        
+        $branchTails = $tails->map(function ($tail) use ($branch_id){  
+            $reservation = $tail->reservation;
+            $professional = $reservation->car->clientProfessional->professional;
+            $client = $reservation->car->clientProfessional->client;      
             return [
-                'reservation_id' => $tail->reservation->id,
-                'car_id' => $tail->reservation->car_id,
-                'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
-                'total_time' => $tail->reservation->total_time,
-                'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname,
-                'client_image' => $tail->reservation->car->clientProfessional->client->client_image ? $tail->reservation->car->clientProfessional->client->client_image : "comments/default_profile.jpg",
-                'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname,
-                'client_id' => $tail->reservation->car->clientProfessional->client_id,
-                'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'total_time' => $reservation->total_time,
+                'client_name' => $client->name." ".$client->surname,
+                'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
+                'professional_name' => $professional->name." ".$professional->surname,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
                 'attended' => $tail->attended, 
                 'updated_at' => $tail->updated_at->format('Y-m-d H:i:s'),
                 'clock' => $tail->clock, 
                 'timeClock' => $tail->timeClock, 
                 'detached' => $tail->detached, 
-                'total_services' => Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $tail->reservation->car_id)->where('is_product', false)->count()
+                'total_services' => Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count()
                
             ];
         })->sortBy('start_time')->values();
@@ -309,19 +312,29 @@ class TailService {
         Log::info($professional);
         $reservation = Reservation::find($data['reservation_id']);
         Log::info($reservation);
-        $horaActual = Carbon::now()->format('H:i:s');
+        $horaActual = \Carbon\Carbon::now();
+        /*$horaActual = Carbon::now()->format('H:i:s');
         $timestamp = strtotime($reservation->total_time);
         $tiempo_entero = date('Gis', $timestamp);
         $horas = intval(substr($tiempo_entero, 0, 1));
         $minutos = intval(substr($tiempo_entero, 2, 2));
-        $time = $horas * 60 + $minutos;
-        Log::info($horaActual);
-        Log::info(Carbon::parse($horaActual)->addMinutes($time)->toTimeString());
-        $reservation->start_time = $horaActual;
-        $reservation->final_hour = Carbon::parse($horaActual)->addMinutes($time)->toTimeString();
-        $reservation->save();
-        $car = Car::find($reservation->car_id);
-        
+        return $time = $horas * 60 + $minutos;*/
+        // Obtener el tiempo total de la reserva en formato "00:40:00"
+            $tiempoReserva = $reservation->total_time;
+
+            // Parsear el tiempo de la reserva para obtener horas, minutos y segundos
+            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+
+            // Sumar el tiempo de la reserva a la hora actual
+            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
+
+            // Formatear la nueva hora en el formato deseado (H:i:s)
+            $nuevaHoraFormateada = $nuevaHora->format('H:i:s');
+                    $reservation->start_time = $horaActual;
+                    $reservation->final_hour = Carbon::parse($nuevaHoraFormateada)->toTimeString();
+                    $reservation->save();
+                    $car = Car::find($reservation->car_id);
+                    
         Log::info($car);
         //$relation = Client::find($data['client_id'])->professionals()->where('professional_id', $data['professional_id'])->first();
         //Log::info($relation);

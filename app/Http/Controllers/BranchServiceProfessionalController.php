@@ -105,19 +105,39 @@ class BranchServiceProfessionalController extends Controller
         }
     }
     public function professional_services(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'professional_id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
-            ]);
-            $serviceModels = Service::whereHas('branchServices', function ($query) use ($data) {
+{
+    try {
+        $data = $request->validate([
+            'professional_id' => 'required|numeric',
+            'branch_id' => 'required|numeric'
+        ]);
+
+        $serviceModels = Service::with(['branchServices' => function ($query) use ($data) {
+                $query->select('service_id')->where('branch_id', $data['branch_id']);
+            }, 'professionals' => function ($query) use ($data) {
+                $query->select('service_id')->where('professional_id', $data['professional_id']);
+            }])
+            ->whereHas('branchServices', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereHas('professionals', function ($query) use ($data) {
+            })
+            ->whereHas('professionals', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->get()->map(function ($service) {
+            })
+            ->select([
+                'id', 
+                'name', 
+                'simultaneou', 
+                'price_service', 
+                'type_service', 
+                'profit_percentaje', 
+                'duration_service', 
+                'image_service', 
+                'service_comment'
+            ])
+            ->get()
+            ->map(function ($service) {
                 return [
-                    "id" => $service->professionals->pluck('id')->first(),
+                    "id" => $service->id, // Using correct 'id' from the 'services' table
                     "name" => $service->name,
                     "simultaneou" => $service->simultaneou,
                     "price_service" => $service->price_service,
@@ -128,11 +148,12 @@ class BranchServiceProfessionalController extends Controller
                     "service_comment" => $service->service_comment
                 ];
             });
-            return response()->json(['professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
-        }
+
+        return response()->json(['professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+    } catch (\Throwable $th) {
+        return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
     }
+}
     
     public function store(Request $request)
     {

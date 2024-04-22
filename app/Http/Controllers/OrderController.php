@@ -105,7 +105,7 @@ class OrderController extends Controller
                 Log::info($trace);
              }
             if ($data['product_id'] == 0 && $data['type'] == 'service') {
-                $order = $this->orderService->service_order_store($data);
+                $order = $this->orderService->service_order_store1($data);
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,

@@ -513,7 +513,7 @@ class CarController extends Controller
                     'data' => $car->reservation->data.' '.$car->reservation->start_time,
                     'time' => $reservation,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
-                    'tips' =>  $car->tip,
+                    'tips' =>  (int)$car->tip,
                     'tips80%' =>  $car->tip * 0.80,
                     'Services' => $orderServ->count(),
                     'totalServices' => $orderServ->sum('price'),

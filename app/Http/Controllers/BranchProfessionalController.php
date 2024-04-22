@@ -137,6 +137,7 @@ class BranchProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $services = $request->input('services');
+            $professionals = [];
             $professionals1 = Professional::where(function ($query) use ($services, $data) {
                 foreach ($services as $service) {
                     $query->whereHas('branchServices', function ($q) use ($service, $data) {

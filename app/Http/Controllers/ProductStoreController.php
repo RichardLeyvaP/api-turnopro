@@ -10,6 +10,7 @@ use App\Models\Store;
 use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ProductStoreController extends Controller
@@ -284,40 +285,51 @@ class ProductStoreController extends Controller
     }
 
     public function category_products(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
-            ]);
-            /*$productStores = ProductStore::whereHas('product', function ($query) use ($data) {
-                $query->where('product_category_id', $data['id'])->where('status_product', 'En venta');
-            })->where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->get();*/
-            $productStores = ProductStore::whereHas('product', function ($query) use ($data){
-                $query->where('product_category_id', $data['id'])->where('status_product', 'En venta');
-            })->whereHas('store.branches', function ($query) use ($data){              
-                    $query->where('branches.id', $data['branch_id']);
-            })->where('product_exit', '>', 0)->get();
-            $productsArray = $productStores->map(function ($productStore) {
-                return [
-                    'id' => $productStore->id,
-                    'product_exit' => $productStore->product_exit,
-                    'product_id' => $productStore->product_id,
-                    'name' => $productStore->product->name,
-                    'reference' => $productStore->product->reference,
-                    'code' => $productStore->product->code,
-                    'description' => $productStore->product->description,
-                    'status_product' => $productStore->product->status_product,
-                    'purchase_price' => $productStore->product->purchase_price,
-                    'sale_price' => $productStore->product->sale_price,
-                    'image_product' => $productStore->product->image_product
-                ];
-            });
-            return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
-        }
+{
+    try {
+        $data = $request->validate([
+            'id' => 'required|numeric',
+            'branch_id' => 'required|numeric'
+        ]);
+
+        // Eager loading con filtrado más específico
+        $productStores = ProductStore::with(['product' => function ($query) use ($data) {
+            $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
+                  ->where('status_product', '=', 'En venta');
+        }])
+        ->whereHas('product', function ($query) use ($data) {
+            $query->where('product_category_id', '=', $data['id']);
+        })
+        ->whereHas('store.branches', function ($query) use ($data){
+            $query->where('branches.id', '=', $data['branch_id']);
+        })
+        ->where('product_exit', '>', 0)
+        ->select(['id', 'product_exit', 'product_id', 'store_id'])
+        ->get();
+
+        $productsArray = $productStores->map(function ($productStore) {
+            $product = $productStore->product; // Almacenar producto en una variable local
+            return [
+                'id' => $productStore->id,
+                'product_exit' => $productStore->product_exit,
+                'product_id' => $productStore->product_id,
+                'name' => $product->name,
+                'reference' => $product->reference,
+                'code' => $product->code,
+                'description' => $product->description,
+                'status_product' => $product->status_product,
+                'purchase_price' => $product->purchase_price,
+                'sale_price' => $product->sale_price,
+                'image_product' => $product->image_product
+            ];
+        });
+
+        return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
+    } catch (\Throwable $th) {
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
     }
+}
+
     public function update(Request $request)
     {
         Log::info("Actualizar asignacion de Producto a un almacén");
