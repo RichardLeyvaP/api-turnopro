@@ -346,8 +346,8 @@ class CarController extends Controller
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->where('pay', 1)/*->where('professional_payment_id', '!=', NULL)*/->get()->map(function($car) use ($retention){
-
+           })->where('pay', 1)/*->where('professional_payment_id', '!=', NULL)*/->get()->map(function($car) use ($retention, $data){
+                $reservation = $car->reservation;
                 //$ordersServices = count($car->orders->where('is_product', 0));
                 $totalServicesWin = $car->orders->where('is_product', 0)->sum('percent_win');
                 //$totalServices = $car->orders->where('is_product', 0)->sum('price');
@@ -356,10 +356,10 @@ class CarController extends Controller
                 $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();
                 return [
-                    'professional_id' => $car->clientProfessional->professional->id,
-                    'branch_id' => $car->reservation->branch_id,
-                    'data' => $car->reservation->data,
-                    'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($car->reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
+                    'professional_id' => $data['professional_id'],
+                    'branch_id' => $reservation->branch_id,
+                    'data' => $reservation->data,
+                    'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
                     'attendedClient' => 1,
                     'services' => $orderServ->count(),
                     'totalServices' => $orderServ->sum('price'),
@@ -375,7 +375,7 @@ class CarController extends Controller
            })->groupBy('data')->map(function ($cars) {
             return [
                 'professional_id' => $cars[0]['professional_id'],
-                'branch_id' => $cars[0]['branch_id'],
+                'branch_id' =>  intval($cars[0]['branch_id']),
                 'data' => $cars[0]['data'],
                 'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana
                 'attendedClient' => $cars->sum('attendedClient'),
@@ -454,16 +454,16 @@ class CarController extends Controller
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->where('pay', 1)->get()->map(function($car) use ($retention){
-                $ordersServices = count($car->orders->where('is_product', 0));
+           })->where('pay', 1)->get()->map(function($car) use ($retention, $data){
+                //$ordersServices = count($car->orders->where('is_product', 0));
                 $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
-
+                $client = $car->clientProfessional->client;
                 return [
                     'id' => $car->id,
-                    'professional_id' => $car->clientProfessional->professional->id,
-                    'clientName' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname,
-                    'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',
-                    'branch_id' => $car->reservation->branch_id,
+                    'professional_id' => $data['professional_id'],
+                    'clientName' => $client->name.' '.$client->surname,
+                    'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
+                    'branch_id' => $data['branch_id'],
                     'data' => $car->reservation->data,
                     'attendedClient' => 1,
                     'services' => $orderServ->count(),
@@ -501,17 +501,19 @@ class CarController extends Controller
                 $ServiceRegular = Order::where('car_id', $car->id)->whereHas('branchServiceProfessional', function ($query) {
                     $query->where('type_service', 'Regular');
                 })->get();
-                $reservation = Reservation::where('car_id', $car->id)->value('total_time');
+                $reservation = Reservation::where('car_id', $car->id)->first();
                 $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();
+                $client = $car->clientProfessional->client;
+                //$reservation = $car->reservation;
                 //Log:info('$ServicesSpecial');
                 Log::info($ServiceEspecial);
                 return [
                     'id' => $car->id,
-                    'clientName' => $car->clientProfessional->client->name." ".$car->clientProfessional->client->surname,
-                    'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',                        
-                    'data' => $car->reservation->data.' '.$car->reservation->start_time,
-                    'time' => $reservation,
+                    'clientName' => $client->name." ".$client->surname,
+                    'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',                        
+                    'data' => $reservation->data.' '.$reservation->start_time,
+                    'time' => $reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
                     'tips' =>  (int)$car->tip,
                     'tips80%' =>  $car->tip * 0.80,

@@ -55,6 +55,60 @@ class BranchServiceProfessionalController extends Controller
     }
     }
     public function services_professional_branch(Request $request)
+{
+    try {
+        $data = $request->validate([
+            'professional_id' => 'required|numeric',
+            'branch_id' => 'required|numeric'
+        ]);
+
+        $assignedServices = BranchServiceProfessional::with(['branchService.service'])
+            ->whereHas('branchService.branch', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })
+            ->where('professional_id', $data['professional_id'])
+            ->get(['branch_service_id', 'type_service', 'percent']);
+
+        $unassignedServiceIds = BranchService::whereNotIn('id', $assignedServices->pluck('branch_service_id')->toArray())
+            ->where('branch_id', $data['branch_id'])
+            ->pluck('id');
+
+        $unassignedServices = BranchService::whereIn('id', $unassignedServiceIds)
+            ->with('service')
+            ->get()
+            ->map(function ($branchService) {
+                $service = $branchService->service;
+                return [
+                    'id' => $branchService->id,
+                    "name" => $service->name,
+                    "type_service" => $service->type_service,
+                    "image_service" => $service->image_service,
+                    "profit_percentaje" => $service->profit_percentaje,
+                ];
+            });
+
+        $assignedServicesData = [];
+        foreach ($assignedServices as $branchservprof) {
+            $branchService = $branchservprof->branchService;
+            $service = $branchService->service;
+            $assignedServicesData[] = [
+                'id' => $branchservprof->branch_service_id,
+                "name" => $service->name,
+                "type_service" => $branchservprof->type_service,
+                "image_service" => $service->image_service,
+                "profit_percentaje" => $branchservprof->percent,
+            ];
+        }
+
+        return response()->json([
+            'assignedServices' => $assignedServicesData,
+            'unassignedServices' => $unassignedServices
+        ], 200, [], JSON_NUMERIC_CHECK);
+    } catch (\Throwable $th) {
+        return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
+    }
+}
+    /*public function services_professional_branch(Request $request)
     {
         try {
             $data = $request->validate([
@@ -85,7 +139,7 @@ class BranchServiceProfessionalController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
-    }
+    }*/
     public function services_professional_branch_web(Request $request)
     {
         try {
@@ -262,7 +316,7 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
-    public function services_professional_branch_free(Request $request)
+    /*public function services_professional_branch_free(Request $request)
     {
         try {
             $data = $request->validate([
@@ -288,7 +342,7 @@ class BranchServiceProfessionalController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
-    }
+    }*/
     public function professionals_branch_service(Request $request)
     {
         try {

@@ -243,7 +243,7 @@ Route::get('/store_professional_service', [BranchServiceProfessionalController::
 Route::get('/branch-service-professionals', [BranchServiceProfessionalController::class, 'branch_service_professionals']);//devolver los professionales que realizan un servicio en una sucursal
 Route::get('/services-professional-branch', [BranchServiceProfessionalController::class, 'services_professional_branch']);//devolver los servicios que realiza un professional en un abranch
 Route::get('/services-professional-branch-web', [BranchServiceProfessionalController::class, 'services_professional_branch_web']);//devolver los servicios que realiza un professional en un abranch
-Route::get('/services-professional-branch-free', [BranchServiceProfessionalController::class, 'services_professional_branch_free']);//devolver los servicios que no realiza un professional en un abranch
+//Route::get('/services-professional-branch-free', [BranchServiceProfessionalController::class, 'services_professional_branch_free']);//devolver los servicios que no realiza un professional en un abranch
 Route::get('/professionals-branch-service', [BranchServiceProfessionalController::class, 'professionals_branch_service']);//devolver los professionales que no realizan un servicio en una sucursal
 
 Route::get('/clientprofessional', [ClientProfessionalController::class, 'index']);
