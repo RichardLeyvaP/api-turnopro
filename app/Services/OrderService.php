@@ -96,7 +96,7 @@ class OrderService {
 
             $tiempoGuardado = $tiempoGuardado->toTimeString();
 
-            $reservation->final_hour = Carbon::parse($reservation ->final_hour)->addMinutes($duration)->toTimeString();
+            $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($duration)->toTimeString();
             $reservation->total_time = $tiempoGuardado;
             $reservation->save();
 
