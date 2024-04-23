@@ -45,22 +45,16 @@ class OrderService {
                  $order->save();
         return $order;
     }
-    public function service_order_store($data){
+    public function service_order_store1($data){
             $car = Car::findOrFail($data['car_id']);
             $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
             
                 $service = $branchServiceprofessional->branchService->service;
                 $percent = number_format($branchServiceprofessional->percent/100, 2);
-                $duration = $branchServiceprofessional->branchService->service->duration_service;
                     $car->amount = $car->amount + $service->price_service;
                 $car->save();
                 $car_id = $car->id;
-                
-                //Log::info('$branchServiceProfessional->percent');
-                //Log::info($branchServiceprofessional->percent);
-                //$porcent = $service->price_service*$branchServiceprofessional->percent/100;
-                //Log::info('$porcent');
-                //Log::info($porcent);
+       
                  $order = new Order();
                  $order->car_id = $car_id;
                  $order->product_store_id = null;
@@ -74,22 +68,16 @@ class OrderService {
                 return $order;
     }
 
-    public function service_order_store1($data){
+    public function service_order_store($data){
         $car = Car::findOrFail($data['car_id']);
         $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
-        
             $service = $branchServiceprofessional->branchService->service;
             $percent = number_format($branchServiceprofessional->percent/100, 2);
-            $duration = $branchServiceprofessional->branchService->service->duration_service;
-                $car->amount = $car->amount + $service->price_service;
+            $duration = $service->duration_service;
+            $car->amount = $car->amount + $service->price_service;
             $car->save();
             $car_id = $car->id;
-            
-            //Log::info('$branchServiceProfessional->percent');
-            //Log::info($branchServiceprofessional->percent);
-            //$porcent = $service->price_service*$branchServiceprofessional->percent/100;
-            //Log::info('$porcent');
-            //Log::info($porcent);
+
              $order = new Order();
              $order->car_id = $car_id;
              $order->product_store_id = null;
@@ -100,7 +88,19 @@ class OrderService {
              $order->price = $service->price_service;   
              $order->request_delete = false;
              $order->save();
-            return $order;
+             $reservation = Reservation::where('car_id', $car_id)->first();
+             $tiempoGuardado = Carbon::createFromFormat('H:i:s', $reservation->total_time);
+
+            $tiempoGuardado->addMinutes($duration);
+
+
+            $tiempoGuardado = $tiempoGuardado->toTimeString();
+
+            $reservation->final_hour = Carbon::parse($reservation ->final_hour)->addMinutes($duration)->toTimeString();
+            $reservation->total_time = $tiempoGuardado;
+            $reservation->save();
+
+        return $order;
 }
 
 

@@ -87,18 +87,22 @@ class OrderController extends Controller
                 'cant' => 'required'
 
             ]);
+            Log::info('$data');
+        Log::info($data);
             $car = Car::find($data['car_id']);            
             $branch = Branch::where('id', $request->branch_id)->first();
+            $clientName = $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname;
+            $professionalName = $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname;
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 $order = $this->orderService->product_order_store($data);
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
-                    'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                    'client' => $clientName,
                     'amount' => $order->price,
                     'operation' => 'Agrega Producto al carro: '.$car->id,
                     'details' => $order->productStore->product->name,
-                    'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                    'description' => $professionalName,
                 ];
                 $this->traceService->store($trace);
                 Log::info('$trace Pproduct');
@@ -109,15 +113,15 @@ class OrderController extends Controller
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
-                    'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                    'client' => $clientName,
                     'amount' => $order->price,
                     'operation' => 'Agrega Servicio  al carro: '.$car->id,
                     'details' => $order->branchServiceProfessional->branchService->service->name,
-                    'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                    'description' => $professionalName,
                 ];
                 $this->traceService->store($trace);
                 Log::info('$trace Service');
-                Log::info($trace);             
+                //Log::info($trace);             
             }
             DB::commit();
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
@@ -318,21 +322,10 @@ class OrderController extends Controller
             if ($order->is_product == 1) {                
             Log::info("Es producto");
                 $productstore = ProductStore::find($order->product_store_id);
-                $productstore->product_quantity = 1;
-                $productstore->product_exit = $productstore->product_exit + 1;
+                $cant = $order->cant;
+                $productstore->product_quantity = $cant;
+                $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
-                /*$trace = [
-                    'branch' => $branch->name,
-                    'cashier' => $request->nameProfessional,
-                    'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
-                    'amount' => $order->price,
-                    'operation' => 'Elimina Producto del carro: '.$car->id,
-                    'details' => $order->productStore->product->name,
-                    'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
-                ];
-                $this->traceService->store($trace);*/
-                //todo pendiente para revisar importante
-               // $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
             if ($order->is_product == 0) {
                 Log::info("servicio");
@@ -345,16 +338,6 @@ class OrderController extends Controller
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
                 $reservation->save();
-                /*$trace = [
-                    'branch' => $branch->name,
-                    'cashier' => $request->nameProfessional,
-                    'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
-                    'amount' => $order->price,
-                    'operation' => 'Elimina servicio del carro: '.$car->id,
-                    'details' => $order->branchServiceProfessional->branchService->service->name,
-                    'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
-                ];
-                $this->traceService->store($trace);*/
             }
             $order->delete();
             if($car->amount = $car->amount - $order->price)
@@ -382,6 +365,8 @@ class OrderController extends Controller
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
+            $client = $car->clientProfessional->client;
+            $professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $request->branch_id)->first();
             Log::info($order);
             Log::info($car);
@@ -389,18 +374,19 @@ class OrderController extends Controller
             Log::info("Es producto");
             
                 $productstore = ProductStore::find($order->product_store_id);
-                $cant = $order->price / $productstore->product->sale_price;
+                $product = $productstore->product;
+                $cant = $order->cant;
                 $productstore->product_quantity = $cant;
                 $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
-                    'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                    'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
                     'amount' => $order->price,
                     'operation' => 'Elimina orden de Producto del carro: '.$car->id,
-                    'details' => $order->productStore->product->name,
-                    'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                    'details' => $product->name,
+                    'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
                 ];
                 $this->traceService->store($trace);
                 Log::info('$trace Pproduct');
@@ -422,11 +408,11 @@ class OrderController extends Controller
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
-                    'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                    'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
                     'amount' => $order->price,
                     'operation' => 'Elimina orden de Servicio del carro: '.$car->id,
-                    'details' => $order->branchServiceProfessional->branchService->service->name,
-                    'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                    'details' => $service->name,
+                    'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
                 ];
                 $this->traceService->store($trace);
                 Log::info('$trace Service');

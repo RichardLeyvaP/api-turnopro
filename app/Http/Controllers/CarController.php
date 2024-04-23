@@ -583,39 +583,56 @@ class CarController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
     
-                $orderDatas = Order::whereHas('car.reservation', function ($query) use ($data){
+                /*$orderDatas = Order::whereHas('car.reservation', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
-                })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
-
+                })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();*/
+                $orderDatas = Order::with(['car.reservation', 'car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])
+    ->whereHas('car.reservation', function ($query) use ($data) {
+        $query->where('branch_id', $data['branch_id']);
+    })
+    ->where('request_delete', true)
+    ->whereDate('data', Carbon::now()->toDateString())
+    ->orderBy('updated_at', 'desc')
+    ->get();
            $car = $orderDatas->map(function ($orderData){
+            $car = $orderData->car;
+                $clientProfessional = $car->clientProfessional;
+
+                $profesionalName = $clientProfessional->professional->name.' '.$clientProfessional->professional->surname.' '.$clientProfessional->client->second_surname;
+                $clientName = $clientProfessional->client->name.' '.$clientProfessional->client->surname.' '.$clientProfessional->client->second_surname;
+
+                $hora = $orderData->updated_at;
             if ($orderData->is_product == true) {
                 return [
                     'id' => $orderData->id,
-                    'profesional_id' => $orderData->car->clientProfessional->professional->id,
-                    'reservation_id' => $orderData->car->reservation->id,
-                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
-                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
-                    'hora' => $orderData->updated_at->Format('g:i:s A'),                    
+                    'profesional_id' => $clientProfessional->professional_id,
+                    'reservation_id' => $car->reservation->id,
+                    'nameProfesional' => $profesionalName,
+                    'nameClient' => $clientName,
+                    'hora' => $hora->format('g:i:s A'),                    
                     'nameProduct' => $orderData->productStore->product->name,
                     'nameService' => null,
                     'duration_service' => null,
-                    'is_product' => $orderData->is_product,
-                    'updated_at' => $orderData->updated_at->toDateString()
+                    'is_product' => (int)$orderData->is_product,
+                    'updated_at' => $hora->toDateString()
                 ];
             }
             else {
+                $branchServiceProfessional = $orderData->branchServiceProfessional;
+                $branchService = $branchServiceProfessional->branchService;
+                $service = $branchService->service;
                 return [
                     'id' => $orderData->id,
-                    'profesional_id' => $orderData->car->clientProfessional->professional->id,
-                    'reservation_id' => $orderData->car->reservation->id,
-                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
-                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
-                    'hora' => $orderData->updated_at->Format('g:i:s A'),
+                    'profesional_id' => $clientProfessional->professional_id,
+                    'reservation_id' => $car->reservation->id,
+                    'nameProfesional' => $profesionalName,
+                    'nameClient' => $clientName,
+                    'hora' => $hora->Format('g:i:s A'),
                     'nameProduct' => null,
-                    'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
-                    'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
+                    'nameService' => $service->name,
+                    'duration_service' => $service->duration_service,
                     'is_product' => (int)$orderData->is_product,
-                    'updated_at' => $orderData->updated_at->toDateString()
+                    'updated_at' => $hora->toDateString()
                 ];
             }
            });

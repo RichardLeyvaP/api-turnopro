@@ -98,14 +98,14 @@ class BranchServiceProfessionalController extends Controller
                 $query->where('branch_id', $data['branch_id']);
             })
             ->where('professional_id', $data['professional_id'])
-            ->get(['branch_service_id', 'type_service', 'percent']);
+            ->get(['branch_service_id', 'type_service', 'percent', 'id']);
 
         $formattedData = [];
         foreach ($serviceModels as $branchservprof) {
             $branchService = $branchservprof->branchService;
             $service = $branchService->service;
             $formattedData[] = [
-                'id' => $branchservprof->branch_service_id,
+                'id' => $branchservprof->id,
                 "name" => $service->name,
                 "type_service" => $branchservprof->type_service,
                 "image_service" => $service->image_service,
