@@ -186,7 +186,7 @@ class ReservationService
             $professional = $tempBranch->car->clientProfessional->professional;
             $branch_id = $tempBranch->branch_id;
             if ($branch_id) {
-                $branchName = Branch::where('id', $branch_id)->first()->value('name');
+                $branchName = $tempBranch->branch->name;
             } else {
                 $branchName = '';
             }
