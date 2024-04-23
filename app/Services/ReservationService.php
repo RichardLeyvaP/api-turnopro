@@ -121,7 +121,7 @@ class ReservationService
             'cantVisit' => 0,
             'endLook' => '',
             'lastDate' => '',
-            'frecuencia' => 0,
+            'frecuencia' => '',
             'services' =>  [],
             'products' => []
         ];
@@ -131,9 +131,11 @@ class ReservationService
             return  $result;
         }
         Log::info("client_history 2");
-        $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data) {
-            $query->where('client_id', $data['client_id']);
-        })->orderByDesc('data')->get();
+        $reservations = Reservation::whereHas('car', function ($query) use ($data) {
+            $query->whereHas('clientProfessional', function ($query) use ($data){
+                $query->where('client_id', $data['client_id']);
+            })->where('pay', 1);
+        })->orderByDesc('data')->limit(12)->get();
 
         if ($reservations->isEmpty()) {
             return $result;
@@ -156,7 +158,7 @@ class ReservationService
         }
         Log::info("client_history 5");
 
-        $reservationids = $reservations->take(3)->pluck('car_id');
+        $reservationids = $reservations->pluck('car_id')->take(3);
         Log::info("client_history 6");
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
             $query->whereHas('car.clientProfessional', function ($query) use ($data) {
@@ -166,15 +168,16 @@ class ReservationService
 
         $products = Product::with(['orders' => function ($query) use ($data, $reservationids) {
             $query->selectRaw('SUM(cant) as total_sale_price')
-                ->groupBy('product_store.product_id')
+                ->groupBy('product_id')
                 ->whereHas('car.clientProfessional', function ($query) use ($data) {
                     $query->where('client_id', $data['client_id']);
                 })
                 ->whereIn('car_id', $reservationids)
-                ->where('is_product', 1); // Agrupar por el ID del producto en la tabla intermedia
+                ->where('is_product', 1);
         }])
-            ->whereHas('orders') // Filtrar solo los productos que tienen pedidos asociados
-            ->get();
+        ->get()->filter(function ($product) {
+            return !$product->orders->isEmpty();
+        });
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
             $query->where('client_id', $client->id);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
