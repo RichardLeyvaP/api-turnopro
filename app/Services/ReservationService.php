@@ -110,26 +110,27 @@ class ReservationService
     {
         $fiel = null;
         $frecuencia = null;
-        $cantMaxService = 0;
+        $cantMaxService = 0;        
+        $client = Client::find($data['client_id']);
         $result = [
-            'clientName' => '',
-            'professionalName' => '',
+            'clientName' => $client->name . " " . $client->surname,
+            'professionalName' => "Ningúno",
             'branchName' => '',
             'image_data' => '',
-            'imageLook' => '',
+            'imageLook' => 'comments/default_profile.jpg',
             'image_url' => '',
             'cantVisit' => 0,
             'endLook' => '',
             'lastDate' => '',
-            'frecuencia' => '',
+            'frecuencia' => "No Frecuente",
             'services' =>  [],
             'products' => []
         ];
-        $client = Client::find($data['client_id']);
-        if (!$client) {
+        
+        /*if (!$client) {
             Log::info("client_history 1");
             return  $result;
-        }
+        }*/
         Log::info("client_history 2");
         $reservations = Reservation::whereHas('car', function ($query) use ($data) {
             $query->whereHas('clientProfessional', function ($query) use ($data){
@@ -178,31 +179,27 @@ class ReservationService
         ->get()->filter(function ($product) {
             return !$product->orders->isEmpty();
         });
-        $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
-            $query->where('client_id', $client->id);
+        $comment = Comment::whereHas('clientProfessional', function ($query) use ($data) {
+            $query->where('client_id', $data['client_id']);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         Log::info('$reservations');
         Log::info($reservations);
         //if ($reservations !== null && !$reservations->isEmpty()) {
             Log::info('Tiene Reserva');
-            $tempBranch = $reservations->first();
-            $professional = $tempBranch->car->clientProfessional->professional;
-            $branch_id = $tempBranch->branch_id;
-            if ($branch_id) {
-                $branchName = $tempBranch->branch->name;
-            } else {
-                $branchName = '';
-            }
+            $reservation = $reservations->first();
+            $branch = $reservation->branch;
+            $professional = $reservation->car->clientProfessional->professional;
+
             $result = [
                 'clientName' => $client->name . " " . $client->surname,
                 'professionalName' => $professional->name . ' ' . $professional->surname,
-                'branchName' => $branchName,
-                'image_data' => $tempBranch->image_data ? $tempBranch->image_data : 'branches/default.jpg',
+                'branchName' => $branch->name,
+                'image_data' => $branch->image_data ? $branch->image_data : 'branches/default.jpg',
                 'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
                 'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
-                'lastDate' => $tempBranch->data,
+                'lastDate' => $reservation->data,
                 'frecuencia' => $fiel ? $fiel : $frecuencia,
                 'services' => $services->map(function ($service) use ($cantMaxService) {
                     return [
@@ -233,7 +230,7 @@ class ReservationService
                         'updated_at' => $product->updated_at,
                         'cant' => $total_sale_price
                     ];
-                }),
+                })->values(),
                 'cantMaxService' => $services->max('orders_count')
             ];
         /*} else {
