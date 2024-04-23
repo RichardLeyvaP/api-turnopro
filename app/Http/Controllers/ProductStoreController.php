@@ -240,27 +240,22 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-        
-            $productStores = ProductStore::with(['product', 'store.branches'])
-                ->whereHas('product', function ($query) {
-                    $query->where('status_product', 'En venta');
-                })
-                ->whereHas('store.branches', function ($query) use ($data) {
-                    $query->where('id', $data['branch_id']);
-                })
-                ->where('product_exit', '>', 0)
-                ->get()
-                ->map(function ($productStore) {
-                    return [
-                        'id' => $productStore->id,
-                        'product_exit' => $productStore->product_exit,
-                        'name' => $productStore->product->name.' (Almacén:'.$productStore->store->address.')'
-                    ];
-                });
-        
+            Log::info("Entra a buscar los productos de la branch");
+            $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
+                $query->where('status_product', 'En venta');
+            })->whereHas('store.branches', function ($query) use ($data){              
+                $query->where('branches.id', $data['branch_id']);
+        })->where('product_exit', '>', 0)->get()->map(function ($productStore) {
+                return [
+                    'id' => $productStore->id,
+                    'product_exit' => $productStore->product_exit,
+                    'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
+                ];
+            });
             return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Exception $e) {
-            // Manejo de errores
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
     

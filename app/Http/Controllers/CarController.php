@@ -294,7 +294,51 @@ class CarController extends Controller
             $data = $request->validate([
                'id' => 'required|numeric'
            ]);
-           $orderProductsDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', true)->orderBy('data', 'desc')->get();
+           $carOrders = Order::with([
+            'car.clientProfessional',
+            'productStore.product',
+            'branchServiceProfessional.branchService.service'
+        ])->where('car_id', $data['id'])->orderBy('data', 'desc')->get();
+
+        $products = [];
+        $services = [];
+
+        foreach ($carOrders as $order) {
+            if ($order->is_product) {
+                $product = $order->productStore->product;
+                $products[] = [
+                    'id' => $order->id,
+                    'name' => $product->name,
+                    'reference' => $product->reference,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product,
+                    'is_product' => $order->is_product,
+                    'price' => $order->price,
+                    'request_delete' => $order->request_delete
+                ];
+            } else {
+                $service = $order->branchServiceProfessional->branchService->service;
+                $services[] = [
+                    'id' => $order->id,
+                    'nameService' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
+                    'is_product' => $order->is_product,
+                    'price' => $order->price,
+                    'request_delete' => $order->request_delete
+                    ];
+                }
+            }
+           /*$orderProductsDatas = Order::with('car.clientProfessional')->whereRelation('car', 'id', '=', $data['id'])->where('is_product', true)->orderBy('data', 'desc')->get();
             $products = $orderProductsDatas->map(function ($orderData){
                     return [
                         'id' => $orderData->id,                   
@@ -327,7 +371,7 @@ class CarController extends Controller
                     'price' => $orderData->price,
                     'request_delete' => $orderData->request_delete
                     ];
-                });
+                });*/
            return response()->json(['productscar' => $products, 'servicescar' => $services], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => "Error al mostrar ls ordenes"], 500);
@@ -342,22 +386,36 @@ class CarController extends Controller
                'branch_id' => 'required|numeric'
            ]);
             $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
-           $cars = Car::whereHas('reservation', function ($query) use ($data){
+           /*$cars = Car::whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->where('pay', 1)/*->where('professional_payment_id', '!=', NULL)*/->get()->map(function($car) use ($retention, $data){
-                $reservation = $car->reservation;
+           })->where('pay', 1)/*->where('professional_payment_id', '!=', NULL)*//*->get()->map(function($car) use ($retention, $data){
+                /*$reservation = $car->reservation;
                 //$ordersServices = count($car->orders->where('is_product', 0));
                 $totalServicesWin = $car->orders->where('is_product', 0)->sum('percent_win');
                 //$totalServices = $car->orders->where('is_product', 0)->sum('price');
                 //$totalProducts = $car->orders->where('is_product', 1)->sum('price');
                 $aleatorio = !$car->select_professional? 1 : 0;
                 $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
-                $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();
+                $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();*/
+                $cars = Car::with(['reservation', 'orders'])
+                ->whereHas('reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                ->whereHas('clientProfessional', function ($query) use ($data) {
+                    $query->where('professional_id', $data['professional_id']);
+                })
+                ->where('pay', 1)
+                ->get()
+                ->map(function ($car) use ($retention, $data) {
+                    $reservation = $car->reservation;
+                    $orderServ = $car->orders->where('is_product', 0);
+                    $orderProd = $car->orders->where('is_product', 1);
+                    $aleatorio = !$car->select_professional? 1 : 0;
                 return [
                     'professional_id' => $data['professional_id'],
-                    'branch_id' => $reservation->branch_id,
+                    'branch_id' => $data['branch_id'],
                     'data' => $reservation->data,
                     'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
                     'attendedClient' => 1,
@@ -369,7 +427,7 @@ class CarController extends Controller
                     'totalProducts' => $orderProd->sum('price'),
                     'clientAleator' => $aleatorio,
                     'amountGenerate' => $orderServ->sum('percent_win'), //ganancia total del barbero ganancias servicios
-                    'retention' => $totalServicesWin * $retention
+                    'retention' => $orderServ->sum('percent_win') * $retention
 
                 ];
            })->groupBy('data')->map(function ($cars) {
@@ -390,7 +448,7 @@ class CarController extends Controller
                 'totalRetention' => $cars->sum('retention'),
             ];
         })->values();
-        Log::info($cars->pluck('id'));
+        //Log::info($cars->pluck('id'));
            return response()->json(['car' => $cars], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
@@ -404,13 +462,45 @@ class CarController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-            //$retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
+           $cars = Car::with('reservation')
+                    ->where('pay', 1)
+                    ->where('tecnico_id', $data['professional_id'])
+                    ->whereHas('reservation', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                    })
+                    ->get();
+
+        $carsData = $cars->map(function($car) use ($data){
+            $reservation = $car->reservation;
+            return [
+                'professional_id' => $car->tecnico_id,
+                'branch_id' => $data['branch_id'],
+                'data' => $reservation->data,
+                'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($reservation->data)->locale('es_ES')->isoFormat('dddd'))),
+                'attendedClient' => $car->technical_assistance,
+                'amountGenerate' => $car->technical_assistance * 5000
+            ];
+        });
+
+        $groupedCars = $carsData->groupBy('data')->map(function ($cars) {
+            return [
+                'professional_id' => $cars[0]['professional_id'],
+                'branch_id' => $cars[0]['branch_id'],
+                'data' => $cars[0]['data'],
+                'day_of_week' => $cars[0]['day_of_week'],
+                'attendedClient' => $cars->sum('attendedClient'),
+                'amountGenerate' => $cars->sum('amountGenerate')
+            ];
+        })->values();
+
+        return response()->json(['car' => $groupedCars], 200);
+            /*//$retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
            $cars = Car::whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
-           })->where('pay', 1)->where('tecnico_id', $data['professional_id'])->get()->map(function($car){
+           })->where('pay', 1)->where('tecnico_id', $data['professional_id'])->get()->map(function($car) use ($data){
                 //$ordersServices = count($car->orders->where('is_product', 0));
                 return [
-                    'professional_id' => $car->clientProfessional->professional->id,
+                    'professional_id' => $data['professional_id'],
                     'branch_id' => $car->reservation->branch_id,
                     'data' => $car->reservation->data,
                     'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($car->reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
@@ -436,7 +526,7 @@ class CarController extends Controller
                 'amountGenerate' => $cars->sum('amountGenerate')
             ];
         })->values();
-           return response()->json(['car' => $cars], 200);
+           return response()->json(['car' => $cars], 200);*/
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
        }
@@ -449,7 +539,41 @@ class CarController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-           $retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
+           $retention = number_format(Professional::where('id', $data['professional_id'])->value('retention') / 100, 2);
+
+            $cars = Car::where('professional_payment_id', null)
+                ->whereHas('reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                ->with(['clientProfessional.client', 'reservation'])
+                ->whereHas('clientProfessional', function ($query) use ($data) {
+                    $query->where('professional_id', $data['professional_id']);
+                })
+                ->where('pay', 1)
+                ->get()
+                ->map(function ($car) use ($retention, $data) {
+                    $orderServ = Order::where('car_id', $car->id)
+                        ->where('is_product', 0)
+                        ->get();
+
+                    $client = $car->clientProfessional->client;
+
+                    return [
+                        'id' => $car->id,
+                        'professional_id' => $data['professional_id'],
+                        'clientName' => $client->name . ' ' . $client->surname,
+                        'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
+                        'branch_id' => $data['branch_id'],
+                        'data' => $car->reservation->data,
+                        'attendedClient' => 1,
+                        'services' => $orderServ->count(),
+                        'totalServices' => $retention ? $orderServ->sum('percent_win') - ($orderServ->sum('percent_win') * $retention) : $orderServ->sum('percent_win'),
+                        'clientAleator' => $car->select_professional,
+                        'amountGenerate' => $car->amount,
+                        'tip' => $car->tip * 0.80
+                    ];
+                });
+           /*$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
            $cars = Car::where('professional_payment_id', Null)->whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->whereHas('clientProfessional', function ($query) use ($data){
@@ -472,7 +596,7 @@ class CarController extends Controller
                     'amountGenerate' => $car->amount,
                     'tip' => $car->tip * 0.80
                 ];
-           });
+           });*/
            return response()->json($cars, 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
@@ -545,7 +669,24 @@ class CarController extends Controller
                'branch_id' => 'required|numeric',
                'data' => 'required|date'
            ]);
-           //$retention = Professional::where('id', $data['professional_id'])->first()->retention/100;
+
+           $cars = Car::with(['reservation', 'clientProfessional.client'])
+                    ->whereHas('reservation', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id'])
+                              ->whereDate('data', $data['data']);
+                    })
+                    ->get()
+                    ->map(function($car) {
+                        $client = $car->clientProfessional;
+                        return [
+                            'id' => $car->id,
+                            'clientName' => $client->name." ".$client->surname,
+                            'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',                        
+                            'data' => $car->reservation->data.' '.$car->reservation->start_time,
+                            'amountTotal' => $car->technical_assistance * 5000,
+                        ];
+                    });
+           /*//$retention = Professional::where('id', $data['professional_id'])->first()->retention/100;
            $cars = Car::whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id'])->whereDate('data', $data['data']);
            })->get()->map(function($car){
@@ -553,7 +694,7 @@ class CarController extends Controller
                 /*$ServicesSpecial = Order::where('car_id', $car->id)->whereHas('branchServiceProfessional', function ($query){
                     $query->where('type_service','Especial');
                 })->get();*/
-                return [
+                /*return [
                     'id' => $car->id,
                     'clientName' => $car->clientProfessional->client->name." ".$car->clientProfessional->client->surname,
                     'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',                        
@@ -570,8 +711,8 @@ class CarController extends Controller
                     'totalServices' => $car->orders->sum('percent_win'),
                     'clientAleator' => $car->select_professional,
                     'amount' => $car->amount + $car->tip*/
-                ];
-           });
+                /*];
+           });*/
            return response()->json(['car' => $cars], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
@@ -589,56 +730,56 @@ class CarController extends Controller
                     $query->where('branch_id', $data['branch_id']);
                 })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();*/
                 $orderDatas = Order::with(['car.reservation', 'car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])
-    ->whereHas('car.reservation', function ($query) use ($data) {
-        $query->where('branch_id', $data['branch_id']);
-    })
-    ->where('request_delete', true)
-    ->whereDate('data', Carbon::now()->toDateString())
-    ->orderBy('updated_at', 'desc')
-    ->get();
-           $car = $orderDatas->map(function ($orderData){
-            $car = $orderData->car;
-                $clientProfessional = $car->clientProfessional;
+                ->whereHas('car.reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                ->where('request_delete', true)
+                ->whereDate('data', Carbon::now()->toDateString())
+                ->orderBy('updated_at', 'desc')
+                ->get();
+                    $car = $orderDatas->map(function ($orderData){
+                        $car = $orderData->car;
+                            $clientProfessional = $car->clientProfessional;
 
-                $profesionalName = $clientProfessional->professional->name.' '.$clientProfessional->professional->surname.' '.$clientProfessional->client->second_surname;
-                $clientName = $clientProfessional->client->name.' '.$clientProfessional->client->surname.' '.$clientProfessional->client->second_surname;
+                            $profesionalName = $clientProfessional->professional->name.' '.$clientProfessional->professional->surname.' '.$clientProfessional->client->second_surname;
+                            $clientName = $clientProfessional->client->name.' '.$clientProfessional->client->surname.' '.$clientProfessional->client->second_surname;
 
-                $hora = $orderData->updated_at;
-            if ($orderData->is_product == true) {
-                return [
-                    'id' => $orderData->id,
-                    'profesional_id' => $clientProfessional->professional_id,
-                    'reservation_id' => $car->reservation->id,
-                    'nameProfesional' => $profesionalName,
-                    'nameClient' => $clientName,
-                    'hora' => $hora->format('g:i:s A'),                    
-                    'nameProduct' => $orderData->productStore->product->name,
-                    'nameService' => null,
-                    'duration_service' => null,
-                    'is_product' => (int)$orderData->is_product,
-                    'updated_at' => $hora->toDateString()
-                ];
-            }
-            else {
-                $branchServiceProfessional = $orderData->branchServiceProfessional;
-                $branchService = $branchServiceProfessional->branchService;
-                $service = $branchService->service;
-                return [
-                    'id' => $orderData->id,
-                    'profesional_id' => $clientProfessional->professional_id,
-                    'reservation_id' => $car->reservation->id,
-                    'nameProfesional' => $profesionalName,
-                    'nameClient' => $clientName,
-                    'hora' => $hora->Format('g:i:s A'),
-                    'nameProduct' => null,
-                    'nameService' => $service->name,
-                    'duration_service' => $service->duration_service,
-                    'is_product' => (int)$orderData->is_product,
-                    'updated_at' => $hora->toDateString()
-                ];
-            }
-           });
-    
+                            $hora = $orderData->updated_at;
+                        if ($orderData->is_product == true) {
+                            return [
+                                'id' => $orderData->id,
+                                'profesional_id' => $clientProfessional->professional_id,
+                                'reservation_id' => $car->reservation->id,
+                                'nameProfesional' => $profesionalName,
+                                'nameClient' => $clientName,
+                                'hora' => $hora->format('g:i:s A'),                    
+                                'nameProduct' => $orderData->productStore->product->name,
+                                'nameService' => null,
+                                'duration_service' => null,
+                                'is_product' => (int)$orderData->is_product,
+                                'updated_at' => $hora->toDateString()
+                            ];
+                        }
+                        else {
+                            $branchServiceProfessional = $orderData->branchServiceProfessional;
+                            $branchService = $branchServiceProfessional->branchService;
+                            $service = $branchService->service;
+                            return [
+                                'id' => $orderData->id,
+                                'profesional_id' => $clientProfessional->professional_id,
+                                'reservation_id' => $car->reservation->id,
+                                'nameProfesional' => $profesionalName,
+                                'nameClient' => $clientName,
+                                'hora' => $hora->Format('g:i:s A'),
+                                'nameProduct' => null,
+                                'nameService' => $service->name,
+                                'duration_service' => $service->duration_service,
+                                'is_product' => (int)$orderData->is_product,
+                                'updated_at' => $hora->toDateString()
+                            ];
+                        }
+                    });
+                
             return response()->json(['carOrderDelete' => $car], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
