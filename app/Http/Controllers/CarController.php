@@ -432,7 +432,7 @@ class CarController extends Controller
                 ];
            })->groupBy('data')->map(function ($cars) {
             return [
-                'professional_id' => $cars[0]['professional_id'],
+                'professional_id' => intval($cars[0]['professional_id']),
                 'branch_id' =>  intval($cars[0]['branch_id']),
                 'data' => $cars[0]['data'],
                 'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana

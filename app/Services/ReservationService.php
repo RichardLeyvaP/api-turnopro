@@ -111,67 +111,52 @@ class ReservationService
         $fiel = null;
         $frecuencia = null;
         $cantMaxService = 0;
+        $result = [
+            'clientName' => '',
+            'professionalName' => '',
+            'branchName' => '',
+            'image_data' => '',
+            'imageLook' => '',
+            'image_url' => '',
+            'cantVisit' => 0,
+            'endLook' => '',
+            'lastDate' => '',
+            'frecuencia' => 0,
+            'services' =>  [],
+            'products' => []
+        ];
         $client = Client::find($data['client_id']);
         if (!$client) {
             Log::info("client_history 1");
-            return  $result = [
-                'clientName' => null,
-                'professionalName' => null,
-                'branchName' => '',
-                'image_data' => '',
-                'image_url' => '',
-                'imageLook' => '',
-                'cantVisit' => 0,
-                'endLook' => '',
-                'lastDate' => '',
-                'frecuencia' => 0,
-                'services' =>  [],
-                'products' => []
-            ];
+            return  $result;
         }
         Log::info("client_history 2");
-        /*$reservations = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
-            $query->where('client_id', $data['client_id']);
-        })->get();*/
         $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($data) {
             $query->where('client_id', $data['client_id']);
         })->orderByDesc('data')->get();
-        if (!$reservations) {
-            return  $result = [
-                'clientName' => '',
-                'professionalName' => '',
-                'branchName' => '',
-                'image_data' => '',
-                'imageLook' => '',
-                'image_url' => '',
-                'cantVisit' => 0,
-                'endLook' => '',
-                'lastDate' => '',
-                'frecuencia' => 0,
-                'services' =>  [],
-                'products' => []
-            ];
+
+        if ($reservations->isEmpty()) {
+            return $result;
         }
-        if ($reservations->count() >= 12) {
-            /*$fiel = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
-                $query->where('client_id', $data['client_id']);
-            })->whereYear('data', Carbon::now()->year)->count();*/
-            $fiel = Reservation::whereHas('car.clientProfessional', function ($query) use ($data) {
-                $query->where('client_id', $data['client_id']);
-            })->whereYear('data', Carbon::now()->year)->count();
-        } elseif ($reservations->count() >= 3) {
+
+        $countReservations = $reservations->count();
+        if ($countReservations >= 12) {
+            $currentYear = Carbon::now()->year;
+
+            $fiel = $reservations->filter(function ($reservation) use ($currentYear) {
+                return Carbon::parse($reservation->data)->year == $currentYear;
+            })->count();
+            if ($fiel >= 12) {
+                $frecuencia = "Fiel";
+            }
+        } elseif ($countReservations >= 3) {
             $frecuencia = "Frecuente";
         } else {
             $frecuencia = "No Frecuente";
         }
-        //$client = Client::find($data['client_id']);
         Log::info("client_history 5");
-        /*$reservationids = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data){
-        $query->where('client_id', $data['client_id']);
-    })->orderByDesc('data')->take(3)->get()->pluck('car_id');*/
-        $reservationids = Reservation::whereHas('car.clientProfessional', function ($query) use ($data) {
-            $query->where('client_id', $data['client_id']);
-        })->orderByDesc('data')->take(3)->get()->pluck('car_id');
+
+        $reservationids = $reservations->take(3)->pluck('car_id');
         Log::info("client_history 6");
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
             $query->whereHas('car.clientProfessional', function ($query) use ($data) {
@@ -188,16 +173,17 @@ class ReservationService
                 ->whereIn('car_id', $reservationids)
                 ->where('is_product', 1); // Agrupar por el ID del producto en la tabla intermedia
         }])
-        ->whereHas('orders') // Filtrar solo los productos que tienen pedidos asociados
-        ->get();
+            ->whereHas('orders') // Filtrar solo los productos que tienen pedidos asociados
+            ->get();
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
             $query->where('client_id', $client->id);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         Log::info('$reservations');
         Log::info($reservations);
-        if ($reservations !== null && !$reservations->isEmpty()) {
+        //if ($reservations !== null && !$reservations->isEmpty()) {
             Log::info('Tiene Reserva');
             $tempBranch = $reservations->first();
+            $professional = $tempBranch->car->clientProfessional->professional;
             $branch_id = $tempBranch->branch_id;
             if ($branch_id) {
                 $branchName = Branch::where('id', $branch_id)->first()->value('name');
@@ -206,11 +192,11 @@ class ReservationService
             }
             $result = [
                 'clientName' => $client->name . " " . $client->surname,
-                'professionalName' => $comment->clientProfessional->professional->name . ' ' . $comment->clientProfessional->professional->surname,
+                'professionalName' => $professional->name . ' ' . $professional->surname,
                 'branchName' => $branchName,
                 'image_data' => $tempBranch->image_data ? $tempBranch->image_data : 'branches/default.jpg',
-                'image_url' => $comment->clientProfessional->professional->image_url ? $comment->clientProfessional->professional->image_url : 'professionals/default_profile.jpg',
-                'imageLook' => $comment->client_look ? $comment->client_look : 'comments/default_profile.jpg',
+                'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+                'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
                 'lastDate' => $tempBranch->data,
@@ -247,21 +233,9 @@ class ReservationService
                 }),
                 'cantMaxService' => $services->max('orders_count')
             ];
-        } else {
-            return  $result = [
-                'clientName' => '',
-                'professionalName' => '',
-                'branchName' => '',
-                'imageLook' => '',
-                'image_url' => '',
-                'cantVisit' => 0,
-                'endLook' => '',
-                'lastDate' => '',
-                'frecuencia' => 0,
-                'services' =>  [],
-                'products' => []
-            ];
-        }
+        /*} else {
+            return  $result;
+        }*/
 
         Log::info("client_history 7");
         return $result;
