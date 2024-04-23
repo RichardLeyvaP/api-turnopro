@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendEmailJob;
 use App\Models\CardGift;
 use App\Models\CardGiftUser;
 use App\Models\Client;
@@ -79,8 +80,8 @@ class CardGiftUserController extends Controller
 
 
             ///Aqui enviar codido por correo $user->email
-            $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
-
+            //$this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
+            SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date)->onQueue('emails');
             return response()->json(['msg' => 'Tarjeta de regalo correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

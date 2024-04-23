@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendEmailJob;
 use App\Models\Branch;
 use App\Models\Business;
 use App\Models\Client;
@@ -204,9 +205,9 @@ class UserController extends Controller
             //AQUI SE LE ENVIA UN CORREO CON LA NUEVA CONTRASEÑA
 
             //$this->sendEmailService->emailRecuperarPass($client_email, $type,$client_name, $usser, $pass);
-            $this->sendEmailService->emailRecuperarPass($request->email,$nombre, $usuario, $pass);
+            //$this->sendEmailService->emailRecuperarPass($request->email,$nombre, $usuario, $pass);
            // $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
-
+            SendEmailJob::dispatch()->emailRecuperarPass($request->email,$nombre, $usuario, $pass);
 
 
             return response()->json(['msg' => "Password modificada correctamente!!!"], 201);

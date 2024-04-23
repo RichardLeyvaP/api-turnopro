@@ -61,20 +61,27 @@ class BranchServiceProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $serviceModels = BranchServiceProfessional::whereHas('branchService.branch', function ($query) use ($data){
+            $serviceModels = BranchServiceProfessional::with(['branchService.service'])
+            ->whereHas('branchService.branch', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereHas('professional', function ($query) use ($data){
-                $query->where('id', $data['professional_id']);
-            })->get()->map(function ($branchservprof) {
-                return [
-                    'id' => $branchservprof->branch_service_id,
-                    "name" => $branchservprof->branchService->service->name,
-                    "type_service" => $branchservprof->type_service,
-                    "image_service" => $branchservprof->branchService->service->image_service,
-                    "profit_percentaje" => $branchservprof->percent,
-                ];
-            });            
-            return response()->json(['branchServices' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+            })
+            ->where('professional_id', $data['professional_id'])
+            ->get(['branch_service_id', 'type_service', 'percent']);
+
+        $formattedData = [];
+        foreach ($serviceModels as $branchservprof) {
+            $branchService = $branchservprof->branchService;
+            $service = $branchService->service;
+            $formattedData[] = [
+                'id' => $branchservprof->branch_service_id,
+                "name" => $service->name,
+                "type_service" => $branchservprof->type_service,
+                "image_service" => $service->image_service,
+                "profit_percentaje" => $branchservprof->percent,
+            ];
+        }
+
+        return response()->json(['branchServices' => $formattedData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
@@ -86,20 +93,27 @@ class BranchServiceProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $serviceModels = BranchServiceProfessional::whereHas('branchService.branch', function ($query) use ($data){
+           $serviceModels = BranchServiceProfessional::with(['branchService.service'])
+            ->whereHas('branchService.branch', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereHas('professional', function ($query) use ($data){
-                $query->where('id', $data['professional_id']);
-            })->get()->map(function ($branchservprof) {
-                return [
-                    'id' => $branchservprof->id,
-                    "name" => $branchservprof->branchService->service->name,
-                    "type_service" => $branchservprof->type_service,
-                    "image_service" => $branchservprof->branchService->service->image_service,
-                    "profit_percentaje" => $branchservprof->percent,
-                ];
-            });            
-            return response()->json(['branchServicesPro' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+            })
+            ->where('professional_id', $data['professional_id'])
+            ->get(['branch_service_id', 'type_service', 'percent']);
+
+        $formattedData = [];
+        foreach ($serviceModels as $branchservprof) {
+            $branchService = $branchservprof->branchService;
+            $service = $branchService->service;
+            $formattedData[] = [
+                'id' => $branchservprof->branch_service_id,
+                "name" => $service->name,
+                "type_service" => $branchservprof->type_service,
+                "image_service" => $service->image_service,
+                "profit_percentaje" => $branchservprof->percent,
+            ];
+        }
+
+        return response()->json(['branchServicesPro' => $formattedData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
@@ -260,12 +274,13 @@ class BranchServiceProfessionalController extends Controller
                 $query->where('id', $data['professional_id']);
             })->get()->pluck('branch_service_id'); 
             $serviceModels = BranchService::whereNotIn('id', $ids)->where('branch_id', $data['branch_id'])->get()->map(function ($branchserv) {
+                $service = $branchserv->service;
                 return [
                     'id' => $branchserv->id,
-                    "name" => $branchserv->service->name,
-                    "type_service" => $branchserv->service->type_service,
-                    "image_service" => $branchserv->service->image_service,
-                    "profit_percentaje" => $branchserv->service->profit_percentaje,
+                    "name" => $service->name,
+                    "type_service" => $service->type_service,
+                    "image_service" => $service->image_service,
+                    "profit_percentaje" => $service->profit_percentaje,
                 ];
             });                 
             return response()->json(['branchServices' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);

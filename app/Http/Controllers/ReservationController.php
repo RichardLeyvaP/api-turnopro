@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Jobs\SendEmailJob;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Tail;
@@ -223,8 +223,8 @@ class ReservationController extends Controller
             $professional = Professional::find($data['professional_id']);
             $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
             //todo *************** llamando al servicio de envio de email *******************
-            $this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
-
+            //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+            SendEmailJob::dispatch()->confirmReservation($data['data'], $data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name)->onQueue('emails');
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
