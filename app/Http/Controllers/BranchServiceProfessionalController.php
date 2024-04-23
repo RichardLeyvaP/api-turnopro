@@ -242,12 +242,13 @@ class BranchServiceProfessionalController extends Controller
                     $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
                 });
             })->get()->map(function ($branchService){
+                $professional = $branchService->professional;
                 return [
                     'id' => $branchService->id,
-                    'name' => $branchService->professional->name.' '.$branchService->professional->surname.' '.$branchService->professional->second_surname,
-                    'image_url' => $branchService->professional->image_url,
-                    'email' => $branchService->professional->email,
-                    'phone' => $branchService->professional->phone,
+                    'name' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'image_url' => $professional->image_url,
+                    'email' => $professional->email,
+                    'phone' => $professional->phone,
                     'branch_service_id' => $branchService->branch_service_id,
                     'professional_id' => $branchService->professional_id
 
