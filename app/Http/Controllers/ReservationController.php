@@ -224,7 +224,19 @@ class ReservationController extends Controller
             $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
             //todo *************** llamando al servicio de envio de email *******************
             //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
-            SendEmailJob::dispatch()->confirmReservation($data['data'], $data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name)->onQueue('emails');
+            //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name)->onQueue('emails');
+            $data = [
+                'confirm_reservation' => true, // Indica que es una confirmación de reserva
+                'data_reservation' => $data['data'], // Datos de la reserva
+                'start_time' => $data['start_time'], // Hora de inicio
+                'client_id' => $id_client, // ID del cliente
+                'branch_id' => $data['branch_id'], // ID de la sucursal
+                'type' => null, // Tipo (en este caso, se deja como null)
+                'name_professional' => $name, // Nombre del profesional
+                'recipient' => null, // Destinatario (en este caso, se deja como null)
+            ];
+            
+            SendEmailJob::dispatch($data)->onQueue('emails');
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

@@ -146,8 +146,28 @@ class BoxCloseController extends Controller
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
             //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
             //$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
-            SendEmailJob::dispatch()->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'])->onQueue('emails');
-
+            //SendEmailJob::dispatch()->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'])->onQueue('emails');
+            $data = [
+                'email_box_closure' => true, // Indica que es un correo de cierre de caja
+                'client_email' => $mergedEmails, // Correo electrónico del cliente
+                'branchBusinessName' => $branch->business['name'], // Nombre del negocio de la sucursal
+                'branchName' => $branch['name'], // Nombre de la sucursal
+                'boxData' => $box['data'], // Datos de la caja
+                'boxCashFound' => $box['cashFound'], // Dinero encontrado en la caja
+                'boxExistence' => $box['existence'], // Existencia de la caja
+                'boxExtraction' => $box['extraction'], // Extracción de la caja
+                'totalTip' => $data['totalTip'], // Total de propinas
+                'totalProduct' => $data['totalProduct'], // Total de productos
+                'totalService' => $data['totalService'], // Total de servicios
+                'totalCash' => $data['totalCash'], // Total en efectivo
+                'totalCreditCard' => $data['totalCreditCard'], // Total en tarjeta de crédito
+                'totalDebit' => $data['totalDebit'], // Total en tarjeta de débito
+                'totalTransfer' => $data['totalTransfer'], // Total en transferencias
+                'totalOther' => $data['totalOther'], // Otros totales
+                'totalMount' => $data['totalMount'], // Monto total
+            ];
+            
+            SendEmailJob::dispatch($data)->onQueue('emails');
 
                         //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
                         /*

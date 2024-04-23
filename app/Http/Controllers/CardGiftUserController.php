@@ -81,7 +81,18 @@ class CardGiftUserController extends Controller
 
             ///Aqui enviar codido por correo $user->email
             //$this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
-            SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date)->onQueue('emails');
+            //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date)->onQueue('emails');
+            $data = [
+                'send_gift_card' => true, // Indica que es un correo de envío de tarjeta de regalo
+                'client_email' => $client_email,
+                'client_name' => $client_name,
+                'code' => $code,
+                'value_card' => $value_card,
+                'expiration_date' => $expiration_date,
+            ];
+            
+            SendEmailJob::dispatch($data)->onQueue('emails');
+            
             return response()->json(['msg' => 'Tarjeta de regalo correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
