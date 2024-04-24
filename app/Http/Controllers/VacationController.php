@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Professional;
 use App\Models\Vacation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,11 +17,43 @@ class VacationController extends Controller
         try {
             Log::info('Entra a buscar las vacaciones');
             $vacations = Vacation::with(['professional'])->get()->map(function ($vacation) {
+                $professional = $vacation->professional;
                 return [
                     'id' => $vacation->id,
-                    'professional_id' => $vacation->professional->id,
-                    'name' => $vacation->professional->name . ' ' . $vacation->professional->surname . ' ' . $vacation->professional->second_surname,
-                    'image_url' => $vacation->professional->image_url,
+                    'professional_id' => $professional->id,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'image_url' => $professional->image_url,
+                    'description' => $vacation->description,
+                    'startDate' => $vacation->startDate,
+                    'endDate' => $vacation->endDate
+                ];
+            });
+    
+            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) {
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'image_url' => $professional->image_url,
+                    'charge' => $professional->charge->name
+                ];
+            });
+    
+            return response()->json(['vacations' => $vacations, 'professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error interno del sistema"], 500);
+        }
+    }
+     /*public function index()
+    {
+        try {
+            Log::info('Entra a buscar las vacaciones');
+            $vacations = Vacation::with(['professional'])->get()->map(function ($vacation) {
+                $professional = $vacation->professional;
+                return [
+                    'id' => $vacation->id,
+                    'professional_id' => $professional->id,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'image_url' => $professional->image_url,
                     'description' => $vacation->description,
                     'startDate' => $vacation->startDate,
                     'endDate' => $vacation->endDate
@@ -30,7 +63,7 @@ class VacationController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
-    }
+    }*/
 
 
     /**
@@ -64,7 +97,51 @@ class VacationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request)
+
+     public function show(Request $request)
+{
+    try {
+        $data = $request->validate([
+            'branch_id' => 'required|numeric'
+        ]);
+
+        $vacations = Vacation::whereHas('professional.branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->get()->map(function ($vacation) {
+            $professional = $vacation->professional;
+            return [
+                'id' => $vacation->id,
+                'professional_id' => $professional->id,
+                'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                'image_url' => $professional->image_url,
+                'description' => $vacation->description,
+                'startDate' => $vacation->startDate,
+                'endDate' => $vacation->endDate
+
+            ];
+        });
+
+        $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        })->get()->map(function ($professional) {
+            return [
+                'id' => $professional->id,
+                'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                'image_url' => $professional->image_url
+
+            ];
+        });
+
+        return response()->json([
+            'vacations' => $vacations,
+            'professionals' => $professionals
+        ], 200);
+    } catch (\Throwable $th) {
+        Log::error($th);
+        return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+    }
+}
+    /*public function show(Request $request)
     {
         Log::info("Actualizar vacaciones");
         try {
@@ -75,11 +152,12 @@ class VacationController extends Controller
             $vacations = Vacation::whereHas('professional.branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->get()->map(function ($vacation) {
+                $professional = $vacation->professional;
                 return [
                     'id' => $vacation->id,
-                    'professional_id' => $vacation->professional->id,
-                    'name' => $vacation->professional->name . ' ' . $vacation->professional->surname . ' ' . $vacation->professional->second_surname,
-                    'image_url' => $vacation->professional->image_url,
+                    'professional_id' => $professional->id,
+                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'image_url' => $professional->image_url,
                     'description' => $vacation->description,
                     'startDate' => $vacation->startDate,
                     'endDate' => $vacation->endDate
@@ -93,7 +171,7 @@ class VacationController extends Controller
             Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
-    }
+    }*/
 
     /**
      * Update the specified resource in storage.

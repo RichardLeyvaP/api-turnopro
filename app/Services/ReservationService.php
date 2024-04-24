@@ -135,9 +135,8 @@ class ReservationService
         $reservations = Reservation::whereHas('car', function ($query) use ($data) {
             $query->whereHas('clientProfessional', function ($query) use ($data){
                 $query->where('client_id', $data['client_id']);
-            })->where('pay', 1);
+            });
         })->orderByDesc('data')->limit(12)->get();
-
         if ($reservations->isEmpty()) {
             return $result;
         }
@@ -162,17 +161,12 @@ class ReservationService
         $reservationids = $reservations->pluck('car_id')->take(3);
         Log::info("client_history 6");
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
-            $query->whereHas('car.clientProfessional', function ($query) use ($data) {
-                $query->where('client_id', $data['client_id']);
-            })->whereIn('car_id', $reservationids)->where('is_product', 0);
+            $query->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
 
         $products = Product::with(['orders' => function ($query) use ($data, $reservationids) {
             $query->selectRaw('SUM(cant) as total_sale_price')
                 ->groupBy('product_id')
-                ->whereHas('car.clientProfessional', function ($query) use ($data) {
-                    $query->where('client_id', $data['client_id']);
-                })
                 ->whereIn('car_id', $reservationids)
                 ->where('is_product', 1);
         }])
@@ -182,8 +176,6 @@ class ReservationService
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($data) {
             $query->where('client_id', $data['client_id']);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
-        Log::info('$reservations');
-        Log::info($reservations);
         //if ($reservations !== null && !$reservations->isEmpty()) {
             Log::info('Tiene Reserva');
             $reservation = $reservations->first();

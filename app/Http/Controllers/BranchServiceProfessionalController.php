@@ -179,44 +179,23 @@ class BranchServiceProfessionalController extends Controller
             'professional_id' => 'required|numeric',
             'branch_id' => 'required|numeric'
         ]);
-
-        $serviceModels = Service::with(['branchServices' => function ($query) use ($data) {
-                $query->select('service_id')->where('branch_id', $data['branch_id']);
-            }, 'professionals' => function ($query) use ($data) {
-                $query->select('service_id')->where('professional_id', $data['professional_id']);
-            }])
-            ->whereHas('branchServices', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            })
-            ->whereHas('professionals', function ($query) use ($data) {
-                $query->where('professional_id', $data['professional_id']);
-            })
-            ->select([
-                'id', 
-                'name', 
-                'simultaneou', 
-                'price_service', 
-                'type_service', 
-                'profit_percentaje', 
-                'duration_service', 
-                'image_service', 
-                'service_comment'
-            ])
-            ->get()
-            ->map(function ($service) {
-                return [
-                    "id" => $service->id, // Using correct 'id' from the 'services' table
-                    "name" => $service->name,
-                    "simultaneou" => $service->simultaneou,
-                    "price_service" => $service->price_service,
-                    "type_service" => $service->type_service,
-                    "profit_percentaje" => $service->profit_percentaje,
-                    "duration_service" => $service->duration_service,
-                    "image_service" => $service->image_service,
-                    "service_comment" => $service->service_comment
-                ];
-            });
-
+        $BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+       })->where('professional_id', $data['professional_id'])->get();
+       $serviceModels = $BSProfessional->map(function ($branchServiceProfessional){
+        $service = $branchServiceProfessional->branchService->service;
+            return[
+                "id" => $branchServiceProfessional->id,
+                "name"=> $service->name,
+                "simultaneou"=> $service->simultaneou,
+                "price_service"=> $service->price_service,
+                "type_service"=> $service->type_service,
+                "profit_percentaje"=> $service->profit_percentaje,
+                "duration_service"=> $service->duration_service,
+                "image_service"=> $service->image_service,
+                "service_comment"=> $service->service_comment
+            ];
+       });
         return response()->json(['professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
     } catch (\Throwable $th) {
         return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);

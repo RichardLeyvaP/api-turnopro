@@ -10,8 +10,10 @@ use App\Models\User;
 use App\Services\SendEmailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class CardGiftUserController extends Controller
 {
@@ -38,7 +40,7 @@ class CardGiftUserController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar Productos a un almacen");
+        Log::info("Asignar tarjeta de regalo");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -81,7 +83,7 @@ class CardGiftUserController extends Controller
 
             ///Aqui enviar codido por correo $user->email
             //$this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
-            //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date)->onQueue('emails');
+            //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
             $data = [
                 'send_gift_card' => true, // Indica que es un correo de envío de tarjeta de regalo
                 'client_email' => $client_email,
@@ -91,12 +93,18 @@ class CardGiftUserController extends Controller
                 'expiration_date' => $expiration_date,
             ];
             
-            SendEmailJob::dispatch($data)->onQueue('emails');
+            SendEmailJob::dispatch($data);
             
-            return response()->json(['msg' => 'Tarjeta de regalo correctamente al almacén'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-        return response()->json(['msg' =>$th->getMessage().'Error interno'], 500);
+            return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente'], 200);
+        } catch (TransportException $e) {
+    
+            return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente.Error al enviar el correo electrónico '], 200);
+  }
+          catch (\Throwable $th) {
+              Log::error($th);
+            
+              DB::rollback();
+              return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
 }
 

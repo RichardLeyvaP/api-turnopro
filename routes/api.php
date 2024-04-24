@@ -209,6 +209,7 @@ Route::get('/branch-service-show', [ServiceController::class, 'branch_service_sh
 
 Route::get('/productstore', [ProductStoreController::class, 'index']);
 Route::get('/productstore-show', [ProductStoreController::class, 'show']);
+Route::get('/show-stores-products', [ProductStoreController::class, 'showStoresProducts']); //devolver los products y los stores
 Route::get('/productstore-academy-show', [ProductStoreController::class, 'academy_show']);//devuelve los productos por almacenes de una academia
 Route::get('/products-academy-show', [ProductStoreController::class, 'products_academy_show']);//devuelve los productos por almacenes de una academia para autocomplete
 Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
@@ -537,7 +538,7 @@ Route::post('/operation-tip', [OperationTipController::class, 'store']);
 Route::post('/operation-tip-destroy', [OperationTipController::class, 'destroy']);
 Route::get('/operation-tip-show', [OperationTipController::class, 'operation_tip_show']);//devolver de una branch los pagos realizado a los cajeros
 Route::get('/operation-tip-periodo', [OperationTipController::class, 'operation_tip_periodo']);//devolver de una branch los pagos realizado a los cajeros en un periodo dado
-Route::get('/cashier-car-notpay', [OperationTipController::class, 'cashier_car_notpay']);//Detalles del carro
+Route::get('/cashier-car-notpay', [OperationTipController::class, 'cashier_car_notpay']);//Detalles del carro y cajero(a)s
 
 Route::get('/professional-branch-notif-queque', [AssistantController::class, 'professional_branch_notif_queque']);//dado un professional devolver la cola del dia y las notificaciones
 

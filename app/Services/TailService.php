@@ -65,7 +65,7 @@ class TailService {
     public function cola_branch_data2($branch_id){
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
-        })->where('attended', [3,33])->get()->map(function ($tail){
+        })->whereIn('attended', [3,33])->get()->map(function ($tail){
             Log::info($tail);
                 $reservation = $tail->reservation;
                 Log::info('reservacion');
@@ -116,7 +116,7 @@ class TailService {
                     })->orderByDesc('updated_at')->first();
     
                 return [
-                    'reservation_id' => $tail->reservation->id,
+                    'reservation_id' => $reservation->id,
                     'car_id' => $tail->reservation->car_id,
                     'from_home' => $tail->reservation->from_home,
                     'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),

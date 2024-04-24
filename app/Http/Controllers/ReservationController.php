@@ -21,6 +21,7 @@ use App\Services\SendEmailService;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class ReservationController extends Controller
 {
@@ -224,7 +225,7 @@ class ReservationController extends Controller
             $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
             //todo *************** llamando al servicio de envio de email *******************
             //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
-            //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name)->onQueue('emails');
+            //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
             $data = [
                 'confirm_reservation' => true, // Indica que es una confirmación de reserva
                 'data_reservation' => $data['data'], // Datos de la reserva
@@ -236,12 +237,17 @@ class ReservationController extends Controller
                 'recipient' => null, // Destinatario (en este caso, se deja como null)
             ];
             
-            SendEmailJob::dispatch($data)->onQueue('emails');
+            SendEmailJob::dispatch($data);
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            DB::rollback();
-            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
+        } catch (TransportException $e) {
+    
+            return response()->json(['msg' => 'Reservación realizada correctamente.Error al enviar el correo electrónico '], 200);
+  }
+          catch (\Throwable $th) {
+              Log::error($th);
+            
+              DB::rollback();
+              return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
 

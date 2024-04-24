@@ -19,7 +19,9 @@ use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 use App\Services\SendEmailService;
+use Symfony\Component\Mailer\Exception\TransportException;
 use GuzzleHttp;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -216,7 +218,7 @@ class UserController extends Controller
                 'pass' => $pass,
             ];
             
-            SendEmailJob::dispatch($data)->onQueue('emails');
+            SendEmailJob::dispatch($data);
 
 
             return response()->json(['msg' => "Password modificada correctamente!!!"], 201);
@@ -224,9 +226,15 @@ class UserController extends Controller
             // else{
             //return response()->json(['msg' => "Password anterior incorrect0!!!"],400);
             //}
-        } catch (\Throwable $th) {
-            Log::info($th);
-            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+        } catch (TransportException $e) {
+    
+            return response()->json(['msg' => 'Password modificada correctamente.Error al enviar el correo electrónico '], 200);
+  }
+          catch (\Throwable $th) {
+              Log::error($th);
+            
+              DB::rollback();
+              return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
     }
 

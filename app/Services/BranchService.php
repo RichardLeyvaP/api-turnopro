@@ -27,11 +27,33 @@ class BranchService
         $aleatorio = 0;
         $totalClients = 0;
         $totalClients = $cars->count();
-        $products = Product::withCount(['orders' => function ($query) {
+        /*$products = Product::withCount(['orders' => function ($query) {
             $query->whereDate('data', Carbon::now());
         }])->whereHas('productStores.store.branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
-        })->orderByDesc('orders_count')->first();
+        })->orderByDesc('orders_count')->first();*/
+        
+        $carIds = $cars->pluck('id');
+        $products = Product::with(['orders' => function ($query) use ($carIds) {
+            $query->selectRaw('SUM(cant) as total_sale_price')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        }])
+        ->get()->filter(function ($product) {
+            return !$product->orders->isEmpty();
+        });
+        $mostSoldProduct = $products->max(function ($product) {
+            return $product->orders->sum('total_sale_price');
+        });
+
+        // Obtener el nombre y la cantidad del producto más vendido
+        $mostSoldProductName = $mostSoldProduct->name;
+        $mostSoldProductQuantity = $mostSoldProduct->orders->sum('total_sale_price');
+        $totalSoldProducts = $products->sum(function ($product) {
+            return $product->orders->sum('total_sale_price');
+        });
+                
         $services = Service::withCount(['orders' => function ($query) {
             $query->whereDate('data', Carbon::now());
         }])->whereHas('branchServices', function ($query) use ($branch_id) {
@@ -44,7 +66,7 @@ class BranchService
                 $aleatorio = $aleatorio + $car->orders->where('is_product', 0)->count();
             }
             $totalservices = $totalservices + count($car->orders->where('is_product', 0));
-            $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
+            //$totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
         }
         $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
@@ -54,9 +76,9 @@ class BranchService
         return $result = [
             'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
             'Propina' => round($cars->sum('tip'), 2),
-            'Producto mas Vendido' => $products->orders_count ? $products->name : null,
-            'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
-            'Total de Productos Vendidos' => $totalproducts,
+            'Producto mas Vendido' => $mostSoldProductName,
+            'Cantidad del Producto' => $mostSoldProductQuantity,
+            'Total de Productos Vendidos' => $totalSoldProducts,
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
@@ -175,8 +197,8 @@ class BranchService
 
     public function branch_winner_periodo_icon($branch_id, $startDate, $endDate)
     {
-        $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
-            $query->where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
+       $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
+            $query->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->where('branch_id', $branch_id);
         })->get();
         $carIds = $cars->pluck('id');
         $totalClients = 0;
@@ -189,10 +211,30 @@ class BranchService
        if(!$totalClients = $cars->count()){
         return $transformedResult;
        }
-        $products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
+        /*$products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 1);
         }])->orderByDesc('orders_count')->first();
-        Log::info("obtener los servicios");
+        Log::info("obtener los servicios");*/
+        $products = Product::with(['orders' => function ($query) use ($carIds) {
+            $query->selectRaw('SUM(cant) as total_cant')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        }])
+        ->get()->filter(function ($product) {
+            return !$product->orders->isEmpty();
+        })->values();
+            $mostSoldProduct = $products->max(function ($product) {
+            $product->orders->sum('total_cant');
+            return $product;
+        });
+
+        // Obtener el nombre y la cantidad del producto más vendido
+        $mostSoldProductName = $mostSoldProduct->name;
+        $mostSoldProductQuantity = $mostSoldProduct->orders->sum('total_cant');
+        $totalSoldProducts = $products->sum(function ($product) {
+            return $product->orders->sum('total_cant');
+        });
         $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
@@ -202,19 +244,19 @@ class BranchService
             } else {
                 $aleatorio = $aleatorio + 1;
             }
-            $totalservices = $totalservices + count($car->orders->where('is_product', 0));
-            $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
+            $totalservices = count($car->orders->where('is_product', 0));
+            //$totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
         }
         $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
             $query->where('type_service', 'Especial');
-        })->whereBetWeen('data', [$startDate, $endDate])->get();
+        })->get();
         //Log::info($services);
         $result = [
             'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
             'Propina' => round($cars->sum('tip'), 2),
-            'Producto mas Vendido' => $products->orders_count ? $products->name : null,
-            'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
-            'Total de Productos Vendidos' => $totalproducts ? $totalproducts : 0,
+            'Producto mas Vendido' => $mostSoldProductName,
+            'Cantidad del Producto' => $mostSoldProductQuantity,
+            'Total de Productos Vendidos' => $totalSoldProducts,
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
@@ -361,9 +403,30 @@ class BranchService
        if(!$totalClients = $cars->count()){
         return $transformedResult;
        }
-        $products = Product::withCount(['orders' => function ($query) use ($carIds){
+        /*$products = Product::withCount(['orders' => function ($query) use ($carIds){
             $query->whereIn('car_id', $carIds)->where('is_product', 1)->whereDate('data', Carbon::now());
-        }])->orderByDesc('orders_count')->first();
+        }])->orderByDesc('orders_count')->first();*/
+        //$carIds = $cars->pluck('car_id');
+        $products = Product::with(['orders' => function ($query) use ($carIds) {
+            $query->selectRaw('SUM(cant) as total_sale_price')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        }])
+        ->get()->filter(function ($product) {
+            return !$product->orders->isEmpty();
+        });
+        $mostSoldProduct = $products->max(function ($product) {
+            $product->orders->sum('total_cant');
+            return $product;
+        });
+
+        // Obtener el nombre y la cantidad del producto más vendido
+        $mostSoldProductName = $mostSoldProduct->name;
+        $mostSoldProductQuantity = $mostSoldProduct->orders->sum('total_sale_price');
+        $totalSoldProducts = $products->sum(function ($product) {
+            return $product->orders->sum('total_sale_price');
+        });
         $services = Service::withCount(['orders' => function ($query) use ($carIds){
             $query->whereIn('car_id', $carIds)->where('is_product', 0)->whereDate('data', Carbon::now());
         }])->orderByDesc('orders_count')->first();
@@ -374,7 +437,7 @@ class BranchService
                 $aleatorio = $aleatorio + 1;
             }
             $totalservices = $totalservices + count($car->orders->where('is_product', 0));
-            $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
+            //$totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
         }
         $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
             $query->where('type_service', 'Especial');
@@ -382,9 +445,9 @@ class BranchService
         $result = [
             'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
             'Propina' => round($cars->sum('tip'), 2),
-            'Producto mas Vendido' => $products->orders_count ? $products->name : null,
-            'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
-            'Total de Productos Vendidos' => $totalproducts ? $totalproducts : 0,
+            'Producto mas Vendido' => $mostSoldProductName,
+            'Cantidad del Producto' => $mostSoldProductQuantity,
+            'Total de Productos Vendidos' => $totalSoldProducts,
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,

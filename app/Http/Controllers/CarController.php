@@ -780,7 +780,7 @@ class CarController extends Controller
                         }
                     });
                 
-            return response()->json(['carOrderDelete' => $car], 200);
+            return response()->json(['carOrderDelete' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
@@ -800,11 +800,13 @@ class CarController extends Controller
                 })->where('request_delete', true)->whereDate('data', Carbon::now()->toDateString())->orderBy('updated_at', 'desc')->get();
 
            $car = $orderDatas->map(function ($orderData){
+            $professional = $orderData->car->clientProfessional->professional;
+            $client = $orderData->car->clientProfessional->client;
             if ($orderData->is_product == true) {
                 return [
                     'id' => $orderData->id,
-                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname,
-                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname,
+                    'nameProfesional' => $professional->name.' '.$professional->surname,
+                    'nameClient' => $client->name.' '.$client->surname,
                     'hora' => $orderData->updated_at->Format('g:i:s A'),                    
                     'nameProduct' => $orderData->productStore->product->name,
                     'nameService' => null,
@@ -815,8 +817,8 @@ class CarController extends Controller
             else {
                 return [
                     'id' => $orderData->id,
-                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname,
-                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname,
+                    'nameProfesional' => $professional->name.' '.$professional->surname,
+                    'nameClient' => $client->name.' '.$client->surname,
                     'hora' => $orderData->updated_at->Format('g:i:s A'),
                     'nameProduct' => null,
                     'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
@@ -826,7 +828,7 @@ class CarController extends Controller
             }
            });
     
-            return response()->json(['carOrderDelete' => $car], 200);
+            return response()->json(['carOrderDelete' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
@@ -871,7 +873,7 @@ class CarController extends Controller
             ]);
             $car = Car::where('client_professional_id', $data['client_professional_id'])->whereDate('created_at', Carbon::parse($data['data']))->find($data['id']);
             //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
-            return response()->json(['car' => $car], 200);
+            return response()->json(['car' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
@@ -890,19 +892,20 @@ class CarController extends Controller
             $client_professional_id = ClientProfessional::where('professional_id', $data['professional_id'])->where('client_id', $data['client_id'])->value('id');
             $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'client_professional_id', '=', $client_professional_id)->where('is_product', false)->orderBy('updated_at', 'desc')->get();
             $services = $orderServicesDatas->map(function ($orderData){
+                $service = $orderData->branchServiceProfessional->branchService->service;
                 return [
                       'data_reservation' => $orderData->car->reservations->data,
-                      'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
-                      'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
-                      'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
-                      'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
-                      'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
-                      'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
-                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service
+                      'nameService' => $service->name,
+                      'simultaneou' => $service->simultaneou,
+                      'price_service' => $service->price_service,
+                      'type_service' => $service->type_service,
+                      'profit_percentaje' => $service->profit_percentaje,
+                      'duration_service' => $service->duration_service,
+                      'image_service' => $service->image_service
                       ];
                   });
             
-            return response()->json(['services' => $services], 200);
+            return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -919,19 +922,20 @@ class CarController extends Controller
             
             $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
             $services = $orderServicesDatas->map(function ($orderData){
+                $service = $orderData->branchServiceProfessional->branchService->service;
                 return [
-                     'name' => $orderData->branchServiceProfessional->branchService->service->name,
-                      'simultaneou' => $orderData->branchServiceProfessional->branchService->service->simultaneou,
-                      'price_service' => $orderData->branchServiceProfessional->branchService->service->price_service,
-                      'type_service' => $orderData->branchServiceProfessional->branchService->service->type_service,
-                      'profit_percentaje' => $orderData->branchServiceProfessional->branchService->service->profit_percentaje,
-                      'duration_service' => $orderData->branchServiceProfessional->branchService->service->duration_service,
-                      'image_service' => $orderData->branchServiceProfessional->branchService->service->image_service,
-                      'description' => $orderData->branchServiceProfessional->branchService->service->service_comment
+                     'name' => $service->name,
+                      'simultaneou' => $service->simultaneou,
+                      'price_service' => $service->price_service,
+                      'type_service' => $service->type_service,
+                      'profit_percentaje' => $service->profit_percentaje,
+                      'duration_service' => $service->duration_service,
+                      'image_service' => $service->image_service,
+                      'description' => $service->service_comment
                       ];
                   });
             
-            return response()->json(['services' => $services], 200);
+            return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
@@ -1002,14 +1006,16 @@ class CarController extends Controller
         ]);
         $car = Car::find($data['id']);
         $branch = Branch::where('id', $request->branch_id)->first();
+        $client = $car->clientProfessional->client;
+        $professional = $car->clientProfessional->professional;
         $trace = [
             'branch' => $branch->name,
             'cashier' => $request->nameProfessional,
-            'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+            'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
             'amount' => $car->amount,
             'operation' => 'Elimina Carro: '.$car->id,
             'details' => '',
-            'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+            'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
         ];
         $this->traceService->store($trace);
             //$car->delete();

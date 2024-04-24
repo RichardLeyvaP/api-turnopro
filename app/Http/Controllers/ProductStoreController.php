@@ -47,6 +47,23 @@ class ProductStoreController extends Controller
         }
     }
 
+    public function showStoresProducts(Request $request)
+    {
+    try {
+        Log::info("Entra a buscar los stores y productos");
+        
+        $stores = Store::all();
+        $products = Product::with('productcategory')->get();
+        
+        return response()->json([
+            'stores' => $stores,
+            'products' => $products
+        ], 200, [], JSON_NUMERIC_CHECK);
+    } catch (\Throwable $th) {
+        Log::error($th);
+        return response()->json(['msg' => "Error al mostrar los stores y productos"], 500);
+    }
+    }
     public function store(Request $request)
     {
         Log::info("Asignar Productos a un almacen");

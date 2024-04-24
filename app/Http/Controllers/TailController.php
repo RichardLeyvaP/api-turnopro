@@ -363,7 +363,7 @@ class TailController extends Controller
             return response()->json(['msg' => 'Estado del tiempo del reloj y estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
-        return response()->json(['msg' => 'Error al modificar el tiempo del reloj y el estado'], 500);
+        return response()->json(['msg' => $th->getMessage().'Error al modificar el tiempo del reloj y el estado'], 500);
         }
     }
 

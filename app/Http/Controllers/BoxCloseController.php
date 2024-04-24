@@ -18,6 +18,8 @@ use App\Services\SendEmailService;
 use App\Services\TraceService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Message;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class BoxCloseController extends Controller
 {
@@ -146,7 +148,7 @@ class BoxCloseController extends Controller
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
             //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
             //$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
-            //SendEmailJob::dispatch()->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'])->onQueue('emails');
+            //SendEmailJob::dispatch()->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
             $data = [
                 'email_box_closure' => true, // Indica que es un correo de cierre de caja
                 'client_email' => $mergedEmails, // Correo electrónico del cliente
@@ -167,7 +169,7 @@ class BoxCloseController extends Controller
                 'totalMount' => $data['totalMount'], // Monto total
             ];
             
-            SendEmailJob::dispatch($data)->onQueue('emails');
+            SendEmailJob::dispatch($data);
 
                         //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
                         /*
@@ -185,9 +187,15 @@ class BoxCloseController extends Controller
             */
 
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::info($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al cerrar la caja el pago'], 500);
+        } catch (TransportException $e) {
+    
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
+  }
+          catch (\Throwable $th) {
+              Log::error($th);
+            
+              DB::rollback();
+              return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
     }
 

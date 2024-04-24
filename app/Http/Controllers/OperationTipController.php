@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Car;
 use App\Models\Finance;
 use App\Models\OperationTip;
+use App\Models\Professional;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -258,7 +259,19 @@ class OperationTipController extends Controller
                     'tipCoffe' => $tipCoffe
                 ];
             });
-            return response()->json($cars, 200);
+
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+               })->whereHas('charge', function ($query) {
+                $query->where('name', 'Cajero (a)');
+            })->get()->map(function ($query){
+                return [
+                    'id' => $query->id,
+                    'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
+                    'charge' => $query->charge->name
+                ];
+               });
+            return response()->json(['cars' => $cars,'professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
