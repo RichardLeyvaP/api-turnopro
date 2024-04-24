@@ -233,20 +233,22 @@ class OperationTipController extends Controller
             //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
             $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->where('pay', 1)->where('tip', '>', 0)->get()->map(function ($car) {
+            })->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])->where('pay', 1)->where('tip', '>', 0)->get()->map(function ($car) {
                 //$ordersServices = count($car->orders->where('is_product', 0));
                 //$orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 //$tipProfessional = $car->tip * 0.80;
                 //$rest = $car->tip - $tipProfessional;
                 $tipCashier = $car->tip * 0.10;
                 $tipCoffe = $car->tip * 0.10;
+                $professional = $car->clientProfessional->professional;
+                $client = $car->clientProfessional->client;
                 return [
                     'id' => $car->id,
-                    'professional_id' => $car->clientProfessional->professional->id,
-                    'clientName' => $car->clientProfessional->client->name . ' ' . $car->clientProfessional->client->surname,
-                    'client_image' => $car->clientProfessional->client->client_image ? $car->clientProfessional->client->client_image : 'comments/default.jpg',
-                    'professionalName' => $car->clientProfessional->professional->name . ' ' . $car->clientProfessional->professional->surname,
-                    'image_url' => $car->clientProfessional->professional->image_url,
+                    'professional_id' => $professional->id,
+                    'clientName' => $client->name . ' ' . $client->surname,
+                    'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
+                    'professionalName' => $professional->name . ' ' . $professional->surname,
+                    'image_url' => $professional->image_url,
                     'branch_id' => $car->reservation->branch_id,
                     'data' => $car->reservation->data,
                     'tip' => $car->tip,
