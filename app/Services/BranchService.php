@@ -243,7 +243,7 @@ class BranchService
             } else {
                 $aleatorio = $aleatorio + 1;
             }
-            $totalservices = count($car->orders->where('is_product', 0));
+            $totalservices = $totalservices + count($car->orders->where('is_product', 0));
             //$totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
         }
         $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
@@ -259,8 +259,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Servicios Seleccionados' => $seleccionado,
-            'Servicios Aleatorios' => $aleatorio,
+            'Seleccionados' => $seleccionado,
+            'Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -274,8 +274,8 @@ class BranchService
             'Servicio mas Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
             'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
             'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Servicios Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Servicios Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
+            'Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
+            'Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
             'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
             'Monto Servicios Especiales' => ['icon' => 'mdi-lightning-bolt', 'color' => 'deep_orange'],
             'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
