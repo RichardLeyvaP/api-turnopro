@@ -229,8 +229,8 @@ class BranchService
         $mostSoldProduct = $products->first();
 
         // Obtener el nombre y la cantidad del producto más vendido
-        $mostSoldProductName = $mostSoldProduct->name;
-        $mostSoldProductQuantity = $mostSoldProduct->orders->sum('total_cant');
+        $mostSoldProductName = $mostSoldProduct ? $mostSoldProduct->name: '';
+        $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
         $totalSoldProducts = $products->sum(function ($product) {
             return $product->orders->sum('total_cant');
         });
@@ -277,7 +277,7 @@ class BranchService
             'Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
             'Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
             'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
-            'Monto Servicios Especiales' => ['icon' => 'mdi-lightning-bolt', 'color' => 'deep_orange'],
+            'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
             'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
         ];
 
@@ -414,20 +414,19 @@ class BranchService
         }])
         ->get()->filter(function ($product) {
             return !$product->orders->isEmpty();
+        })->values()->sortByDesc(function ($product) {
+            return $product->orders->sum('total_cant');
         });
-        $mostSoldProduct = $products->max(function ($product) {
-            $product->orders->sum('total_cant');
-            return $product;
-        });
+        $mostSoldProduct = $products->first();
 
         // Obtener el nombre y la cantidad del producto más vendido
-        $mostSoldProductName = $mostSoldProduct->name;
-        $mostSoldProductQuantity = $mostSoldProduct->orders->sum('total_sale_price');
+        $mostSoldProductName = $mostSoldProduct ? $mostSoldProduct->name: '';
+        $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
         $totalSoldProducts = $products->sum(function ($product) {
-            return $product->orders->sum('total_sale_price');
+            return $product->orders->sum('total_cant');
         });
-        $services = Service::withCount(['orders' => function ($query) use ($carIds){
-            $query->whereIn('car_id', $carIds)->where('is_product', 0)->whereDate('data', Carbon::now());
+        $services = Service::withCount(['orders' => function ($query) use ($carIds) {
+            $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
         foreach ($cars as $car) {
             if ($car->select_professional == 1) {
@@ -440,7 +439,8 @@ class BranchService
         }
         $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
             $query->where('type_service', 'Especial');
-        })->whereDate('data', Carbon::now())->get();
+        })->get();
+        //Log::info($services);
         $result = [
             'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
             'Propina' => round($cars->sum('tip'), 2),
@@ -450,8 +450,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Servicios Seleccionados' => $seleccionado,
-            'Servicios Aleatorios' => $aleatorio,
+            'Seleccionados' => $seleccionado,
+            'Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -465,8 +465,8 @@ class BranchService
             'Servicio mas Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
             'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
             'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Servicios Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Servicios Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
+            'Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
+            'Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
             'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
             'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
             'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
