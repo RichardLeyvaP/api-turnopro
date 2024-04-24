@@ -223,11 +223,10 @@ class BranchService
         }])
         ->get()->filter(function ($product) {
             return !$product->orders->isEmpty();
-        })->values();
-            $mostSoldProduct = $products->max(function ($product) {
-            $product->orders->sum('total_cant');
-            return $product;
+        })->values()->sortByDesc(function ($product) {
+            return $product->orders->sum('total_cant');
         });
+        $mostSoldProduct = $products->first();
 
         // Obtener el nombre y la cantidad del producto más vendido
         $mostSoldProductName = $mostSoldProduct->name;
