@@ -144,13 +144,14 @@ class OperationTipController extends Controller
             $branchId = $request->branch_id;
 
             $payments = OperationTip::where('branch_id', $branchId)
-                ->get()->map(function ($query) {
+                ->get()->map(function ($query) use ($branchId){
+                    $professional = $query->professional;
                     return [
                         'id' => $query->id,
-                        'branch_id ' => $query->branch_id,
+                        'branch_id ' => $branchId,
                         'professional_id' => $query->professional_id,
-                        'nameProfessional' => $query->professional->name . ' ' . $query->professional->surname . ' ' . $query->professional->second_surname,
-                        'image_url' => $query->professional->image_url,
+                        'nameProfessional' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                        'image_url' => $professional->image_url,
                         'date' => $query->date,
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
@@ -180,13 +181,14 @@ class OperationTipController extends Controller
             $branchId = $request->branch_id;
 
             $payments = OperationTip::where('branch_id', $branchId)->whereDate('date', '>=', $request->startDate)->whereDate('date', '<=', $request->endDate)
-                ->get()->map(function ($query) {
+                ->get()->map(function ($query) use ($branchId){
+                    $professional = $query->professional;
                     return [
                         'id' => $query->id,
-                        'branch_id ' => $query->branch_id,
+                        'branch_id ' => $branchId,
                         'professional_id' => $query->professional_id,
-                        'nameProfessional' => $query->professional->name . ' ' . $query->professional->surname . ' ' . $query->professional->second_surname,
-                        'image_url' => $query->professional->image_url,
+                        'nameProfessional' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                        'image_url' => $professional->image_url,
                         'date' => $query->date,
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
