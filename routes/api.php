@@ -496,6 +496,7 @@ Route::post('/revenue-destroy', [RevenueController::class, 'destroy']);
 
 Route::get('/finance', [FinanceController::class, 'index']);
 Route::get('/finance-show', [FinanceController::class, 'show']);
+Route::get('/finance-combined-data', [FinanceController::class, 'combinedData']);
 Route::post('/finance', [FinanceController::class, 'store']);
 Route::post('/finance-updated', [FinanceController::class, 'update']);
 Route::post('/finance-destroy', [FinanceController::class, 'destroy']);

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Business;
+use App\Models\Enrollment;
 use App\Models\Expense;
 use App\Models\Finance;
 use App\Models\Revenue;
@@ -187,6 +190,35 @@ class FinanceController extends Controller
             return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
         }
     }
+
+    public function combinedData(Request $request)
+{
+    try {
+        $businesses = Business::with(['professional', 'branches'])->get();
+        $expenses = Expense::all();
+        $revenues = Revenue::all();
+
+        $data = $request->validate([
+            'business_id' => 'required|numeric'
+        ]);
+        $branches = Branch::where('business_id', $data['business_id'])->get();
+
+        $enrollments = Enrollment::where('business_id', $data['business_id'])->with(['business'])->get();
+
+        $responseData = [
+            'businesses' => $businesses,
+            'expenses' => $expenses,
+            'revenues' => $revenues,
+            'branches' => $branches,
+            'enrollments' => $enrollments
+        ];
+
+        return response()->json($responseData, 200, [], JSON_NUMERIC_CHECK);
+    } catch (\Throwable $th) {
+        Log::error($th);
+        return response()->json(['msg' => "Error interno del sistema"], 500);
+    }
+}
 
     /**
      * Update the specified resource in storage.
