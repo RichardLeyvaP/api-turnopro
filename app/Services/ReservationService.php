@@ -218,6 +218,7 @@ class ReservationService
                         'status_product' => $product->status_product,
                         'purchase_price' => $product->purchase_price,
                         'sale_price' => $product->sale_price,
+                        'image_product' => $product->image_product,
                         'created_at' => $product->created_at,
                         'updated_at' => $product->updated_at,
                         'cant' => $total_sale_price

@@ -147,21 +147,21 @@ class ProfessionalController extends Controller
             ]);
             $nombreDia = ucfirst(strtolower(Carbon::parse($data['data'])->locale('es_ES')->dayName));
             $start_time = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->value('start_time');
-            $startTime = strtotime($start_time);
-
+            //$startTime = strtotime($start_time);
+            $reservations = [];
             $professional = Professional::where('id', $data['professional_id'])
                 ->whereHas('branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })
                 ->with(['reservations' => function ($query) use ($data) {
-                    $query->whereDate('data', $data['data']);
+                    $query->whereDate('data', $data['data'])->orderBy('start_time');
                 }])
                 ->first();
             $currentDateTime =  Carbon::now();
             // Verificar si hay reservas para este profesional y día
             if ($professional && $professional->reservations->isNotEmpty()) {
                 // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
-                $reservations = $professional->reservations->map(function ($reservation) use ($startTime) {
+                $reservations = $professional->reservations->map(function ($reservation){
                     $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                     $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
 
@@ -184,28 +184,33 @@ class ProfessionalController extends Controller
                 })->flatten()->values()->all();
 
                 if (Carbon::parse($data['data'])->isToday()) {
+                    $lastReservation = $professional->reservations->last();
+                    $lastReservationFinalTime = Carbon::parse($lastReservation->final_hour);
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
                     if ($currentDateTime->lessThan($firstReservationStartTime)) {
                         $startTime = Carbon::parse($start_time);
-                        while ($startTime->addMinutes(15) <= $currentDateTime) {
+                        while ($startTime <= $currentDateTime) {
                             $reservations[] = $startTime->format('H:i');
+                            $startTime->addMinutes(15);
                         }
                     } else {
                         $startTime = Carbon::parse($start_time);
-                        while ($startTime->addMinutes(15) <= $firstReservationStartTime) {
+                        while ($startTime <= $lastReservationFinalTime) {
                             $reservations[] = $startTime->format('H:i');
+                            $startTime->addMinutes(15);
                         }
                     }
                 }
             } else {
-                if ($currentDateTime->isToday()) {
+                if (Carbon::parse($data['data'])->isToday()) {
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     //$firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
                     //if ($currentDateTime->lessThan($firstReservationStartTime)) {
                         $startTime = Carbon::parse($start_time);
-                        while ($startTime->addMinutes(15) <= $currentDateTime) {
+                        while ($startTime <= $currentDateTime) {
                             $reservations[] = $startTime->format('H:i');
+                            $startTime->addMinutes(15);
                         }
                     //}
                 }
