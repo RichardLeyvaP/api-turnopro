@@ -183,8 +183,6 @@ class ProfessionalController extends Controller
                     return $intervalos;
                 })->flatten()->values()->all();
                 if (Carbon::parse($data['data'])->isToday()) {
-                    $lastReservation = $professional->reservations->last();
-                    $lastReservationFinalTime = Carbon::parse($lastReservation->final_hour);
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
                     if ($currentDateTime->lessThan($firstReservationStartTime)) {
