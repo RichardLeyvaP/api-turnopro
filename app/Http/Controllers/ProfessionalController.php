@@ -182,7 +182,6 @@ class ProfessionalController extends Controller
 
                     return $intervalos;
                 })->flatten()->values()->all();
-
                 if (Carbon::parse($data['data'])->isToday()) {
                     $lastReservation = $professional->reservations->last();
                     $lastReservationFinalTime = Carbon::parse($lastReservation->final_hour);
@@ -196,7 +195,7 @@ class ProfessionalController extends Controller
                         }
                     } else {
                         $startTime = Carbon::parse($start_time);
-                        while ($startTime <= $lastReservationFinalTime) {
+                        while ($startTime <= $currentDateTime) {
                             $reservations[] = $startTime->format('H:i');
                             $startTime->addMinutes(15);
                         }
