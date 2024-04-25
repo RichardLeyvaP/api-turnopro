@@ -396,9 +396,11 @@ class UserController extends Controller
                 if (Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
                     //return $user->professional->id;
-                    $business = Business::where('id', $user->professional->business_id)->get();
-                    $user->professional->branches;
-                    if ($user->professional->branches->isNotEmpty()) { // Check if branches exist
+                    //Log::info($user->professional->id);
+                    $business = Business::where('professional_id', $user->professional->id)->first();
+                    Log::info($business);
+                    //$branch = ;
+                    if ($user->professional->branches->where('id', $request->branch_id)->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
                         if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
                         $branch = $user->professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
@@ -416,7 +418,7 @@ class UserController extends Controller
                         })->values()->first();}
 
                         //reglas de convivencia
-                        Log::info($user->professional->branchRules);
+                        /*Log::info($user->professional->branchRules);
                         if($user->professional->charge->name == 'Barbero' || $user->professional->charge->name == 'Tecnico' || $user->professional->charge->name == 'Barbero y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                         if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
@@ -432,15 +434,15 @@ class UserController extends Controller
                                 $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
                             }
                         }
-                        }
+                        }*/
                     }
                     //return $branch;
                     return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,
                         'email' => $user->email,
-                        'business_id' => $business->value('id'),
-                        'nameBusiness' => $business->value('name'),
+                        'business_id' => $business ? $business->id : $branch['business_id'],
+                        'nameBusiness' => $business ? $business->name : $branch['nameBusiness'],
                         'charge' => $user->professional ? $user->professional->charge->name : null,
                         'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
                         'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
@@ -458,12 +460,12 @@ class UserController extends Controller
                 } else {
                     return response()->json([
                         "msg" => "Contraseña incorrecta"
-                    ], 404);
+                    ], 401);
                 }
             } else {
                 return response()->json([
                     "msg" => "Usuario no registrado"
-                ], 404);
+                ], 401);
             }
         } catch (\Throwable $th) {
             Log::info($th);

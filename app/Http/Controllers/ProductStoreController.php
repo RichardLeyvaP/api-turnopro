@@ -52,8 +52,8 @@ class ProductStoreController extends Controller
     try {
         Log::info("Entra a buscar los stores y productos");
         
-        $stores = Store::all();
-        $products = Product::with('productcategory')->get();
+        $stores = Store::all('id', 'address');
+        $products = Product::all('id', 'name');
         
         return response()->json([
             'stores' => $stores,

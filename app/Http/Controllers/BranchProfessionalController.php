@@ -90,7 +90,7 @@ class BranchProfessionalController extends Controller
                 $query->where('branch_id', $data['branch_id']);
             })->whereHas('charge', function ($query){
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->get();
+            })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
 
@@ -138,15 +138,11 @@ class BranchProfessionalController extends Controller
             ]);
             $services = $request->input('services');
             $professionals = [];
-            $professionals1 = Professional::where(function ($query) use ($services, $data) {
-                foreach ($services as $service) {
-                    $query->whereHas('branchServices', function ($q) use ($service, $data) {
-                        $q->where('service_id', $service)->where('branch_id', $data['branch_id']);
-                    });
-                }
-            })->whereHas('charge', function ($query) {
+            $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $data) {
+                $query->whereIn('service_id', $services)->where('branch_id', $data['branch_id']);
+            }, '=', count($services))->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->get();
+            })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
 
             foreach($professionals1 as $professional1){
                 $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('endDate', '>=', Carbon::now())->get();

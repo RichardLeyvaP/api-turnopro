@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Reservation;
 use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\Vacation;
@@ -204,7 +206,7 @@ class ProfessionalService
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->get();
+        })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
         foreach($professionals1 as $professional1){
             $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
             ->whereDate('endDate', '>=', $fechaDada)
@@ -1039,16 +1041,21 @@ class ProfessionalService
 
     //        return $professionals;
     // }
-    public function professionals_state($branch_id)
+    public function professionals_state($branch_id, $reservation_id)
     {
+        $reservation = Reservation::find($reservation_id);
+        $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
+        $branchService = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
         $time = 20;
         //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
         $currentTime = Carbon::now();
         $endTimeThreshold = $currentTime->copy()->addMinutes(20);
 
-        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $branchService) {
             $query->where('branch_id', $branch_id);
-        })->whereHas('charge', function ($query){
+        })->whereHas('branchServiceProfessionals', function ($query) use ($branchService){
+            $query->whereIn('branch_service_id', $branchService);
+        }, '=', count($branchService))->whereHas('charge', function ($query){
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->where(function ($query) use ($endTimeThreshold) {
             $query->orWhereDoesntHave('tails')

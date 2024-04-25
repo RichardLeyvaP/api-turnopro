@@ -7,6 +7,7 @@ use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Professional;
 use App\Models\Schedule;
+use App\Models\Service;
 use App\Models\User;
 use App\Services\ImageService;
 use App\Services\ProfessionalService;
@@ -144,7 +145,7 @@ class ProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-            $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
+            $nombreDia = ucfirst(strtolower(Carbon::parse($data['data'])->locale('es_ES')->dayName));
             $start_time = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->value('start_time');
             $startTime = strtotime($start_time);
 
@@ -156,10 +157,9 @@ class ProfessionalController extends Controller
                     $query->whereDate('data', $data['data']);
                 }])
                 ->first();
-
-            $currentDateTime = Carbon::now();
+            $currentDateTime =  Carbon::now();
             // Verificar si hay reservas para este profesional y día
-            if (count($professional->reservations) > 0) {
+            if ($professional && $professional->reservations->isNotEmpty()) {
                 // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
                 $reservations = $professional->reservations->map(function ($reservation) use ($startTime) {
                     $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
@@ -170,7 +170,11 @@ class ProfessionalController extends Controller
                     $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
 
                     $finalTime = Carbon::parse($finalFormatted);
-
+                    $horaActual = Carbon::now();
+                    if ($finalTime->lessThan($horaActual)) {
+                        // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
+                        $finalTime = $horaActual;
+                    }
                     // Agregar las horas intermedias de 15 en 15 minutos
                     while ($startTime->addMinutes(15) <= $finalTime) {
                         $intervalos[] = $startTime->format('H:i');
@@ -179,7 +183,7 @@ class ProfessionalController extends Controller
                     return $intervalos;
                 })->flatten()->values()->all();
 
-                if ($currentDateTime->isToday()) {
+                if (Carbon::parse($data['data'])->isToday()) {
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
                     if ($currentDateTime->lessThan($firstReservationStartTime)) {
@@ -630,9 +634,10 @@ class ProfessionalController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required|numeric',
+                'reservation_id' => 'required|numeric'
             ]);
-            $professional = $this->professionalService->professionals_state($data['branch_id']);
+            $professional = $this->professionalService->professionals_state($data['branch_id'], $data['reservation_id']);
             return response()->json(['professionals' => $professional], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);

@@ -50,7 +50,7 @@ class BranchController extends Controller
                 'business_id' => 'required|numeric'
             ]);
             Log::info($branch_data['business_id']);
-            return response()->json(['branches' => Branch::where('business_id', $branch_data['business_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['branches' => Branch::where('business_id', $branch_data['business_id'])->select('id', 'name')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
