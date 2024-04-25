@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductStore;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -120,7 +121,7 @@ class ProductController extends Controller
                 'branch_id' => 'nullable'
             ]);
             $products = Product::with(['orders' => function ($query) {
-                $query->selectRaw('SUM(price) as total_sale_price')
+                $query->selectRaw('SUM(cant) as total_sale_price')
                     ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
             }, 'productSales' => function ($query) {
                 $query->selectRaw('SUM(cant) as total_cant')
