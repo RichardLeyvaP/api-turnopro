@@ -18,7 +18,7 @@ class BranchService
     {
         $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
-        })->get();
+        })->where('pay', 1)->get();
         $carIds = $cars->pluck('id');
         
         $totalservices = 0;
@@ -76,8 +76,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Seleccionados' => $seleccionado,
-            'Aleatorios' => $aleatorio,
+            'Clientes Seleccionados' => $seleccionado,
+            'Clientes Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -88,7 +88,7 @@ class BranchService
     {
         $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $month, $year) {
             $query->whereMonth('data', $month)->whereYear('data', $year)->where('branch_id', $branch_id);
-        })->get();
+        })->where('pay', 1)->get();
         $carIds = $cars->pluck('id');
         $totalClients = 0;
         $totalservices = 0;
@@ -144,8 +144,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Seleccionados' => $seleccionado,
-            'Aleatorios' => $aleatorio,
+            'Clientes Seleccionados' => $seleccionado,
+            'Clientes Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -157,7 +157,7 @@ class BranchService
     {
         $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
             $query->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->where('branch_id', $branch_id);
-        })->get();
+        })->where('pay', 1)->get();
         $carIds = $cars->pluck('id');
         $totalClients = 0;
         $totalservices = 0;
@@ -217,8 +217,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Seleccionados' => $seleccionado,
-            'Aleatorios' => $aleatorio,
+            'Clientes Seleccionados' => $seleccionado,
+            'Clientes Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -229,7 +229,7 @@ class BranchService
     {
        $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
             $query->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->where('branch_id', $branch_id);
-        })->get();
+        })->where('pay', 1)->get();
         $carIds = $cars->pluck('id');
         $totalClients = 0;
         $totalservices = 0;
@@ -289,8 +289,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Seleccionados' => $seleccionado,
-            'Aleatorios' => $aleatorio,
+            'Clientes Seleccionados' => $seleccionado,
+            'Clientes Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -304,8 +304,8 @@ class BranchService
             'Servicio mas Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
             'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
             'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
+            'Clientes Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
+            'Clientes Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
             'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
             'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
             'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
@@ -418,7 +418,7 @@ class BranchService
         })->get();*/
         $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
-        })->get();
+        })->where('pay', 1)->get();
         $carIds = $cars->pluck('id');
         
         $totalservices = 0;
@@ -480,8 +480,8 @@ class BranchService
             'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
             'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
             'Total de Servicios Brindados' => $totalservices,
-            'Seleccionados' => $seleccionado,
-            'Aleatorios' => $aleatorio,
+            'Clientes Seleccionados' => $seleccionado,
+            'Clientes Aleatorios' => $aleatorio,
             'Servicios Especiales' => $orders->count(),
             'Monto Servicios Especiales' => round($orders->sum('price'), 2),
             'Clientes Atendidos' => $totalClients
@@ -495,8 +495,8 @@ class BranchService
             'Servicio mas Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
             'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
             'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
+            'Clientes Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
+            'Clientes Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
             'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
             'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
             'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
