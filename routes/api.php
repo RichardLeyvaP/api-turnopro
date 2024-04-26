@@ -265,6 +265,7 @@ Route::get('/car_order_delete_branch', [CarController::class, 'car_order_delete_
 Route::put('/car-give-tips', [CarController::class, 'give_tips']);
 Route::get('/reservation_services', [CarController::class, 'reservation_services']);
 Route::get('/car_services', [CarController::class, 'car_services']); //dado una reservations devolver los servicios
+Route::get('/car_services2', [CarController::class, 'car_services2']); //dado una reservations devolver los servicios y detalles del cliente
 Route::get('/cars-winner-day', [CarController::class, 'cars_sum_amount']);//Dado un business devolver las ganancial del dia
 Route::get('/cars-winner-week', [CarController::class, 'cars_sum_amount_week']);//Dado un business devolver las ganancial de la semana
 Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial del mes

@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Business;
 use App\Models\Car;
 use App\Models\ClientProfessional;
+use App\Models\Comment;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Professional;
@@ -447,11 +448,11 @@ class CarController extends Controller
                 'amountGenerate' => $cars->sum('amountGenerate'),
                 'totalRetention' => $cars->sum('retention'),
             ];
-        })->values();
+        })->sortByDesc('data')->values();
         //Log::info($cars->pluck('id'));
            return response()->json(['car' => $cars], 200);
        } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
+           return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
        }
     }
 
@@ -942,6 +943,92 @@ class CarController extends Controller
 			
         }
     }
+
+    public function car_services2(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar las reservaciones y los servicios de un cliente con un profesional");
+            $data = $request->validate([
+                'car_id' => 'required|numeric'
+            ]);
+            $car = Car::where('id', $data['car_id'])->first();
+            $client = $car->clientProfessional->client;
+            //historial
+            $result = [];
+            $fiel = null;
+            $frecuencia = null;
+            $reservations = Reservation::whereHas('car', function ($query) use ($client) {
+                $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($client){
+                    $query->where('client_id', $client->id);
+                });
+            })->orderByDesc('data')->limit(12)->get();
+            if ($reservations->isEmpty()) {
+                $result[] = [
+                    'clientName' => $client->name . " " . $client->surname,
+                    'professionalName' => "Ninguno",
+                    'imageLook' => 'comments/default_profile.jpg',
+                    'image_url' => '',
+                    'cantVisit' => 0,
+                    'endLook' => 'No hay comentarios',
+                    'frecuencia' => "No Frecuente"
+                ];
+            }else{
+            $countReservations = $reservations->count();
+            if ($countReservations >= 12) {
+                $currentYear = Carbon::now()->year;
+    
+                $fiel = $reservations->filter(function ($reservation) use ($currentYear) {
+                    return Carbon::parse($reservation->data)->year == $currentYear;
+                })->count();
+                if ($fiel >= 12) {
+                    $frecuencia = "Fiel";
+                }
+            } elseif ($countReservations >= 3) {
+                $frecuencia = "Frecuente";
+            } else {
+                $frecuencia = "No Frecuente";
+            }
+
+            $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
+                $query->where('client_id', $client->id);
+            })->orderByDesc('data')->orderByDesc('updated_at')->first();
+
+            $reservation = $reservations->first();
+            $professional = $reservation->car->clientProfessional->professional;
+            $result[] = [
+                'clientName' => $client->name . " " . $client->surname,
+                'professionalName' => $professional->name . ' ' . $professional->surname,
+                'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+                'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
+                'cantVisit' => $reservations->count(),
+                'endLook' => $comment ? $comment->look : null,
+                'frecuencia' => $frecuencia,
+            ];
+        }
+            //endhistoria
+            $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
+            $services = $orderServicesDatas->map(function ($orderData){
+                $service = $orderData->branchServiceProfessional->branchService->service;
+                return [
+                     'name' => $service->name,
+                      'simultaneou' => $service->simultaneou,
+                      'price_service' => $service->price_service,
+                      'type_service' => $service->type_service,
+                      'profit_percentaje' => $service->profit_percentaje,
+                      'duration_service' => $service->duration_service,
+                      'image_service' => $service->image_service,
+                      'description' => $service->service_comment
+                      ];
+                  });
+            
+            return response()->json(['services' => $services, 'clientHistory' => $result], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las reservaciones"], 500);
+			
+        }
+    }
+
 
    public function update(Request $request)
     {

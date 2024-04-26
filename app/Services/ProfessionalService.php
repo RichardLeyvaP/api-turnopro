@@ -192,7 +192,7 @@ class ProfessionalService
         //$arrayHoras = ['10:25', '10:30', '11:00', '11:15', '11:30','14:30'];
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
-        $start_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
+        $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
         $closingTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
         $current_date = Carbon::now()->format('Y-m-d');
         $availableProfessionals = [];
@@ -206,7 +206,7 @@ class ProfessionalService
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
+        })->where('state', 1)->orderBy('updated_at')->get();
         foreach($professionals1 as $professional1){
             $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
             ->whereDate('endDate', '>=', $fechaDada)
@@ -238,8 +238,8 @@ class ProfessionalService
             $entrada = json_decode($reservations, true);
             //return $entrada[0];
             if($reservations->isEmpty()){
-                if(Carbon::now() < Carbon::parse($start_time)){
-                    $professional->start_time = Carbon::parse($start_time)->format('H:i');
+                if(Carbon::now() < Carbon::parse($startTime)){
+                    $professional->start_time = Carbon::parse($startTime)->format('H:i');
                 $availableProfessionals[] = $professional;
                 }
                 else{
@@ -247,10 +247,9 @@ class ProfessionalService
                 $availableProfessionals[] = $professional;
             }
             }else{
-
                 //$arrayHoras = $this->professional_reservations_time1($branch_id, $professional->id, $current_date);
                 //return $arrayHoras;
-                $professional->start_time = $this->encontrarHoraDisponible($totalTiempo, $entrada);
+                $professional->start_time = $this->encontrarHoraDisponible($totalTiempo, $entrada, $startTime);
                 $availableProfessionals[] = $professional;
                 //break;
             }//else
@@ -274,10 +273,14 @@ class ProfessionalService
 
 
     ///nuevo metodo
-    function encontrarHoraDisponible($timeService, $arrayIntervalos) {
+    function encontrarHoraDisponible($timeService, $arrayIntervalos, $startTime) {
         // Convertir la hora actual a un objeto Carbon para facilitar la comparación
         //$horaActualCarbon = Carbon::createFromFormat('H:i', $horaActual);
         $horaActual = Carbon::now();
+
+        if($horaActual < Carbon::parse($startTime)){
+            $horaActual = Carbon::parse($startTime);
+        }
     
         // Convertir la hora de inicio del primer intervalo a Carbon para comparar
         //$primerIntervaloInicio = Carbon::createFromFormat('H:i:s', $arrayIntervalos[0]['start_time']);
@@ -874,37 +877,37 @@ class ProfessionalService
         //$services = $services + count($car->orders->where('is_product', 0));
         //$products = $products + count($car->orders->where('is_product', 1));
         $products = $orderProd->sum('cant');
-    //}
-    $ServiceEspecial = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
-        $query->where('type_service', 'Especial');
-    })->get();
-    $ServiceRegular = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
-        $query->where('type_service', 'Regular');
-    })->get();
-    $totalClients = $cars->count();
-    $amountGenral = round($cars->sum('amount'), 2);
-    /*$winProfessional =$cars->sum(function ($car){
-        return $car->orders->sum('percent_win');
-    });*/
-    $winProfessional = $orderServ->sum('percent_win');
-    $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
-    $winTips =  round($cars->sum('tip') * 0.80, 2);
-    return $result = [
-        'Monto Generado' => $amountGenral, //suma productos y servicios
-        'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
-        'Retención' => $winProfessional * $retention, //monto generado percent_win % calculando la retención
-        'Propina' => round($cars->sum('tip'), 2),
-        'Propina 80%' => $winTips,
-        'Ganancia Total Barbero' => $winProfessional-$retentionPorcent+$winTips, //ganancia barbero - retencion + propinas 80%
-        'Servicios Realizados' => $services,
-        'Productos Vendidos' => $products,
-        'Servicios Regulares' => $ServiceRegular->count(),
-        'Servicios Especiales' => $ServiceEspecial->count(),
-        'Monto Especial' => round($ServiceEspecial->sum('percent_win'), 2),
-        'Clientes Atendidos' => $totalClients,
-        'Seleccionado' => $cars->where('select_professional', 1)->count(),
-        'Aleatorio' => $cars->where('select_professional', 0)->count()
-    ];
+        //}
+        $ServiceEspecial = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Especial');
+        })->get();
+        $ServiceRegular = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+            $query->where('type_service', 'Regular');
+        })->get();
+        $totalClients = $cars->count();
+        $amountGenral = round($cars->sum('amount'), 2);
+        /*$winProfessional =$cars->sum(function ($car){
+            return $car->orders->sum('percent_win');
+        });*/
+        $winProfessional = $orderServ->sum('percent_win');
+        $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
+        $winTips =  round($cars->sum('tip') * 0.80, 2);
+        return $result = [
+            'Monto Generado' => $amountGenral, //suma productos y servicios
+            'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
+            'Retención' => $winProfessional * $retention, //monto generado percent_win % calculando la retención
+            'Propina' => round($cars->sum('tip'), 2),
+            'Propina 80%' => $winTips,
+            'Ganancia Total Barbero' => $winProfessional-$retentionPorcent+$winTips, //ganancia barbero - retencion + propinas 80%
+            'Servicios Realizados' => $services,
+            'Productos Vendidos' => $products,
+            'Servicios Regulares' => $ServiceRegular->count(),
+            'Servicios Especiales' => $ServiceEspecial->count(),
+            'Monto Especial' => round($ServiceEspecial->sum('percent_win'), 2),
+            'Clientes Atendidos' => $totalClients,
+            'Seleccionado' => $cars->where('select_professional', 1)->count(),
+            'Aleatorio' => $cars->where('select_professional', 0)->count()
+        ];
     }
 
     public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
@@ -1063,7 +1066,7 @@ class ProfessionalService
                     $subquery->whereIn('attended', [0, 2, 3]);
                 })
                 ->orWhereHas('tails', function ($subquery) use ($endTimeThreshold) {
-                    $subquery->whereNotIn('attended', [0, 2, 3])
+                    $subquery->where('attended', '!=', 1)
                         ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
                         ->orWhereNull('start_time');
                 });

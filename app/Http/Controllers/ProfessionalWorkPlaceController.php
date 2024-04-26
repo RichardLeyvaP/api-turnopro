@@ -32,7 +32,7 @@ class ProfessionalWorkPlaceController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar Productos a un almacen");
+        Log::info("Asignar Puesto de trabajo");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -43,6 +43,8 @@ class ProfessionalWorkPlaceController extends Controller
             $places = $data['places'];
             //return json_decode($places);
             $professional = Professional::find($data['professional_id']);
+            $professional->state = 1;
+            $professional->save();
             $workplace = Workplace::find($data['workplace_id']);
             $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)]);
             $workplace->busy = 1;
@@ -190,6 +192,8 @@ class ProfessionalWorkPlaceController extends Controller
                 'workplace_id' => 'required|numeric'
             ]);            
             $professional = Professional::find($data['professional_id']);
+            $professional->state = 0;
+            $professional->save();
             $workplace = Workplace::find($data['workplace_id']);
             //return $professional->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->withPivot('id', 'places')->get()->map->pivot;
             $professionalworkplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->where('workplace_id', $data['workplace_id'])->whereDate('data', Carbon::now())->selectRaw('*, CAST(places AS CHAR) AS places_decodificado')->first();

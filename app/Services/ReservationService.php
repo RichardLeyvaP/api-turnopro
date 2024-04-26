@@ -114,7 +114,7 @@ class ReservationService
         $client = Client::find($data['client_id']);
         $result = [
             'clientName' => $client->name . " " . $client->surname,
-            'professionalName' => "Ningúno",
+            'professionalName' => "Ninguno",
             'branchName' => '',
             'image_data' => '',
             'imageLook' => 'comments/default_profile.jpg',
@@ -163,11 +163,14 @@ class ReservationService
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
             $query->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-
-        $products = Product::with(['orders' => function ($query) use ($data, $reservationids) {
+        $reservation2 = $reservations->filter(function ($query){
+            return $query->car->where('pay', 1);
+        });
+       $reservationids2 = $reservation2->pluck('car_id')->take(3);
+        $products = Product::with(['orders' => function ($query) use ($data, $reservationids2) {
             $query->selectRaw('SUM(cant) as total_sale_price')
                 ->groupBy('product_id')
-                ->whereIn('car_id', $reservationids)
+                ->whereIn('car_id', $reservationids2)
                 ->where('is_product', 1);
         }])
         ->get()->filter(function ($product) {
@@ -178,7 +181,7 @@ class ReservationService
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         //if ($reservations !== null && !$reservations->isEmpty()) {
             Log::info('Tiene Reserva');
-            $reservation = $reservations->first();
+            $reservation = $reservation2->first();
             $branch = $reservation->branch;
             $professional = $reservation->car->clientProfessional->professional;
 
@@ -192,7 +195,7 @@ class ReservationService
                 'cantVisit' => $reservations->count(),
                 'endLook' => $comment ? $comment->look : null,
                 'lastDate' => $reservation->data,
-                'frecuencia' => $fiel ? $fiel : $frecuencia,
+                'frecuencia' => $frecuencia,
                 'services' => $services->map(function ($service) use ($cantMaxService) {
                     return [
                         'id' => $service->id,
