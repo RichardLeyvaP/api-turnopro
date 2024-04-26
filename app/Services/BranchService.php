@@ -411,11 +411,6 @@ class BranchService
 
     public function branch_winner_date_icon($branch_id)
     {
-        /*$cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->whereHas('orders', function ($query) {
-            $query->whereDate('data', Carbon::now());
-        })->get();*/
         $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
         })->where('pay', 1)->get();
