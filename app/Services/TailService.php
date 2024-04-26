@@ -312,7 +312,7 @@ class TailService {
         Log::info($professional);
         $reservation = Reservation::find($data['reservation_id']);
         Log::info($reservation);
-        $horaActual = \Carbon\Carbon::now();
+        $horaActual = Carbon::now();
         /*$horaActual = Carbon::now()->format('H:i:s');
         $timestamp = strtotime($reservation->total_time);
         $tiempo_entero = date('Gis', $timestamp);
