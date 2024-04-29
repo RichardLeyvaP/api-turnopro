@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\Vacation;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use function PHPSTORM_META\map;
@@ -207,13 +208,14 @@ class ProfessionalService
         }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->where('state', 1)->whereHas('records', function ($query){
-            $query->whereDate('start_time', Carbon::now())->orderBy('start_time', 'asc');
-        })->get();
+            $query->whereDate('start_time', Carbon::now());
+        })->select('professionals.id', 'professionals.name', 'professionals.surname', 'professionals.second_surname', 'professionals.email', 'professionals.phone', 'professionals.charge_id', 'professionals.state', 'professionals.image_url', 
+        DB::raw('(SELECT start_time FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->get();
         /*$professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->where('state', 1)->orderBy('updated_at')->get();*/
+        })->where('state', 1)->orderBy('updated_at')->get();->orderBy('start_time', 'asc')*/
         foreach($professionals1 as $professional1){
             $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
             ->whereDate('endDate', '>=', $fechaDada)
