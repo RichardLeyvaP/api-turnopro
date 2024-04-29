@@ -71,7 +71,7 @@ class BranchServiceController extends Controller
             ]);
             $services = Service::whereHas('branchServices', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-               })->get();
+               })->orderByDesc('ponderation')->orderBy('name')->get();
                 return response()->json(['services' => $services],200); 
           
             } catch (\Throwable $th) {  

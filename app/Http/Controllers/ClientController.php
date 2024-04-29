@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Business;
 use App\Models\Car;
 use App\Models\Client;
+use App\Models\Comment;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -59,21 +60,73 @@ class ClientController extends Controller
                 $name = '';
                 $image = '';
                 $id = '';
-                if ($user->client) {
-                    $name = $user->client->name . ' ' . $user->client->surname . ' ' . $user->client->second_surname;
-                    $image = $user->client->client_image;
-                    $id = $user->client->id;
+                if ($client =$user->client) { 
+                    $name = $client->name . ' ' . $client->surname . ' ' . $client->second_surname;
+                    $image = $client->client_image;
+                    $id = $client->id;
+                    $reservations = Reservation::whereHas('car', function ($query) use ($client) {
+                        $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($client){
+                            $query->where('client_id', $client->id);
+                        });
+                    })->orderByDesc('data')->limit(12)->get();
+                    if ($reservations->isEmpty())
+                    {
+                        $details = [
+                        'professionalName' => "Ninguno",
+                        'imageLook' => 'comments/default_profile.jpg',
+                        'image_url' => '',
+                        'cantVisit' => 0,
+                        'endLook' => 'No hay comentarios',
+                        'lastVisit' => 'No ha sido atendido',
+                        'frecuencia' => "No Frecuente"
+                    ];
                 }
-                if ($user->professional) {
-                    $id = $user->professional->id;
-                    $name = $user->professional->name . ' ' . $user->professional->surname . ' ' . $user->professional->second_surname;
-                    $image = $user->professional->image_url;
+                else{
+                $countReservations = $reservations->count();
+            if ($countReservations >= 12) {
+                $currentYear = Carbon::now()->year;
+    
+                $fiel = $reservations->filter(function ($reservation) use ($currentYear) {
+                    return Carbon::parse($reservation->data)->year == $currentYear;
+                })->count();
+                if ($fiel >= 12) {
+                    $frecuencia = "Fiel";
+                }
+            } elseif ($countReservations >= 3) {
+                $frecuencia = "Frecuente";
+            } else {
+                $frecuencia = "No Frecuente";
+            }
+
+            $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
+                $query->where('client_id', $client->id);
+            })->orderByDesc('data')->orderByDesc('updated_at')->first();
+
+            $reservation = $reservations->first();
+            $professional = $reservation->car->clientProfessional->professional;
+            $details = [
+                'professionalName' => $professional->name . ' ' . $professional->surname,
+                'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+                'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
+                'cantVisit' => $reservations->count(),
+                'endLook' => $comment ? $comment->look : null,
+                'lastVisit' => $reservation->data,
+                'frecuencia' => $frecuencia,
+            ];
+                    }
+                }
+                if ($professional = $user->professional) {
+                    $id = $professional->id;
+                    $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
+                    $image = $professional->image_url;
+                    $details = [];
                 }
                 return [
                     'id' => $id,
                     'name' => $name,
                     'client_image' => $image,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
+                    'details' => $details
 
                 ];
             });
@@ -168,22 +221,22 @@ class ClientController extends Controller
                 ], 400);
             }
             $user = User::create([
-                'name' => $validator['name'],
-                'email' => $validator['email'],
-                'password' => Hash::make($validator['email'])
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->email)
             ]);
             $client = new Client();
-            $client->name = $validator['name'];
-            $client->surname = $validator['surname'];
-            $client->second_surname = $validator['second_surname'];
-            $client->email = $validator['email'];
-            $client->phone = $validator['phone'];
+            $client->name = $request->name;
+            $client->surname = $request->surname;
+            $client->second_surname = $request->second_surname;
+            $client->email = $request->email;
+            $client->phone = $request->phone;
             $client->user_id = $user->id;
             //$client->client_image = 'comments/default.jpg';
             $client->save();
             Log::info($client);
           //  $filename = "image/default.png";
-            $filename = "comments/default.jpg";
+            $filename = "clients/default.jpg";
             if ($request->hasFile('client_image')) {
                 $filename = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
@@ -216,12 +269,12 @@ class ClientController extends Controller
             Log::info($request['client_image']);
             $client = Client::find($clients_data['id']);
             if ($request->hasFile('client_image'))
-            if ($client->client_image != 'comments/default.jpg') {
+            if ($client->client_image != 'clients/default.jpg') {
                 $destination = public_path("storage\\" . $client->client_image);
                 if (File::exists($destination)) {
                     File::delete($destination);
                 }
-                $client->client_image = $request->file('client_image')->storeAs('comments', $client->id . '.' . $request->file('client_image')->extension(), 'public');
+                $client->client_image = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
             $client->name = $clients_data['name'];
             $client->surname = $clients_data['surname'];

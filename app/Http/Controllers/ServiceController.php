@@ -35,7 +35,8 @@ class ServiceController extends Controller
                 'profit_percentaje' => 'nullable|numeric',
                 'duration_service' => 'required|numeric',
                 'image_service' => 'nullable',
-                'service_comment' => 'nullable|min:3'
+                'service_comment' => 'nullable|min:3',
+                'ponderation' => 'nullable'
             ]);            
             $service = new Service();
             $service->name = $data['name'];
@@ -45,6 +46,7 @@ class ServiceController extends Controller
             $service->profit_percentaje = $data['profit_percentaje'];
             $service->duration_service = $data['duration_service'];
             $service->service_comment = $data['service_comment'];
+            $service->ponderation = $data['ponderation'];
             $service->save();
 
             $filename = "services/default.png";
@@ -112,7 +114,8 @@ class ServiceController extends Controller
                 'profit_percentaje' => 'nullable',
                 'duration_service' => 'required|numeric',
                 'image_service' => 'nullable',
-                'service_comment' => 'nullable|min:3'
+                'service_comment' => 'nullable|min:3',
+                'ponderation' => 'nullable'
             ]);
             Log::info($request->profit_percentaje);
             //$filename = "services/default.png";
@@ -152,6 +155,7 @@ class ServiceController extends Controller
             $service->type_service = $data['type_service'];            
             $service->duration_service = $data['duration_service'];
             $service->service_comment = $data['service_comment'];
+            $service->ponderation = $data['ponderation'];
             $service->save();
 
             return response()->json(['msg' => 'Servicio actualizado correctamente'], 200);

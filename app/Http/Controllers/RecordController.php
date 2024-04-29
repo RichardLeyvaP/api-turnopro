@@ -103,7 +103,7 @@ class RecordController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $branch = Record::find($data['id']);
+            //$branch = Record::find($data['id']);
 
             Record::destroy($data['id']);
 

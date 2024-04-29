@@ -68,11 +68,11 @@ class UserController extends Controller
             ]);
 
             $client = new Client();
-            $client->name = $validator['name'];
-            $client->surname = $validator['surname'];
-            $client->second_surname = $validator['second_surname'];
-            $client->email = $validator['email'];
-            $client->phone = $validator['phone'];
+            $client->name = $request->name;
+            $client->surname = $request->surname;
+            $client->second_surname = $request->second_surname;
+            $client->email = $request->email;
+            $client->phone = $request->phone;
             $client->user_id = $user->id;
             $client->client_image = 'comments/default.jpg';
             $client->save();

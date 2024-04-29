@@ -241,12 +241,23 @@ class CarController extends Controller
                 $professional = $car->clientProfessional->professional;
                 $products = $car->orders->where('is_product', 1)->sum('price');
                 $services = $car->orders->where('is_product', 0)->sum('price');
+                $attended = $car->reservation->tail->attended;
+                if($attended == 0 || $attended == 3 ){
+                    $state = 3; //En cola
+                }
+                elseif($attended == 2){
+                    $state = 1; // Atendido
+                }
+                else{
+                    $state = 2; // Atendiendose 
+                }
+
                 return [
                     'id' => $car->id,
                     'client_professional_id' => $car->client_professional_id,
                     'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
                     'tip' => $car->tip,
-                    'pay' => $car->pay,
+                    'pay' => (int)$car->pay,
                     'active' => $car->active,
                     'product' => $products,
                     'service' => $services,
@@ -256,11 +267,12 @@ class CarController extends Controller
                     'client_image' => $client->client_image,
                     'professional_id' => $professional->id,
                     'image_url' => $professional->image_url,
-                    'payment' => $car->payment
+                    'payment' => $car->payment,
+                    'state' => (int)$state
 
                 ];
                 //}
-            });
+            })->sortBy('state')->values();
             return response()->json(['cars' => $cars], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);

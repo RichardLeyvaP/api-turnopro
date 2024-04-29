@@ -225,14 +225,17 @@ class TailService {
             return true;
         }
         else {
-            Log::info('else');
-            foreach ($tails as $tail) {            
-            foreach ($tail->reservation->car->orders->where('is_product', false) as $orderData) { 
-                if ($orderData->branchServiceProfessional->branchService->service->simultaneou == 1) {
-                    return true;
+            Log::info('else');  
+            foreach ($tails as $tail) {
+                // Verifica si car no es null
+                if ($tail->reservation->car !== null) {
+                    foreach ($tail->reservation->car->orders->where('is_product', false) as $orderData) {
+                        if ($orderData->branchServiceProfessional->branchService->service->simultaneous == 1) {
+                            return true;
+                        }
+                    }
                 }
             }
-        }
         }
         return false;
     }
