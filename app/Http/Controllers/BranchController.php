@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Car;
+use App\Models\Comment;
 use App\Models\Product;
 use App\Services\BranchService;
 use Carbon\Carbon;
@@ -268,4 +269,6 @@ class BranchController extends Controller
             return response()->json(['msg' => 'Error al eliminar la sucursal'], 500);
         }
     }
+
+    
 }

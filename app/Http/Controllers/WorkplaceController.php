@@ -80,7 +80,7 @@ class WorkplaceController extends Controller
         Log::info($request);
         try {
             $workplace_data = $request->validate([
-                'name' => 'required|max:100|unique:workplaces',
+                'name' => 'required|max:100',
                 'branch_id' => 'required|numeric',
             ]);
 

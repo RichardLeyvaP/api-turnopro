@@ -40,6 +40,8 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\ClientSurveyController;
 use App\Http\Controllers\TailController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkplaceController;
@@ -358,12 +360,15 @@ Route::get('/rules_professional', [BranchRuleProfessionalController::class, 'rul
 Route::get('/branchprofessional', [BranchProfessionalController::class, 'index']);
 Route::get('/branchprofessional-show', [BranchProfessionalController::class, 'show']);
 Route::post('/branchprofessional', [BranchProfessionalController::class, 'store']);
+Route::put('/request_location_professional', [BranchProfessionalController::class, 'update_state']); //dato un professional pasarlo a location state 2 y sacar del puesto de trabajo
 Route::put('/branchprofessional', [BranchProfessionalController::class, 'update']);
 Route::post('/branchprofessional-destroy', [BranchProfessionalController::class, 'destroy']);
 Route::get('/branch-professionals', [BranchProfessionalController::class, 'branch_professionals']);//dado una branch devuelve los professionales que trabajan en ella
 Route::get('/branch-professionals-barber', [BranchProfessionalController::class, 'branch_professionals_barber']);//dado una branch devuelve los professionales que trabajan en ella que son barberos
 Route::get('/branch-professionals-barber-totem', [BranchProfessionalController::class, 'branch_professionals_barber_totem']);//dado una branch devuelve los professionales que trabajan en ella que son barberos
 Route::get('/branch-professionals-barber-tecnico', [BranchProfessionalController::class, 'branch_professionals_barber_tecnico']);//dado una branch devuelve los professionales que trabajan en ella que son barberos
+Route::get('/branch_colacion', [BranchProfessionalController::class, 'branch_colacion']); //dado una id de la branch Mostrar los professionales que estan en colacion
+
 
 Route::get('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'index']);
 Route::get('/professionalworkplace-show', [ProfessionalWorkPlaceController::class, 'show']);
@@ -542,6 +547,15 @@ Route::get('/operation-tip-periodo', [OperationTipController::class, 'operation_
 Route::get('/cashier-car-notpay', [OperationTipController::class, 'cashier_car_notpay']);//Detalles del carro y cajero(a)s
 
 Route::get('/professional-branch-notif-queque', [AssistantController::class, 'professional_branch_notif_queque']);//dado un professional devolver la cola del dia y las notificaciones
+
+Route::get('/survey', [SurveyController::class, 'index']);
+Route::get('/survey-show', [SurveyController::class, 'show']);
+Route::post('/survey', [SurveyController::class, 'store']);
+Route::put('/survey', [SurveyController::class, 'update']);
+Route::post('/survey-destroy', [SurveyController::class, 'destroy']);
+
+Route::post('/client-survey', [ClientSurveyController::class, 'store']);
+Route::get('/surveyCounts', [ClientSurveyController::class, 'surveyCounts']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

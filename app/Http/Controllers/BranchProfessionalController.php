@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\BranchProfessional;
+use App\Models\Comment;
 use App\Models\Professional;
+use App\Models\ProfessionalWorkPlace;
 use App\Models\Service;
 use App\Models\Vacation;
+use App\Models\Workplace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -237,6 +240,68 @@ class BranchProfessionalController extends Controller
             return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
+        }
+    }
+
+    public function update_state(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'type' => 'required|string',
+                'state' => 'required|numeric'
+            ]);
+            $professional = Professional::find($data['professional_id']);
+            $professional->state = $data['state'];
+            $professional->save();
+            if($data['state'] == 2){
+                $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data){
+                    $query->where('busy', 1)->where('branch_id', $data['branch_id']);
+                })->first();
+                $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
+                if($data['type'] == 'Barbero'){
+                    $workplace->busy = 0;
+                    $workplace->save();
+                }
+                if($data['type'] == 'Tecnico'){
+                    $workplace->busy = 0;
+                    $workplace->save();
+                    $places = json_decode($ProfessionalWorkPlace->places, true);
+                    Workplace::whereIn('id', $places)->update(['select' => 0]);
+                }
+            }
+            
+            return response()->json(['msg' => 'Estado modificado correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
+        }
+    }
+
+    public function branch_colacion(Request $request)
+    {
+
+        try {             
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('state', 2)->get()->map(function ($query){
+                return [
+                    'professional_name' => $query->name . " " . $query->surname  . " " . $query->second_surname,
+                    'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
+                    'professional_id' => $query->id,
+                    'professional_state' => $query->state,
+                    'start_time' => Carbon::now()->format('H:i:s')
+                ];
+            });
+                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
         }
     }
 

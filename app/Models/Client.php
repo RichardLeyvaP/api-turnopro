@@ -34,4 +34,9 @@ class Client extends Model
     public function reservations(){
         return $this->hasManyDeep(Reservation::class, [ClientProfessional::class, Car::class]);
     }
+
+    public function surveys()
+    {
+        return $this->belongsToMany(Survey::class, 'client_survey')->withTimestamps();
+    }
 }

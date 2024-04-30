@@ -19,9 +19,7 @@ class ProfessionalWorkPlace extends Model
     return $this->belongsTo(Workplace::class);
     }
 
-    protected $casts = [
-        'places' => 'integer'
-    ];
+ 
 
      //para decirle a q table debe administrar
     protected $table = "professional_workplace";

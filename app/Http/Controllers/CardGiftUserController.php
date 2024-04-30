@@ -149,9 +149,9 @@ class CardGiftUserController extends Controller
             $data = $request->validate([
                 'code' => 'required'
             ]);
-            $cardGiftUser = CardGiftUser::where('code', $data['code'])->get()->value('exist');
+            $cardGiftUser = CardGiftUser::where('state', 'Activa')->where('code', $data['code'])->get()->value('exist');
             Log::info($cardGiftUser);
-            return response()->json($cardGiftUser, 200, [], JSON_NUMERIC_CHECK);
+            return response()->json($cardGiftUser ? $cardGiftUser : 0, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::info($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
