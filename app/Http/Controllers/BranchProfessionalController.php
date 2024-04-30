@@ -305,7 +305,7 @@ class BranchProfessionalController extends Controller
         }
     }
 
-    public function branch_colacion_3(Request $request)
+    public function branch_colacion3(Request $request)
     {
 
         try {             
