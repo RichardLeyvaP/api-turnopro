@@ -241,7 +241,12 @@ class CarController extends Controller
                 $professional = $car->clientProfessional->professional;
                 $products = $car->orders->where('is_product', 1)->sum('price');
                 $services = $car->orders->where('is_product', 0)->sum('price');
-                $attended = $car->reservation->tail->attended;
+                if($car->reservation->tail == null)
+                {
+                    $state = 4;
+                }
+                else{
+                    $attended = $car->reservation->tail->attended;
                 if($attended == 0 || $attended == 3 ){
                     $state = 3; //En cola
                 }
@@ -251,7 +256,8 @@ class CarController extends Controller
                 else{
                     $state = 2; // Atendiendose 
                 }
-
+                }
+                
                 return [
                     'id' => $car->id,
                     'client_professional_id' => $car->client_professional_id,
