@@ -243,7 +243,7 @@ class CarController extends Controller
                 $services = $car->orders->where('is_product', 0)->sum('price');
                 if($car->reservation->tail == null)
                 {
-                    $state = 4;
+                    $state = 0;
                 }
                 else{
                     $attended = $car->reservation->tail->attended;
