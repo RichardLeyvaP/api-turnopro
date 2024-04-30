@@ -305,6 +305,33 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    public function branch_colacion_3(Request $request)
+    {
+
+        try {             
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('state', 3)->get()->map(function ($query){
+                return [
+                    'professional_name' => $query->name . " " . $query->surname  . " " . $query->second_surname,
+                    'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
+                    'professional_id' => $query->id,
+                    'professional_state' => $query->state,
+                    'start_time' => Carbon::now()->format('H:i:s')
+                ];
+            });
+                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+        }
+    }
+
     public function destroy(Request $request)
     {
         try {
