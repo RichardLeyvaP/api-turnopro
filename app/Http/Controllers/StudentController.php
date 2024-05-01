@@ -6,6 +6,11 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+
 
 class StudentController extends Controller
 {
@@ -39,15 +44,33 @@ class StudentController extends Controller
                 'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15'
             ]);
+
+            
+            $code = Str::random(8);
+            $url = 'https://landingbh.simplifies.cl/?codigo='.$code;
+            /*$datos = [
+                'code' => $code,
+                'url' => $url
+            ];*/
+            //return $qrCode = QrCode::format('png')->size(100)->generate(json_encode($code));
+            $qrCode = QrCode::format('svg')->size(250)->generate($url);
+            // Guardar el código QR en storage/students/qr_codes
+            $fileName = $code . uniqid() . '.svg';
+            Storage::disk('public')->put('students/qr_codes/' . $fileName, $qrCode);
+
+            // La ruta del archivo guardado
+            $qrCodeFilePath = 'students/qr_codes/' . $fileName;
            
             $student = new Student;
+            $student->code = $code;
+            $student->qr_url = $qrCodeFilePath;
             $student->name = $data['name'];
             $student->surname = $data['surname'];
             $student->second_surname = $data['second_surname'];
             $student->email = $data['email'];
             $student->phone = $data['phone'];
             $student->save();
-            Log::info($student);
+
             $filename = "students/default.jpg"; 
             if ($request->hasFile('student_image')) {
                $filename = $request->file('student_image')->storeAs('students',$student->id.'.'.$request->file('student_image')->extension(),'public');
@@ -58,7 +81,7 @@ class StudentController extends Controller
             return response()->json(['msg' => 'Estudiante insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar el Estudiante'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al insertar el Estudiante'], 500);
         }
     }
 
@@ -116,6 +139,24 @@ class StudentController extends Controller
             ]);
             Log::info($request['student_image']);
             $student = Student::find($data['id']);
+            if(!$student->code){
+                $code = Str::random(8);
+                $url = 'https://landingbh.simplifies.cl/?codigo='.$code;
+            /*$datos = [
+                'code' => $code,
+                'url' => $url
+            ];*/
+            //return $qrCode = QrCode::format('png')->size(100)->generate(json_encode($code));
+            $qrCode = QrCode::format('svg')->size(250)->generate(json_encode($url));
+            // Guardar el código QR en storage/students/qr_codes
+            $fileName = $code . uniqid() . '.svg';
+            Storage::disk('public')->put('students/qr_codes/' . $fileName, $qrCode);
+
+            // La ruta del archivo guardado
+            $qrCodeFilePath = 'students/qr_codes/' . $fileName;
+            $student->code = $code;
+            $student->qr_url = $qrCodeFilePath;
+            }
             if ($request->hasFile('student_image')) {
                 if($student->student_image != 'students/default.jpg'){
                 $destination = public_path("storage\\" . $student->student_image);
