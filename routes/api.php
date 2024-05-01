@@ -371,6 +371,7 @@ Route::get('/branch-professionals-barber-totem', [BranchProfessionalController::
 Route::get('/branch-professionals-barber-tecnico', [BranchProfessionalController::class, 'branch_professionals_barber_tecnico']);//dado una branch devuelve los professionales que trabajan en ella que son barberos
 Route::get('/branch_colacion', [BranchProfessionalController::class, 'branch_colacion']); //dado una id de la branch Mostrar los professionales que estan en colacion state 2
 Route::get('/branch_colacion3', [BranchProfessionalController::class, 'branch_colacion3']); //dado una id de la branch Mostrar los professionales que estan en colacion state 3
+Route::get('/branch_colacion4', [BranchProfessionalController::class, 'branch_colacion4']); //dado una id de la branch Mostrar los professionales que estan en colacion state 4
 
 
 Route::get('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'index']);
