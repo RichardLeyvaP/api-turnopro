@@ -142,9 +142,10 @@ class BoxCloseController extends Controller
                     ->orWhere('name', 'Coordinador');
             })/*whereIn('charge_id', [3, 4, 5, 12])*/
                 ->pluck('email');
-            $emailassociated = Associated::all()->pluck('email');
-
-            $mergedEmails = $emails->merge($emailassociated);
+            //$emailassociated = Associated::all()->pluck('email');
+            $emailassociated = $branch->associates()->pluck('email');
+            $emailArray = $emailassociated->toArray();
+            $mergedEmails = $emails->merge($emailArray);
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
             //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
             //$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);

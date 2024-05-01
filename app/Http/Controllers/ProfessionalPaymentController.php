@@ -85,7 +85,7 @@ class ProfessionalPaymentController extends Controller
                                                 'type' => $query->type,
                                                 'amount' => $query->amount
                                             ];
-                                          });
+                                          })->sortByDesc('date')->values();
 
             return response()->json($payments, 200);
         } catch (ValidationException $e) {

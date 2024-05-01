@@ -137,6 +137,22 @@ class ProfessionalController extends Controller
         }
     }
 
+    public function show_apk(Request $request)
+    {
+        try {
+            $professionals_data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+            $professional = Professional::where('id', $professionals_data['id'])->first();
+            if($professional !== null)
+            return $professional->state;
+        else
+        return -1;
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
+        }
+    }
+
     public function professional_reservations_time(Request $request)
     {
         try {
@@ -319,7 +335,9 @@ class ProfessionalController extends Controller
             return [
                 'id' => $query->id,
                 'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
-                'charge' => $query->charge->name
+                'charge' => $query->charge->name,
+                'image_url' => $query->image_url,
+                'email' => $query->email
             ];
            });
            

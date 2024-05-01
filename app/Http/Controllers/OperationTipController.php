@@ -40,12 +40,12 @@ class OperationTipController extends Controller
                 'coffe_percent' => 'required|numeric',
                 'type' => 'required|string',
             ]);
-            $operationTip = OperationTip::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->first();
+            /*$operationTip = OperationTip::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->first();
             if ($operationTip !== null) {
                 $operationTip->amount = $operationTip->amount + $data['amount'];
                 $operationTip->coffe_percent = $operationTip->coffe_percent + $data['coffe_percent'];
                 $operationTip->save();
-            } else {
+            } else {*/
                 $operationTip = new OperationTip();
                 $operationTip->branch_id = $data['branch_id'];
                 $operationTip->professional_id = $data['professional_id'];
@@ -55,7 +55,7 @@ class OperationTipController extends Controller
                 $operationTip->coffe_percent = $data['coffe_percent'];
                 // Guardar el modelo
                 $operationTip->save();
-            }
+            //}
             Log::info($request->input('car_ids'));
             if ($request->input('car_ids')) {
                 // Actualizar carros con professional_payment_id
@@ -118,7 +118,7 @@ class OperationTipController extends Controller
                         'id' => $query->id,
                         'branch_id ' => $query->branch_id,
                         'professional_id' => $query->professional_id,
-                        'date' => $query->date . ' ' . Carbon::parse($query->created_at)->format('H:i:s'),
+                        'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
                         'amount' => $query->amount
@@ -228,6 +228,44 @@ class OperationTipController extends Controller
     }
 
     public function cashier_car_notpay(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
+            $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])->where('pay', 1)->where('tip', '>', 0)->get()->map(function ($car) {
+                //$ordersServices = count($car->orders->where('is_product', 0));
+                //$orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+                //$tipProfessional = $car->tip * 0.80;
+                //$rest = $car->tip - $tipProfessional;
+                $tipCashier = $car->tip * 0.10;
+                $tipCoffe = $car->tip * 0.10;
+                $professional = $car->clientProfessional->professional;
+                $client = $car->clientProfessional->client;
+                return [
+                    'id' => $car->id,
+                    'professional_id' => $professional->id,
+                    'clientName' => $client->name . ' ' . $client->surname,
+                    'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
+                    'professionalName' => $professional->name . ' ' . $professional->surname,
+                    'image_url' => $professional->image_url,
+                    'branch_id' => $car->reservation->branch_id,
+                    'data' => $car->reservation->data,
+                    'tip' => $car->tip,
+                    'tipCashier' => $tipCashier,
+                    'tipCoffe' => $tipCoffe
+                ];
+            });
+            return response()->json(['cars' => $cars], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+        }
+    }
+
+    public function cashier_car_notpay_original(Request $request)
     {
         try {
             $data = $request->validate([

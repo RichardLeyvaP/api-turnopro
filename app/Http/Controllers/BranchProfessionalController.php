@@ -290,11 +290,11 @@ class BranchProfessionalController extends Controller
                 $query->where('branch_id', $data['branch_id']);
             })->where('state', 2)->get()->map(function ($query){
                 return [
-                    'professional_name' => $query->name . " " . $query->surname  . " " . $query->second_surname,
+                    'professional_name' => $query->name . " " . $query->surname,
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::now()->format('H:i:s')
+                    'start_time' => Carbon::parse($query->updated_at)->format('H:i')
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 

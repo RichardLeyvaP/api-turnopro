@@ -33,7 +33,7 @@ class Branch extends Model
     }
 
     public function services(){
-        return $this->belongsToMany(Service::class)->withPivot('id')->withTimestamps();
+        return $this->belongsToMany(Service::class)->withPivot('id', 'ponderation')->withTimestamps();
     }
 
     public function professionals(){
@@ -95,4 +95,9 @@ class Branch extends Model
     {
         return $this->hasMany(ProfessionalPayment::class, 'branch_id');
     }
+
+    public function associates(){
+        return $this->belongsToMany(Associated::class, 'associate_branch')->withPivot('id')->withTimestamps();
+    }
+
 }

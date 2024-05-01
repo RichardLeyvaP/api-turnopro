@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssociatedController;
+use App\Http\Controllers\AssociateBranchController;
 use App\Http\Controllers\BoxCloseController;
 use App\Http\Controllers\BoxController;
 use App\Http\Controllers\BranchController;
@@ -100,6 +101,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/professional', [ProfessionalController::class, 'index']);
 Route::get('/professional-show', [ProfessionalController::class, 'show']);
+Route::get('/professional-show-apk', [ProfessionalController::class, 'show_apk']);
 Route::get('/professional-show-autocomplete', [ProfessionalController::class, 'show_autocomplete']);
 Route::get('/professional-show-autocomplete-Notin', [ProfessionalController::class, 'show_autocomplete_Notin']);
 Route::get('/professional-show-autocomplete-branch', [ProfessionalController::class, 'show_autocomplete_branch']);//mostrar solo los professionals de una branch dada
@@ -540,7 +542,7 @@ Route::post('/professional-payment', [ProfessionalPaymentController::class, 'sto
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
 Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']);//devolver de una branch los pagos realizado a los professionals
 
-Route::get('/operation-tip-show', [OperationTipController::class, 'show']);
+Route::get('/operation-tip', [OperationTipController::class, 'show']);
 Route::post('/operation-tip', [OperationTipController::class, 'store']);
 Route::post('/operation-tip-destroy', [OperationTipController::class, 'destroy']);
 Route::get('/operation-tip-show', [OperationTipController::class, 'operation_tip_show']);//devolver de una branch los pagos realizado a los cajeros
@@ -557,6 +559,10 @@ Route::post('/survey-destroy', [SurveyController::class, 'destroy']);
 
 Route::post('/client-survey', [ClientSurveyController::class, 'store']);
 Route::get('/surveyCounts', [ClientSurveyController::class, 'surveyCounts']);
+
+Route::post('/associate-branch', [AssociateBranchController::class, 'store']);
+Route::post('/associate-branch-destroy', [AssociateBranchController::class, 'destroy']);
+Route::get('/associate-branch', [AssociateBranchController::class, 'show']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

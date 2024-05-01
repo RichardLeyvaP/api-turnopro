@@ -251,7 +251,8 @@ class BranchServiceProfessionalController extends Controller
                     'profit_percentaje' => $service->profit_percentaje,                    
                     'duration_service' => $service->duration_service,
                     'image_service' => $service->image_service,
-                    'service_comment' => $service->service_comment
+                    'service_comment' => $service->service_comment,
+                    'ponderation' => $service->pivot->ponderation
                 ];
             });
             //$result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
