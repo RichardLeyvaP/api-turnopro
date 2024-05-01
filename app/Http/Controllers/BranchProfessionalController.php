@@ -253,9 +253,14 @@ class BranchProfessionalController extends Controller
                 'state' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
+            if($professional->state == 2){
+                $professional->end_time = Carbon::now();
+            }
             $professional->state = $data['state'];
             $professional->save();
             if($data['state'] == 2){
+                $professional->start_time = Carbon::now();
+                $professional->save();
                 $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data){
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
@@ -294,7 +299,7 @@ class BranchProfessionalController extends Controller
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::parse($query->updated_at)->format('H:i')
+                    'start_time' => Carbon::parse($query->start_time)->format('H:i')
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
@@ -321,7 +326,7 @@ class BranchProfessionalController extends Controller
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::parse($query->updated_at)->format('H:i')
+                    'start_time' => Carbon::now()->format('H:i')
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
@@ -348,7 +353,7 @@ class BranchProfessionalController extends Controller
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::parse($query->updated_at)->format('H:i')
+                    'start_time' => Carbon::now()->format('H:i')
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
