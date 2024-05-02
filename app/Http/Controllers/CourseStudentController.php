@@ -7,6 +7,7 @@ use App\Models\CourseStudent;
 use App\Models\Finance;
 use App\Models\Student;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -210,10 +211,10 @@ class CourseStudentController extends Controller
             ]);
             $student = Student::find($data['student_id']);
            $totalAnt = $student->courses()->wherePivot('course_id', $data['course_id'])->value('total_payment');
-            $filename = "image/default.png"; 
+            $filename = "students/pagos/default.png"; 
             if ($request->hasFile('image_url')) {
                 Log::info("tiene una imagen");
-               $filename = $request->file('image_url')->storeAs('students',$student->id.'.'.$request->file('image_url')->extension(),'public');
+               $filename = $request->file('image_url')->storeAs('students/pagos',$student->id.'-'.$data['course_id'].'.'.$request->file('image_url')->extension(),'public');
             }
 
             $atributosParaActualizar = [
@@ -290,9 +291,17 @@ class CourseStudentController extends Controller
             ]);
             $course = Course::find($data['course_id']);
             $student = Student::find($data['student_id']);
+            $pagoAnt = $student->courses()->wherePivot('course_id', $data['course_id'])->value('image_url');
+            if ($pagoAnt != "students/pagos/default.jpg") {
+                $destination=public_path("storage\\".$pagoAnt);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
             $course->students()->detach($student->id);
             $course->available_slots += 1;
             $course->save();
+
 
             return response()->json(['msg' => 'Estudiante desmatriculado correctamente del curso'], 200);
         } catch (\Throwable $th) {

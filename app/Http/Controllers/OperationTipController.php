@@ -175,6 +175,61 @@ class OperationTipController extends Controller
         try {
             $request->validate([
                 'branch_id' => 'required|exists:branches,id',
+                'professional_id' => 'required|exists:professionals,id',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date'
+            ]);
+
+            $professionalId = $request->professional_id;
+            $branchId = $request->branch_id;
+
+            $payments = OperationTip::where('branch_id', $branchId)->where('professional_id', $professionalId)->whereDate('date', '>=', $request->startDate)->whereDate('date', '<=', $request->endDate)
+                ->get()->map(function ($query) use ($branchId){
+                    $professional = $query->professional;
+                    return [
+                        'id' => $query->id,
+                        'branch_id ' => $branchId,
+                        'professional_id' => $query->professional_id,
+                        'date' => $query->date,
+                        'type' => $query->type,
+                        'coffe_percent' => $query->coffe_percent,
+                        'amount' => $query->amount
+                    ];
+                });
+
+                // Calcular totales
+            $totalCoffePercent = $payments->sum('coffe_percent');
+            $totalAmount = $payments->sum('amount');
+                if($totalAmount){
+            // Agregar fila de total
+            $totalRow = [
+                'id' => '',
+                'branch_id' => '',
+                'professional_id' => '',
+                'date' => 'Total',
+                'type' => '',
+                'coffe_percent' => $totalCoffePercent,
+                'amount' => $totalAmount
+            ];
+
+            $payments->push($totalRow);
+                }
+           
+            return response()->json($payments, 200);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function operation_tip_periodo_Ant(Request $request)
+    {
+        try {
+            $request->validate([
+                'branch_id' => 'required|exists:branches,id',
                 'startDate' => 'required|date',
                 'endDate' => 'required|date'
             ]);

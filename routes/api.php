@@ -439,6 +439,7 @@ Route::post('/enrollment-destroy', [EnrollmentController::class, 'destroy']);
 
 Route::get('/student', [StudentController::class, 'index']);
 Route::get('/student-show', [StudentController::class, 'show']);
+Route::get('/student-code', [StudentController::class, 'student_code']); //dado un codigo devolver un resumen del students
 Route::post('/student', [StudentController::class, 'store']);
 Route::post('/student-update', [StudentController::class, 'update']);
 Route::post('/student-destroy', [StudentController::class, 'destroy']);
@@ -539,6 +540,7 @@ Route::put('/productsale', [ProductSaleController::class, 'update']);
 Route::post('/productsale-destroy', [ProductSaleController::class, 'destroy']);
 
 Route::get('/professional-payment-show', [ProfessionalPaymentController::class, 'show']);
+Route::get('/professional-payment-periodo', [ProfessionalPaymentController::class, 'show_periodo']);
 Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
 Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']);//devolver de una branch los pagos realizado a los professionals

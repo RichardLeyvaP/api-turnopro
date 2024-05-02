@@ -97,6 +97,58 @@ class ProfessionalPaymentController extends Controller
         }
     }
 
+    public function show_periodo(Request $request)
+    {
+        try {
+            $request->validate([
+                'professional_id' => 'required|exists:professionals,id',
+                'branch_id' => 'required|exists:branches,id',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date'
+            ]);
+
+            $professionalId = $request->professional_id;
+            $branchId = $request->branch_id;
+
+            $payments = ProfessionalPayment::where('professional_id', $professionalId)
+                                          ->where('branch_id', $branchId)
+                                          ->whereDate('date', '>=', $request->startDate)
+                                          ->whereDate('date', '<=', $request->endDate)
+                                          ->get()->map(function ($query){
+                                            return [
+                                                'id' => $query->id,
+                                                'branch_id ' =>$query->branch_id,
+                                                'professional_id' => $query->professional_id,
+                                                'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
+                                                'type' => $query->type,
+                                                'amount' => $query->amount
+                                            ];
+                                          })->sortByDesc('date')->values();
+
+            $totalAmount = $payments->sum('amount');
+                if($totalAmount){
+            // Agregar fila de total
+            $totalRow = [
+                'id' => '',
+                'branch_id' => '',
+                'professional_id' => '',
+                'date' => 'Total',
+                'type' => '',
+                'amount' => $totalAmount
+            ];
+
+            $payments->push($totalRow);
+        }
+            return response()->json($payments, 200);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function branch_payment_show(Request $request)
     {
         try {

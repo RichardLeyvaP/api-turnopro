@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -115,6 +117,89 @@ class StudentController extends Controller
             return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error al mostrar el estudiante"], 500);
+        }
+    }
+
+    public function student_code(Request $request)
+    {
+        try {
+            
+            $data = $request->validate([
+                'code' => 'required'
+            ]);
+            $student = Student::where('code', $data['code'])->select('id', 'name', 'surname', 'second_surname', 'email', 'phone', 'student_image')->with('courses', 'productsales.productStore.product')->first();
+            /*if ($student !== null) {
+                $curseStudent = $student->courses;
+            }*/
+            $coursesArray = [];
+            $pagosArray = [];
+            $productsArray = [];
+
+            $coursesData = $student['courses'];
+            //$productSales = $student['productsales'];
+            $studentData[] = [
+                'id' => $student['id'],
+                'name' => $student['name'],
+                'surname' => $student['surname'],
+                'second_surname' => $student['second_surname'],
+                'email' => $student['email'],
+                'phone' => $student['phone'],
+                'student_image' => $student['student_image']
+            ];
+            foreach ($coursesData as $course) {
+                // Extraer datos del curso
+                $courseData = [
+                    'id' => $course['id'],
+                    'name' => $course['name'],
+                    'course_image' => $course['course_image'],
+                    'price' => $course['price'],
+                    'reservation_price' => $course['reservation_price'],
+                    'startDate' => $course['startDate'],
+                    'endDate' => $course['endDate'],
+                    'description' => $course['description'],
+                    'duration' => $course['duration'],
+                    // Agrega aquí los otros campos que desees extraer del curso
+                ];
+                $coursesArray[] = $courseData;
+            
+                // Extraer datos de la tabla pivot
+                $pivotData = [
+                    'data' => Carbon::parse($course['pivot']['updated_at'])->format('Y-m-d'),
+                    'name' => $course['name'],
+                    'details' => $course['pivot']['image_url'],
+                    'reservation_payment' => $course['pivot']['reservation_payment'],
+                    'total_payment' => $course['pivot']['total_payment'],
+                    // Agrega aquí los otros campos que desees extraer de la tabla pivot
+                ];
+                $pagosArray[] = $pivotData;
+            }
+
+            /*foreach ($productSales as $productSale){
+                //return $productData = $productSale;
+                $productsArray = [
+                    'price' => $productSale['price'],
+                    'cant' => $productSale['cant'],
+                    'product' => $productSale['product_store']
+                ];
+            }*/
+            $productSales = $student->productsales;
+
+            foreach ($productSales as $productSale) {
+                $product = $productSale->productStore->product;
+                $course = Course::find($productSale->course_id);
+
+                $productsArray[] = [
+                    'price' => $productSale->price,
+                    'cant' => $productSale->cant,
+                    'course' => $course->name,
+                    'name' => $product->name,
+                    'image_product' => $product->image_product
+                ];
+            }
+            
+        return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 
