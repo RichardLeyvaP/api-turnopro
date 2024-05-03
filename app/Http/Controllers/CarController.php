@@ -294,55 +294,112 @@ class CarController extends Controller
         try {    
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
-            ]);      
-            $orderData = [];   
-            $cars = Car::whereHas('reservation', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
-            })->where('active', 3)->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->orderByDesc('updated_at')->get()->map(function ($car) use ($data){
-                $client = $car->clientProfessional->client;
-                $professional = $car->clientProfessional->professional;
-                $products = $car->orders->where('is_product', 1)->sum('price');
-                $services = $car->orders->where('is_product', 0)->sum('price');        
-                return [
-                    'id' => $car->id,
-                    'client_professional_id' => $car->client_professional_id,
-                    'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
-                    'tip' => $car->tip,
-                    'pay' => (int)$car->pay,
-                    'active' => $car->active,
-                    'product' => $products,
-                    'service' => $services,
-                    'technical_assistance' => $car->technical_assistance * 5000,
-                    'clientName' => $client->name.' '.$client->surname,
-                    'professionalName' => $professional->name.' '.$professional->surname,
-                    'client_image' => $client->client_image,
-                    'professional_id' => $professional->id,
-                    'image_url' => $professional->image_url,
-
-                ];
-                //}
-            })->sortBy('state')->values();
-            $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->whereHas('car.reservation', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
-            })->where('request_delete', 3)->get();
+            ]);   
             
-            foreach ($orders as $order) {
-                $professional = $order['car']['clientProfessional']['professional'];
-                $client = $order['car']['clientProfessional']['client'];
-                $product = $order['is_product'] ? $order['productStore']['product'] : null;
-                $service = !$order['is_product'] ? $order['branchServiceProfessional'] : null;
-                $orderData [] = [
-                    'id' => $order['id'],
-                    'car_id' => $order['car_id'],
-                    'price' => $order['price'],
-                    'professionalName' => $professional['name'].' '.$professional['surname'].' '.$professional['second_surname'],
-                    'image_url' => $professional['image_url'],
-                    'clientName' => $client['name'].' '.$client['surname'].' '.$client['second_surname'],
-                    'client_image' => $client['client_image'],
-                    'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
-                    'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
-                    'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service']
-                ];
+            $orderData = [];   
+            if($data['branch_id'] == 0){
+                $cars = Car::whereHas('reservation', function ($query) use ($data){
+                    $query->whereDate('data', Carbon::now());
+                })->where('active', 3)->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->orderByDesc('updated_at')->get()->map(function ($car) use ($data){
+                    $client = $car->clientProfessional->client;
+                    $professional = $car->clientProfessional->professional;
+                    $products = $car->orders->where('is_product', 1)->sum('price');
+                    $services = $car->orders->where('is_product', 0)->sum('price');
+                    $branch = Branch::where('id', $car->reservation->branch_id)->first();      
+                    return [
+                        'id' => $car->id,
+                        'client_professional_id' => $car->client_professional_id,
+                        'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
+                        'tip' => $car->tip,
+                        'pay' => (int)$car->pay,
+                        'active' => $car->active,
+                        'product' => $products,
+                        'service' => $services,
+                        'technical_assistance' => $car->technical_assistance * 5000,
+                        'clientName' => $client->name.' '.$client->surname,
+                        'professionalName' => $professional->name.' '.$professional->surname,
+                        'client_image' => $client->client_image,
+                        'professional_id' => $professional->id,
+                        'image_url' => $professional->image_url,
+                        'nameBranch' => $branch->name
+                    ];
+                    //}
+                })->sortBy('state')->values();
+                $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->whereHas('car.reservation', function ($query) use ($data){
+                    $query->whereDate('data', Carbon::now());
+                })->where('request_delete', 3)->orderByDesc('updated_at')->get();
+                
+                foreach ($orders as $order) {
+                    $branch = Branch::where('id', $order['car']['reservation']['branch_id'])->first();
+                    $professional = $order['car']['clientProfessional']['professional'];
+                    $client = $order['car']['clientProfessional']['client'];
+                    $product = $order['is_product'] ? $order['productStore']['product'] : null;
+                    $service = !$order['is_product'] ? $order['branchServiceProfessional'] : null;
+                    $orderData [] = [
+                        'id' => $order['id'],
+                        'car_id' => $order['car_id'],
+                        'price' => $order['price'],
+                        'professionalName' => $professional['name'].' '.$professional['surname'],
+                        'image_url' => $professional['image_url'],
+                        'clientName' => $client['name'].' '.$client['surname'],
+                        'client_image' => $client['client_image'],
+                        'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
+                        'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
+                        'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service'],
+                        'nameBranch' => $branch->name
+                    ];
+                }
+            }else{
+                $branch = Branch::where('id', $data['branch_id'])->first();      
+                $cars = Car::whereHas('reservation', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+                })->where('active', 3)->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->orderByDesc('updated_at')->get()->map(function ($car) use ($branch){
+                    $client = $car->clientProfessional->client;
+                    $professional = $car->clientProfessional->professional;
+                    $products = $car->orders->where('is_product', 1)->sum('price');
+                    $services = $car->orders->where('is_product', 0)->sum('price');
+                    return [
+                        'id' => $car->id,
+                        'client_professional_id' => $car->client_professional_id,
+                        'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
+                        'tip' => $car->tip,
+                        'pay' => (int)$car->pay,
+                        'active' => $car->active,
+                        'product' => $products,
+                        'service' => $services,
+                        'technical_assistance' => $car->technical_assistance * 5000,
+                        'clientName' => $client->name.' '.$client->surname,
+                        'professionalName' => $professional->name.' '.$professional->surname,
+                        'client_image' => $client->client_image,
+                        'professional_id' => $professional->id,
+                        'image_url' => $professional->image_url,
+                        'nameBranch' => $branch->name
+                    ];
+                    //}
+                })->sortBy('state')->values();
+                $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->whereHas('car.reservation', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+                })->where('request_delete', 3)->orderByDesc('updated_at')->get();
+                
+                foreach ($orders as $order) {
+                    $professional = $order['car']['clientProfessional']['professional'];
+                    $client = $order['car']['clientProfessional']['client'];
+                    $product = $order['is_product'] ? $order['productStore']['product'] : null;
+                    $service = !$order['is_product'] ? $order['branchServiceProfessional'] : null;
+                    $orderData [] = [
+                        'id' => $order['id'],
+                        'car_id' => $order['car_id'],
+                        'price' => $order['price'],
+                        'professionalName' => $professional['name'].' '.$professional['surname'],
+                        'image_url' => $professional['image_url'],
+                        'clientName' => $client['name'].' '.$client['surname'],
+                        'client_image' => $client['client_image'],
+                        'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
+                        'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
+                        'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service'],
+                        'nameBranch' => $branch->name
+                    ];
+                }  
             }
             return response()->json(['cars' => $cars, 'orders' => $orderData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
