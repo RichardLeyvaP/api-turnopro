@@ -270,7 +270,7 @@ class TailService {
         $workplace = Professional::find($professional_id)
             ->workplaces()
             ->wherePivot('data', Carbon::now()->format('Y-m-d'))
-            ->orderByDesc('data')
+            ->orderByDesc('created_at')
             ->withPivot('places')
             ->first()->pivot->places;
 
