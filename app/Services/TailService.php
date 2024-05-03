@@ -290,17 +290,20 @@ class TailService {
                 $query->whereIn('professional_id', $professionals);
             });
         })->orderBy('updated_at')->whereIn('attended', [4])->get()->map(function ($tail){
+            $client = $tail->reservation->car->clientProfessional->client;
+            $professional = $tail->reservation->car->clientProfessional->professional;
+            $reservation = $tail->reservation;
             return [
-                'reservation_id' => $tail->reservation->id,
-                'car_id' => $tail->reservation->car_id,
-                'start_time' => Carbon::parse($tail->reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($tail->reservation->final_hour)->format('H:i:s'),
-                'total_time' => $tail->reservation->total_time,
-                'client_name' => $tail->reservation->car->clientProfessional->client->name." ".$tail->reservation->car->clientProfessional->client->surname,
-                'professional_name' => $tail->reservation->car->clientProfessional->professional->name." ".$tail->reservation->car->clientProfessional->professional->surname,
-                'client_id' => $tail->reservation->car->clientProfessional->client_id,
-                'professional_id' => $tail->reservation->car->clientProfessional->professional_id,
-                'professional_state' => $tail->reservation->car->clientProfessional->professional->state,
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'total_time' => $reservation->total_time,
+                'client_name' => $client->name." ".$client->surname,
+                'professional_name' => $professional->name." ".$professional->surname,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
+                'professional_state' => $professional->state,
                 'attended' => $tail->attended
             ];
         })->values();
