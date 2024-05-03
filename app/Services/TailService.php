@@ -267,12 +267,7 @@ class TailService {
     }
 
     public function cola_branch_tecnico($branch_id, $professional_id){
-        $workplace = Professional::find($professional_id)
-            ->workplaces()
-            ->wherePivot('data', Carbon::now()->format('Y-m-d'))
-            ->orderByDesc('created_at')
-            ->withPivot('places')
-            ->first()->pivot->places;
+        $workplace = ProfessionalWorkPlace::where('professional_id', $professional_id)->whereDate('data', Carbon::now()->format('Y-m-d'))->orderByDesc('created_at')->first()->places;
 
         if ($workplace) {
             $places = json_decode($workplace, true);
