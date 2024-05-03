@@ -53,7 +53,7 @@ class ProductStoreController extends Controller
         Log::info("Entra a buscar los stores y productos");
         
         $stores = Store::all('id', 'address');
-        $products = Product::all('id', 'name');
+        $products = Product::all('id', 'name', 'image_product');
         
         return response()->json([
             'stores' => $stores,
@@ -266,7 +266,8 @@ class ProductStoreController extends Controller
                 return [
                     'id' => $productStore->id,
                     'product_exit' => $productStore->product_exit,
-                    'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')'
+                    'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')',
+                    'image_product' => $productStore->product->image_product
                 ];
             });
             return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);

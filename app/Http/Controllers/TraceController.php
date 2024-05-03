@@ -57,7 +57,7 @@ class TraceController extends Controller
                 'startDate' => 'nullable|date'
             ]);
             $branch = Branch::where('id', $data['branch_id'])->first();
-            $traces = Trace::where('branch', $branch->name)->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->get();
+            $traces = Trace::where('branch', $branch->name)->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->orderByDesc('data')->get();
             return response()->json(['traces' => $traces], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);

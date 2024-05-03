@@ -262,8 +262,11 @@ Route::get('/car-show', [CarController::class, 'show']);
 Route::post('/car', [CarController::class, 'store']);
 Route::put('/car', [CarController::class, 'update']);
 Route::post('/car-destroy', [CarController::class, 'destroy']);
+Route::post('/car-denegada', [CarController::class, 'destroy_denegada']);
+Route::post('/car-destroy-solicitud', [CarController::class, 'destroy_solicitud']);
 Route::get('/car_orders', [CarController::class, 'car_orders']);
 Route::get('/branch-cars', [CarController::class, 'branch_cars']);//devuelve los cars de una branch en la fecha actual
+Route::get('/branch-cars-delete', [CarController::class, 'branch_cars_delete']);//devuelve los cars de una branch en la fecha actual solicitados a eliminar
 Route::get('/car_order_delete_professional', [CarController::class, 'car_order_delete_professional']);//dado una branch y un professional devolver las ordenes solicitadas a eliminar en la fecha actual
 Route::get('/car_order_delete_branch', [CarController::class, 'car_order_delete_branch']);//dado una branch devolver las ordenes solicitadas a eliminar en la fecha actual
 Route::put('/car-give-tips', [CarController::class, 'give_tips']);
@@ -280,6 +283,7 @@ Route::get('/tecnico-car-date', [CarController::class, 'tecnico_car_date']);//De
 Route::get('/professional-car-notpay', [CarController::class, 'professional_car_notpay']);//Detalles del carro
 
 Route::get('/order', [OrderController::class, 'index']);
+Route::get('/order-delete-show', [OrderController::class, 'order_delete_show']);
 Route::get('/order-show', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::post('/order-web', [OrderController::class, 'store_web']); //para registrar en traces la operacion que realiza
@@ -288,6 +292,8 @@ Route::put('/order2', [OrderController::class, 'update2']);
 Route::put('/order-web', [OrderController::class, 'update_web']); //para registrar en traces la operacion que realiza
 Route::post('/order-destroy', [OrderController::class, 'destroy']);
 Route::post('/order-destroy-web', [OrderController::class, 'destroy_web']);//para registrar en traces la operacion que realiza
+Route::post('/order-denegar', [OrderController::class, 'order_denegar']);//Deniega la solicitud de eliminación de la cajera
+Route::post('/order-destroy-solicitud', [OrderController::class, 'destroy_solicitud']);//para registrar en traces la operacion que realiza
 Route::get('/sales_periodo_branch', [OrderController::class, 'sales_periodo_branch']);
 
 Route::get('/reservation', [ReservationController::class, 'index']);

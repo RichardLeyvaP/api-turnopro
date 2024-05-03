@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\Business;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Comment;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductStore;
 use App\Models\Professional;
 use App\Models\Reservation;
 use App\Services\CarService;
@@ -268,8 +271,8 @@ class CarController extends Controller
                     'product' => $products,
                     'service' => $services,
                     'technical_assistance' => $car->technical_assistance * 5000,
-                    'clientName' => $client->name.' '.$client->surname.' '.$client->second_surname,
-                    'professionalName' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'clientName' => $client->name.' '.$client->surname,
+                    'professionalName' => $professional->name.' '.$professional->surname,
                     'client_image' => $client->client_image,
                     'professional_id' => $professional->id,
                     'image_url' => $professional->image_url,
@@ -280,6 +283,68 @@ class CarController extends Controller
                 //}
             })->sortBy('state')->values();
             return response()->json(['cars' => $cars], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
+        }
+    }
+
+    public function branch_cars_delete(Request $request)
+    {
+        try {    
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);      
+            $orderData = [];   
+            $cars = Car::whereHas('reservation', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+            })->where('active', 3)->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->orderByDesc('updated_at')->get()->map(function ($car) use ($data){
+                $client = $car->clientProfessional->client;
+                $professional = $car->clientProfessional->professional;
+                $products = $car->orders->where('is_product', 1)->sum('price');
+                $services = $car->orders->where('is_product', 0)->sum('price');        
+                return [
+                    'id' => $car->id,
+                    'client_professional_id' => $car->client_professional_id,
+                    'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
+                    'tip' => $car->tip,
+                    'pay' => (int)$car->pay,
+                    'active' => $car->active,
+                    'product' => $products,
+                    'service' => $services,
+                    'technical_assistance' => $car->technical_assistance * 5000,
+                    'clientName' => $client->name.' '.$client->surname,
+                    'professionalName' => $professional->name.' '.$professional->surname,
+                    'client_image' => $client->client_image,
+                    'professional_id' => $professional->id,
+                    'image_url' => $professional->image_url,
+
+                ];
+                //}
+            })->sortBy('state')->values();
+            $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->whereHas('car.reservation', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+            })->where('request_delete', 3)->get();
+            
+            foreach ($orders as $order) {
+                $professional = $order['car']['clientProfessional']['professional'];
+                $client = $order['car']['clientProfessional']['client'];
+                $product = $order['is_product'] ? $order['productStore']['product'] : null;
+                $service = !$order['is_product'] ? $order['branchServiceProfessional'] : null;
+                $orderData [] = [
+                    'id' => $order['id'],
+                    'car_id' => $order['car_id'],
+                    'price' => $order['price'],
+                    'professionalName' => $professional['name'].' '.$professional['surname'].' '.$professional['second_surname'],
+                    'image_url' => $professional['image_url'],
+                    'clientName' => $client['name'].' '.$client['surname'].' '.$client['second_surname'],
+                    'client_image' => $client['client_image'],
+                    'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
+                    'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
+                    'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service']
+                ];
+            }
+            return response()->json(['cars' => $cars, 'orders' => $orderData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
@@ -1110,7 +1175,80 @@ class CarController extends Controller
             'id' => 'required|numeric'
         ]);
         $car = Car::find($data['id']);
+        $branch = Branch::where('id', $car->reservation->branch_id)->first();
+        $orders = Order::where('car_id', $data['id'])->where('is_product', 1)->select('product_store_id', 'cant')->get();
+        if(!$orders->isEmpty()){
+            foreach ($orders as $order) {
+                $productstore = ProductStore::find($order->product_store_id);
+                $productstore->product_quantity = $order->cant;
+                $productstore->product_exit = $productstore->product_exit + $order->cant;
+                $productstore->save();
+            }             
+        }
+        $cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            $query->where('name', 'Cajero (a)');
+        })->get('professional_id');
+            if(!$cajeros->isEmpty()){
+                foreach ($cajeros as $cajero) {                    
+                $notification = new Notification();
+                $notification->professional_id = $cajero->professional_id;
+                $notification->tittle = 'Aceptada';
+                $notification->description = 'Carro eliminado: '.$car->id.' eliminado';
+                $notification->type = 'Cajero';
+                $branch->notifications()->save($notification);
+                }
+            }
+        $car->delete();
+            //$car->delete();
+            return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error al eliminar el carro'], 500);
+        }
+    }
+
+    public function destroy_denegada(Request $request)
+    {
+        Log::info("Eliminar");
+        try{
+        $data = $request->validate([
+            'id' => 'required|numeric'
+        ]);
+        $car = Car::find($data['id']);
+        $branch = Branch::where('id', $car->reservation->branch_id)->first();
+        $car->active = 1;
+        $car->save();
+        $cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            $query->where('name', 'Cajero (a)');
+        })->get('professional_id');
+            if(!$cajeros->isEmpty()){
+                foreach ($cajeros as $cajero) {                    
+                $notification = new Notification();
+                $notification->professional_id = $cajero->professional_id;
+                $notification->tittle = 'Denegada';
+                $notification->description = 'Solicitud de eliminación del carro: '.$car->id.' denegada';
+                $notification->type = 'Cajero';
+                $branch->notifications()->save($notification);
+                }
+            }
+            //$car->delete();
+            return response()->json(['msg' => 'Solicitud denegada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => 'Error al eliminar el carro'], 500);
+        }
+    }
+
+    public function destroy_solicitud(Request $request)
+    {
+        Log::info("Eliminar");
+        try{
+        $data = $request->validate([
+            'id' => 'required|numeric'
+        ]);
+        $car = Car::find($data['id']);
         $branch = Branch::where('id', $request->branch_id)->first();
+        
         $client = $car->clientProfessional->client;
         $professional = $car->clientProfessional->professional;
         $trace = [
@@ -1118,11 +1256,26 @@ class CarController extends Controller
             'cashier' => $request->nameProfessional,
             'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
             'amount' => $car->amount,
-            'operation' => 'Elimina Carro: '.$car->id,
+            'operation' => 'Hace solicitud de eliminar carro: '.$car->id,
             'details' => '',
             'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
         ];
         $this->traceService->store($trace);
+        $car->active = 3;
+        $car->save();
+        $administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            $query->where('name', 'Administrador de Sucursal');
+        })->get('professional_id');
+            if(!$administradores->isEmpty()){
+                foreach ($administradores as $administrador) {                    
+                $notification = new Notification();
+                $notification->professional_id = $administrador->professional_id;
+                $notification->tittle = 'Solicitud';
+                $notification->description = 'Solicitud de eliminación del carro: '.$car->id;
+                $notification->type = 'Administrador';
+                $branch->notifications()->save($notification);
+                }
+            }
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {

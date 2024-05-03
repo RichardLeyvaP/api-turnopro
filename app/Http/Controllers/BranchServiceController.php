@@ -99,7 +99,7 @@ class BranchServiceController extends Controller
                     'service_comment' => $service->service_comment,
                     'ponderation' => $service->pivot->ponderation
                 ];
-            })->sortBy('name')->sortByDesc('ponderation')->values();
+            })->sortBy('name')->sortBy('ponderation')->values();
                 return response()->json(['services' => $services],200); 
           
             } catch (\Throwable $th) {  

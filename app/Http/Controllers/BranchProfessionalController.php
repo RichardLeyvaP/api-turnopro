@@ -34,12 +34,13 @@ class BranchProfessionalController extends Controller
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
+                'professional_id' => 'required|numeric',
+                'ponderation' => 'nullable'
             ]);
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
 
-            $branch->professionals()->attach($professional->id);
+            $branch->professionals()->attach($professional->id, ['ponderation' => $data['ponderation']]);
 
             return response()->json(['msg' => 'Professional asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
@@ -71,10 +72,29 @@ class BranchProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->with('charge')->get();
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
+            $professionals = BranchProfessional::where('branch_id', $data['branch_id'])->with('professional.charge')->get()/*->map(function ($query){
+                $professional = $query->professional;
+                return [
+                    'id' => $query->id,
+                    'professional_id' => $query->professional_id,
+                    'ponderation' => $query->ponderation,
+                    'name' => $professional->name.' '.$professional->surname,
+                    'image_url' => $professional->image_url,
+                    'charge' => $professional->chrage
+                ];
+            })*/;
+            $data = [];
+            foreach ($professionals as $branchprofessional) {
+                $data[] = [
+                    'id' => $branchprofessional['id'],
+                    'professional_id' => $branchprofessional['professional_id'],
+                    'ponderation' => $branchprofessional['ponderation'],
+                    'name' => $branchprofessional['professional']['name'].' '.$branchprofessional['professional']['surname'],
+                    'image_url' => $branchprofessional['professional']['image_url'],
+                    'charge' => $branchprofessional['professional']['charge']['name'],
+                ];
+            }
+                return response()->json(['professionals' => $data],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
             Log::error($th);
@@ -145,20 +165,30 @@ class BranchProfessionalController extends Controller
                 $query->whereIn('service_id', $services)->where('branch_id', $data['branch_id']);
             }, '=', count($services))->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
+            })->with('branches')->select('id', 'name', 'surname', 'second_surname', 'image_url')->get()->map(function ($professional) {
+                $ponderation = $professional->branches->first()->pivot->ponderation;
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name,
+                    'surname' => $professional->surname,
+                    'second_surname' => $professional->second_surname,
+                    'image_url' => $professional->image_url,
+                    'ponderation' => $ponderation
+                ];
+            })->sortBy('ponderation')->values();
 
             foreach($professionals1 as $professional1){
-                $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('endDate', '>=', Carbon::now())->get();
+                $vacation = Vacation::where('professional_id', $professional1['id'])->whereDate('endDate', '>=', Carbon::now())->get();
                 Log::info($vacation);
                 if ($vacation == null) {
                     Log::info('vacio');
-                    $professional1->vacations = null;
+                    $professional1['vacations'] = null;
                     //$professional1->endDate = null;
                     $professionals[] = $professional1;
                 } 
                 else{
                     Log::info('datos');
-                    $professional1->vacations = $vacation->map(function ($query){
+                    $professional1['vacations'] = $vacation->map(function ($query){
                         return [
                             'startDate' => $query->startDate,                            
                             'endDate' => $query->endDate,                            
@@ -232,11 +262,12 @@ class BranchProfessionalController extends Controller
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
+                'professional_id' => 'required|numeric',
+                'ponderation' => 'nullable'
             ]);
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            $branch->professionals()->sync($professional->id);
+            $branch->professionals()->updateExistingPivot($professional->id, ['ponderation' => $data['ponderation']]);
             return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
@@ -299,7 +330,8 @@ class BranchProfessionalController extends Controller
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::parse($query->start_time)->format('H:i')
+                    'start_time' => Carbon::parse($query->start_time)->format('H:i'),
+                    'charge' => $query->charge->name
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
@@ -322,11 +354,12 @@ class BranchProfessionalController extends Controller
                 $query->where('branch_id', $data['branch_id']);
             })->where('state', 3)->get()->map(function ($query){
                 return [
-                    'professional_name' => $query->name . " " . $query->surname  . " " . $query->second_surname,
+                    'professional_name' => $query->name . " " . $query->surname,
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::now()->format('H:i')
+                    'start_time' => Carbon::now()->format('H:i'),
+                    'charge' => $query->charge->name
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
@@ -349,11 +382,12 @@ class BranchProfessionalController extends Controller
                 $query->where('branch_id', $data['branch_id']);
             })->where('state', 4)->get()->map(function ($query){
                 return [
-                    'professional_name' => $query->name . " " . $query->surname  . " " . $query->second_surname,
+                    'professional_name' => $query->name . " " . $query->surname,
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::now()->format('H:i')
+                    'start_time' => Carbon::now()->format('H:i'),
+                    'charge' => $query->charge->name
                 ];
             });
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 

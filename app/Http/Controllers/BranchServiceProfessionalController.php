@@ -164,6 +164,7 @@ class BranchServiceProfessionalController extends Controller
                 "type_service" => $branchservprof->type_service,
                 "image_service" => $service->image_service,
                 "profit_percentaje" => $branchservprof->percent,
+                "price_service" => $service->price_service
             ];
         }
 
@@ -254,7 +255,7 @@ class BranchServiceProfessionalController extends Controller
                     'service_comment' => $service->service_comment,
                     'ponderation' => $service->pivot->ponderation
                 ];
-            });
+            })->sortBy('ponderation')->values();
             //$result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
 
             return response()->json(['branchServices' => $services], 200, [], JSON_NUMERIC_CHECK);

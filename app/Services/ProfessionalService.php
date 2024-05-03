@@ -275,10 +275,15 @@ class ProfessionalService
                     $returnedProfessionals[] = $professional;
                 }
             }
-            
+
+            usort($returnedProfessionals, function($a, $b) {
+                return strtotime($a['start_time']) - strtotime($b['start_time']);
+            });
+                        
             return $returnedProfessionals;
               
     }
+    
 
 
     ///nuevo metodo
