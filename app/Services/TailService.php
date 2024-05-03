@@ -267,14 +267,14 @@ class TailService {
     }
 
     public function cola_branch_tecnico($branch_id, $professional_id){
-        $workplace = ProfessionalWorkPlace::where('professional_id', $professional_id)->whereDate('data', Carbon::now()->format('Y-m-d'))->orderByDesc('created_at')->first()->places;
+        $workplace = ProfessionalWorkPlace::where('professional_id', $professional_id)->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first()->places;
 
         if ($workplace) {
             $places = json_decode($workplace, true);
-
-            $professionals = Professional::whereHas('workplaces', function ($query) use ($places) {
-                $query->whereIn('workplace_id', $places)->whereDate('data', Carbon::now()->format('Y-m-d'));
-            })->pluck('id');
+            $professionals = ProfessionalWorkPlace::whereHas('workplace', function ($query) use($places){
+                $query->whereIn('id', $places)->where('select', 1);
+            })->where('state', 1)->whereDate('data', Carbon::now())->orderByDesc('created_at')->get()->pluck('professional_id');
+            //$professionals = ProfessionalWorkPlace::whereIn('workplace_id', $places)->whereDate('data', Carbon::now())->orderByDesc('created_at')->first();
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $professionals){
                 $query->where('branch_id', $branch_id)->whereHas('car.clientProfessional', function ($query) use ($professionals){
                     $query->whereIn('professional_id', $professionals);

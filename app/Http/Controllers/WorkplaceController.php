@@ -129,9 +129,13 @@ class WorkplaceController extends Controller
             $workplace_data = $request->validate([
                 'id' => 'required|numeric',
                 'busy' => 'required|numeric',
+                'professional_id' => 'required|numeric'
             ]);
 
             $workplace = Workplace::find($workplace_data['id']);
+            $professionalWorkplace = ProfessionalWorkPlace::where('professional_id', $workplace_data['professional_id'])->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first();
+            $professionalWorkplace->state = 0;
+            $professionalWorkplace->save();
             $workplace->busy = $workplace_data['busy'];
             $workplace->save();
 
@@ -153,15 +157,15 @@ class WorkplaceController extends Controller
                 'select' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
-            $workplace = ProfessionalWorkPlace::where('professional_id', $workplace_data['professional_id'])->whereDate('data', Carbon::now()->format('Y-m-d'))->orderByDesc('created_at')->first();
+            $workplace = ProfessionalWorkPlace::where('professional_id', $workplace_data['professional_id'])->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first();
 
             $places = $workplace->places;
             if($places){
                 $placesId = json_decode($places, true);
                 Workplace::whereIn('id', $placesId)->update(['select' => $workplace_data['select']]);
             }
-            //$workplace->places = 0;
-            //$workplace->save();
+            $workplace->state = 0;
+            $workplace->save();
             return response()->json(['msg' => 'Puesto de Trabajo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

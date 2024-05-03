@@ -46,7 +46,7 @@ class ProfessionalWorkPlaceController extends Controller
             $professional->state = 1;
             $professional->save();
             $workplace = Workplace::find($data['workplace_id']);
-            $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)]);
+            $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places), 'state' => 1]);
             if(!$places){
             $workplace->busy = 1;
             $workplace->save();
@@ -85,12 +85,21 @@ class ProfessionalWorkPlaceController extends Controller
         try {             
             Log::info( "Entra a buscar el puestos de trabajo de un professionals");
             $data = $request->validate([
-                'professional_id' => 'required|numeric'
+                'professional_id' => 'required|numeric',
+                'charge' => 'required'
             ]);
-            $professional = Professional::find($data['professional_id']);
-            $workplace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query){
-                $query->where('busy', 1);
-            })->first();
+            if($data['charge'] === 'Tecnico'){
+                $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->whereHas('workplace', function ($query){
+                    $query->where('select', 1);
+                })->where('state', 1)->orderByDesc('created_at')->first();
+            }
+            else{
+                $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->whereHas('workplace', function ($query){
+                    $query->where('busy', 1);
+                })->where('state', 1)->orderByDesc('created_at')->first();
+            }
+            //$professional = Professional::find($data['professional_id']);
+            
             if(!$workplace){
                 return 0;
             }

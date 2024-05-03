@@ -550,8 +550,8 @@ class UserController extends Controller
       Log::info($request);
       $professional = Professional::whereHas('branches', function ($query) use ($data) {
         $query->where('branch_id', $data['branch_id']);
-    })->with(['user', 'charge', 'branches'])->whereHas('user', function ($query) use ($data){
-    $query->where('name', $data['email']);
+        })->with(['user', 'charge', 'branches'])->whereHas('user', function ($query) use ($data){
+        $query->where('name', $data['email']);
         })->first();
             if ($professional) {
                 //$workplace_id = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->pluck('workplace_id');
