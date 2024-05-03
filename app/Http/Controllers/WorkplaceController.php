@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProfessionalWorkPlace;
 use App\Models\Workplace;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -148,13 +150,18 @@ class WorkplaceController extends Controller
             Log::info($request);
             $workplace_data = $request->validate([
                 'id' => 'required|numeric',
-                'select' => 'required|numeric'
+                'select' => 'required|numeric',
+                'professional_id' => 'required|numeric'
             ]);
+            $workplace = ProfessionalWorkPlace::where('professional_id', $workplace_data['professional_id'])->whereDate('data', Carbon::now()->format('Y-m-d'))->orderByDesc('created_at')->first();
 
-            $workplace = Workplace::find($workplace_data['id']);
-            $workplace->select = $workplace_data['select'];
-            $workplace->save();
-
+            $places = $workplace->places;
+            if($places){
+                $placesId = json_decode($places, true);
+                Workplace::whereIn('id', $placesId)->update(['select' => $workplace_data['select']]);
+            }
+            //$workplace->places = 0;
+            //$workplace->save();
             return response()->json(['msg' => 'Puesto de Trabajo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
