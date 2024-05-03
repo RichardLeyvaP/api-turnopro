@@ -47,10 +47,13 @@ class ProfessionalWorkPlaceController extends Controller
             $professional->save();
             $workplace = Workplace::find($data['workplace_id']);
             $professional->workplaces()->attach($workplace->id, ['data'=>Carbon::now(), 'places'=>json_encode($places)]);
+            if(!$places){
             $workplace->busy = 1;
             $workplace->save();
-            if($places)
+            }
+            else{
             Workplace::whereIn('id', $places)->update(['select'=> 1]);
+            }
             return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
