@@ -26,7 +26,7 @@ class BusinessService
                     $query->where('business_id', $busine->id);
             })->*/whereHas('reservation', function ($query) use ($month, $year){
                 $query->whereMonth('data', $month)->whereYear('data', $year);
-                })->get()->map(function ($car){
+                })->where('pay', 1)->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
@@ -66,12 +66,12 @@ class BusinessService
                     $query->where('business_id', $busine->id);
             })->*/whereHas('reservation', function ($query) use ($startDate ,$endDate){
                 $query->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);//$query->whereBetWeen('data', [$startDate ,$endDate]);
-                })->get()->map(function ($car){
+                })->where('pay', 1)->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->technical_assistance * 5000
                     ];
                 });
                 $result[$i]['name'] = $busine->name;
@@ -107,12 +107,12 @@ class BusinessService
                     $query->where('branch_id', $busine->id);
             })->*/whereHas('reservation', function ($query) use ($data){
                 $query->whereDate('data', $data);
-                })->get()->map(function ($car){
+                })->where('pay', 1)->get()->map(function ($car){
                     return [
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->technical_assistance * 5000
                     ];
                 });
                 $result[$i]['name'] = $busine->name;

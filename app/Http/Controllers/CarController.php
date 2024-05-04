@@ -1229,7 +1229,8 @@ class CarController extends Controller
         Log::info("Eliminar");
         try{
         $data = $request->validate([
-            'id' => 'required|numeric'
+            'id' => 'required|numeric',
+            'professional_id' => 'nullable'
         ]);
         $car = Car::find($data['id']);
         $branch = Branch::where('id', $car->reservation->branch_id)->first();
@@ -1242,19 +1243,19 @@ class CarController extends Controller
                 $productstore->save();
             }             
         }
-        $cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
-            $query->where('name', 'Cajero (a)');
-        })->get('professional_id');
-            if(!$cajeros->isEmpty()){
-                foreach ($cajeros as $cajero) {                    
+        //$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            //$query->where('name', 'Cajero (a)');
+        //})->get('professional_id');
+            //if(!$cajeros->isEmpty()){
+                //foreach ($cajeros as $cajero) {                    
                 $notification = new Notification();
-                $notification->professional_id = $cajero->professional_id;
+                $notification->professional_id = $data['professional_id'];
                 $notification->tittle = 'Aceptada';
-                $notification->description = 'Carro eliminado: '.$car->id.' eliminado';
-                $notification->type = 'Cajero';
+                $notification->description = 'Carro: '.$car->id.' eliminado';
+                $notification->type = 'Caja';
                 $branch->notifications()->save($notification);
-                }
-            }
+                //}
+            //}
         $car->delete();
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
@@ -1269,13 +1270,14 @@ class CarController extends Controller
         Log::info("Eliminar");
         try{
         $data = $request->validate([
-            'id' => 'required|numeric'
+            'id' => 'required|numeric',
+            'professional_id' => 'nullable'
         ]);
         $car = Car::find($data['id']);
         $branch = Branch::where('id', $car->reservation->branch_id)->first();
         $car->active = 1;
         $car->save();
-        $cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+        /*$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
             $query->where('name', 'Cajero (a)');
         })->get('professional_id');
             if(!$cajeros->isEmpty()){
@@ -1287,7 +1289,13 @@ class CarController extends Controller
                 $notification->type = 'Cajero';
                 $branch->notifications()->save($notification);
                 }
-            }
+            }*/
+            $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->tittle = 'Denegada';
+                $notification->description = 'Carro : '.$car->id.' denegado a eliminar';
+                $notification->type = 'Caja';
+                $branch->notifications()->save($notification);
             //$car->delete();
             return response()->json(['msg' => 'Solicitud denegada correctamente'], 200);
         } catch (\Throwable $th) {
@@ -1301,7 +1309,8 @@ class CarController extends Controller
         Log::info("Eliminar");
         try{
         $data = $request->validate([
-            'id' => 'required|numeric'
+            'id' => 'required|numeric',
+            'professional_id' => 'nullable'
         ]);
         $car = Car::find($data['id']);
         $branch = Branch::where('id', $request->branch_id)->first();
@@ -1320,19 +1329,19 @@ class CarController extends Controller
         $this->traceService->store($trace);
         $car->active = 3;
         $car->save();
-        $administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+       /* $administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
             $query->where('name', 'Administrador de Sucursal');
         })->get('professional_id');
             if(!$administradores->isEmpty()){
-                foreach ($administradores as $administrador) {                    
+                foreach ($administradores as $administrador) {  */                  
                 $notification = new Notification();
-                $notification->professional_id = $administrador->professional_id;
+                $notification->professional_id = $data['professional_id'];
                 $notification->tittle = 'Solicitud';
                 $notification->description = 'Solicitud de eliminación del carro: '.$car->id;
                 $notification->type = 'Administrador';
                 $branch->notifications()->save($notification);
-                }
-            }
+                //}
+            //}
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {

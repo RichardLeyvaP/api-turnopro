@@ -243,24 +243,25 @@ class OrderController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
             ]);
             $order = Order::find($data['id']);
             $branch = Branch::where('id', $order->car->reservation->branch_id)->first();
-            $cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            /*$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
             $query->where('name', 'Cajero (a)');
-        })->get('professional_id');
+        })->get('professional_id');*/
         $type = $order->is_producy ? 'producto' : 'servicio';
-        if(!$cajeros->isEmpty()){
-            foreach ($cajeros as $cajero) {                    
+        /*if(!$cajeros->isEmpty()){
+            foreach ($cajeros as $cajero) {    */                
             $notification = new Notification();
-            $notification->professional_id = $cajero->professional_id;
+            $notification->professional_id = $data['professional_id'];
             $notification->tittle = 'Denegada';
             $notification->description = 'Solicitud de eliminación de orden de'.$type.' del carro: '.$order->car_id.' denegada';
-            $notification->type = 'Cajero';
+            $notification->type = 'Caja';
             $branch->notifications()->save($notification);
-            }
-        }
+            //}
+        //}
             $order->request_delete = 2;
             $order->save();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
@@ -434,35 +435,36 @@ class OrderController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'professional_id' => 'nullable'
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
             //$client = $car->clientProfessional->client;
             //$professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
-            $cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            /*$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
                 $query->where('name', 'Cajero (a)');
-            })->get('professional_id');
+            })->get('professional_id');*/
             if ($order->is_product) {                
             Log::info("Es producto");
             
                 $productstore = ProductStore::find($order->product_store_id);
-                $product = $productstore->product;
+                //$product = $productstore->product;
                 $cant = $order->cant;
                 $productstore->product_quantity = $cant;
                 $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
-                if(!$cajeros->isEmpty()){
-                    foreach ($cajeros as $cajero) {                    
+                /*if(!$cajeros->isEmpty()){
+                    foreach ($cajeros as $cajero) {     */               
                     $notification = new Notification();
-                    $notification->professional_id = $cajero->professional_id;
+                    $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Aceptada';
                     $notification->description = 'Solicitud de eliminación de orden de producto del carro: '.$car->id.' aceptada';
-                    $notification->type = 'Cajero';
+                    $notification->type = 'Caja';
                     $branch->notifications()->save($notification);
-                    }
-                }
+                    //}
+                //}
                 /*$trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -489,16 +491,16 @@ class OrderController extends Controller
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
                 $reservation->save();
-                if(!$cajeros->isEmpty()){
-                    foreach ($cajeros as $cajero) {                    
+                /*if(!$cajeros->isEmpty()){
+                    foreach ($cajeros as $cajero) { */                   
                     $notification = new Notification();
-                    $notification->professional_id = $cajero->professional_id;
+                    $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Aceptada';
                     $notification->description = 'Solicitud de eliminación de orden de servicio del carro: '.$car->id.' aceptada';
-                    $notification->type = 'Cajero';
+                    $notification->type = 'Caja';
                     $branch->notifications()->save($notification);
-                    }
-                }
+                    //}
+                //}
                 /*$trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -535,17 +537,18 @@ class OrderController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'professional_id' => 'nullable'
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
             $client = $car->clientProfessional->client;
             $professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $request->branch_id)->first();
-            $administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
+            /*$administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
                 $query->where('name', 'Administrador de Sucursal');
-            })->get('professional_id');
-            if ($order->is_product) {                
+            })->get('professional_id');*/
+            if ($order->is_product == 1) {                
             Log::info("Es producto");
             
                 $productstore = ProductStore::find($order->product_store_id);
@@ -564,20 +567,20 @@ class OrderController extends Controller
                     'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
                 ];
                 $this->traceService->store($trace);
-                if(!$administradores->isEmpty()){
-                    foreach ($administradores as $administrador) {                    
+                /*if(!$administradores->isEmpty()){
+                    foreach ($administradores as $administrador) { */                   
                     $notification = new Notification();
-                    $notification->professional_id = $administrador->professional_id;
+                    $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Solicitud';
                     $notification->description = 'Solicitud de eliminación de la orden de producto del carro: '.$car->id;
                     $notification->type = 'Administrador';
                     $branch->notifications()->save($notification);
-                    }
-                }
+                   // }
+                //}
                 //todo pendiente para revisar importante
                // $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
-            elseif (!$order->is_product) {
+            elseif ($order->is_product == 0) {
                 Log::info("servicio");
                 $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
                 $service = $branchServiceprofessional->branchService->service;
@@ -595,16 +598,16 @@ class OrderController extends Controller
                     'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
                 ];
                 $this->traceService->store($trace);
-                if(!$administradores->isEmpty()){
-                    foreach ($administradores as $administrador) {                    
+                /*if(!$administradores->isEmpty()){
+                    foreach ($administradores as $administrador) {  */                  
                     $notification = new Notification();
-                    $notification->professional_id = $administrador->professional_id;
+                    $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Solicitud';
                     $notification->description = 'Solicitud de eliminación de la orden de servicio del carro: '.$car->id;
                     $notification->type = 'Administrador';
                     $branch->notifications()->save($notification);
-                    }
-                }   
+                    //}
+               // }   
 
             }
             $order->request_delete = 3;

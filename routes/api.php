@@ -160,7 +160,7 @@ Route::post('/branch-destroy', [BranchController::class, 'destroy']);
 Route::get('/branch_winner', [BranchController::class, 'branch_winner']);//devuelve las ganancias y products mas vendido de una branch 
 Route::get('/branch_winner_icon', [BranchController::class, 'branch_winner_icon']);//devuelve las ganancias y products mas vendido de una branch 
 Route::get('/branches_professional', [BranchController::class, 'branches_professional']);
-Route::get('/company_winner', [BranchController::class, 'company_winner']);//devuelve las ganancias y el products mas vendido de la compañia
+Route::get('/company_winner', [BranchController::class, 'company_winner']);//devuelve las ganancias por sucursales
 Route::get('/branch_professionals_winner', [BranchController::class, 'branch_professionals_winner']);//devuelve las ganancias y products mas vendido de una branch
 Route::get('/show-business', [BranchController::class, 'show_business']);
 Route::get('/company-close-car', [BranchController::class, 'company_close_cars']);//Cierre de caja de la compañia por branch
@@ -399,10 +399,13 @@ Route::post('/storeByReservationId', [CommentController::class, 'storeByReservat
 Route::get('/notification', [NotificationController::class, 'index']);
 Route::get('/notification-show', [NotificationController::class, 'show']);
 Route::get('/notification-professional', [NotificationController::class, 'professional_show']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
+Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
 Route::post('/notification', [NotificationController::class, 'store']);
 Route::post('/notification2', [NotificationController::class, 'store2']);
 Route::put('/notification', [NotificationController::class, 'update']);
 Route::put('/notification2', [NotificationController::class, 'update2']);
+Route::put('/notification3', [NotificationController::class, 'update3']);
+Route::put('/notification-charge', [NotificationController::class, 'update_charge']);
 Route::post('/notification-destroy', [NotificationController::class, 'destroy']);
 
 Route::get('/payment', [PaymentController::class, 'index']);

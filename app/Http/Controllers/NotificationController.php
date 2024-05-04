@@ -117,22 +117,6 @@ class NotificationController extends Controller
 
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            // $notifications = $branch->notifications()->where('professional_id', $professional->id)->get()->map(function ($query) {
-            //     return [
-            //         'id' => $query->id,
-            //         'professional_id' => $query->professional_id,
-            //         'branch_id' => $query->branch_id,
-            //         'tittle' => $query->tittle,
-            //         'description' => $query->description,
-            //         'state' => $query->state,
-            //         'created_at' => $query->created_at->format('Y-m-d h:i:s A'),
-            //         'updated_at' => $query->updated_at->format('Y-m-d h:i:s A')
-            //     ];
-            // })->sortByDesc('created_at')
-            // ->sortByDesc(function ($notification) {
-            //     return $notification['created_at']->format('H:i:s');
-            // })
-            // ->values();
             $notifications = $branch->notifications()
                 ->where('professional_id', $professional->id)
                 ->whereDate('created_at', Carbon::now())
@@ -160,6 +144,103 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
+
+    public function professional_show_web(Request $request)
+    {
+        Log::info('Dada una sucursal y un professional devuelve las notificaciones');
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
+            ]);
+            $professional = Professional::find($data['professional_id']);
+            $charge = $professional->charge->name;
+            if($data['branch_id'] == 0){
+                $notifications = Notification::/*where('type', 'Administrador')
+                ->*/whereDate('created_at', Carbon::now())
+                ->get()
+                ->map(function ($query) {
+                    $professional = $query->professional;
+                    return [
+                        'id' => $query->id,
+                        'professional_id' => $query->professional_id,
+                        'nameProfessional' => $professional->name.' '.$professional->surname,
+                        'image_url' => $professional->image_url,
+                        'branch_id' => $query->branch_id,
+                        'tittle' => $query->tittle,
+                        'description' => $query->description,
+                        'state' => $query->state,
+                        'state2' => $query->stateAdm,
+                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                    ];
+                })
+                ->sortByDesc(function ($notification) {
+                    return $notification['created_at'];
+                })
+                ->values();
+            }
+            else{
+                if($charge == 'Cajero (a)'){
+                    $branch = Branch::find($data['branch_id']);
+                    $notifications = $branch->notifications()
+                        ->whereDate('created_at', Carbon::now())
+                        ->where('type', 'Caja')
+                        ->get()
+                        ->map(function ($query) {
+                            $professional = $query->professional;
+                            return [
+                                'id' => $query->id,
+                                'professional_id' => $query->professional_id,
+                                'nameProfessional' => $professional->name.' '.$professional->surname,
+                                'image_url' => $professional->image_url,
+                                'branch_id' => $query->branch_id,
+                                'tittle' => $query->tittle,
+                                'description' => $query->description,
+                                'state' => $query->state,
+                                'state2' => $query->stateCajero,
+                                'updated_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                            ];
+                        })
+                        ->sortByDesc(function ($notification) {
+                            return $notification['updated_at'];
+                        })
+                        ->values(); 
+                }
+                if($charge == 'Administrador de Sucursal'){
+                    $branch = Branch::find($data['branch_id']);
+                    $notifications = $branch->notifications()
+                        ->whereDate('created_at', Carbon::now())
+                        ->where('type', 'Administrador')
+                        ->get()
+                        ->map(function ($query) {
+                            $professional = $query->professional;
+                            return [
+                                'id' => $query->id,
+                                'professional_id' => $query->professional_id,
+                                'nameProfessional' => $professional->name.' '.$professional->surname,
+                                'image_url' => $professional->image_url,
+                                'branch_id' => $query->branch_id,
+                                'tittle' => $query->tittle,
+                                'description' => $query->description,
+                                'state' => $query->state,
+                                'state2' => $query->stateAdmSucur,
+                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                            ];
+                        })
+                        ->sortByDesc(function ($notification) {
+                            return $notification['created_at'];
+                        })
+                        ->values(); 
+                }
+                
+            }
+
+            return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
+        }
+    }
+
 
     public function update(Request $request)
     {
@@ -199,6 +280,64 @@ class NotificationController extends Controller
                 ->where('professional_id', $professional->id)
                 ->where('id', $data['id']) // Verifica también el ID
                 ->update(['state' => 0]);
+
+            return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
+        }
+    }
+
+    public function update3(Request $request)
+    {
+        Log::info('Modificar el estado de una notificacion');
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'charge' => 'required'
+            ]);
+            if($data['charge'] == 'Cajero (a)'){
+                Notification::where('id', $data['id'])
+                ->update(['stateCajero' => 2]);
+            }
+            if($data['charge'] == 'Administrador'){
+                Notification::where('id', $data['id'])
+                ->update(['stateAdm' => 2]);
+            }
+            if($data['charge'] == 'Administrador de Sucursal'){
+                Notification::where('id', $data['id'])
+                ->update(['stateAdmSucur' => 2]);
+            }
+            /*$notification = Notification::find($data['id']);
+            $notification->state = 1;
+            $notification->save();*/
+
+            return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
+        }
+    }
+
+    public function update_charge(Request $request)
+    {
+        Log::info('Modificar el estado de una notificacion');
+        try {
+            $data = $request->validate([
+                'ids' => 'required|array',
+                'charge' => 'required'
+            ]);
+            $ids = $request->input('services');
+            if($data['charge'] == 'Cajero (a)'){
+                Notification::whereIn('id', $data['ids'])
+                ->update(['stateCajero' => 1]);
+            }
+            if($data['charge'] == 'Administrador'){
+                Notification::whereIn('id', $data['ids'])
+                ->update(['stateAdm' => 1]);
+            }
+            if($data['charge'] == 'Administrador de Sucursal'){
+                Notification::whereIn('id', $data['ids'])
+                ->update(['stateAdmSucur' => 1]);
+            }
 
             return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
         } catch (\Throwable $th) {

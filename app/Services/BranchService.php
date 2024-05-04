@@ -715,7 +715,7 @@ class BranchService
         foreach ($branches as $branch) {
             $cars = Car::whereHas('reservation', function ($query) use ($branch, $startDate, $endDate) {
                 $query->where('branch_id', $branch->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
-            })->get()->map(function ($car) {
+            })->where('pay', 1)->get()->map(function ($car) {
                 $products = $car->orders->where('is_product', 1)->sum('price');
                 $services = $car->orders->where('is_product', 0)->sum('price');
                 return [
@@ -766,7 +766,7 @@ class BranchService
         foreach ($branches as $branch) {
             $cars = Car::whereHas('reservation', function ($query) use ($branch) {
                 $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now()->toDateString());
-            })->get()->map(function ($car) {
+            })->where('pay', 1)->get()->map(function ($car) {
                 $products = $car->orders->where('is_product', 1)->sum('price');
                 $services = $car->orders->where('is_product', 0)->sum('price');
                 return [
