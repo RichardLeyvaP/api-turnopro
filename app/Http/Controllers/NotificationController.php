@@ -171,11 +171,11 @@ class NotificationController extends Controller
                         'description' => $query->description,
                         'state' => $query->state,
                         'state2' => $query->stateAdm,
-                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                        'updated_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
                     ];
                 })
                 ->sortByDesc(function ($notification) {
-                    return $notification['created_at'];
+                    return $notification['updated_at'];
                 })
                 ->values();
             }
@@ -224,11 +224,11 @@ class NotificationController extends Controller
                                 'description' => $query->description,
                                 'state' => $query->state,
                                 'state2' => $query->stateAdmSucur,
-                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                                'updated_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
                             ];
                         })
                         ->sortByDesc(function ($notification) {
-                            return $notification['created_at'];
+                            return $notification['updated_at'];
                         })
                         ->values(); 
                 }
