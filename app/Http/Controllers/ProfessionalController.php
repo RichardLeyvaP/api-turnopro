@@ -31,12 +31,13 @@ class ProfessionalController extends Controller
     public function index()
     {
         try {
-            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) {
+            $professionals = Professional::with('user', 'charge')->addSelect('*', DB::raw("CONCAT(name, ' ', surname, ' ', second_surname) AS fullName"))->get()->map(function ($professional) {
                 return [
                     'id' => $professional->id,
                     'name' => $professional->name,
                     'surname' => $professional->surname,
                     'second_surname' => $professional->second_surname,
+                    'fullName' => $professional->fullName,
                     'email' => $professional->email,
                     'phone' => $professional->phone,
                     'user_id' => $professional->user_id,
