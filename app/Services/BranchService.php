@@ -802,9 +802,41 @@ class BranchService
         return $result;
     }
 
-    public function branch_professionals_winner_date($branch_id)
+    public function branch_professionals_winner_date()
     {
-        return $professionals = Professional::whereHas('charge', function ($query){
+        $dates = [];
+        $professionals = Professional::whereHas('charge', function($query){
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+        })->get();
+        $branches = Branch::select('id', 'name')->get();
+        foreach ($professionals as $professional) {
+            foreach ($branches as $branch) {
+                $cars = Car::whereHas('reservation', function ($query) use ($branch) {
+                    $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now());
+                })->whereHas('clientProfessional', function ($query) use ($professional){
+                    $query->where('professional_id', $professional->id);
+                })->where('pay', 1)->get(); 
+                $retention = number_format($professional->retention/100, 2);
+                $winProfessional =$cars->sum(function ($car){
+                    return $car->orders->sum('percent_win');
+                });
+                $retentionPorcent = round($winProfessional * $retention);
+                $winTips =  round($cars->sum('tip') * 0.8, 2);
+                $dates [] =  [
+                    'branchName' => $branch->name,
+                    'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
+                    'amount' => $winProfessional,
+                    'retention' => $retentionPorcent,
+                    'tip' => round($cars->sum('tip'), 2),
+                    'tip80' => $winTips,
+                    'total' => $winProfessional-$retentionPorcent+$winTips,
+                    'total_cars' => $cars->count()
+                ];
+            //})->sortByDesc('total')->values();
+            }
+        }
+        return $dates;
+        /*return $professionals = Professional::whereHas('charge', function ($query){
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get()->map(function ($professional) use ($branch_id){
             $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
@@ -827,7 +859,7 @@ class BranchService
                 'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
-        })->sortByDesc('total')->values();
+        })->sortByDesc('total')->values();*/
        
     }
 
@@ -887,9 +919,41 @@ class BranchService
             })->sortByDesc('total')->values();*/
     //}*/
 
-    public function branch_professionals_winner_periodo($branch_id, $startDate, $endDate)
+    public function branch_professionals_winner_periodo($startDate, $endDate)
     {
-        return $professionals = Professional::whereHas('charge', function ($query){
+        $dates = [];
+        $professionals = Professional::whereHas('charge', function($query){
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+        })->get();
+        $branches = Branch::select('id', 'name')->get();
+        foreach ($professionals as $professional) {
+            foreach ($branches as $branch) {
+                $cars = Car::whereHas('reservation', function ($query) use ($branch, $startDate, $endDate) {
+                    $query->where('branch_id', $branch->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
+                })->whereHas('clientProfessional', function ($query) use ($professional){
+                    $query->where('professional_id', $professional->id);
+                })->where('pay', 1)->get(); 
+                $retention = number_format($professional->retention/100, 2);
+                $winProfessional =$cars->sum(function ($car){
+                    return $car->orders->sum('percent_win');
+                });
+                $retentionPorcent = round($winProfessional * $retention);
+                $winTips =  round($cars->sum('tip') * 0.8, 2);
+                $dates [] =  [
+                    'branchName' => $branch->name,
+                    'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
+                    'amount' => $winProfessional,
+                    'retention' => $retentionPorcent,
+                    'tip' => round($cars->sum('tip'), 2),
+                    'tip80' => $winTips,
+                    'total' => $winProfessional-$retentionPorcent+$winTips,
+                    'total_cars' => $cars->count()
+                ];
+            //})->sortByDesc('total')->values();
+            }
+        }
+        return $dates;
+        /*return $professionals = Professional::whereHas('charge', function ($query){
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->get()->map(function ($professional) use ($branch_id, $startDate, $endDate){
             $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
@@ -912,7 +976,7 @@ class BranchService
                 'total' => $winProfessional-$retentionPorcent+$winTips,
                 'total_cars' => $cars->count()
             ];
-        })->sortByDesc('total')->values();
+        })->sortByDesc('total')->values();*/
         
     }
 }

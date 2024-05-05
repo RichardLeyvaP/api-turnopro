@@ -603,7 +603,56 @@ class RecordController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
             ]);
-            $llegadasTardias = Record::withCount('professional')
+            $llegadasTardias = Record::withCount('professional')->with('professional')
+                ->where('branch_id', $data['branch_id'])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->get()
+                ->filter(function ($registro) use ($data) {
+                    // Obtiene el nombre del día de la semana en español
+                    //$diaSemana = $registro->start_time->formatLocalized('%A');
+                    $diaSemana = new DateTime($registro->start_time);
+                    $nombreDia = $diaSemana->format('l');
+                    Log::info($nombreDia);
+                    // Días de la semana en español
+                    $diasSemanaEspañol = [
+                        'Monday' => 'Lunes',
+                        'Tuesday' => 'Martes',
+                        'Wednesday' => 'Miércoles',
+                        'Thursday' => 'Jueves',
+                        'Friday' => 'Viernes',
+                        'Saturday' => 'Sábado',
+                        'Sunday' => 'Domingo',
+                    ];
+
+                    // Reemplazamos el día de la semana en inglés por su equivalente en español
+                    $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
+                    Log::info($diaSemanaEspañol);
+                    // Obtiene el horario de inicio correspondiente al día de la semana del registro
+                    $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
+                    Log::info($schedule);
+                    // Si no hay horario de inicio para ese día, no se considera como llegada tardía
+                    if (!$schedule) {
+                        return false;
+                    }
+                    Log::info($schedule->start_time);
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
+                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                })
+                ->groupBy('professional_id')
+                ->map(function ($group) {
+                    return [
+                        'professional_id' => $group->first()->professional_id,
+                        'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
+                        'image_url' => $group->first()->professional->image_url,
+                        'charge' => $group->first()->professional->charge->name,
+                        'cant' => $group->sum('professional_count')
+                    ];
+                })
+                ->sortByDesc('cant')
+                ->values();
+                //Llegadas puntuales
+                $llegadasTime = Record::withCount('professional')
                 ->where('branch_id', $data['branch_id'])
                 ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()
@@ -651,26 +700,33 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
+            // Cantidad de profesionales que llegaron tarde
+            //$tardyCount = $tardyProfessionals->count();
             /*$llegadasTardias = [];
             $branchId = Branch::find($data['branch_id']);
-            if ($branchId)
-                $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
-                    ->whereBetween('start_time', [$request->start_date, $request->end_date])
-                    ->get()
-                    ->filter(function ($registro) {
-                        // Considera llegada tardía si es después de las 9:00 AM
-                        return Carbon::parse($registro->start_time)->hour < 9;
-                    })->groupBy('professional_id')->groupBy('professional_id')->map(function ($group) {
-                        return [
-                            'professional_id' => $group->first()->professional_id,
-                            'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
-                            'image_url' => $group->first()->professional->image_url,
-                            'charge' => $group->first()->professional->charge->name,
-                            'cant' => $group->sum('professional_count')
-                        ];
-                    })->sortByDesc('cant')->values();*/
+            // Obtén la fecha actual
+            $hoy = Carbon::now();
 
-            return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
+            // Obtén el nombre del día de la semana
+            $nombreDia = $hoy->format('l');
+            if($branchId)
+            $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
+                ->whereBetween('start_time', [$request->start_date, $request->end_date])
+                ->get()
+                ->filter(function ($registro) {
+                    // Considera llegada tardía si es después de las 9:00 AM
+                    return Carbon::parse($registro->start_time)->hour >= 9;
+                })->groupBy('professional_id')->map(function ($group){
+                    return [
+                        'professional_id' => $group->first()->professional_id,
+                        'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
+                        'image_url' => $group->first()->professional->image_url,
+                        'charge' => $group->first()->professional->charge->name,
+                        'cant' => $group->sum('professional_count')
+                    ];
+                })->sortByDesc('cant')->values();*/
+
+            return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . 'Error'], 500);
         }
@@ -684,7 +740,7 @@ class RecordController extends Controller
                 'branch_id' => 'required|numeric',
             ]);
             $today = Carbon::now(); // Incluye toda la jornada del último día
-            $llegadasTardias = Record::withCount('professional')->with('professional')
+            $llegadasTime = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
                 ->whereDate('start_time', $today)
                 ->get()
@@ -752,8 +808,56 @@ class RecordController extends Controller
                             'cant' => $group->sum('professional_count')
                         ];
                     })->sortByDesc('cant')->values();*/
+                    $llegadasTardias = Record::withCount('professional')->with('professional')
+                ->where('branch_id', $data['branch_id'])
+                ->whereDate('start_time', $today)
+                ->get()
+                ->filter(function ($registro) use ($data) {
+                    // Obtiene el nombre del día de la semana en español
+                    //$diaSemana = $registro->start_time->formatLocalized('%A');
+                    $diaSemana = new DateTime($registro->start_time);
+                    $nombreDia = $diaSemana->format('l');
+                    Log::info($nombreDia);
+                    // Días de la semana en español
+                    $diasSemanaEspañol = [
+                        'Monday' => 'Lunes',
+                        'Tuesday' => 'Martes',
+                        'Wednesday' => 'Miércoles',
+                        'Thursday' => 'Jueves',
+                        'Friday' => 'Viernes',
+                        'Saturday' => 'Sábado',
+                        'Sunday' => 'Domingo',
+                    ];
 
-            return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
+                    // Reemplazamos el día de la semana en inglés por su equivalente en español
+                    $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
+                    Log::info($diaSemanaEspañol);
+                    // Obtiene el horario de inicio correspondiente al día de la semana del registro
+                    $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
+                    Log::info($schedule);
+                    // Si no hay horario de inicio para ese día, no se considera como llegada tardía
+                    if (!$schedule) {
+                        return false;
+                    }
+                    Log::info($schedule->start_time);
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
+                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                })
+                ->groupBy('professional_id')
+                ->map(function ($group) {
+                    return [
+                        'professional_id' => $group->first()->professional_id,
+                        'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
+                        'image_url' => $group->first()->professional->image_url,
+                        'charge' => $group->first()->professional->charge->name,
+                        'cant' => $group->sum('professional_count')
+                    ];
+                })
+                ->sortByDesc('cant')
+                ->values();
+                return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
+            //return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . 'Error'], 500);
         }

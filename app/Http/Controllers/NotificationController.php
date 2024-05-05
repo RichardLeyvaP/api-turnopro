@@ -171,11 +171,11 @@ class NotificationController extends Controller
                         'description' => $query->description,
                         'state' => $query->state,
                         'state2' => $query->stateAdm,
-                        'updated_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
                     ];
                 })
                 ->sortByDesc(function ($notification) {
-                    return $notification['updated_at'];
+                    return $notification['created_at'];
                 })
                 ->values();
             }
@@ -198,11 +198,11 @@ class NotificationController extends Controller
                                 'description' => $query->description,
                                 'state' => $query->state,
                                 'state2' => $query->stateCajero,
-                                'updated_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
                             ];
                         })
                         ->sortByDesc(function ($notification) {
-                            return $notification['updated_at'];
+                            return $notification['created_at'];
                         })
                         ->values(); 
                 }
@@ -224,11 +224,11 @@ class NotificationController extends Controller
                                 'description' => $query->description,
                                 'state' => $query->state,
                                 'state2' => $query->stateAdmSucur,
-                                'updated_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
                             ];
                         })
                         ->sortByDesc(function ($notification) {
-                            return $notification['updated_at'];
+                            return $notification['created_at'];
                         })
                         ->values(); 
                 }

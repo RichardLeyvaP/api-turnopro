@@ -175,6 +175,7 @@ Route::put('/store', [StoreController::class, 'update']);
 Route::post('/store-destroy', [StoreController::class, 'destroy']);
 
 Route::get('/charge', [ChargeController::class, 'index']);
+Route::get('/charge-web', [ChargeController::class, 'index_web']);
 Route::get('/charge-show', [ChargeController::class, 'show']);
 Route::post('/charge', [ChargeController::class, 'store']);
 Route::put('/charge', [ChargeController::class, 'update']);
@@ -317,6 +318,7 @@ Route::get('/tail_up', [TailController::class, 'tail_up']);
 Route::get('/cola_branch_data', [TailController::class, 'cola_branch_data']); //dado un branch_id devolver la cola de esa branch
 Route::get('/cola_branch_data2', [TailController::class, 'cola_branch_data2']); //dado un branch_id devolver la cola de esa branch que estan en attended 3 movil
 Route::get('/cola_branch_professional', [TailController::class, 'cola_branch_professional']); //dado un branch_id  y un professional_id devolver la cola de esa branch
+Route::get('/cola_branch_professional_new', [TailController::class, 'cola_branch_professional_new']); //dado un branch_id  y un professional_id devolver la cola de esa branch y los servicios por carros
 Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar la cola
 Route::get('/cola_branch_delete', [TailController::class, 'cola_branch_delete']); //vaciar la cola de una branch_id
 Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado

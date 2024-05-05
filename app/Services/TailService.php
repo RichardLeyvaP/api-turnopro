@@ -177,6 +177,53 @@ class TailService {
         return $branchTails;
     }
 
+    public function cola_branch_professional_new($branch_id, $professional_id){
+        $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
+            $query->where('branch_id', $branch_id);
+        })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
+            $query->where('professional_id', $professional_id);
+        })->whereNot('attended', [2])->get();
+        $branchTails = $tails->map(function ($tail) use ($branch_id){  
+            $reservation = $tail->reservation;
+            $professional = $reservation->car->clientProfessional->professional;
+            $client = $reservation->car->clientProfessional->client; 
+			$services = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->get()->map(function ($orderData){
+                $service = $orderData->branchServiceProfessional->branchService->service;
+                return [
+                     'name' => $service->name,
+                      'simultaneou' => $service->simultaneou,
+                      'price_service' => $service->price_service,
+                      'type_service' => $service->type_service,
+                      'profit_percentaje' => $service->profit_percentaje,
+                      'duration_service' => $service->duration_service,
+                      'image_service' => $service->image_service,
+                      'description' => $service->service_comment
+                      ];
+                  });
+            return [
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'total_time' => $reservation->total_time,
+                'client_name' => $client->name." ".$client->surname,
+                'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
+                'professional_name' => $professional->name." ".$professional->surname,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
+                'attended' => $tail->attended, 
+                'updated_at' => $tail->updated_at->format('Y-m-d H:i:s'),
+                'clock' => $tail->clock, 
+                'timeClock' => $tail->timeClock, 
+                'detached' => $tail->detached, 
+                'total_services' => $services->count(),
+				'services' => $services
+               
+            ];
+        })->sortBy('start_time')->values();
+        return $branchTails;
+    }
+
     public function tail_attended($reservation_id, $attended){
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         $tail->attended = $attended;

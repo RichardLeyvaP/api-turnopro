@@ -1,12 +1,28 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Charge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ChargeController extends Controller
 {
+    public function index_web(Request $request)
+    {
+        Log::info( "entra a buscar cargos y sucursales");
+        try { $branch_data = $request->validate([
+            'business_id' => 'required|numeric'
+        ]);
+        $charges = Charge::all();
+        $branches = Branch::where('business_id', $branch_data['business_id'])->select('id', 'name', 'image_data')->get();
+        return response()->json(['branches' => $branches, 'charges' => $charges], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar los cargos"], 500);
+        }
+    }
+
     public function index()
     {
         try { 
@@ -18,6 +34,7 @@ class ChargeController extends Controller
             return response()->json(['msg' => "Error al mostrar los cargos"], 500);
         }
     }
+
     public function show(Request $request)
     {
         try {
