@@ -11,6 +11,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +25,10 @@ class ClientController extends Controller
 
             Log::info("entra a cliente");
 
-            return response()->json(['clients' => Client::with('user')->get()], 200, [], JSON_NUMERIC_CHECK);
+            $clients = Client::with('user')
+            ->addSelect('*', DB::raw("CONCAT(name, ' ', surname, ' ', second_surname) AS fullName"))
+            ->get();
+            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
 
