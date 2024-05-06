@@ -117,18 +117,18 @@ class ProductController extends Controller
     public function product_mostSold(Request $request)
     {
         try {
-            $data = $request->validate([
+            /*$data = $request->validate([
                 'branch_id' => 'nullable'
-            ]);
+            ]);*/
             $products = Product::with(['orders' => function ($query) {
                 $query->selectRaw('SUM(cant) as total_sale_price')
                     ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
             }, 'productSales' => function ($query) {
                 $query->selectRaw('SUM(cant) as total_cant')
                     ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
-            }])->whereHas('productStores', function ($query) use ($data){
+            }])/*->whereHas('productStores', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-                })
+                })*/
             ->get()
             ->map(function ($product) {
                 $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
@@ -202,7 +202,7 @@ class ProductController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'nullable',
+                //'branch_id' => 'nullable',
                 'startDate' => 'nullable',
                 'endDate' => 'nullable'
             ]);
@@ -212,9 +212,9 @@ class ProductController extends Controller
             }, 'productSales' => function ($query) {
                 $query->selectRaw('SUM(cant) as total_cant')
                     ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
-            }])->whereHas('productStores', function ($query) use ($data){
+            }])/*->whereHas('productStores', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
-                })
+                })*/
             ->get()
             ->map(function ($product) {
                 $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
