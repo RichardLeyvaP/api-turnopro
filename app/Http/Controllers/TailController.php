@@ -182,8 +182,44 @@ class TailController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
+
+            $reservations = Tail::whereHas('reservation', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->whereIn('attended', [0, 1, 3])->get()->map(function ($tail) {
+                    $reservation = $tail->reservation;
+                    $professional = $reservation->car->clientProfessional->professional;
+                    $client = $reservation->car->clientProfessional->client;
+                    $workplace = $professional->workplaces()
+                        ->whereDate('data', $reservation->data)
+                        ->first();
+                        $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
+                            $query->where('client_id', $client->id);
+                        })->orderByDesc('updated_at')->first();
+        
+                    return [
+                        'reservation_id' => $reservation->id,
+                        'car_id' => $reservation->car_id,
+                        'from_home' => $reservation->from_home,
+                        'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
+                        'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                        'total_time' => $reservation->total_time,
+                        'client_name' => $client->name . " " . $client->surname,
+                        'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
+                        'professional_name' => $professional->name . " " . $professional->surname  . " " . $professional->second_surname,
+                        'image_url' => $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg",
+                        'client_id' => $client->id,
+                        'professional_id' => $professional->id,
+                        'professional_state' => $professional->state,
+                        'attended' => $tail->attended,
+                        'puesto' => $workplace ? $workplace->name : null,
+                        'code' => $reservation->code
+                    ];
+                })->sortBy('start_time')->values();
+
+                $attendedReservations = $reservations->where('attended', 1)->values();
+                $unattendedReservations = $reservations->where('attended', '!=', 1)->values();
             
-            return response()->json(['tail' => $this->tailService->tail_branch_attended($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations ], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage()."Error al mostrar las Tail"], 500);

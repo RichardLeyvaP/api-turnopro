@@ -329,7 +329,7 @@ class ReservationController extends Controller
             if ($data['branch_id'] != 0) {
                 Log::info('Es una Sucursal');
                 // Consulta para obtener las reservas de la semana actual
-                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->orderBy('data')->get();
+                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->where('branch_id', $data['branch_id'])->orderBy('data')->get();
 
                 $reservationsData = $reservations->map(function ($reservation) {
                     $client = $reservation->car->clientProfessional->client;
@@ -361,6 +361,24 @@ class ReservationController extends Controller
             } else {
                 Log::info("Business");
                 $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->get();
+                $reservationsData = $reservations->map(function ($reservation) {
+                    $client = $reservation->car->clientProfessional->client;
+                    $professional = $reservation->car->clientProfessional->professional;
+                    return [
+                        'id' => $reservation->id,
+                        'car_id' => $reservation->car_id,
+                        'client_professional_id' => $reservation->car->client_professional_id,
+                        'clientName' => $client->name . ' ' . $client->surname,
+                        'professionalName' => $professional->name . ' ' . $professional->surname,
+                        'client_image' => $client->client_image,
+                        'image_url' => $professional->image_url,
+                        'data' => $reservation->data,
+                        'start_time' => $reservation->start_time,
+                        'end_time' => $reservation->final_hour,
+                        'total_time' => $reservation->total_time
+    
+                    ];
+                }); 
                 for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $reservations->where('data', $date->toDateString())->count();
                     //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
