@@ -322,6 +322,7 @@ class ReservationController extends Controller
             $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
             $end = now()->endOfWeek();   // End of the current week, shifted to Sunday
             $dates = [];
+            $reservationsData = [];
             //return [$start, $end];
             $i = 0;
             $day = 0; //en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
