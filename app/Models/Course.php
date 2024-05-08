@@ -18,4 +18,8 @@ class Course extends Model
         return $this->belongsToMany(Student::class)->withPivot('id','course_id','student_id ', 'reservation_payment','total_payment', 'image_url')->withTimestamps();
     }
 
+    public function professionals(){
+        return $this->belongsToMany(Professional::class, 'course_professional')->withPivot('id')->withTimestamps();
+    }
+
 }

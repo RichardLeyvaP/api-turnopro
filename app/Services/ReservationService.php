@@ -91,6 +91,19 @@ class ReservationService
         //$car = Car::find($car->id);
         $car->amount = $total_amount;
         $car->save();
+        $fechaCarbon = Carbon::createFromFormat('Y-m-d', $data['data']);
+        if ($fechaCarbon->isToday() && $data['from_home'] == 0) {
+            $reservationsDay = Reservation::whereDate('data', Carbon::now())->where('from_home', 0)->where('branch_id', $data['branch_id'])->get();
+            if($data['select_professional'] == 1){                
+            $code = 'TS'.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT);
+            }
+            else{
+            $code = 'TA'.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT);
+            }
+        }
+        else{
+            $code = 'RP'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 2);
+        }
         $reservation = new Reservation();
         $reservation->start_time = Carbon::parse($data['start_time'])->toTimeString();
         $reservation->final_hour = Carbon::parse($data['start_time'])->addMinutes($total_time)->toTimeString();
@@ -99,6 +112,7 @@ class ReservationService
         $reservation->from_home = $data['from_home'];
         $reservation->branch_id = $data['branch_id'];
         $reservation->car_id = $car->id;
+        $reservation->code = $code;
         $reservation->save();
         Log::info('Crea la reservación');
         DB::commit();

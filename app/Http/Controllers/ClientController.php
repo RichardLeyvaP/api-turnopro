@@ -482,12 +482,12 @@ class ClientController extends Controller
                         Log::info('Es Fiel');                        
                         Log::info($frecuence);
                     }
-                    if($query->reservations_count >= 2){
+                    if($query->reservations_count >= 2 && $query->reservations_count < 12){
                         $frecuence = 'Frecuente';
                         Log::info('Es Frecuente');  
                         Log::info($frecuence);
                     } 
-                    else{
+                    else if($query->reservations_count < 2){
                         $frecuence = 'No Frecuente';
                         Log::info('No es frecuente');                        
                         Log::info($frecuence);
@@ -501,7 +501,7 @@ class ClientController extends Controller
                         'cant_visist' => $query->reservations_count,
                         'data' => $reservation ? $reservation->data : 'No ha sido atendido'
                     ];
-                });
+                })->values();
             
             
 

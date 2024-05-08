@@ -820,12 +820,16 @@ class BranchService
                 $winProfessional =$cars->sum(function ($car){
                     return $car->orders->sum('percent_win');
                 });
+                $amuntGenerate =$cars->sum(function ($car){
+                    return $car->orders->sum('price');
+                });
                 $retentionPorcent = round($winProfessional * $retention);
                 $winTips =  round($cars->sum('tip') * 0.8, 2);
                 $dates [] =  [
                     'branchName' => $branch->name,
                     'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
                     'amount' => $winProfessional,
+                    'amountGenerate' => $amuntGenerate,
                     'retention' => $retentionPorcent,
                     'tip' => round($cars->sum('tip'), 2),
                     'tip80' => $winTips,
@@ -937,12 +941,16 @@ class BranchService
                 $winProfessional =$cars->sum(function ($car){
                     return $car->orders->sum('percent_win');
                 });
+                $amuntGenerate =$cars->sum(function ($car){
+                    return $car->orders->sum('price');
+                });
                 $retentionPorcent = round($winProfessional * $retention);
                 $winTips =  round($cars->sum('tip') * 0.8, 2);
                 $dates [] =  [
                     'branchName' => $branch->name,
                     'name' => $professional->name. " " .$professional->surname. " " .$professional->second_surname,
                     'amount' => $winProfessional,
+                    'amountGenerate' => $amuntGenerate,
                     'retention' => $retentionPorcent,
                     'tip' => round($cars->sum('tip'), 2),
                     'tip80' => $winTips,

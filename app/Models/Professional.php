@@ -21,7 +21,7 @@ class Professional extends Model
     }
 
     public function branchServices(){
-        return $this->belongsToMany(BranchService::class)->withPivot('percent', 'type_service','id')->withTimestamps();
+        return $this->belongsToMany(BranchService::class)->withPivot('percent', 'type_service','id', 'meta')->withTimestamps();
     }
 
     public function branchServiceProfessionals(){
@@ -90,6 +90,10 @@ class Professional extends Model
     public function professionalPayments()
     {
         return $this->hasMany(ProfessionalPayment::class, 'professional_id');
+    }
+
+    public function courses(){
+        return $this->belongsToMany(Course::class, 'course_professional')->withPivot('id')->withTimestamps();
     }
 
     protected $table = "professionals";

@@ -905,7 +905,7 @@ class ProfessionalService
         });*/
         $winProfessional = $orderServ->sum('percent_win');
         $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
-        $winTips =  round($cars->sum('tip') * 0.80, 2);
+        $winTips = round($cars->sum('tip') * 0.80, 2);
         return $result = [
             'Monto Generado' => $amountGenral, //suma productos y servicios
             'Ganancia Barbero' => $winProfessional, //monto generado percent_win 
@@ -965,7 +965,7 @@ class ProfessionalService
         });*/
         $winProfessional = $orderServ->sum('percent_win');
         $retentionPorcent = $retention ? round($winProfessional * $retention, 2) : round($winProfessional, 2);
-        $winTips =  round($cars->sum('tip') * 0.80, 2);
+        $winTips = round($cars->sum('tip') * 0.80, 2);
         return $result = [
             'Monto Generado' => $amountGenral, //suma productos y servicios
             'Ganancia Barbero' => $winProfessional, //monto generado percent_win 

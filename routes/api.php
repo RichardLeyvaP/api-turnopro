@@ -30,6 +30,7 @@ use App\Http\Controllers\ChargePermissionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseStudentController;
+use App\Http\Controllers\CourseProfessionalController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
@@ -242,6 +243,7 @@ Route::get('/show-service-idProfessional', [BranchServiceController::class, 'sho
 Route::get('/professionalservice', [BranchServiceProfessionalController::class, 'index']);
 Route::get('/professionalservice-show', [BranchServiceProfessionalController::class, 'show']);
 Route::post('/professionalservice', [BranchServiceProfessionalController::class, 'store']);
+Route::post('/professionalservice-meta', [BranchServiceProfessionalController::class, 'update_meta']);
 Route::put('/professionalservice', [BranchServiceProfessionalController::class, 'update']);
 Route::post('/professionalservice-destroy', [BranchServiceProfessionalController::class, 'destroy']);
 Route::get('/professional_services', [BranchServiceProfessionalController::class, 'professional_services']);
@@ -277,6 +279,7 @@ Route::get('/car_services2', [CarController::class, 'car_services2']); //dado un
 Route::get('/cars-winner-day', [CarController::class, 'cars_sum_amount']);//Dado un business devolver las ganancial del dia
 Route::get('/cars-winner-week', [CarController::class, 'cars_sum_amount_week']);//Dado un business devolver las ganancial de la semana
 Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']);//Dado un business devolver las ganancial del mes
+Route::get('/car-products-services', [CarController::class, 'car_products_services']);//Dado un business devolver el producto y el servicio mas vendido
 Route::get('/professional-car', [CarController::class, 'professional_car']);//Ganancias del professionals en una branch por dias
 Route::get('/tecnico-car', [CarController::class, 'tecnico_car']);//Ganancias del tecninco en una branch por dias
 Route::get('/professional-car-date', [CarController::class, 'professional_car_date']);//Detalles del carro
@@ -577,6 +580,11 @@ Route::get('/surveyCounts', [ClientSurveyController::class, 'surveyCounts']);
 Route::post('/associate-branch', [AssociateBranchController::class, 'store']);
 Route::post('/associate-branch-destroy', [AssociateBranchController::class, 'destroy']);
 Route::get('/associate-branch', [AssociateBranchController::class, 'show']);
+
+Route::post('/course-professional', [CourseProfessionalController::class, 'store']);
+Route::post('/course-professional-destroy', [CourseProfessionalController::class, 'destroy']);
+Route::get('/course-professional', [CourseProfessionalController::class, 'show']);
+Route::get('/course-professional-show-Notin', [CourseProfessionalController::class, 'show_Notin']);//devolver los professionales que no han sido asociados al curso
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

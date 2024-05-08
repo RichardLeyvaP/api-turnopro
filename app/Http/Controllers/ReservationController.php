@@ -242,7 +242,7 @@ class ReservationController extends Controller
         } catch (TransportException $e) {
     
             return response()->json(['msg' => 'Reservación realizada correctamente.Error al enviar el correo electrónico '], 200);
-  }
+        }
           catch (\Throwable $th) {
               Log::error($th);
             
@@ -282,7 +282,7 @@ class ReservationController extends Controller
             Log::info($data);
             if ($data['branch_id'] != 0) {
                 Log::info("Branch");
-                $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', now()->toDateString())->count();
+                $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', now()->toDateString())->where('from_home', 1)->count();
                 //$branch = Branch::find($data['branch_id']);
                 //Log::info('Es una branch');
                 //Log::info($branch);
@@ -297,7 +297,7 @@ class ReservationController extends Controller
                     })->count();*/
             } else {
                 Log::info("Business");
-                $reservations = Reservation::whereDate('data', now()->toDateString())->count();
+                $reservations = Reservation::whereDate('data', now()->toDateString())->where('from_home', 1)->count();
             }
 
             Log::info('$reservations');
@@ -328,7 +328,27 @@ class ReservationController extends Controller
             if ($data['branch_id'] != 0) {
                 Log::info('Es una Sucursal');
                 // Consulta para obtener las reservas de la semana actual
-                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->get();
+                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->orderBy('data')->get();
+
+                $reservationsData = $reservations->map(function ($reservation) {
+                    $client = $reservation->car->clientProfessional->client;
+                    $professional = $reservation->car->clientProfessional->professional;
+                    return [
+                        'id' => $reservation->id,
+                        'car_id' => $reservation->car_id,
+                        'client_professional_id' => $reservation->car->client_professional_id,
+                        'clientName' => $client->name . ' ' . $client->surname,
+                        'professionalName' => $professional->name . ' ' . $professional->surname,
+                        'client_image' => $client->client_image,
+                        'image_url' => $professional->image_url,
+                        'data' => $reservation->data,
+                        'start_time' => $reservation->start_time,
+                        'end_time' => $reservation->final_hour,
+                        'total_time' => $reservation->total_time
+    
+                    ];
+                }); 
+
                 for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $reservations->where('data', $date->toDateString())->count();
                     //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
@@ -339,7 +359,7 @@ class ReservationController extends Controller
                 $reservations = $dates;
             } else {
                 Log::info("Business");
-                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->get();
+                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->get();
                 for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $reservations->where('data', $date->toDateString())->count();
                     //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
@@ -351,7 +371,7 @@ class ReservationController extends Controller
             }
 
             //$reservationsString = implode(',', $reservations);
-            return response($reservations, 200, ['Content-Type' => 'application/json']);
+            return response(['cantReservations' => $reservations, 'reservations' => $reservationsData], 200, ['Content-Type' => 'application/json']);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
