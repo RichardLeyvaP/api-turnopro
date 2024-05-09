@@ -210,7 +210,7 @@ class ProfessionalService
         })->where('state', 1)->whereHas('records', function ($query){
             $query->whereDate('start_time', Carbon::now());
         })->select('professionals.id', 'professionals.name', 'professionals.surname', 'professionals.second_surname', 'professionals.email', 'professionals.phone', 'professionals.charge_id', 'professionals.state', 'professionals.image_url', 
-        DB::raw('(SELECT start_time FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->get();
+        DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->get();
         /*$professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
