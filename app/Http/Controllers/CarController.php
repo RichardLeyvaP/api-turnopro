@@ -1455,7 +1455,7 @@ class CarController extends Controller
                       'type_service' => $service->type_service,
                       'profit_percentaje' => $service->profit_percentaje,
                       'duration_service' => $service->duration_service,
-                      'image_service' => $service->image_service,
+                      'image_service' => $service->image_service ? $service->image_service : 'services/default.jpg',
                       'description' => $service->service_comment
                       ];
                   });

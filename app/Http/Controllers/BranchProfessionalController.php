@@ -358,7 +358,7 @@ class BranchProfessionalController extends Controller
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::now()->format('H:i'),
+                    'start_time' => Carbon::parse($query->start_time)->format('H:i'),
                     'charge' => $query->charge->name
                 ];
             });
@@ -386,7 +386,7 @@ class BranchProfessionalController extends Controller
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                     'professional_id' => $query->id,
                     'professional_state' => $query->state,
-                    'start_time' => Carbon::now()->format('H:i'),
+                    'start_time' => Carbon::parse($query->start_time)->format('H:i'),
                     'charge' => $query->charge->name
                 ];
             });
