@@ -81,7 +81,7 @@ class ProfessionalPaymentController extends Controller
                                                 'id' => $query->id,
                                                 'branch_id ' =>$query->branch_id,
                                                 'professional_id' => $query->professional_id,
-                                                'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
+                                                'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                                                 'type' => $query->type,
                                                 'amount' => $query->amount
                                             ];
@@ -119,7 +119,7 @@ class ProfessionalPaymentController extends Controller
                                                 'id' => $query->id,
                                                 'branch_id ' =>$query->branch_id,
                                                 'professional_id' => $query->professional_id,
-                                                'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
+                                                'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                                                 'type' => $query->type,
                                                 'amount' => $query->amount
                                             ];

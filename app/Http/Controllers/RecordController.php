@@ -152,9 +152,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -240,9 +240,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -320,9 +320,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -411,9 +411,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })->map(function ($group) {
                     return [
                         /*'professional_id' => $group->first()->professional_id,
@@ -487,9 +487,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                     })->map(function ($group) use ($cant) {
                         return [
                             /*'professional_id' => $group->first()->professional_id,
@@ -563,9 +563,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                     })->map(function ($group) use ($cant) {
                         return [
                             /*'professional_id' => $group->first()->professional_id,
@@ -635,9 +635,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -684,9 +684,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') <= $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') <= $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -772,9 +772,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') <= $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') <= $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -840,9 +840,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') > $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {
@@ -902,9 +902,9 @@ class RecordController extends Controller
                         return false;
                     }
                     Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i:s'));
+                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i:s') <= $schedule->start_time;
+                    return Carbon::parse($registro->start_time)->format('H:i') <= $schedule->start_time;
                 })
                 ->groupBy('professional_id')
                 ->map(function ($group) {

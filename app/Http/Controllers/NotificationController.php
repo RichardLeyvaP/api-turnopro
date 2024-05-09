@@ -201,8 +201,8 @@ class NotificationController extends Controller
                         'description' => $query->description,
                         'state' => $query->state,
                         'type' => $query->type,
-                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                        'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d H:i A'),
+                        'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d H:i A')
                     ];
                 })
                 ->sortByDesc(function ($notification) {
@@ -229,8 +229,8 @@ class NotificationController extends Controller
                         'description' => $query->description,
                         'state' => $query->state,
                         'type' => $query->type,
-                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                        'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d H:i A'),
+                        'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d H:i A')
                     ];
                 })
                 ->sortByDesc(function ($notification) {
@@ -273,8 +273,8 @@ class NotificationController extends Controller
                         'description' => $query->description,
                         'state' => $query->state,
                         'type' => $query->type,
-                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                        'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+                        'created_at' => Carbon::parse($query->created_at)->format('Y-m-d H:i A'),
+                        'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d H:i A')
                     ];
                 })
                 ->sortByDesc(function ($notification) {

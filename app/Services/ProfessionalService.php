@@ -47,7 +47,7 @@ class ProfessionalService
             $dataUser['id'] = $professionals->id;
             $dataUser['usuario'] = $professionals->name;
             $dataUser['fecha'] = $date->toDateString();
-            $dataUser['hora'] = $date->Format('g:i:s A');
+            $dataUser['hora'] = $date->Format('g:i A');
         }
 
         return $dataUser;

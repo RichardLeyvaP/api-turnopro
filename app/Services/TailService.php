@@ -44,8 +44,8 @@ class TailService {
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
                 'from_home' => $reservation->from_home,
-                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
@@ -78,8 +78,8 @@ class TailService {
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
-                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $client->id,
@@ -87,7 +87,7 @@ class TailService {
                 'professional_name' => $professional->name." ".$professional->surname,
                 'client_name' => $client->name." ".$client->surname, 
                 'attended' => $tail->attended,
-                'time' => Carbon::parse($tail->updated_at)->format('H:i:s')
+                'time' => Carbon::parse($tail->updated_at)->format('H:i')
             ];
         })->sortBy('time')->values();
 
@@ -123,8 +123,8 @@ class TailService {
                     'reservation_id' => $reservation->id,
                     'car_id' => $reservation->car_id,
                     'from_home' => $reservation->from_home,
-                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                     'total_time' => $reservation->total_time,
                     'client_name' => $client->name . " " . $client->surname,
                     'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
@@ -162,8 +162,8 @@ class TailService {
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
-                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
                 'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
@@ -171,7 +171,7 @@ class TailService {
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'attended' => $tail->attended, 
-                'updated_at' => $tail->updated_at->format('Y-m-d H:i:s'),
+                'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
                 'clock' => $tail->clock, 
                 'timeClock' => $tail->timeClock, 
                 'detached' => $tail->detached, 
@@ -208,8 +208,8 @@ class TailService {
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
-                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
                 'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
@@ -217,7 +217,7 @@ class TailService {
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'attended' => $tail->attended, 
-                'updated_at' => $tail->updated_at->format('Y-m-d H:i:s'),
+                'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
                 'clock' => $tail->clock, 
                 'timeClock' => $tail->timeClock, 
                 'detached' => $tail->detached, 
@@ -303,8 +303,8 @@ class TailService {
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
-                'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
                 'professional_name' => $professional->name." ".$professional->surname,
@@ -338,8 +338,8 @@ class TailService {
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => $reservation->car_id,
-                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                     'total_time' => $reservation->total_time,
                     'client_name' => $client->name." ".$client->surname,
                     'professional_name' => $professional->name." ".$professional->surname,
@@ -365,7 +365,7 @@ class TailService {
         $reservation = Reservation::find($data['reservation_id']);
         Log::info($reservation);
         $horaActual = Carbon::now();
-        /*$horaActual = Carbon::now()->format('H:i:s');
+        /*$horaActual = Carbon::now()->format('H:i');
         $timestamp = strtotime($reservation->total_time);
         $tiempo_entero = date('Gis', $timestamp);
         $horas = intval(substr($tiempo_entero, 0, 1));
@@ -380,8 +380,8 @@ class TailService {
             // Sumar el tiempo de la reserva a la hora actual
             $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
 
-            // Formatear la nueva hora en el formato deseado (H:i:s)
-            $nuevaHoraFormateada = $nuevaHora->format('H:i:s');
+            // Formatear la nueva hora en el formato deseado (H:i)
+            $nuevaHoraFormateada = $nuevaHora->format('H:i');
                     $reservation->start_time = $horaActual;
                     $reservation->final_hour = Carbon::parse($nuevaHoraFormateada)->toTimeString();
                     $reservation->save();
