@@ -288,10 +288,9 @@ class BranchProfessionalController extends Controller
                 $professional->end_time = Carbon::now();
             }
             $professional->state = $data['state'];
+            $professional->start_time = Carbon::now();
             $professional->save();
             if($data['state'] == 2){
-                $professional->start_time = Carbon::now();
-                $professional->save();
                 $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data){
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
