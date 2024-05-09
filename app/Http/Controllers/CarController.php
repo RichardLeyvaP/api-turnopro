@@ -853,6 +853,9 @@ class CarController extends Controller
                     $orderServ = $car->orders->where('is_product', 0);
                     $orderProd = $car->orders->where('is_product', 1);
                     $aleatorio = !$car->select_professional? 1 : 0;
+                    $meta = $orderServ->filter(function ($order) {
+                        return $order->percent_win == $order->price;
+                    });
                 return [
                     'professional_id' => $data['professional_id'],
                     'branch_id' => $data['branch_id'],
@@ -867,7 +870,9 @@ class CarController extends Controller
                     'totalProducts' => $orderProd->sum('price'),
                     'clientAleator' => $aleatorio,
                     'amountGenerate' => $orderServ->sum('percent_win'), //ganancia total del barbero ganancias servicios
-                    'retention' => $orderServ->sum('percent_win') * $retention
+                    'retention' => $orderServ->sum('percent_win') * $retention,
+                    'metacant' => $meta->count(),
+                    'metaamount' => $meta->sum('price')
 
                 ];
            })->groupBy('data')->map(function ($cars) {
@@ -886,6 +891,8 @@ class CarController extends Controller
                 'clientAleator' => $cars->sum('clientAleator'),
                 'amountGenerate' => $cars->sum('amountGenerate'),
                 'totalRetention' => $cars->sum('retention'),
+                'metaCant' => $cars->sum('metacant'),
+                'metaAmount' => $cars->sum('metaamount'),
             ];
         })->sortByDesc('data')->values();
         //Log::info($cars->pluck('id'));
@@ -1069,6 +1076,10 @@ class CarController extends Controller
                 $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();
                 $client = $car->clientProfessional->client;
+
+                $meta = $orderServ->filter(function ($order) {
+                    return $order->percent_win == $order->price;
+                });
                 //$reservation = $car->reservation;
                 //Log:info('$ServicesSpecial');
                 Log::info($ServiceEspecial);
@@ -1092,7 +1103,9 @@ class CarController extends Controller
                     'pay' => $car->professional_payment_id == null ? 0 : 1,
                     'totalRetention' => $orderServ->sum('percent_win') * $retention,
                     'totalGeneral' => $car->amount,
-                    'amountGenerate' => $orderServ->sum('percent_win')
+                    'amountGenerate' => $orderServ->sum('percent_win'),
+                    'metaCant' => $meta->count(),
+                    'metaAmount' => $meta->sum('price'),
                 ];
            });
            return response()->json(['car' => $cars], 200);
