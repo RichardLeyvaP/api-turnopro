@@ -142,8 +142,8 @@ class NotificationController extends Controller
                     'professionalName' => $query->professional->name . ' ' . $query->professional->surname . ' ' . $query->professional->surname,
                     'state' => $query->state,
                     'type' => $query->type,
-                    'created_at' => $query->created_at->format('Y-m-d h:i:s A'),
-                    'updated_at' => $query->updated_at->format('Y-m-d h:i:s A')
+                    'created_at' => $query->created_at->format('Y-m-d h:i A'),
+                    'updated_at' => $query->updated_at->format('Y-m-d h:i A')
                 ];
             });
 
@@ -188,8 +188,8 @@ class NotificationController extends Controller
                             'description' => $query->description,
                             'state' => $query->state,
                             'type' => $query->type,
-                            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                            'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+                            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                            'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
                         ];
                     }
                     /*->map(function ($query) {
@@ -251,8 +251,8 @@ class NotificationController extends Controller
                             'description' => $query->description,
                             'state' => $query->state,
                             'type' => $query->type,
-                            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                            'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+                            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                            'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
                         ];
                     })
                     ->sortByDesc(function ($notification) {
@@ -314,7 +314,7 @@ class NotificationController extends Controller
                             'description' => $query->description,
                             'state' => $query->state,
                             'state2' => $query->stateAdm,
-                            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                            'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A')
                         ];
                     })
                     ->sortByDesc(function ($notification) {
@@ -340,7 +340,7 @@ class NotificationController extends Controller
                                 'description' => $query->description,
                                 'state' => $query->state,
                                 'state2' => $query->stateCajero,
-                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A')
                             ];
                         })
                         ->sortByDesc(function ($notification) {
@@ -366,7 +366,7 @@ class NotificationController extends Controller
                                 'description' => $query->description,
                                 'state' => $query->state,
                                 'state2' => $query->stateAdmSucur,
-                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A')
+                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A')
                             ];
                         })
                         ->sortByDesc(function ($notification) {

@@ -171,11 +171,13 @@ class BoxCloseController extends Controller
             //Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
             // $this->sendEmailService->emailBoxClosure('evylabrada@gmail.com', $reporte);
-            $emails = Professional::whereHas('charge', function ($query) {
+            $emails = Professional::whereHas('charge', function ($query)  use ($branch){
                 $query->where('name', 'Administrador')
                     ->orWhere('name', 'Encargado')
                     ->orWhere('name', 'Administrador de Sucursal')
                     ->orWhere('name', 'Coordinador');
+            })->whereHas('branches', function ($query) use ($branch){
+                $query->where('branches.id', $branch->id);
             })/*whereIn('charge_id', [3, 4, 5, 12])*/
                 ->pluck('email');
             //$emailassociated = Associated::all()->pluck('email');
@@ -183,10 +185,9 @@ class BoxCloseController extends Controller
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
-            //todo $emails = ['correo1@example.com', 'correo2@example.com', 'correo3@example.com', 'correo4@example.com', 'correo5@example.com'];
-            //$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
+            $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
             //SendEmailJob::dispatch()->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
-            $data = [
+            /*$data = [
                 'email_box_closure' => true, // Indica que es un correo de cierre de caja
                 'client_email' => $mergedEmails, // Correo electrónico del cliente
                 'type' => '', // Correo electrónico del cliente
@@ -207,7 +208,7 @@ class BoxCloseController extends Controller
                 'totalMount' => $data['totalMount'], // Monto total
             ];
             
-            SendEmailJob::dispatch($data);
+            SendEmailJob::dispatch($data);*/
 
                         //DE ESTA FORMA FUNCIONA PERO SIN UTILIZAR PLANTILLA evylabrada@gmail.com
                         /*
