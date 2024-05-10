@@ -19,5 +19,10 @@ class ClientSurvey extends Model
         return $this->belongsTo(Survey::class);
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     protected $table = 'client_survey';
 }

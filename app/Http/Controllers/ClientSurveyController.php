@@ -26,13 +26,22 @@ class ClientSurveyController extends Controller
     {
         try {
         $request->validate([
-            'email' => 'required|email'
+            'email' => 'required|email',
+            'branch_id' => 'required|numeric'
         ]);
         $surveys = $request->input('survey_id');
         if (!empty($surveys)) {
         $client = Client::where('email', $request->email)->first();
         if (!empty($client)) {
-        $client->surveys()->attach($surveys, ['data' => Carbon::now()]);
+            foreach ($surveys as $survey) {
+                $clientSurvey = new ClientSurvey();
+                $clientSurvey->client_id = $client->id;
+                $clientSurvey->survey_id = $survey;
+                $clientSurvey->branch_id = $request->branch_id;
+                $clientSurvey->data = Carbon::now();
+                $clientSurvey->save();
+            }        
+        //$client->surveys()->attach($surveys, ['data' => Carbon::now(), $request->branch_id]);
         }
         }
         /*$clientSurvey = new ClientSurvey();
@@ -62,14 +71,25 @@ class ClientSurveyController extends Controller
         // Implementar la lógica para eliminar un registro existente
     }
 
-    public function surveyCounts()
+    public function surveyCounts(Request $request)
     {
-        $surveyCounts = Survey::select('surveys.name')
-        ->withCount('clientSurveys')
+        try { 
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+
+            $surveyCounts = Survey::select('surveys.name')
+        ->withCount(['clientSurveys' => function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+        }])
         ->orderBy('client_surveys_count', 'desc')
         ->get();
-
-    return $surveyCounts;
+            
+            return response()->json($surveyCounts, 200);
+        } catch (\Throwable $th) {  
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
+        };
     }
 
 }
