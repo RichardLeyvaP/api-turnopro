@@ -233,6 +233,11 @@ class TailService {
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         $tail->attended = $attended;
         $tail->save();
+        if($attended == 2){
+           $reservation = Reservation::find($reservation_id);
+           $reservation->confirmation = 2;
+           $reservation->save(); 
+        }
         if ($attended == 5) {
             $car = Car::whereHas('reservation', function ($query) use ($reservation_id){
                 $query->where('id', $reservation_id);

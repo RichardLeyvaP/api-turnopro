@@ -178,27 +178,52 @@ class ProfessionalController extends Controller
             // Verificar si hay reservas para este profesional y día
             if ($professional && $professional->reservations->isNotEmpty()) {
                 // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
-                $reservations = $professional->reservations->map(function ($reservation){
-                    $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
-                    $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-
-                    $intervalos = [$startFormatted];
-                    $startTime = Carbon::parse($startFormatted);
-                    $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
-
-                    $finalTime = Carbon::parse($finalFormatted);
-                    $horaActual = Carbon::now();
-                    if ($finalTime->lessThan($horaActual)) {
-                        // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
-                        $finalTime = $horaActual;
-                    }
-                    // Agregar las horas intermedias de 15 en 15 minutos
-                    while ($startTime->addMinutes(15) <= $finalTime) {
-                        $intervalos[] = $startTime->format('H:i');
-                    }
-
-                    return $intervalos;
-                })->flatten()->values()->all();
+                if (Carbon::parse($data['data'])->isToday()){
+                    $reservations = $professional->reservations->where('confirmation', 1)->map(function ($reservation){
+                        $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                        $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+    
+                        $intervalos = [$startFormatted];
+                        $startTime = Carbon::parse($startFormatted);
+                        $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
+    
+                        $finalTime = Carbon::parse($finalFormatted);
+                        $horaActual = Carbon::now();
+                        if ($finalTime->lessThan($horaActual)) {
+                            // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
+                            $finalTime = $horaActual;
+                        }
+                        // Agregar las horas intermedias de 15 en 15 minutos
+                        while ($startTime->addMinutes(15) <= $finalTime) {
+                            $intervalos[] = $startTime->format('H:i');
+                        }
+    
+                        return $intervalos;
+                    })->flatten()->values()->all();
+                }else{
+                    $reservations = $professional->reservations->map(function ($reservation){
+                        $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                        $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+    
+                        $intervalos = [$startFormatted];
+                        $startTime = Carbon::parse($startFormatted);
+                        $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
+    
+                        $finalTime = Carbon::parse($finalFormatted);
+                        $horaActual = Carbon::now();
+                        if ($finalTime->lessThan($horaActual)) {
+                            // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
+                            $finalTime = $horaActual;
+                        }
+                        // Agregar las horas intermedias de 15 en 15 minutos
+                        while ($startTime->addMinutes(15) <= $finalTime) {
+                            $intervalos[] = $startTime->format('H:i');
+                        }
+    
+                        return $intervalos;
+                    })->flatten()->values()->all();
+                }
+                
                 if (Carbon::parse($data['data'])->isToday()) {
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);

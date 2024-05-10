@@ -554,6 +554,7 @@ Route::put('/productsale', [ProductSaleController::class, 'update']);
 Route::post('/productsale-destroy', [ProductSaleController::class, 'destroy']);
 
 Route::get('/professional-payment-show', [ProfessionalPaymentController::class, 'show']);
+Route::get('/professional-payment-show-apk', [ProfessionalPaymentController::class, 'show_apk']);
 Route::get('/professional-payment-periodo', [ProfessionalPaymentController::class, 'show_periodo']);
 Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);

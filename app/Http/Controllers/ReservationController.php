@@ -157,7 +157,7 @@ class ReservationController extends Controller
                 if ($client) {
                     Log::info("Buscar el cliente");
                     $id_client = $client->id;
-                    $this->reservationService->store($data, $servs, $id_client);
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
                 } else {
                     Log::info("Si no existe registrarlo");
 
@@ -174,7 +174,7 @@ class ReservationController extends Controller
 
                     Log::info("Id que tiene");
                     Log::info($id_client);
-                    $this->reservationService->store($data, $servs, $id_client);
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
                 }
             } else {
                 Log::info("Crear Usuario");
@@ -199,7 +199,7 @@ class ReservationController extends Controller
 
                 Log::info("Id que obtuvo");
                 Log::info($id_client);
-                $this->reservationService->store($data, $servs, $id_client);
+                $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
 
             DB::commit();
@@ -226,6 +226,14 @@ class ReservationController extends Controller
             //todo *************** llamando al servicio de envio de email *******************
             //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
             //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+            if($reservation != null){
+                $id = $reservation->id;
+            }
+            else{
+                $id = 0; 
+            }
+            Log::info('Id de la reservacion');
+            Log::info($id);
             $data = [
                 'confirm_reservation' => true, // Indica que es una confirmación de reserva
                 'data_reservation' => $data['data'], // Datos de la reserva
@@ -234,7 +242,7 @@ class ReservationController extends Controller
                 'branch_id' => $data['branch_id'], // ID de la sucursal
                 'type' => null, // Tipo (en este caso, se deja como null)
                 'name_professional' => $name, // Nombre del profesional
-                'recipient' => null, // Destinatario (en este caso, se deja como null)
+                'recipient' => null // Destinatario (en este caso, se deja como null),                
             ];
             
             SendEmailJob::dispatch($data);
@@ -445,18 +453,18 @@ class ReservationController extends Controller
     {
         try {
             $data = $request->validate([
-                'confirmation' => 'required|numeric',
+                //'confirmation' => 'required|numeric',
                 'id' => 'required'
 
             ]);
             $reservacion = Reservation::find($data['id']);
-            $reservacion->confirmation = $data['confirmation'];
+            $reservacion->confirmation = 1;
             $reservacion->save();
 
             return response()->json(['msg' => 'Reservacion confirmada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
+            return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
         }
     }
 

@@ -228,7 +228,7 @@ class ProfessionalService
         }
 
         foreach ($professionals1 as $professional) {
-            $reservations = $professional->reservations()->where('branch_id', $branch_id)
+            $reservations = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 1)
             /*->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
             })*/
@@ -287,7 +287,8 @@ class ProfessionalService
 
 
     ///nuevo metodo
-    function encontrarHoraDisponible($timeService, $arrayIntervalos, $startTime) {
+    function encontrarHoraDisponible($timeService, $arrayIntervalos, $startTime) 
+    {
         // Convertir la hora actual a un objeto Carbon para facilitar la comparación
         //$horaActualCarbon = Carbon::createFromFormat('H:i', $horaActual);
         $horaActual = Carbon::now();

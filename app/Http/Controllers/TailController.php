@@ -212,7 +212,7 @@ class TailController extends Controller
                         'professional_state' => $professional->state,
                         'attended' => $tail->attended,
                         'puesto' => $workplace ? $workplace->name : null,
-                        'code' => $reservation->code
+                        'code' => 'RESERVA'
                     ];
                 })->sortBy('start_time')->values();
 
