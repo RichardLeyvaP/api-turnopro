@@ -151,17 +151,26 @@ class ProfessionalPaymentController extends Controller
                 $metaPagado = $orderServPay->filter(function ($order) {
                     return $order->percent_win == $order->price;
                 });
-                $detailPay = [
-                    'clientAtended' => $carPagado->count() ? $carPagado->count() : 0,
-                    'servCant' => $orderServPay->count() ? $orderServPay->count() : 0,
-                    'amountGenerate' => $carPagado->sum('amount') ? $carPagado->sum('amount') : 0,
-                    'propina80' => $carPagado->sum('tip')*0.80 ? $carPagado->sum('tip')*0.80 : 0,
-                    'metaCant' => $metaPagado->count() ? $metaPagado->count() : 0,
-                    'metaAmount' => $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0,
-                    'retention' => $orderServPay->sum('percent_win')*$retention ? $orderServPay->sum('percent_win')*$retention : 0,
-                    'winnerRetention' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) : 0,
-                    'winnerAmount' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) : 0
-                ];
+                $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
+                $servCant = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
+                $amountGenerate = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
+                $propina80 = $carPagado->sum('tip')*0.80 ? $carPagado->sum('tip')*0.80 : 0;
+                $metaCant = $metaPagado->count() ? $metaPagado->count() : 0;
+                $metaAmount = $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0;
+                $retention = $orderServPay->sum('percent_win')*$retention ? $orderServPay->sum('percent_win')*$retention : 0;
+                $winnerRetention = $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) : 0;
+                $winnerAmount = $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) : 0;
+                /*$detailPay = [
+                    //'clientAtended' => $carPagado->count() ? $carPagado->count() : 0,
+                    //'servCant' => $orderServPay->count() ? $orderServPay->count() : 0,
+                    //'amountGenerate' => $carPagado->sum('amount') ? $carPagado->sum('amount') : 0,
+                    //'propina80' => $carPagado->sum('tip')*0.80 ? $carPagado->sum('tip')*0.80 : 0,
+                    //'metaCant' => $metaPagado->count() ? $metaPagado->count() : 0,
+                    //'metaAmount' => $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0,
+                    //'retention' => $orderServPay->sum('percent_win')*$retention ? $orderServPay->sum('percent_win')*$retention : 0,
+                    //'winnerRetention' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) : 0,
+                    //'winnerAmount' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) : 0
+                ];*/
                 //Pendiente
                 $carPendiente = $cars->where('professional_payment_id', null);
                 $carIdsPend = $carPendiente->pluck('id');
@@ -194,7 +203,7 @@ class ProfessionalPaymentController extends Controller
                 });*/
 
 
-            return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'detailPay' => $detailPay], 200);
+            return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => $amountGenerate, 'propina80' => $propina80, 'metaCant' => $metaCant, 'metaAmount' => $metaAmount, 'retention' => $retention, 'winnerRetention' => $winnerRetention, 'winnerAmount' => $winnerAmount], 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
