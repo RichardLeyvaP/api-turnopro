@@ -29,7 +29,7 @@
 </p>
 
 <p style="color: #555;">
-    &#x1F917; Por favor, has click en el botón de abajo para confirmar tu reserva.
+    &#x1F917; Por favor, has click en el botón de abajo para confirmar tu reserva con id={{$id_reservation}}.
 </p>
 
 <!-- Botón de Confirmación -->
