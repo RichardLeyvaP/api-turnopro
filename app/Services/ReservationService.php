@@ -115,8 +115,8 @@ class ReservationService
         $reservation->data = $data['data'];
         $reservation->from_home = $data['from_home'];
         $reservation->branch_id = $data['branch_id'];
-        $reservation->car_id = $data['from_home'] == 0 ? 1 : 0;
-        $reservation->confirmation = $car->id;
+        $reservation->car_id = $car->id;
+        $reservation->confirmation = $data['from_home'] == 0 ? 1 : 0;
         $reservation->code = $code;
         $reservation->save();
         Log::info('Crea la reservación');
