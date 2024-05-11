@@ -145,21 +145,23 @@ class ProfessionalPaymentController extends Controller
                 $propinaPay = $carPagado->sum('tip');
                 $propinaPay80 = $propinaPay * 0.80;
                 $orderServPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
+                $orderProdPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 1)->get();
                 $servMountPay = $orderServPay->sum('percent_win');
-                $retention = $retention ? $servMountPay * $retention : 0;
-                $pagadoMount = $servMountPay - $retention + $propinaPay80;
+                $retentionpay = $retention ? $servMountPay * $retention : 0;
+                $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
                 $metaPagado = $orderServPay->filter(function ($order) {
                     return $order->percent_win == $order->price;
                 });
                 $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
-                $servCant = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
+                $servCant = $orderServPay->sum('price') ? $orderServPay->sum('price') : 0;
+                $productCant = $orderProdPay->sum('price') ? $orderProdPay->sum('price') : 0;
                 $amountGenerate = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
                 $propina80 = $carPagado->sum('tip') * 0.80 ? $carPagado->sum('tip') * 0.80 : 0;
                 $metaCant = $metaPagado->count() ? $metaPagado->count() : 0;
                 $metaAmount = $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0;
                 //$retention = $orderServPay->sum('percent_win') * $retention ? $orderServPay->sum('percent_win') * $retention : 0;
-                $winnerRetention = $servMountPay - $retention;
-                $winnerAmount = $servMountPay - $retention + $propinaPay80;
+                $winnerRetention = $servMountPay - $retentionpay;
+                $winnerAmount = $servMountPay - $retentionpay + $propinaPay80;
                 /*$detailPay = [
                     //'clientAtended' => $carPagado->count() ? $carPagado->count() : 0,
                     //'servCant' => $orderServPay->count() ? $orderServPay->count() : 0,
@@ -185,8 +187,9 @@ class ProfessionalPaymentController extends Controller
                 $carIdsPend = $carPendiente->pluck('id');
                 $propinaPen = $carPendiente->sum('tip');
                 $propinaPend80 = $propinaPen * 0.80;
-                $orderServPen = Order::whereIn('car_id', $carIdsPend)->where('is_product', 0)->sum('percent_win');
-                $servMountPenRet = $retention ? $orderServPen * $retention : 0;
+                $orderServ = Order::whereIn('car_id', $carIdsPend)->where('is_product', 0)->get();
+                $orderServPen = $orderServ->sum('percent_win');
+                $servMountPenRet = $orderServPen * $retention;
                 $pendienteMount = $orderServPen - $servMountPenRet + $propinaPend80 ? $orderServPen - $servMountPenRet + $propinaPend80 : 0;
                 /*->map(function ($car) use ($retention, $request) {
                     $orderServ = Order::where('car_id', $car->id)
@@ -212,7 +215,7 @@ class ProfessionalPaymentController extends Controller
                 });*/
 
 
-            return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => $amountGenerate, 'propina80' => $propina80, 'metaCant' => $metaCant, 'metaAmount' => $metaAmount, 'retention' => $retention, 'winnerRetention' => $winnerRetention, 'winnerAmount' => $winnerAmount], 200);
+            return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => $amountGenerate, 'propina80' => $propina80, 'metaCant' => $metaCant, 'metaAmount' => $metaAmount, 'retention' => $retentionpay, 'winnerRetention' => $winnerRetention, 'winnerAmount' => $winnerAmount, 'productCant' => $productCant], 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
