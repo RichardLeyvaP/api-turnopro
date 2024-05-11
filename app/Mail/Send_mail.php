@@ -24,6 +24,7 @@ class Send_mail extends Mailable
     public $start_time;
     public $branch_name;
     public $file;
+    public $id_reservation;
 
     // Propiedades adicionales correspondientes a la plantilla final
     public $branchBusinessName;
@@ -93,6 +94,7 @@ class Send_mail extends Mailable
                 'start_time' => $this->start_time,
                 'branch_name' => $this->branch_name,
                 'file' => $this->file,
+                'id_reservation' => $this->id_reservation,
 
                 // Propiedades adicionales
                 'branchBusinessName' => $this->branchBusinessName,

@@ -117,7 +117,8 @@ class SendEmailJob implements ShouldQueue
                 $this->data['branch_id'],
                 $this->data['type'],
                 $this->data['name_professional'],
-                $this->data['recipient']
+                $this->data['recipient'],
+                $this->data['id_reservation']
             );
         }
         if (isset($this->data['email_box_closure'])) {

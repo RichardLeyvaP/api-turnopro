@@ -242,7 +242,8 @@ class ReservationController extends Controller
                 'branch_id' => $data['branch_id'], // ID de la sucursal
                 'type' => null, // Tipo (en este caso, se deja como null)
                 'name_professional' => $name, // Nombre del profesional
-                'recipient' => null // Destinatario (en este caso, se deja como null),                
+                'recipient' => null, // Destinatario (en este caso, se deja como null),                
+                'id_reservation' => $id // Destinatario (en este caso, se deja como null),                
             ];
             
             SendEmailJob::dispatch($data);
