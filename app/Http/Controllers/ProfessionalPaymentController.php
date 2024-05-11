@@ -153,7 +153,7 @@ class ProfessionalPaymentController extends Controller
                     return $order->percent_win == $order->price;
                 });
                 $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
-                $servCant = $orderServPay->sum('price') ? $orderServPay->sum('price') : 0;
+                $servCant = $orderServPay->count() ? $orderServPay->count() : 0;
                 $productCant = $orderProdPay->sum('price') ? $orderProdPay->sum('price') : 0;
                 $amountGenerate = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
                 $propina80 = $carPagado->sum('tip') * 0.80 ? $carPagado->sum('tip') * 0.80 : 0;
