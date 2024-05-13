@@ -311,6 +311,7 @@ Route::get('/professional_reservationDate', [ReservationController::class, 'prof
 Route::post('/reservation_store', [ReservationController::class, 'reservation_store']);//Hacer una reservation en una fecha dada
 Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch
 Route::get('/update-confirmation', [ReservationController::class, 'update_confirmation']);//Dado una branch y actualizar la confirmation
+Route::get('/reservation-notconfirm', [ReservationController::class, 'reserve_noconfirm']);//Reservas no confirmadas, eliminarlas, tarea programada
 Route::get('/branch-reservations', [ReservationController::class, 'branch_reservations']);//Dado una branch devolver las reservations del dia
 Route::get('/reservations-count', [ReservationController::class, 'reservations_count']);//Dado un business devolver las reservations del dia reservations_count_week
 Route::get('/reservations-count-week', [ReservationController::class, 'reservations_count_week']);//Dado un business devolver las reservations por dias de la semana actual

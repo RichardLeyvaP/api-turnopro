@@ -72,7 +72,7 @@ class ProfessionalWorkPlaceController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-            return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
+            return response()->json(['professionals' => $professional->workplaces],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
             Log::error($th);

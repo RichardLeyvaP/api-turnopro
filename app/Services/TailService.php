@@ -66,11 +66,41 @@ class TailService {
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
         })->whereIn('attended', [3,33])->get()->map(function ($tail){
+            $professional = [];
             Log::info($tail);
                 $reservation = $tail->reservation;
                 Log::info('reservacion');
                 Log::info($reservation);
-                $professional = $reservation->car->clientProfessional->professional;
+                if($tail->attended == 33){
+                    $car = Car::whereHas('reservation', function ($query) use ($reservation){
+                        $query->where('id', $reservation->id);
+                    })->first();
+                    Log::info('$car->id');
+                    Log::info($car->id);
+                    $professionaltem = ClientProfessional::whereHas('cars', function ($query) use ($car){
+                        $query->where('id', $car->id);
+                    })->first()->professional_id;
+                    Log::info('$professional->id');
+                    Log::info($professionaltem);
+                    $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
+                        $query->where('busy', 1)->where('select', 1);
+                    })->first()->workplace_id;
+                    Log::info('$workplace->id');
+                    Log::info($workplaceId);
+                    $tecnicoId = ProfessionalWorkplace::where('data', Carbon::today())->orderByDesc('data')
+                ->whereJsonContains('places', (int)$workplaceId)
+                ->first();
+                Log::info('$tecnicoId');
+                Log::info($tecnicoId);
+                    if($tecnicoId != null){
+                        Log::info('$tecnicoId->id');
+                    Log::info($tecnicoId->professional_id);
+                    $professional = Professional::where('id', $tecnicoId->professional_id)->first();
+                    Log::info($professional);
+                    }
+                }else{
+                    $professional = $reservation->car->clientProfessional->professional;
+                }
                 $client = $reservation->car->clientProfessional->client;
                 $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
                     $query->where('client_id', $client->id);
@@ -83,9 +113,10 @@ class TailService {
                 'total_time' => $reservation->total_time,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $client->id,
-                'professional_id' => $professional->id,
-                'professional_name' => $professional->name." ".$professional->surname,
+                'professional_id' => $professional ? $professional->id : 0,
+                'professional_name' => $professional ? $professional->name." ".$professional->surname : ' ',
                 'client_name' => $client->name." ".$client->surname, 
+                'charge' => $professional ? $professional->charge->name : ' ',
                 'attended' => $tail->attended,
                 'time' => Carbon::parse($tail->updated_at)->format('H:i')
             ];
