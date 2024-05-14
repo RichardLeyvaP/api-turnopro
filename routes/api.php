@@ -561,6 +561,7 @@ Route::get('/professional-payment-periodo', [ProfessionalPaymentController::clas
 Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
 Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
 Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']);//devolver de una branch los pagos realizado a los professionals
+Route::get('/professional-win-year', [ProfessionalPaymentController::class, 'professional_win_year']);//devolver las ganancias de un professional en un año dado
 
 Route::get('/operation-tip', [OperationTipController::class, 'show']);
 Route::post('/operation-tip', [OperationTipController::class, 'store']);
