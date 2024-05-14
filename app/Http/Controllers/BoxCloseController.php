@@ -10,10 +10,13 @@ use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\BranchRuleProfessional;
 use App\Models\BranchServiceProfessional;
+use App\Models\Car;
 use App\Models\CloseBox;
 use App\Models\Finance;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\Professional;
+use App\Models\ProfessionalPayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -156,14 +159,61 @@ class BoxCloseController extends Controller
                     $orders = Order::where('branch_service_professional_id', $idService)->whereHas('car', function ($query){
                         $query->where('pay', 1)->whereDate('data', Carbon::now());
                     })->limit(4)->get();
-                    if(!$orders->isEmpty())
-                    foreach($orders as $order){
+                    if(!$orders->isEmpty()){
+                        $cant = $orders->count();
+                        $amount = $orders->first()->price * $cant;
+                        $professionalPayment = new ProfessionalPayment();
+                        $professionalPayment->branch_id = $branch->id;
+                        $professionalPayment->professional_id = $professional->id;
+                        $professionalPayment->date = Carbon::now();
+                        $professionalPayment->amount = $amount;
+                        $professionalPayment->type = 'Bono convivencias';
+                        $professionalPayment->cant = $cant;
+                        $professionalPayment->save();
+                    /*foreach($orders as $order){
                         $order->percent_win = $order->price;
                         $order->save();
-                    }
-
+                    }*/
                 }
+                }
+
+                $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch->id)->first();
+            
+            //Venta de productos y servicios
+            $cars = Car::whereHas('reservation', function ($query) use ($branch) {
+                $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now());
+            })
+            ->with(['clientProfessional.client', 'reservation'])
+            ->whereHas('clientProfessional', function ($query) use ($professional) {
+                $query->where('professional_id', 67);
+            })
+            ->where('pay', 1)
+            ->get();
+            $carIdsPay = $cars->pluck('id');
+            $orderServPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->sum('price');
+            if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
+                $professionalPayment = new ProfessionalPayment();
+                $professionalPayment->branch_id = $branch->id;
+                $professionalPayment->professional_id = $professional->id;
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $profesionalbonus->mountpay;
+                $professionalPayment->type = 'Bono servicios';
+                $professionalPayment->save();
             }
+            /*return $products = Product::withCount(['orders' => function ($query) use ($carIdsPay){
+                $query->whereIn('car_id', $carIdsPay);
+            }]);
+            foreach ($products  as $product) {
+                $cantProduct = $product;
+            }*/
+
+            /*$mountProduct = $orderProdPay->sum('price');
+            if($cantProduct <= 24){
+
+            }*/
+            }
+
+
 
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);

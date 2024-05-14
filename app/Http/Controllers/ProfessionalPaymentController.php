@@ -9,6 +9,7 @@ use App\Models\ProfessionalPayment;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -376,4 +377,54 @@ class ProfessionalPaymentController extends Controller
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
+
+    public function professional_win_year(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable',
+                'professional_id' => 'required|numeric'
+            ]);
+            $year = $data['year']; // Año deseado
+$professionalId = $data['professional_id']; // ID del profesional
+
+// Obtener los datos de la base de datos
+$result = DB::table('professionals_payments')
+    ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
+    ->whereYear('date', $data['year'])
+    ->where('professional_id', $data['professional_id'])
+    ->where('branch_id', $data['branch_id'])
+    ->groupBy(DB::raw('MONTH(date)'))
+    ->orderBy('month')
+    ->get();
+
+// Inicializar el array de resultados
+$monthlyEarnings = [];
+$totalEarnings = 0;
+
+// Llenar el array con los nombres de los meses en español y sus ganancias correspondientes
+for ($month = 1; $month <= 12; $month++) {
+    $monthName = Carbon::createFromDate($year, $month)->locale('es_ES')->monthName;
+    $monthlyEarnings[$monthName] = 0;
+}
+
+// Actualizar los valores de ganancias en el array
+foreach ($result as $row) {
+    $monthName = Carbon::createFromDate($year, $row->month)->locale('es_ES')->monthName;
+    $monthlyEarnings[$monthName] = $row->earnings;
+    $totalEarnings += $row->earnings;
+}
+// Calcular el promedio por mes
+$averageEarnings = count($result) > 0 ? $totalEarnings / count($result) : 0;
+// Devolver el array de resultados
+$monthlyEarnings;
+
+            return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
+        }
+    }
+
 }
