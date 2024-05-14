@@ -96,5 +96,10 @@ class Professional extends Model
         return $this->belongsToMany(Course::class, 'course_professional')->withPivot('id')->withTimestamps();
     }
 
+    public function restdays()
+    {
+        return $this->hasMany(Restday::class);
+    }
+
     protected $table = "professionals";
 }

@@ -105,13 +105,14 @@ class ProfessionalPaymentController extends Controller
             $request->validate([
                 'professional_id' => 'required|exists:professionals,id',
                 'branch_id' => 'required|exists:branches,id',
+                'charge' => 'nullable'
             ]);
 
             $professionalId = $request->professional_id;
             $branchId = $request->branch_id;
 
-            $startOfMonth = now()->startOfMonth()->toDateString();
-            $endOfMonth = now()->endOfMonth()->toDateString();
+            //$startOfMonth = now()->startOfMonth()->toDateString();
+            //$endOfMonth = now()->endOfMonth()->toDateString();
 
             $payments = ProfessionalPayment::where('professional_id', $professionalId)
                                         //->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
@@ -139,81 +140,113 @@ class ProfessionalPaymentController extends Controller
                 })
                 ->where('pay', 1)
                 ->get();*/
-                //pagado
-                $carPagado = Car::whereIn('professional_payment_id', $paymentIds)->get();
-                $carIdsPay = $carPagado->pluck('id');
-                $propinaPay = $carPagado->sum('tip');
-                $propinaPay80 = $propinaPay * 0.80;
-                $orderServPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
-                $orderProdPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 1)->get();
-                $servMountPay = $orderServPay->sum('percent_win');
-                $retentionpay = $retention ? $servMountPay * $retention : 0;
-                $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
-                $metaPagado = $orderServPay->filter(function ($order) {
-                    return $order->percent_win == $order->price;
-                });
-                $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
-                $servCant = $orderServPay->count() ? $orderServPay->count() : 0;
-                $productCant = $orderProdPay->sum('price') ? $orderProdPay->sum('price') : 0;
-                $amountGenerate = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
-                $propina80 = $carPagado->sum('tip') * 0.80 ? $carPagado->sum('tip') * 0.80 : 0;
-                $metaCant = $metaPagado->count() ? $metaPagado->count() : 0;
-                $metaAmount = $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0;
-                //$retention = $orderServPay->sum('percent_win') * $retention ? $orderServPay->sum('percent_win') * $retention : 0;
-                $winnerRetention = $servMountPay - $retentionpay;
-                $winnerAmount = $servMountPay - $retentionpay + $propinaPay80;
-                /*$detailPay = [
-                    //'clientAtended' => $carPagado->count() ? $carPagado->count() : 0,
-                    //'servCant' => $orderServPay->count() ? $orderServPay->count() : 0,
-                    //'amountGenerate' => $carPagado->sum('amount') ? $carPagado->sum('amount') : 0,
-                    //'propina80' => $carPagado->sum('tip')*0.80 ? $carPagado->sum('tip')*0.80 : 0,
-                    //'metaCant' => $metaPagado->count() ? $metaPagado->count() : 0,
-                    //'metaAmount' => $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0,
-                    //'retention' => $orderServPay->sum('percent_win')*$retention ? $orderServPay->sum('percent_win')*$retention : 0,
-                    //'winnerRetention' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) : 0,
-                    //'winnerAmount' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) : 0
-                ];*/
-                //Pendiente
-                $carPendiente = Car::whereHas('reservation', function ($query) use ($request) {
-                    $query->where('branch_id', $request->branch_id);
-                })
-                ->with(['clientProfessional.client', 'reservation'])
-                ->whereHas('clientProfessional', function ($query) use ($request) {
-                    $query->where('professional_id', $request->professional_id);
-                })
-                //->where('pay', 1)
-                ->where('professional_payment_id', null)
-                ->get();
-                $carIdsPend = $carPendiente->pluck('id');
-                $propinaPen = $carPendiente->sum('tip');
-                $propinaPend80 = $propinaPen * 0.80;
-                $orderServ = Order::whereIn('car_id', $carIdsPend)->where('is_product', 0)->get();
-                $orderServPen = $orderServ->sum('percent_win');
-                $servMountPenRet = $orderServPen * $retention;
-                $pendienteMount = $orderServPen - $servMountPenRet + $propinaPend80 ? $orderServPen - $servMountPenRet + $propinaPend80 : 0;
-                /*->map(function ($car) use ($retention, $request) {
-                    $orderServ = Order::where('car_id', $car->id)
-                        ->where('is_product', 0)
-                        ->get();
+                if($request->charge == 'Tecnico'){
+                   $pendienteMount = 0;
+                    $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : 0;
+                    $clientAttended = Car::where('tecnico_id', $professionalId)->sum('select_professional');
+                    $servCant = 0;
+                    $amountGenerate = 0;
+                    $propina80 = 0;
+                    $metaCant = 0;
+                    $metaAmount = 0;
+                    $retentionpay = 0;
+                    $winnerRetention = 0;
+                    $winnerAmount = 0;
+                    $productCant = 0; 
+                }
+                else if ($request->charge == 'Barbero' || $request->charge == 'Barbero y Encargado') 
+                {
+                    //pagado
+                    $carPagado = Car::whereIn('professional_payment_id', $paymentIds)->get();
+                    $carIdsPay = $carPagado->pluck('id');
+                    $propinaPay = $carPagado->sum('tip');
+                    $propinaPay80 = $propinaPay * 0.80;
+                    $orderServPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
+                    $orderProdPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 1)->get();
+                    $servMountPay = $orderServPay->sum('percent_win');
+                    $retentionpay = $retention ? $servMountPay * $retention : 0;
+                    $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
+                    $metaPagado = $orderServPay->filter(function ($order) {
+                        return $order->percent_win == $order->price;
+                    });
+                    $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
+                    $servCant = $orderServPay->count() ? $orderServPay->count() : 0;
+                    $productCant = $orderProdPay->sum('price') ? $orderProdPay->sum('price') : 0;
+                    $amountGenerate = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
+                    $propina80 = $carPagado->sum('tip') * 0.80 ? $carPagado->sum('tip') * 0.80 : 0;
+                    $metaCant = $metaPagado->count() ? $metaPagado->count() : 0;
+                    $metaAmount = $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0;
+                    //$retention = $orderServPay->sum('percent_win') * $retention ? $orderServPay->sum('percent_win') * $retention : 0;
+                    $winnerRetention = $servMountPay - $retentionpay;
+                    $winnerAmount = $servMountPay - $retentionpay + $propinaPay80;
+                    /*$detailPay = [
+                        //'clientAtended' => $carPagado->count() ? $carPagado->count() : 0,
+                        //'servCant' => $orderServPay->count() ? $orderServPay->count() : 0,
+                        //'amountGenerate' => $carPagado->sum('amount') ? $carPagado->sum('amount') : 0,
+                        //'propina80' => $carPagado->sum('tip')*0.80 ? $carPagado->sum('tip')*0.80 : 0,
+                        //'metaCant' => $metaPagado->count() ? $metaPagado->count() : 0,
+                        //'metaAmount' => $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0,
+                        //'retention' => $orderServPay->sum('percent_win')*$retention ? $orderServPay->sum('percent_win')*$retention : 0,
+                        //'winnerRetention' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) : 0,
+                        //'winnerAmount' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) : 0
+                    ];*/
+                    //Pendiente
+                    $carPendiente = Car::whereHas('reservation', function ($query) use ($request) {
+                        $query->where('branch_id', $request->branch_id);
+                    })
+                    ->with(['clientProfessional.client', 'reservation'])
+                    ->whereHas('clientProfessional', function ($query) use ($request) {
+                        $query->where('professional_id', $request->professional_id);
+                    })
+                    //->where('pay', 1)
+                    ->where('professional_payment_id', null)
+                    ->get();
+                    $carIdsPend = $carPendiente->pluck('id');
+                    $propinaPen = $carPendiente->sum('tip');
+                    $propinaPend80 = $propinaPen * 0.80;
+                    $orderServ = Order::whereIn('car_id', $carIdsPend)->where('is_product', 0)->get();
+                    $orderServPen = $orderServ->sum('percent_win');
+                    $servMountPenRet = $orderServPen * $retention;
+                    $pendienteMount = $orderServPen - $servMountPenRet + $propinaPend80 ? $orderServPen - $servMountPenRet + $propinaPend80 : 0;
+                    /*->map(function ($car) use ($retention, $request) {
+                        $orderServ = Order::where('car_id', $car->id)
+                            ->where('is_product', 0)
+                            ->get();
 
-                    $client = $car->clientProfessional->client;
+                        $client = $car->clientProfessional->client;
 
-                    return [
-                        'id' => $car->id,
-                        'professional_id' => $data['professional_id'],
-                        'clientName' => $client->name . ' ' . $client->surname,
-                        'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
-                        'branch_id' => $data['branch_id'],
-                        'data' => $car->reservation->data,
-                        'attendedClient' => 1,
-                        'services' => $orderServ->count(),
-                        'totalServices' => $retention ? $orderServ->sum('percent_win') - ($orderServ->sum('percent_win') * $retention) : $orderServ->sum('percent_win'),
-                        'clientAleator' => $car->select_professional,
-                        'amountGenerate' => $car->amount,
-                        'tip' => $car->tip * 0.80
-                    ];
-                });*/
+                        return [
+                            'id' => $car->id,
+                            'professional_id' => $data['professional_id'],
+                            'clientName' => $client->name . ' ' . $client->surname,
+                            'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
+                            'branch_id' => $data['branch_id'],
+                            'data' => $car->reservation->data,
+                            'attendedClient' => 1,
+                            'services' => $orderServ->count(),
+                            'totalServices' => $retention ? $orderServ->sum('percent_win') - ($orderServ->sum('percent_win') * $retention) : $orderServ->sum('percent_win'),
+                            'clientAleator' => $car->select_professional,
+                            'amountGenerate' => $car->amount,
+                            'tip' => $car->tip * 0.80
+                        ];
+                    });*/
 
+                }
+                else{
+                    $pendienteMount = 0;
+                    $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : 0;
+                    $clientAttended = 0;
+                    $servCant = 0;
+                    $amountGenerate = 0;
+                    $propina80 = 0;
+                    $metaCant = 0;
+                    $metaAmount = 0;
+                    $retentionpay = 0;
+                    $winnerRetention = 0;
+                    $winnerAmount = 0;
+                    $productCant = 0;
+                }
+                
 
             return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => $amountGenerate, 'propina80' => $propina80, 'metaCant' => $metaCant, 'metaAmount' => $metaAmount, 'retention' => $retentionpay, 'winnerRetention' => $winnerRetention, 'winnerAmount' => $winnerAmount, 'productCant' => $productCant], 200);
         } catch (ValidationException $e) {

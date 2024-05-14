@@ -526,6 +526,31 @@ class ReservationController extends Controller
         }
     }
 
+    public function reserve_noconfirm(Request $request)
+    {
+        try {
+            /*$data = $request->validate([
+                'id' => 'required|numeric'
+            ]);*/
+            $fechaCarbon = Carbon::now();
+            $reservacionIds = Reservation::whereDate('data', $fechaCarbon)->where('confirmation', 0)->pluck('id');
+            foreach ($reservacionIds as $reservacionId) {
+                $reservation = Reservation::find($reservacionId);
+            $reservation->cause = 'No confimada';
+            $reservation->save();
+            $tail = Tail::where('reservation_id', $reservation->id);
+            if ($tail) {
+                $tail->delete();
+            }
+            $reservation->delete();
+            }
+
+            return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la reservacion'], 500);
+        }
+    }
+
     public function client_history(Request $request)
     {
         try {

@@ -106,7 +106,8 @@ class ReservationService
             }
         }
         else{
-            $code = 'RP'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 2);
+            //$code = 'RP'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 2);
+            $code = 'RESERVA';
         }
         $reservation = new Reservation();
         $reservation->start_time = Carbon::parse($data['start_time'])->toTimeString();
