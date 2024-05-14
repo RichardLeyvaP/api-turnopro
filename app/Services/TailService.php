@@ -79,25 +79,44 @@ class TailService {
                     Log::info($car->id);
                     $professionaltem = ClientProfessional::whereHas('cars', function ($query) use ($car){
                         $query->where('id', $car->id);
-                    })->first()->professional_id;
+                    })->first();
                     Log::info('$professional->id');
                     Log::info($professionaltem);
-                    $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
+                    $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem->professional_id)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
                         $query->where('busy', 1)->where('select', 1);
-                    })->first()->workplace_id;
+                    })->first();
+                    if($workplaceId){
                     Log::info('$workplace->id');
                     Log::info($workplaceId);
-                    $tecnicoId = ProfessionalWorkplace::where('data', Carbon::today())->orderByDesc('data')
-                ->whereJsonContains('places', (int)$workplaceId)
-                ->first();
-                Log::info('$tecnicoId');
+                    $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query){
+                        $query->where('name', 'Tecnico');
+                    })->orderByDesc('data')
+                //->whereJsonContains('places', (int)$workplaceId->workplace_id)
+                ->get();
+                if ($workplacetecnicos) {
+                    foreach ($workplacetecnicos as $workplacetecnico) {
+                        $places = json_decode($workplacetecnico->places, true);
+                        if (in_array($workplaceId->workplace_id, $places)){
+                            $tecnicoId = $workplacetecnico;
+                            $professional = $workplacetecnico->professional;
+                            break;
+                        }
+
+                    }
+                }
+                    }
+                /*else{
+                    $tecnicoId =  null;
+                }*/
+
+                /*Log::info('$tecnicoId');
                 Log::info($tecnicoId);
                     if($tecnicoId != null){
                         Log::info('$tecnicoId->id');
                     Log::info($tecnicoId->professional_id);
                     $professional = Professional::where('id', $tecnicoId->professional_id)->first();
                     Log::info($professional);
-                    }
+                    }*/
                 }else{
                     $professional = $reservation->car->clientProfessional->professional;
                 }
@@ -113,6 +132,8 @@ class TailService {
                 'total_time' => $reservation->total_time,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $client->id,
+                'idBarber' => $professionaltem->professional_id,
+                'nameBarber' => $professionaltem->professional->name.' '.$professionaltem->professional->surname,
                 'professional_id' => $professional ? $professional->id : 0,
                 'professional_name' => $professional ? $professional->name." ".$professional->surname : ' ',
                 'client_name' => $client->name." ".$client->surname, 
@@ -261,6 +282,7 @@ class TailService {
     }
 
     public function tail_attended($reservation_id, $attended){
+        $tecnicoId = 0;
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         $tail->attended = $attended;
         $tail->save();
@@ -282,20 +304,33 @@ class TailService {
             Log::info($professional);
             $workplaceId = ProfessionalWorkPlace::where('professional_id', $professional)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
                 $query->where('busy', 1)->where('select', 1);
-            })->first()->workplace_id;
+            })->first();/*->workplace_id;
             Log::info('$workplace->id');
             Log::info($workplaceId);
             $tecnicoId = ProfessionalWorkplace::where('data', Carbon::today())
         ->whereJsonContains('places', $workplaceId)
         ->value('professional_id');
             Log::info('$tecnicoId->id');
-            Log::info($tecnicoId);
-            
+            Log::info($tecnicoId);*/
+            $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query){
+                $query->where('name', 'Tecnico');
+            })->orderByDesc('data')
+        //->whereJsonContains('places', (int)$workplaceId->workplace_id)
+        ->get();
+        if ($workplacetecnicos) {
+            foreach ($workplacetecnicos as $workplacetecnico) {
+                $places = json_decode($workplacetecnico->places, true);
+                if (in_array($workplaceId->workplace_id, $places)){
+                    $tecnicoId = $workplacetecnico->professional_id;
+                    //$professional = $workplacetecnico->professional;
+                    break;
+                }
+
+            }
             $car->technical_assistance = $car->technical_assistance + 1;
             $car->tecnico_id = $tecnicoId;
             $car->save();
-            
-            Log::info($car);
+        }
         }
     }
 
@@ -367,7 +402,7 @@ class TailService {
                 $query->where('branch_id', $branch_id)->whereHas('car.clientProfessional', function ($query) use ($professionals){
                     $query->whereIn('professional_id', $professionals);
                 });
-            })->orderBy('updated_at')->whereIn('attended', [4, 5])->get()->map(function ($tail){
+            })->orderBy('updated_at')->whereIn('attended', [4, 5, 33])->get()->map(function ($tail){
                 $client = $tail->reservation->car->clientProfessional->client;
                 $professional = $tail->reservation->car->clientProfessional->professional;
                 $reservation = $tail->reservation;
