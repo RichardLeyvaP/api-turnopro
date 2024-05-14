@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 class load_tail extends Command
 {
@@ -14,6 +15,7 @@ class load_tail extends Command
      */
     protected $signature = 'app:load_tail';
     // protected $signature = 'app:load_tail {hr_ini,hr_fin}'; de esta forma se pasan parametros
+    
 
     /**
      * The console command description.
@@ -31,5 +33,9 @@ class load_tail extends Command
         //$hr_ini = $this->argument(key:'hr_ini'); //asi se leen las variables
         dd('Aqui poner la logica de crear la cola ');
         //dd($hr_ini );
+     /*   $response = app()->call('GET', route('cola_truncate'));
+        $this->info($response);*/
+        Log::info("Funcion ejecutandose cada 10 FINNN");
     }
 }
+
