@@ -79,10 +79,10 @@ class TailService {
                     Log::info($car->id);
                     $professionaltem = ClientProfessional::whereHas('cars', function ($query) use ($car){
                         $query->where('id', $car->id);
-                    })->first()->professional_id;
+                    })->first();
                     Log::info('$professional->id');
                     Log::info($professionaltem);
-                    $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
+                    $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem->professional_id)->whereDate('data', Carbon::now())->whereHas('workplace', function($query){
                         $query->where('busy', 1)->where('select', 1);
                     })->first();
                     if($workplaceId){
@@ -132,6 +132,8 @@ class TailService {
                 'total_time' => $reservation->total_time,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $client->id,
+                'idBarber' => $professionaltem->professional_id,
+                'nameBarber' => $professionaltem->professional->name.' '.$professionaltem->professional->surname,
                 'professional_id' => $professional ? $professional->id : 0,
                 'professional_name' => $professional ? $professional->name." ".$professional->surname : ' ',
                 'client_name' => $client->name." ".$client->surname, 

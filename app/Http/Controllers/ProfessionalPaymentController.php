@@ -198,7 +198,7 @@ class ProfessionalPaymentController extends Controller
                     ->whereHas('clientProfessional', function ($query) use ($request) {
                         $query->where('professional_id', $request->professional_id);
                     })
-                    //->where('pay', 1)
+                    ->where('pay', 1)
                     ->where('professional_payment_id', null)
                     ->get();
                     $carIdsPend = $carPendiente->pluck('id');

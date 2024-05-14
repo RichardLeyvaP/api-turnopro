@@ -36,7 +36,9 @@ class BranchProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'ponderation' => 'nullable'
+                'ponderation' => 'nullable',
+                'limit' => 'nullable',
+                'mountpay' => 'nullable'
             ]);
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
@@ -90,6 +92,8 @@ class BranchProfessionalController extends Controller
                     'id' => $branchprofessional['id'],
                     'professional_id' => $branchprofessional['professional_id'],
                     'ponderation' => $branchprofessional['ponderation'],
+                    'limit' => $branchprofessional['limit'],
+                    'mountpay' => $branchprofessional['mountpay'],
                     'name' => $branchprofessional['professional']['name'].' '.$branchprofessional['professional']['surname'],
                     'image_url' => $branchprofessional['professional']['image_url'],
                     'charge' => $branchprofessional['professional']['charge']['name'],
@@ -273,11 +277,13 @@ class BranchProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'ponderation' => 'nullable'
+                'ponderation' => 'nullable',
+                'limit' => 'nullable',
+                'mountpay' => 'nullable'
             ]);
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            $branch->professionals()->updateExistingPivot($professional->id, ['ponderation' => $data['ponderation']]);
+            $branch->professionals()->updateExistingPivot($professional->id, ['ponderation' => $data['ponderation'], 'limit' => $data['limit'], 'mountpay' => $data['mountpay']]);
             return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
