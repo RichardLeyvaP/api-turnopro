@@ -7,6 +7,7 @@ use App\Models\BranchProfessional;
 use App\Models\Comment;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Restday;
 use App\Models\Service;
 use App\Models\Vacation;
 use App\Models\Workplace;
@@ -178,6 +179,15 @@ class BranchProfessionalController extends Controller
             })->sortBy('ponderation')->values();
 
             foreach($professionals1 as $professional1){
+                /*$today = Carbon::now();
+                $firstDayOfWeek = $today->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+
+                $dates = [];
+                $freeDay = Restday::where('professional_id', 76)->where('state', 1)->pluck('day');
+                foreach ($freeDay as $index => $day) {
+                    $dates[] = Carbon::parse($firstDayOfWeek)->addDays($index)->toDateString();
+                }
+                return $dates;*/
                 $vacation = Vacation::where('professional_id', $professional1['id'])->whereDate('endDate', '>=', Carbon::now())->get();
                 Log::info($vacation);
                 if ($vacation == null) {

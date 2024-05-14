@@ -53,6 +53,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ProductSaleController;
 use App\Http\Controllers\RevenueController;
+use App\Http\Controllers\RestdayController;
 use App\Http\Controllers\TraceController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\OperationTipController;
@@ -587,6 +588,10 @@ Route::post('/course-professional', [CourseProfessionalController::class, 'store
 Route::post('/course-professional-destroy', [CourseProfessionalController::class, 'destroy']);
 Route::get('/course-professional', [CourseProfessionalController::class, 'show']);
 Route::get('/course-professional-show-Notin', [CourseProfessionalController::class, 'show_Notin']);//devolver los professionales que no han sido asociados al curso
+ 
+
+Route::get('/restday-show', [RestdayController::class, 'show']);
+Route::put('/restday', [RestdayController::class, 'update']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
