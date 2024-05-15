@@ -146,6 +146,16 @@ class BoxCloseController extends Controller
             Log::info($professionals);
             foreach($professionals as $professional){
                 Log::info($professional->id);
+                $cars = Car::whereHas('reservation', function ($query) use ($branch) {
+                    $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now());
+                })
+                ->with(['clientProfessional.client', 'reservation'])
+                ->whereHas('clientProfessional', function ($query) use ($professional) {
+                    $query->where('professional_id', $professional->id);
+                })
+                ->where('pay', 1)
+                ->get();
+                $carIdsPay = $cars->pluck('id');
                 $rules =  BranchRuleProfessional::where('professional_id', $professional->id)->whereHas('branchRule', function ($query) use ($branch){
                     $query->where('branch_id', $branch->id)->where('estado', 3)->whereDate('data', Carbon::now());
                 })->get();
@@ -156,12 +166,12 @@ class BoxCloseController extends Controller
                     })->where('meta', 1)->value('id');
                 }
                 if($idService){
-                    $orders = Order::where('branch_service_professional_id', $idService)->whereHas('car', function ($query){
-                        $query->where('pay', 1)->whereDate('data', Carbon::now());
-                    })->limit(4)->get();
+                    $orders = Order::where('branch_service_professional_id', $idService)->whereIn('car_id', $carIdsPay)->limit(4)->get();
                     if(!$orders->isEmpty()){
                         $cant = $orders->count();
                         $amount = $orders->first()->price * $cant;
+                        $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
+                        if($professionalPayment == null)
                         $professionalPayment = new ProfessionalPayment();
                         $professionalPayment->branch_id = $branch->id;
                         $professionalPayment->professional_id = $professional->id;
@@ -180,33 +190,66 @@ class BoxCloseController extends Controller
                 $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch->id)->first();
             
             //Venta de productos y servicios
-            $cars = Car::whereHas('reservation', function ($query) use ($branch) {
-                $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now());
-            })
-            ->with(['clientProfessional.client', 'reservation'])
-            ->whereHas('clientProfessional', function ($query) use ($professional) {
-                $query->where('professional_id', 67);
-            })
-            ->where('pay', 1)
-            ->get();
-            $carIdsPay = $cars->pluck('id');
-            $orderServPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->sum('price');
+            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0);
+            $orderServPay = $orderServs->sum('price');
+            $catServices = $orderServs->count();
             if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
+                $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
+                if($professionalPayment == null)
                 $professionalPayment = new ProfessionalPayment();
                 $professionalPayment->branch_id = $branch->id;
                 $professionalPayment->professional_id = $professional->id;
                 $professionalPayment->date = Carbon::now();
                 $professionalPayment->amount = $profesionalbonus->mountpay;
                 $professionalPayment->type = 'Bono servicios';
+                $professionalPayment->cant = $catServices;
                 $professionalPayment->save();
             }
-            /*return $products = Product::withCount(['orders' => function ($query) use ($carIdsPay){
-                $query->whereIn('car_id', $carIdsPay);
-            }]);
-            foreach ($products  as $product) {
-                $cantProduct = $product;
+            $winProduct = 0;
+            $products = Order::whereIn('car_id', $carIdsPay)
+            ->where('is_product', 1)
+            ->groupBy('product_store_id')
+            ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
+            ->get();
+            $venta = $products->sum('total_cant');
+            $percent_win = $products->sum('total_percent_win');
+            Log::info('$venta');
+            Log::info($venta);
+            Log::info('$percent_win');
+            Log::info($percent_win);
+            if($venta <= 24){
+                $winProduct = $percent_win*0.15;
+            }else if($venta > 24 && $venta <= 49){
+                $winProduct = $percent_win*0.25;
+            }else{
+                $winProduct = $percent_win*0.50;
+            }
+            Log::info('$winProduct');
+            Log::info($winProduct);
+            /*foreach ($products  as $product) {
+                if($product->total_cant <= 24){
+                    $winProduct += $product->total_percent_win*0.15;
+                }
+                else if ($product->total_cant < 24 && $product->total_cant <= 49) {
+                    $winProduct += $product->total_percent_win*0.25;
+                }
+                else{
+                    $winProduct += $product->total_percent_win*0.50;
+                }
             }*/
+            if ($winProduct > 0) {
+                $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
+                if($professionalPayment == null)
+                $professionalPayment = new ProfessionalPayment();
 
+                $professionalPayment->branch_id = $branch->id;
+                $professionalPayment->professional_id = $professional->id;
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $winProduct;
+                $professionalPayment->type = 'Bono productos';
+                $professionalPayment->cant = $venta;
+                $professionalPayment->save();
+            }
             /*$mountProduct = $orderProdPay->sum('price');
             if($cantProduct <= 24){
 
