@@ -19,12 +19,12 @@ class BranchProfessionalController extends Controller
 {
     public function index()
     {
-        try {             
-            Log::info( "Entra a buscar los Professionales por sucursales");
+        try {
+            Log::info("Entra a buscar los Professionales por sucursales");
             return response()->json(['branch' => Branch::with('professionals')->get()], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => "Error al mostrar los professionals por sucursales"], 500);
+            return response()->json(['msg' => "Error al mostrar los professionals por sucursales"], 500);
         }
     }
 
@@ -48,29 +48,28 @@ class BranchProfessionalController extends Controller
             return response()->json(['msg' => 'Professional asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage().'Error al asignar el professional a esta sucursal'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al asignar el professional a esta sucursal'], 500);
         }
     }
 
     public function show(Request $request)
     {
-        try {             
+        try {
             Log::info("Dado un professionals devuelve las branches a las que pertenece");
             $data = $request->validate([
                 'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-                return response()->json(['branches' => $professional->branches],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['branches' => $professional->branches], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => "Error al mostrar las branches"], 500);
+            return response()->json(['msg' => "Error al mostrar las branches"], 500);
         }
     }
 
     public function branch_professionals(Request $request)
     {
-        try {             
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -94,29 +93,28 @@ class BranchProfessionalController extends Controller
                     'ponderation' => $branchprofessional['ponderation'],
                     'limit' => $branchprofessional['limit'],
                     'mountpay' => $branchprofessional['mountpay'],
-                    'name' => $branchprofessional['professional']['name'].' '.$branchprofessional['professional']['surname'],
+                    'name' => $branchprofessional['professional']['name'] . ' ' . $branchprofessional['professional']['surname'],
                     'image_url' => $branchprofessional['professional']['image_url'],
                     'charge' => $branchprofessional['professional']['charge']['name'],
                 ];
             }
-                return response()->json(['professionals' => $data],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['professionals' => $data], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
-    
+
     public function branch_professionals_barber_totem(Request $request)
     {
-        try {  
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereHas('charge', function ($query){
+            })->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
             })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
@@ -131,8 +129,8 @@ class BranchProfessionalController extends Controller
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('charge_id', 1)->get();*/
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-                     
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+
             /*Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -149,17 +147,17 @@ class BranchProfessionalController extends Controller
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('charge_id', 1)->get();*/
-                //return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); */
-          
-            } catch (\Throwable $th) {  
+            //return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); */
+
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
 
     public function branch_professionals_barber(Request $request)
     {
-        try {  
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -182,35 +180,48 @@ class BranchProfessionalController extends Controller
                 ];
             })->sortBy('ponderation')->values();
 
-            foreach($professionals1 as $professional1){
-                /*$today = Carbon::now();
-                $firstDayOfWeek = $today->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
-
-                $dates = [];
-                $freeDay = Restday::where('professional_id', 76)->where('state', 1)->pluck('day');
-                foreach ($freeDay as $index => $day) {
-                    $dates[] = Carbon::parse($firstDayOfWeek)->addDays($index)->toDateString();
-                }
-                return $dates;*/
-                $vacation = Vacation::where('professional_id', $professional1['id'])->whereDate('endDate', '>=', Carbon::now())->get();
-                Log::info($vacation);
-                if ($vacation == null) {
-                    Log::info('vacio');
+            foreach ($professionals1 as $professional1) {
+                // Obtener vacaciones del profesional
+                $vacation = Vacation::where('professional_id', $professional1['id'])
+                                    ->whereDate('endDate', '>=', Carbon::now())
+                                    ->get();
+                
+                if ($vacation->isEmpty()) {
+                    // Si no hay vacaciones, inicializar el array de vacaciones como nulo
                     $professional1['vacations'] = null;
-                    //$professional1->endDate = null;
-                    $professionals[] = $professional1;
-                } 
-                else{
-                    Log::info('datos');
-                    $professional1['vacations'] = $vacation->map(function ($query){
+                } else {
+                    // Si hay vacaciones, mapearlas al formato deseado
+                    $professional1['vacations'] = $vacation->map(function ($query) {
                         return [
-                            'startDate' => $query->startDate,                            
-                            'endDate' => $query->endDate,                            
+                            'startDate' => $query->startDate,
+                            'endDate' => $query->endDate,
                         ];
                     });
-                    $professionals[] = $professional1;
                 }
+            
+                // Obtener días libres del profesional
+                $diasSemana  = Restday::where('professional_id', $professional1['id'])
+                                       ->where('state', 1)
+                                       ->pluck('day')
+                                       ->toArray();
+            
+                // Si hay días libres, convertirlos y agregarlos al array de vacaciones del profesional
+                if (!empty($diasSemana)) {
+                    $fechasDiasLibres = $this->obtenerFechasDiasSemana($diasSemana);
+                    if (!empty($fechasDiasLibres)) {
+                        foreach ($fechasDiasLibres as $fecha) {
+                            $professional1['vacations'][] = [
+                                'startDate' => $fecha,
+                                'endDate' => $fecha,
+                            ];
+                        }
+                    }
+                }
+            
+                // Agregar el profesional actual al array de profesionales
+                $professionals[] = $professional1;
             }
+            
             //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
 
@@ -223,8 +234,8 @@ class BranchProfessionalController extends Controller
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('charge_id', 1)->get();*/
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-                     
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+
             /*Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -241,33 +252,87 @@ class BranchProfessionalController extends Controller
             /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('charge_id', 1)->get();*/
-                //return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); */
-          
-            } catch (\Throwable $th) {  
+            //return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); */
+
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
+    }
+    function obtenerFechasDiasSemana($diasSemana)
+    {
+        // Definir los nombres de los días de la semana en inglés
+        $diasSemanaIngles = [
+            'Lunes' => 'Monday',
+            'Martes' => 'Tuesday',
+            'Miércoles' => 'Wednesday',
+            'Jueves' => 'Thursday',
+            'Viernes' => 'Friday',
+            'Sábado' => 'Saturday',
+            'Domingo' => 'Sunday'
+        ];
+
+        // Obtener el día actual en inglés
+        $diaActualIngles = Carbon::now()->isoFormat('dddd');
+
+        // Si el día actual en inglés está en el array de días de la semana, agregar su fecha correspondiente
+        if (in_array($diaActualIngles, array_values($diasSemanaIngles))) {
+            $fechas[] = Carbon::now()->format('Y-m-d');
+        }
+        // Obtener las fechas para cada día de la semana en el array
+        foreach ($diasSemana as $dia) {
+            // Restablecer la fecha actual para cada iteración del bucle
+            $fechaActual = Carbon::now();
+            $diaIngles = $diasSemanaIngles[$dia];
+            $fecha = $this->siguienteFechaDiaSemana($fechaActual, $diaIngles);
+            if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
+                $fecha->addWeek();
+            }
+            while ($fecha->year === $fechaActual->year) { // Verificar todo el año
+                $fechas[] = $fecha->format('Y-m-d');
+                $fecha->addWeek(); // Avanzar una semana
+            }
+            /*while ($fecha->month === $fechaActual->month) {
+                $fechas[] = $fecha->format('Y-m-d');
+                $fecha->addWeek(); // Avanzar una semana
+            }*/
+        }
+        // Ordenar las fechas
+        sort($fechas);
+
+        return $fechas;
+    }
+
+    function siguienteFechaDiaSemana($fechaActual, $diaBuscado)
+    {
+        $diaActual = ucfirst($fechaActual->isoFormat('dddd')); // Obtener el nombre del día actual en español y capitalizar la primera letra
+        if ($diaActual === $diaBuscado) {
+            return $fechaActual->copy();
+        }
+        while (ucfirst($fechaActual->isoFormat('dddd')) !== $diaBuscado) {
+            $fechaActual->addDay();
+        }
+        return $fechaActual->copy();
     }
 
     public function branch_professionals_barber_tecnico(Request $request)
     {
-        try {             
+        try {
             Log::info("Dado una branch devuelve los professionales y tecnicos que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereHas('charge', function ($query){
+            })->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')
-                      ->orWhere('name', 'Tecnico')
-                      ->orWhere('name', 'Barbero y Encargado');
+                    ->orWhere('name', 'Tecnico')
+                    ->orWhere('name', 'Barbero y Encargado');
             })->get();
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
 
@@ -286,7 +351,7 @@ class BranchProfessionalController extends Controller
             $branch->professionals()->updateExistingPivot($professional->id, ['ponderation' => $data['ponderation'], 'limit' => $data['limit'], 'mountpay' => $data['mountpay']]);
             return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
         }
     }
 
@@ -300,46 +365,46 @@ class BranchProfessionalController extends Controller
                 'state' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-            if($professional->state == 2){
+            if ($professional->state == 2) {
                 $professional->end_time = Carbon::now();
             }
             $professional->state = $data['state'];
             $professional->start_time = Carbon::now();
             $professional->save();
-            if($data['state'] == 2){
-                $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data){
+            if ($data['state'] == 2) {
+                $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
                 $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
-                if($data['type'] == 'Barbero'){
+                if ($data['type'] == 'Barbero') {
                     $workplace->busy = 0;
                     $workplace->save();
                 }
-                if($data['type'] == 'Tecnico'){
+                if ($data['type'] == 'Tecnico') {
                     $workplace->busy = 0;
                     $workplace->save();
                     $places = json_decode($ProfessionalWorkPlace->places, true);
                     Workplace::whereIn('id', $places)->update(['select' => 0]);
                 }
             }
-            
+
             return response()->json(['msg' => 'Estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al actualizar el professionals de esa branch'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
         }
     }
 
     public function branch_colacion(Request $request)
     {
 
-        try {             
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->where('state', 2)->get()->map(function ($query){
+            })->where('state', 2)->get()->map(function ($query) {
                 return [
                     'professional_name' => $query->name . " " . $query->surname,
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
@@ -349,25 +414,24 @@ class BranchProfessionalController extends Controller
                     'charge' => $query->charge->name
                 ];
             });
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
 
     public function branch_colacion3(Request $request)
     {
 
-        try {             
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->where('state', 3)->get()->map(function ($query){
+            })->where('state', 3)->get()->map(function ($query) {
                 return [
                     'professional_name' => $query->name . " " . $query->surname,
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
@@ -377,25 +441,24 @@ class BranchProfessionalController extends Controller
                     'charge' => $query->charge->name
                 ];
             });
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
 
     public function branch_colacion4(Request $request)
     {
 
-        try {             
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->where('state', 4)->get()->map(function ($query){
+            })->where('state', 4)->get()->map(function ($query) {
                 return [
                     'professional_name' => $query->name . " " . $query->surname,
                     'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
@@ -405,11 +468,10 @@ class BranchProfessionalController extends Controller
                     'charge' => $query->charge->name
                 ];
             });
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
 
@@ -425,7 +487,7 @@ class BranchProfessionalController extends Controller
             $branch->professionals()->detach($professional->id);
             return response()->json(['msg' => 'Professional eliminada correctamente de la branch'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al eliminar la professional de esta branch'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la professional de esta branch'], 500);
         }
     }
 }

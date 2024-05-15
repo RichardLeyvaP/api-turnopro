@@ -22,7 +22,9 @@ class OrderService {
     public function product_order_store($data){
             $car = Car::findOrFail($data['car_id']);
             $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
-                $sale_price = $productStore->product()->first()->sale_price;
+                $product = $productStore->product()->first();
+                $sale_price = $product->sale_price;
+                $percent_wint = $sale_price - $product->purchase_price;
                     $car->amount = $car->amount + $sale_price * $data['cant'];
                     $car->save();
                 $car_id = $car->id;
@@ -42,6 +44,7 @@ class OrderService {
                  $order->price = $sale_price*$data['cant'];               
                  $order->cant = $data['cant'];               
                  $order->request_delete = false;
+                 $order->percent_win = $percent_wint*$data['cant'];
                  $order->save();
         return $order;
     }
