@@ -299,10 +299,13 @@ class NotificationController extends Controller
             $professional = Professional::find($data['professional_id']);
             $charge = $professional->charge->name;
             if ($data['branch_id'] == 0) {
-                $notifications = Notification::where('type', 'Administrador')->orWhere('type', 'Caja')
-                    ->whereDate('created_at', Carbon::now())
-                    ->where('stateAdm', '!=', 2)
-                    ->get()
+                $notifications = Notification::where(function($query) {
+                    $query->where('type', 'Administrador')
+                          ->orWhere('type', 'Caja');
+                })
+                ->whereDate('created_at', Carbon::now())
+                ->where('stateAdm', '!=', 2)
+                ->get()
                     ->map(function ($query) {
                         $professional = $query->professional;
                         return [
