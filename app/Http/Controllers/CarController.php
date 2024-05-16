@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Professional;
+use App\Models\ProfessionalPayment;
 use App\Models\Reservation;
 use App\Models\Service;
 use App\Services\CarService;
@@ -865,9 +866,14 @@ class CarController extends Controller
                     $orderServ = $car->orders->where('is_product', 0);
                     $orderProd = $car->orders->where('is_product', 1);
                     $aleatorio = !$car->select_professional? 1 : 0;
-                    $meta = $orderServ->filter(function ($order) {
+                    $meta = ProfessionalPayment::where('professional_id', $data['professional_id'])
+                                        //->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
+                                          ->where('branch_id', $data['branch_id'])
+                                          ->where('type', 'Bono convivencias')
+                                          ->get();
+                    /*$meta = $orderServ->filter(function ($order) {
                         return $order->percent_win == $order->price;
-                    });
+                    });*/
                 return [
                     'professional_id' => $data['professional_id'],
                     'branch_id' => $data['branch_id'],
@@ -1070,12 +1076,18 @@ class CarController extends Controller
                'branch_id' => 'required|numeric',
                'data' => 'required|date'
            ]);
+           
+           $meta = ProfessionalPayment::where('professional_id', $data['professional_id'])
+           ->whereDate('date', $data['data'])
+             ->where('branch_id', $data['branch_id'])
+             ->where('type', 'Bono convivencias')
+             ->get();
            $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
            $cars = Car::whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id'])->whereDate('data', $data['data']);
            })->whereHas('clientProfessional', function ($query) use ($data){
             $query->where('professional_id', $data['professional_id']);
-           })->where('pay', 1)->get()->map(function($car) use ($retention){
+           })->where('pay', 1)->get()->map(function($car) use ($retention, $meta){
             $serviceNames = $car->orders->where('is_product', 0)->pluck('branchServiceProfessional.branchService.service.name')->values();
                 //$ServicesSpecial = $car->orders->where('is_product', 0)->where('branchServiceProfessional.type_servie', 'Especial');
                 $ServiceEspecial = Order::where('car_id', $car->id)->whereHas('branchServiceProfessional', function ($query) {
@@ -1089,9 +1101,9 @@ class CarController extends Controller
                 $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();
                 $client = $car->clientProfessional->client;
 
-                $meta = $orderServ->filter(function ($order) {
+                /*$meta = $orderServ->filter(function ($order) {
                     return $order->percent_win == $order->price;
-                });
+                });*/
                 //$reservation = $car->reservation;
                 //Log:info('$ServicesSpecial');
                 Log::info($ServiceEspecial);
