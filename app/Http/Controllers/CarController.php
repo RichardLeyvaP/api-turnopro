@@ -120,7 +120,7 @@ class CarController extends Controller
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', $fechaFormateada);
                 })->get();
 
-                /*$products = Product::has('orders', '>', 0)
+                $products = Product::has('orders', '>', 0)
                 ->with(['orders' => function ($query) use ($data){
                     $query->selectRaw('SUM(cant) as total_cant')
                         ->groupBy('product_id')
@@ -134,17 +134,14 @@ class CarController extends Controller
                     return !$product->orders->isEmpty();
                 })->values()->sortByDesc(function ($product) {
                     return $product->orders->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant')
+                    ];
                 });
-                $mostSoldProduct = $products->first();
-                
-                // Obtener el nombre y la cantidad del producto más vendido
-                $mostSoldProductName = $mostSoldProduct ? $mostSoldProduct->name: '--';
-                $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
-                /*$totalSoldProducts = $products->sum(function ($product) {
-                    return $product->orders->sum('total_cant');
-                });*/
 
-                /*$productsAnt = Product::has('orders', '>', 0)
+                $productsAnt = Product::has('orders', '>', 0)
                 ->with(['orders' => function ($query) use ($data, $fechaFormateada){
                     $query->selectRaw('SUM(cant) as total_cant')
                         ->groupBy('product_id')
@@ -158,52 +155,49 @@ class CarController extends Controller
                     return !$product->orders->isEmpty();
                 })->values()->sortByDesc(function ($product) {
                     return $product->orders->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant')
+                    ];
                 });
-                $mostSoldProductAnt = $productsAnt->first();
-        
-                // Obtener el nombre y la cantidad del producto más vendido
-                $mostSoldProductNameAnt = $mostSoldProductAnt ? $mostSoldProductAnt->name: '--';
-                $mostSoldProductQuantityAnt = $mostSoldProductAnt ? $mostSoldProductAnt->orders->sum('total_cant') : 0;*/
-                /*$totalSoldProducts = $products->sum(function ($product) {
-                    return $product->orders->sum('total_cant');
-                });*/ 
                 $resultPproduct[] = [
                     //'name' => $mostSoldProductName,
                     'cant' => $ordersAct->where('is_product', 1)->sum('price'),
-                    //'products' => $products,
+                    'products' => $products,
                     //'nameAnt' => $mostSoldProductNameAnt,
                     'cantAnt' => $ordersAnt->where('is_product', 1)->sum('price'),
-                    //'productsAnt' => $productsAnt,
+                    'productsAnt' => $productsAnt,
                 ];
                 //Servicios
-                /*$services = Service::has('orders')
+                $services = Service::has('orders')
                 ->withCount(['orders' => function ($query) use ($data) {
                     $query->whereHas('car.reservation', function ($query) use ($data) {
                         $query->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id']);
                     })->where('is_product', 0);
                 }])->orderByDesc('orders_count')->get();
-                $mostSoldService = $services->first();
+                //$mostSoldService = $services->first();
 
                 $servicesAnt = Service::has('orders')
                 ->withCount(['orders' => function ($query) use ($data, $fechaFormateada) {
                     $query->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
-                        $query->whereDate('data', $fechaFormateada);
+                        $query->whereDate('data', $fechaFormateada)->where('branch_id', $data['branch_id']);
                     })->where('is_product', 0);
                 }])
                 ->orderByDesc('orders_count')
                 ->get();
-                $mostSoldServiceAnt = $servicesAnt->first();*/
+                /*$mostSoldServiceAnt = $servicesAnt->first();*/
                 $resultService[] = [
                     //'name' => $mostSoldService->orders_count ? $mostSoldService->name : '--',
                     'cant' => $ordersAct->where('is_product', 0)->sum('price'),
-                    /*'services' => $services->filter(function ($service) {
+                    'services' => $services->filter(function ($service) {
                         return $service->orders_count > 0;
-                    }),*/
+                    }),
                     //'nameAnt' => $mostSoldServiceAnt->orders_count ? $mostSoldServiceAnt->name : '--',
                     'cantAnt' => $ordersAnt->where('is_product', 0)->sum('price'),
-                    /*'servicesAnt' => $servicesAnt->filter(function ($service) {
+                    'servicesAnt' => $servicesAnt->filter(function ($service) {
                         return $service->orders_count > 0;
-                    }),*/
+                    }),
                 ];
                 return response()->json(['product' => $resultPproduct, 'service' => $resultService], 200);
             }
@@ -215,69 +209,63 @@ class CarController extends Controller
                 $ordersAnt = Order::whereHas('car.reservation', function ($query) use ($data, $fechaFormateada){
                     $query->whereDate('data', $fechaFormateada);
                 })->get();
-                /*$products = Product::has('orders', '>', 0)
+                $products = Product::has('orders', '>', 0)
                 ->with(['orders' => function ($query) use ($data){
                     $query->selectRaw('SUM(cant) as total_cant')
                         ->groupBy('product_id')
                         ->whereDate('data', Carbon::now())
                         ->whereHas('car.reservation', function ($query) use ($data) {
                             $query->whereDate('data', Carbon::now())/*->where('branch_id', $data['branch_id'])*/;
-                       /* })
+                        })
                         ->where('is_product', 1);
                 }])
                 ->get()->filter(function ($product) {
                     return !$product->orders->isEmpty();
                 })->values()->sortByDesc(function ($product) {
                     return $product->orders->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant')
+                    ];
                 });
-                $mostSoldProduct = $products->first();
-                
-                // Obtener el nombre y la cantidad del producto más vendido
-                $mostSoldProductName = $mostSoldProduct ? $mostSoldProduct->name: '--';
-                $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;*/
-                /*$totalSoldProducts = $products->sum(function ($product) {
-                    return $product->orders->sum('total_cant');
-                });*/
 
-                /*$productsAnt = Product::has('orders', '>', 0)
+                $productsAnt = Product::has('orders', '>', 0)
                 ->with(['orders' => function ($query) use ($data, $fechaFormateada){
                     $query->selectRaw('SUM(cant) as total_cant')
                         ->groupBy('product_id')
                         ->whereDate('data', $fechaFormateada)
                         ->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
                             $query->whereDate('data', $fechaFormateada)/*->where('branch_id', $data['branch_id'])*/;
-                       /* })
+                        })
                         ->where('is_product', 1);
                 }])
                 ->get()->filter(function ($product) {
                     return !$product->orders->isEmpty();
                 })->values()->sortByDesc(function ($product) {
                     return $product->orders->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant')
+                    ];
                 });
-                $mostSoldProductAnt = $productsAnt->first();
-        
-                // Obtener el nombre y la cantidad del producto más vendido
-                $mostSoldProductNameAnt = $mostSoldProductAnt ? $mostSoldProductAnt->name: '--';
-                $mostSoldProductQuantityAnt = $mostSoldProductAnt ? $mostSoldProductAnt->orders->sum('total_cant') : 0;*/
-                /*$totalSoldProducts = $products->sum(function ($product) {
-                    return $product->orders->sum('total_cant');
-                });*/ 
                 $resultPproduct[] = [
                     //'name' => $mostSoldProductName,
                     'cant' => $ordersAct->where('is_product', 1)->sum('price'),
-                    //'products' => $products,
+                    'products' => $products,
                     //'nameAnt' => $mostSoldProductNameAnt,
                     'cantAnt' => $ordersAnt->where('is_product', 1)->sum('price'),
-                    //'productsAnt' => $productsAnt,
+                    'productsAnt' => $productsAnt,
                 ];
                 //Servicios
-                /*$services = Service::has('orders')
+                $services = Service::has('orders')
                 ->withCount(['orders' => function ($query) use ($data) {
                     $query->whereHas('car.reservation', function ($query) use ($data) {
                         $query->whereDate('data', Carbon::now())/*->where('branch_id', $data['branch_id'])*/;
-                    /*})->where('is_product', 0);
+                    })->where('is_product', 0);
                 }])->orderByDesc('orders_count')->get();
-                $mostSoldService = $services->first();
+                //$mostSoldService = $services->first();
 
                 $servicesAnt = Service::has('orders')
                 ->withCount(['orders' => function ($query) use ($data, $fechaFormateada) {
@@ -287,20 +275,18 @@ class CarController extends Controller
                 }])
                 ->orderByDesc('orders_count')
                 ->get();
-                Log::info('$servicesAnt');
-                Log::info($servicesAnt);
-                $mostSoldServiceAnt = $servicesAnt->first();*/
+                //$mostSoldServiceAnt = $servicesAnt->first();*/
                 $resultService[] = [
                     //'name' => $mostSoldService->orders_count ? $mostSoldService->name : '--',
                     'cant' => $ordersAct->where('is_product', 0)->sum('price'),
-                    /*'services' => $services->filter(function ($service) {
+                    'services' => $services->filter(function ($service) {
                         return $service->orders_count > 0;
-                    }),*/
+                    }),
                     //'nameAnt' => $mostSoldServiceAnt->orders_count ? $mostSoldServiceAnt->name : '--',
                     'cantAnt' => $ordersAnt->where('is_product', 0)->sum('price'),
-                    /*'servicesAnt' => $servicesAnt->filter(function ($service) {
+                    'servicesAnt' => $servicesAnt->filter(function ($service) {
                         return $service->orders_count > 0;
-                    }),*/
+                    }),
                 ];
                 return response()->json(['product' => $resultPproduct, 'service' => $resultService], 200);
             }
