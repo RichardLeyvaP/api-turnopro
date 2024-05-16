@@ -128,7 +128,7 @@ class CourseStudentController extends Controller
               // Obtiene los estudiantes inscritos en el curso especificado, incluyendo los datos adicionales
          
               $course = Course::with(['students' => function($query) {
-                $query->withPivot('reservation_payment', 'total_payment', 'enrollment_confirmed', 'image_url');
+                $query->withPivot('reservation_payment', 'total_payment', 'enrollment_confirmed', 'image_url', 'enabled', 'payment_status', 'amount_pay');
             }])->find($data[ 'course_id']);
         
             if (!$course) {
