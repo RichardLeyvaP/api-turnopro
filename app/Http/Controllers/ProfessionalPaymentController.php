@@ -146,7 +146,12 @@ class ProfessionalPaymentController extends Controller
                     $retentionpay = 0;
                     $winnerRetention = 0;
                     $winnerAmount = 0;
-                    $productCant = 0; 
+                    $productCant = 0;
+                    $productBono = 0;
+                    $productBonoCant = 0;
+                    $servBonoCant = 0;
+                    $servAmount = 0;
+                    $productAmount = 0; 
                 }
                 else if ($request->charge == 'Barbero' || $request->charge == 'Barbero y Encargado') 
                 {
@@ -159,7 +164,6 @@ class ProfessionalPaymentController extends Controller
                     $orderProdPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 1)->get();
                     $servMountPay = $orderServPay->sum('percent_win');
                     $retentionpay = $retention ? $servMountPay * $retention : 0;
-                    $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
                     $metaPagado = $payments->where('type', 'Bono convivencias');
                     $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
                     $servCant = $orderServPay->count() ? $orderServPay->count() : 0;
@@ -174,6 +178,7 @@ class ProfessionalPaymentController extends Controller
                     $ServBono = $payments->where('type', 'Bono servicios');
                     $servBonoCant = $ServBono ? $ServBono->sum('cant') : 0;
                     $servAmount = $ServBono ? $ServBono->sum('amount') : 0;
+                    $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
 
                     $winnerRetention = $servMountPay-$retentionpay;
                     $winnerAmount = $servMountPay - $retentionpay + $propinaPay80;
@@ -210,6 +215,11 @@ class ProfessionalPaymentController extends Controller
                     $winnerRetention = 0;
                     $winnerAmount = 0;
                     $productCant = 0;
+                    $productBono = 0;
+                    $productBonoCant = 0;
+                    $servBonoCant = 0;
+                    $servAmount = 0;
+                    $productAmount = 0;
                 }
                 
 
