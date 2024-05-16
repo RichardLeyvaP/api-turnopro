@@ -49,7 +49,8 @@ class StudentController extends Controller
 
             
             $code = Str::random(8);
-            $url = 'https://landingbh.simplifies.cl/?codigo='.$code;
+            $url = 'https://landingbh.simplifies.cl/student/?code='.$code;
+            //$url = 'https://landingbh.simplifies.cl/?codigo='.$code;
             /*$datos = [
                 'code' => $code,
                 'url' => $url
@@ -137,7 +138,7 @@ class StudentController extends Controller
 
             $coursesData = $student['courses'];
             //$productSales = $student['productsales'];
-            $studentData[] = [
+            $studentData = [
                 'id' => $student['id'],
                 'name' => $student['name'],
                 'surname' => $student['surname'],
@@ -195,9 +196,8 @@ class StudentController extends Controller
                     'name' => $product->name,
                     'image_product' => $product->image_product
                 ];
-            }
-            
-        return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
+            } 
+        return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
@@ -226,7 +226,8 @@ class StudentController extends Controller
             $student = Student::find($data['id']);
             if(!$student->code){
                 $code = Str::random(8);
-                $url = 'https://landingbh.simplifies.cl/?codigo='.$code;
+                $url = 'https://landingbh.simplifies.cl/student/?code='.$code;
+                //$url = 'https://landingbh.simplifies.cl/?codigo='.$code;
             /*$datos = [
                 'code' => $code,
                 'url' => $url

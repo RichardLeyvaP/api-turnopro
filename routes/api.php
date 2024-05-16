@@ -147,6 +147,7 @@ Route::post('/business', [BusinessController::class, 'store']);
 Route::put('/business', [BusinessController::class, 'update']);
 Route::post('/business-destroy', [BusinessController::class, 'destroy']);
 Route::get('/business-winner', [BusinessController::class, 'business_winner']);//Ganancias por negocioscompany_close_car
+Route::get('/business-branch-academy', [BusinessController::class, 'business_branch_academy']);//Ganancias por negocioscompany_close_car
 
 Route::get('/business-type', [BusinessTypesController::class, 'index']);
 Route::get('/business-type-show', [BusinessTypesController::class, 'show']);

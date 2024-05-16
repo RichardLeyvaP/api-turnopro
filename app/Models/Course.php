@@ -15,7 +15,7 @@ class Course extends Model
     }
 
     public function students(){
-        return $this->belongsToMany(Student::class)->withPivot('id','course_id','student_id ', 'reservation_payment','total_payment', 'image_url')->withTimestamps();
+        return $this->belongsToMany(Student::class)->withPivot('id','course_id','student_id ', 'reservation_payment','total_payment', 'image_url', 'enabled', 'payment_status', 'amount_pay')->withTimestamps();
     }
 
     public function professionals(){

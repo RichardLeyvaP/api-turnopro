@@ -31,7 +31,9 @@ class EnrollmentController extends Controller
                 'name' => 'required',
                 'description' => 'required',
                 'business_id' => 'required|numeric',
-                'location' => 'nullable'
+                'location' => 'nullable',
+                'address' => 'nullable',
+                'phone' => 'nullable'
             ]);
             
             $enrolment = new Enrollment();
@@ -39,6 +41,8 @@ class EnrollmentController extends Controller
             $enrolment->description = $data['description'];
             $enrolment->business_id = $data['business_id'];
             $enrolment->location = $data['location'];
+            $enrolment->address = $data['address'];
+            $enrolment->phone = $data['phone'];
             $enrolment->save();
             $filename = "enrollments/default.jpg";
             if ($request->hasFile('image_data')) {
@@ -80,7 +84,9 @@ class EnrollmentController extends Controller
                 'name' => 'required',
                 'description' => 'required',
                 'business_id' => 'required|numeric',
-                'location' => 'nullable'
+                'location' => 'nullable',
+                'address' => 'nullable',
+                'phone' => 'nullable'
             ]);
             Log::info($data);
             $enrollment = Enrollment::find($data['id']);
@@ -97,6 +103,8 @@ class EnrollmentController extends Controller
             $enrollment->description = $data['description'];
             $enrollment->business_id = $data['business_id'];
             $enrollment->location = $data['location'];
+            $enrollment->address = $data['address'];
+            $enrollment->phone = $data['phone'];
             $enrollment->save();
 
             return response()->json(['msg' => 'Academia actualizada correctamente'], 200);

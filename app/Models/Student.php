@@ -10,7 +10,7 @@ class Student extends Model
     use HasFactory;
 
     public function courses(){
-        return $this->belongsToMany(Course::class)->withPivot('id','course_id','student_id ', 'reservation_payment','total_payment', 'image_url')->withTimestamps();
+        return $this->belongsToMany(Course::class)->withPivot('id','course_id','student_id ', 'reservation_payment','total_payment', 'image_url', 'enabled', 'payment_status', 'amount_pay')->withTimestamps();
     }
 
     public function productsales()

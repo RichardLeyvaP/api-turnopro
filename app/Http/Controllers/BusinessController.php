@@ -10,20 +10,64 @@ use Illuminate\Support\Facades\Log;
 class BusinessController extends Controller
 {
     private BusinessService $businessService;
-    
+
     public function __construct(BusinessService $businessService)
     {
-         $this->businessService = $businessService;
+        $this->businessService = $businessService;
     }
 
     public function index()
     {
         try {
             return response()->json(['business' => Business::join('professionals', 'businesses.professional_id', '=', 'professionals.id')
-            ->select('businesses.id', 'businesses.name', 'businesses.address', 'professionals.name as professional_name')
-            ->get()], 200, [], JSON_NUMERIC_CHECK);
+                ->select('businesses.id', 'businesses.name', 'businesses.address', 'professionals.name as professional_name')
+                ->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar los negocios"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los negocios"], 500);
+        }
+    }
+    public function business_branch_academy()
+    {
+        try {
+            $business = Business::with('branches', 'enrollments')->first();
+
+            $branches = $business->branches;
+            $enrollments = $business->enrollments;
+
+            $resultArray = [];
+
+            // Agregar las branches al resultado
+            foreach ($branches as $branch) {
+                $resultArray[] = [
+                    'id' => $branch->id,
+                    'icon'=> "mdi-store",
+                    'title' => $branch->name,
+                    'subtitle' => 'Sucursal', 
+                    'phone' => $branch->phone, 
+                    'location' => $branch->address, 
+                    'location_link' => $branch->location,
+                    'phone_link' => "https://wa.me/".$branch->phone,
+                    'image' => $branch->image_data
+                ];
+            }
+
+            // Agregar las enrollments al resultado
+            foreach ($enrollments as $enrollment) {
+                $resultArray[] = [
+                    'id' => $enrollment->id,
+                    'icon'=> "mdi-school",
+                    'title' => $enrollment->name,
+                    'subtitle' => 'Academia', 
+                    'phone' => $enrollment->phone, 
+                    'location' => $enrollment->address, 
+                    'location_link' => $enrollment->location,
+                    'phone_link' => "https://wa.me/".$enrollment->phone,
+                    'image' => $enrollment->image_data
+                ];
+            }
+            return response()->json(['business' => $resultArray], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
     }
     public function show(Request $request)
@@ -40,18 +84,17 @@ class BusinessController extends Controller
     public function business_winner(Request $request)
     {
         try {
-           if ($request->has('mes')) {
-            return response()->json($this->businessService->business_winner_month($request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
+            if ($request->has('mes')) {
+                return response()->json($this->businessService->business_winner_month($request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
             }
             if ($request->has('startDate') && $request->has('endDate')) {
                 return response()->json($this->businessService->business_winner_periodo($request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
-            }            
-            else {
+            } else {
                 return response()->json($this->businessService->business_winner_date(), 200, [], JSON_NUMERIC_CHECK);
             }
-       } catch (\Throwable $th) {
-           return response()->json(['msg' => $th->getMessage()."La compañía no obtuvo ganancias en este dia"], 500);
-       }
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "La compañía no obtuvo ganancias en este dia"], 500);
+        }
     }
     public function store(Request $request)
     {
