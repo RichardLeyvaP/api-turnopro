@@ -475,6 +475,7 @@ Route::get('/course-student-product-show', [CourseStudentController::class, 'cou
 Route::post('/course-student', [CourseStudentController::class, 'store']);
 Route::post('/course-student-landing', [CourseStudentController::class, 'store_landing']);
 Route::post('/course-student-update', [CourseStudentController::class, 'update']);
+Route::post('/course-student-update2', [CourseStudentController::class, 'update2']);
 Route::post('/course-student-destroy', [CourseStudentController::class, 'destroy']);
 
 Route::get('/record', [RecordController::class, 'index']);

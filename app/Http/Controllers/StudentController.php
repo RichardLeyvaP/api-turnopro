@@ -128,6 +128,7 @@ class StudentController extends Controller
             $data = $request->validate([
                 'code' => 'required'
             ]);
+            
             $student = Student::where('code', $data['code'])->select('id', 'name', 'surname', 'second_surname', 'email', 'phone', 'student_image')->with('courses', 'productsales.productStore.product')->first();
             /*if ($student !== null) {
                 $curseStudent = $student->courses;
@@ -170,11 +171,29 @@ class StudentController extends Controller
                     'details' => $course['pivot']['image_url'],
                     'reservation_payment' => $course['pivot']['reservation_payment'],
                     'total_payment' => $course['pivot']['total_payment'],
+                    'enabled' => $course['pivot']['enabled'],
+                    'payment_status' => $course['pivot']['payment_status'],
+                    'amount_pay' => $course['pivot']['amount_pay'],
                     // Agrega aquí los otros campos que desees extraer de la tabla pivot
                 ];
                 $pagosArray[] = $pivotData;
             }
-
+            $contadorEnabledCero =0;
+            $contadorPaymentStatusCero =0;
+            $sumaAmountPay = 0;
+            foreach ($pagosArray as $pago) {
+                // Verifica si 'enabled' es 0 y aumenta el contador
+                if ($pago['enabled'] == 0) {
+                    $contadorEnabledCero++;
+                }
+            
+                // Verifica si 'payment_status' es 0 y aumenta el contador
+                if ($pago['payment_status'] == 0) {
+                    $contadorPaymentStatusCero++;            
+                // Suma 'amount_pay'
+                $sumaAmountPay += $pago['amount_pay'];
+                }
+            }
             /*foreach ($productSales as $productSale){
                 //return $productData = $productSale;
                 $productsArray = [
@@ -197,7 +216,7 @@ class StudentController extends Controller
                     'image_product' => $product->image_product
                 ];
             } 
-        return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray], 200);
+        return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray, 'habilitado' => $contadorEnabledCero ? 'No Habilitado' : 'Habilitado',  'status' => $contadorEnabledCero ? 'Retrasado' : 'Ok',  'payMount' => $sumaAmountPay], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }

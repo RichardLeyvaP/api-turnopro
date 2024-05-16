@@ -150,6 +150,9 @@ class CourseStudentController extends Controller
                     'total_payment' => $student->pivot->total_payment,
                     'enrollment_confirmed' => $student->pivot->enrollment_confirmed,
                     'image_url' => $student->pivot->image_url,
+                    'enabled' => $student->pivot->enabled,
+                    'payment_status' => $student->pivot->payment_status,
+                    'amount_pay' => $student->pivot->amount_pay,
                 ];
             });
             
@@ -276,6 +279,32 @@ class CourseStudentController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al matricular el estudiante al curso'], 500);
+        }
+    }
+
+    public function update2(Request $request)
+    {
+        Log::info("Editar estado en el curso");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'course_id' => 'required|numeric',
+                'student_id' => 'required|numeric',
+                'enabled' => 'nullable|numeric',
+                'payment_status' => 'nullable|numeric',
+                'amount_pay' => 'required|numeric'
+            ]);
+            $student = Student::find($data['student_id']);
+            $atributosParaActualizar = [
+                'enabled' => $data['enabled'],
+                'payment_status' => $data['payment_status'],
+                'amount_pay' => $data['amount_pay']
+            ];
+            $student->courses()->updateExistingPivot($data['course_id'], $atributosParaActualizar);
+            return response()->json(['msg' => 'Estado del Estudiante actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
 
