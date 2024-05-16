@@ -125,22 +125,15 @@ class ProfessionalPaymentController extends Controller
                                                 'professional_id' => $query->professional_id,
                                                 'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                                                 'type' => $query->type,
-                                                'amount' => $query->amount
+                                                'amount' => $query->amount,
+                                                'cant' => $query->cant
                                             ];
                                           })->sortByDesc('date')->values();
                                           
                                           //pendiente por pagar
                                           $retention = number_format(Professional::where('id', $request->professional_id)->value('retention') / 100, 2);
                                           $paymentIds = $payments->pluck('id');
-                                          /*$cars = Car::where('professional_payment_id', null)->whereHas('reservation', function ($query) use ($request) {
-                    $query->where('branch_id', $request->branch_id);
-                })
-                ->with(['clientProfessional.client', 'reservation'])
-                ->whereHas('clientProfessional', function ($query) use ($request) {
-                    $query->where('professional_id', $request->professional_id);
-                })
-                ->where('pay', 1)
-                ->get();*/
+                                          
                 if($request->charge == 'Tecnico'){
                    $pendienteMount = 0;
                     $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : 0;
@@ -153,7 +146,12 @@ class ProfessionalPaymentController extends Controller
                     $retentionpay = 0;
                     $winnerRetention = 0;
                     $winnerAmount = 0;
-                    $productCant = 0; 
+                    $productCant = 0;
+                    $productBono = 0;
+                    $productBonoCant = 0;
+                    $servBonoCant = 0;
+                    $servAmount = 0;
+                    $productAmount = 0; 
                 }
                 else if ($request->charge == 'Barbero' || $request->charge == 'Barbero y Encargado') 
                 {
@@ -166,31 +164,24 @@ class ProfessionalPaymentController extends Controller
                     $orderProdPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 1)->get();
                     $servMountPay = $orderServPay->sum('percent_win');
                     $retentionpay = $retention ? $servMountPay * $retention : 0;
-                    $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
-                    $metaPagado = $orderServPay->filter(function ($order) {
-                        return $order->percent_win == $order->price;
-                    });
+                    $metaPagado = $payments->where('type', 'Bono convivencias');
                     $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
                     $servCant = $orderServPay->count() ? $orderServPay->count() : 0;
                     $productCant = $orderProdPay->sum('price') ? $orderProdPay->sum('price') : 0;
                     $amountGenerate = $carPagado->sum('amount') ? $carPagado->sum('amount') : 0;
                     $propina80 = $carPagado->sum('tip') * 0.80 ? $carPagado->sum('tip') * 0.80 : 0;
-                    $metaCant = $metaPagado->count() ? $metaPagado->count() : 0;
-                    $metaAmount = $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0;
-                    //$retention = $orderServPay->sum('percent_win') * $retention ? $orderServPay->sum('percent_win') * $retention : 0;
-                    $winnerRetention = $servMountPay - $retentionpay;
+                    $metaCant = $metaPagado ? $metaPagado->sum('cant') : 0;
+                    $metaAmount = $metaPagado ? $metaPagado->sum('amount') : 0;
+                    $productBono = $payments->where('type', 'Bono productos');
+                    $productBonoCant = $productBono ? $productBono->sum('cant') : 0;
+                    $productAmount = $productBono ? $productBono->sum('amount') : 0;
+                    $ServBono = $payments->where('type', 'Bono servicios');
+                    $servBonoCant = $ServBono ? $ServBono->sum('cant') : 0;
+                    $servAmount = $ServBono ? $ServBono->sum('amount') : 0;
+                    $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
+
+                    $winnerRetention = $servMountPay-$retentionpay;
                     $winnerAmount = $servMountPay - $retentionpay + $propinaPay80;
-                    /*$detailPay = [
-                        //'clientAtended' => $carPagado->count() ? $carPagado->count() : 0,
-                        //'servCant' => $orderServPay->count() ? $orderServPay->count() : 0,
-                        //'amountGenerate' => $carPagado->sum('amount') ? $carPagado->sum('amount') : 0,
-                        //'propina80' => $carPagado->sum('tip')*0.80 ? $carPagado->sum('tip')*0.80 : 0,
-                        //'metaCant' => $metaPagado->count() ? $metaPagado->count() : 0,
-                        //'metaAmount' => $metaPagado->sum('percent_win') ? $metaPagado->sum('percent_win') : 0,
-                        //'retention' => $orderServPay->sum('percent_win')*$retention ? $orderServPay->sum('percent_win')*$retention : 0,
-                        //'winnerRetention' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention) : 0,
-                        //'winnerAmount' => $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) ? $orderServPay->sum('percent_win')-($orderServPay->sum('percent_win')*$retention)+($carPagado->sum('tip')*0.80) : 0
-                    ];*/
                     //Pendiente
                     $carPendiente = Car::whereHas('reservation', function ($query) use ($request) {
                         $query->where('branch_id', $request->branch_id);
@@ -209,28 +200,6 @@ class ProfessionalPaymentController extends Controller
                     $orderServPen = $orderServ->sum('percent_win');
                     $servMountPenRet = $orderServPen * $retention;
                     $pendienteMount = $orderServPen - $servMountPenRet + $propinaPend80 ? $orderServPen - $servMountPenRet + $propinaPend80 : 0;
-                    /*->map(function ($car) use ($retention, $request) {
-                        $orderServ = Order::where('car_id', $car->id)
-                            ->where('is_product', 0)
-                            ->get();
-
-                        $client = $car->clientProfessional->client;
-
-                        return [
-                            'id' => $car->id,
-                            'professional_id' => $data['professional_id'],
-                            'clientName' => $client->name . ' ' . $client->surname,
-                            'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
-                            'branch_id' => $data['branch_id'],
-                            'data' => $car->reservation->data,
-                            'attendedClient' => 1,
-                            'services' => $orderServ->count(),
-                            'totalServices' => $retention ? $orderServ->sum('percent_win') - ($orderServ->sum('percent_win') * $retention) : $orderServ->sum('percent_win'),
-                            'clientAleator' => $car->select_professional,
-                            'amountGenerate' => $car->amount,
-                            'tip' => $car->tip * 0.80
-                        ];
-                    });*/
 
                 }
                 else{
@@ -246,10 +215,15 @@ class ProfessionalPaymentController extends Controller
                     $winnerRetention = 0;
                     $winnerAmount = 0;
                     $productCant = 0;
+                    $productBono = 0;
+                    $productBonoCant = 0;
+                    $servBonoCant = 0;
+                    $servAmount = 0;
+                    $productAmount = 0;
                 }
                 
 
-            return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => $amountGenerate, 'propina80' => $propina80, 'metaCant' => $metaCant, 'metaAmount' => $metaAmount, 'retention' => $retentionpay, 'winnerRetention' => $winnerRetention, 'winnerAmount' => $winnerAmount, 'productCant' => $productCant], 200);
+            return response()->json(['payments' => $payments, 'pendiente' => $pendienteMount, 'pagado' => $pagadoMount, 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => $amountGenerate, 'propina80' => $propina80, 'metaCant' => $metaCant, 'metaAmount' => $metaAmount, 'productBonoCant' => $productBonoCant, 'productAmount' => $productAmount, 'servBonoCant' => $servBonoCant, 'servAmount' => $servAmount, 'retention' => $retentionpay, 'winnerRetention' => $winnerRetention, 'winnerAmount' => $winnerAmount, 'productCant' => $productCant], 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
@@ -387,44 +361,44 @@ class ProfessionalPaymentController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $year = $data['year']; // Año deseado
-$professionalId = $data['professional_id']; // ID del profesional
+        $professionalId = $data['professional_id']; // ID del profesional
 
-// Obtener los datos de la base de datos
-$result = DB::table('professionals_payments')
-    ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
-    ->whereYear('date', $data['year'])
-    ->where('professional_id', $data['professional_id'])
-    ->where('branch_id', $data['branch_id'])
-    ->groupBy(DB::raw('MONTH(date)'))
-    ->orderBy('month')
-    ->get();
+        // Obtener los datos de la base de datos
+        $result = DB::table('professionals_payments')
+            ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
+            ->whereYear('date', $data['year'])
+            ->where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->groupBy(DB::raw('MONTH(date)'))
+            ->orderBy('month')
+            ->get();
 
-// Inicializar el array de resultados
-$monthlyEarnings = [];
-$totalEarnings = 0;
+        // Inicializar el array de resultados
+        $monthlyEarnings = [];
+        $totalEarnings = 0;
 
-// Llenar el array con los nombres de los meses en español y sus ganancias correspondientes
-for ($month = 1; $month <= 12; $month++) {
-    $monthName = Carbon::createFromDate($year, $month)->locale('es_ES')->monthName;
-    $monthlyEarnings[$monthName] = 0;
-}
-
-// Actualizar los valores de ganancias en el array
-foreach ($result as $row) {
-    $monthName = Carbon::createFromDate($year, $row->month)->locale('es_ES')->monthName;
-    $monthlyEarnings[$monthName] = $row->earnings;
-    $totalEarnings += $row->earnings;
-}
-// Calcular el promedio por mes
-$averageEarnings = count($result) > 0 ? $totalEarnings / count($result) : 0;
-// Devolver el array de resultados
-$monthlyEarnings;
-
-            return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
+        // Llenar el array con los nombres de los meses en español y sus ganancias correspondientes
+        for ($month = 1; $month <= 12; $month++) {
+            $monthName = Carbon::createFromDate($year, $month)->locale('es_ES')->monthName;
+            $monthlyEarnings[$monthName] = 0;
         }
+
+        // Actualizar los valores de ganancias en el array
+        foreach ($result as $row) {
+            $monthName = Carbon::createFromDate($year, $row->month)->locale('es_ES')->monthName;
+            $monthlyEarnings[$monthName] = $row->earnings;
+            $totalEarnings += $row->earnings;
+        }
+        // Calcular el promedio por mes
+        $averageEarnings = count($result) > 0 ? $totalEarnings / count($result) : 0;
+        // Devolver el array de resultados
+        $monthlyEarnings;
+
+                    return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings], 200);
+                } catch (\Throwable $th) {
+                    Log::error($th);
+                    return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
+                }
     }
 
 }

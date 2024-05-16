@@ -28,7 +28,7 @@ class ClientController extends Controller
             $clients = Client::with('user')
             ->addSelect('*', DB::raw("CONCAT(name, ' ', surname, ' ', second_surname) AS fullName"))
             ->get();
-            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['clients' => $clients], 200);
         } catch (\Throwable $th) {
             Log::error($th);
 
@@ -267,7 +267,7 @@ class ClientController extends Controller
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email',
-                'phone' => 'required|max:15',
+                'phone' => 'required|max:15|string',
                 //'user_id' => 'required|numeric'
             ]);
             Log::info($request['client_image']);

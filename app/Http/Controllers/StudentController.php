@@ -25,7 +25,7 @@ class StudentController extends Controller
             
             Log::info( "entra a cliente");
 
-            return response()->json(['clients' => Student::all()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['clients' => Student::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
 
@@ -207,7 +207,7 @@ class StudentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Student $student)
+    public function update(Request $request)
     {
         try {
 
@@ -243,12 +243,12 @@ class StudentController extends Controller
             $student->qr_url = $qrCodeFilePath;
             }
             if ($request->hasFile('student_image')) {
-                if($student->student_image != 'students/default.jpg'){
+                if($student->student_image != 'students/default.png'){
                 $destination = public_path("storage\\" . $student->student_image);
                 if (File::exists($destination)) {
                     File::delete($destination);
                 }
-                }                      
+                } 
                     $student->student_image = $request->file('student_image')->storeAs('students',$student->id.'.'.$request->file('student_image')->extension(),'public');
                 }
             $student->name = $data['name'];

@@ -27,7 +27,7 @@ class BranchController extends Controller
     public function index()
     {
         try {
-            return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
         }
