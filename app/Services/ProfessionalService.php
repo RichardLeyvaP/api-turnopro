@@ -194,7 +194,7 @@ class ProfessionalService
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
-        $closingTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
+        $closingTime = Carbon::now()->setTime(23, 59, 59)->format('H:i:s');/*Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');*/
         $current_date = Carbon::now()->format('Y-m-d');
         $availableProfessionals = [];
         $fechaDada = Carbon::now()->format('Y-m-d');
