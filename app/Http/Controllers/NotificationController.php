@@ -304,7 +304,7 @@ class NotificationController extends Controller
                           ->orWhere('type', 'Caja');
                 })
                 ->whereDate('created_at', Carbon::now())
-                ->where('stateAdm', '!=', 2)
+                ->where('stateAdm', '<>', 2)
                 ->get()
                     ->map(function ($query) {
                         $professional = $query->professional;
@@ -331,7 +331,7 @@ class NotificationController extends Controller
                     $notifications = $branch->notifications()
                         ->whereDate('created_at', Carbon::now())
                         ->where('type', 'Caja')
-                        ->where('stateCajero', '!=', 2)
+                        ->where('stateCajero', '<>', 2)
                         ->get()
                         ->map(function ($query) {
                             $professional = $query->professional;
@@ -358,7 +358,7 @@ class NotificationController extends Controller
                     $notifications = $branch->notifications()
                         ->whereDate('created_at', Carbon::now())
                         ->where('type', 'Administrador')
-                        ->where('stateAdmSucur', '!=', 2)
+                        ->where('stateAdmSucur', '<>', 2)
                         ->get()
                         ->map(function ($query) {
                             $professional = $query->professional;

@@ -242,7 +242,9 @@ class ProductStoreController extends Controller
                 return [
                     'id' => $query->id,
                     'product_exit' => $query->product_exit,
-                    'name' => $query->product->name.' ('.'Almacén:'.$query->store->address.')'                ];
+                    'name' => $query->product->name.' ('.'Almacén:'.$query->store->address.')',
+                    'image_product' => $query->product->image_product,
+                    ];
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
