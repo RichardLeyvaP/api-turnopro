@@ -77,6 +77,7 @@ class BoxCloseController extends Controller
                 'totalOther' => 'nullable|numeric',
                 'totalCardGif' => 'nullable|numeric'
             ]);
+            $idService=null;
             Log::info($data);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $request->branch_id)->first();
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
@@ -165,7 +166,7 @@ class BoxCloseController extends Controller
                         $query->where('branch_id', $branch->id);
                     })->where('meta', 1)->value('id');
                 }
-                if($idService){
+                if($idService!=null){
                     $orders = Order::where('branch_service_professional_id', $idService)->whereIn('car_id', $carIdsPay)->limit(4)->get();
                     if(!$orders->isEmpty()){
                         $cant = $orders->count();

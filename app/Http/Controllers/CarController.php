@@ -838,6 +838,20 @@ class CarController extends Controller
                 $aleatorio = !$car->select_professional? 1 : 0;
                 $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();*/
+                $meta = ProfessionalPayment::where('professional_id', $data['professional_id'])
+                                            ->where(function($query) {
+                                                $query->where('type', 'Bono convivencias')
+                                                ->orwhere('type', 'Bono productos')
+                                                ->orwhere('type', 'Bono servicios');
+                                            })
+                                        //->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
+                                         // ->where('branch_id', $data['branch_id'])
+                                          //->where('type', 'Bono convivencias')
+                                          //->orwhere('type', 'Bono productos')
+                                          //->orwhere('type', 'Bono servicios')
+                                          ->get();
+                                          $metacant = $meta->count();
+                                        $metaamount = $meta->sum('amount');
                 $cars = Car::with(['reservation', 'orders'])
                 ->whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
@@ -847,16 +861,12 @@ class CarController extends Controller
                 })
                 ->where('pay', 1)
                 ->get()
-                ->map(function ($car) use ($retention, $data) {
+                ->map(function ($car) use ($retention, $data, $meta) {
                     $reservation = $car->reservation;
                     $orderServ = $car->orders->where('is_product', 0);
                     $orderProd = $car->orders->where('is_product', 1);
                     $aleatorio = !$car->select_professional? 1 : 0;
-                    $meta = ProfessionalPayment::where('professional_id', $data['professional_id'])
-                                        //->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
-                                          ->where('branch_id', $data['branch_id'])
-                                          ->where('type', 'Bono convivencias')
-                                          ->get();
+                    
                     /*$meta = $orderServ->filter(function ($order) {
                         return $order->percent_win == $order->price;
                     });*/
@@ -875,11 +885,11 @@ class CarController extends Controller
                     'clientAleator' => $aleatorio,
                     'amountGenerate' => $orderServ->sum('percent_win'), //ganancia total del barbero ganancias servicios
                     'retention' => $orderServ->sum('percent_win') * $retention,
-                    'metacant' => $meta->count(),
-                    'metaamount' => $meta->sum('price')
+                    //'metacant' => $meta->count(),
+                    //'metaamount' => $meta->sum('amount')
 
                 ];
-           })->groupBy('data')->map(function ($cars) {
+           })->groupBy('data')->map(function ($cars) use ($meta){
             return [
                 'professional_id' => intval($cars[0]['professional_id']),
                 'branch_id' =>  intval($cars[0]['branch_id']),
@@ -895,12 +905,19 @@ class CarController extends Controller
                 'clientAleator' => $cars->sum('clientAleator'),
                 'amountGenerate' => $cars->sum('amountGenerate'),
                 'totalRetention' => $cars->sum('retention'),
-                'metaCant' => $cars->sum('metacant'),
-                'metaAmount' => $cars->sum('metaamount'),
+                //'metacant' => $meta->count(),
+                //'metaamount' => $meta->sum('amount')
             ];
         })->sortByDesc('data')->values();
+        // Agregar metacant y metaamount después del mapeo
+        $result = $cars->map(function ($car) use ($metacant, $metaamount) {
+            return array_merge($car, [
+                'metacant' => $metacant,
+                'metaamount' => $metaamount
+            ]);
+        });
         //Log::info($cars->pluck('id'));
-           return response()->json(['car' => $cars], 200);
+           return response()->json(['car' => $result], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
        }
@@ -1067,6 +1084,8 @@ class CarController extends Controller
            ->whereDate('date', $data['data'])
              ->where('branch_id', $data['branch_id'])
              ->where('type', 'Bono convivencias')
+            ->orwhere('type', 'Bono productos')
+             ->orwhere('type', 'Bono servicios')
              ->get();
            $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
            $cars = Car::whereHas('reservation', function ($query) use ($data){
@@ -1115,7 +1134,7 @@ class CarController extends Controller
                     'totalGeneral' => $car->amount,
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),
-                    'metaAmount' => $meta->sum('price'),
+                    'metaAmount' => $meta->sum('amount'),
                 ];
            });
            return response()->json(['car' => $cars], 200);

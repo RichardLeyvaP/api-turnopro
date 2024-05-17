@@ -82,9 +82,9 @@ class CardGiftUserController extends Controller
 
 
             ///Aqui enviar codido por correo $user->email
-            //$this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
+            $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
             //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
-            $data = [
+            /*$data = [
                 'send_gift_card' => true, // Indica que es un correo de envío de tarjeta de regalo
                 'client_email' => $client_email,
                 'client_name' => $client_name,
@@ -93,7 +93,7 @@ class CardGiftUserController extends Controller
                 'expiration_date' => $expiration_date,
             ];
             
-            SendEmailJob::dispatch($data);
+            SendEmailJob::dispatch($data);*/
             
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente'], 200);
         } catch (TransportException $e) {

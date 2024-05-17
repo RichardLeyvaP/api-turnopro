@@ -43,7 +43,7 @@ class BranchProfessionalController extends Controller
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
 
-            $branch->professionals()->attach($professional->id, ['ponderation' => $data['ponderation']]);
+            $branch->professionals()->attach($professional->id, ['ponderation' => $data['ponderation'], 'limit' => $data['limit'], 'mountpay' => $data['mountpay']]);
 
             return response()->json(['msg' => 'Professional asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
