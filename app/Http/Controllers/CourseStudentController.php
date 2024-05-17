@@ -82,7 +82,7 @@ class CourseStudentController extends Controller
             $student->phone = $data['phone'];
             $student->save();
            
-            $filename = "image/default.png"; 
+            $filename = ""; 
             if ($request->hasFile('course_image')) {
                 Log::info("tiene una imagen");
                $filename = $request->file('course_image')->storeAs('students',$student->id.'.'.$request->file('course_image')->extension(),'public');
@@ -214,7 +214,7 @@ class CourseStudentController extends Controller
             ]);
             $student = Student::find($data['student_id']);
            $totalAnt = $student->courses()->wherePivot('course_id', $data['course_id'])->value('total_payment');
-            $filename = "students/pagos/default.png"; 
+            $filename = ""; 
             if ($request->hasFile('image_url')) {
                 Log::info("tiene una imagen");
                $filename = $request->file('image_url')->storeAs('students/pagos',$student->id.'-'.$data['course_id'].'.'.$request->file('image_url')->extension(),'public');
