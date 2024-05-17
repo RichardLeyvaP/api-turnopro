@@ -49,7 +49,7 @@ class StudentController extends Controller
 
             
             $code = Str::random(8);
-            $url = 'https://landingbh.simplifies.cl/student/?code='.$code;
+            $url = 'https://landingbh.simplifies.cl/student/?code=' . rawurlencode($code);
             //$url = 'https://landingbh.simplifies.cl/?codigo='.$code;
             /*$datos = [
                 'code' => $code,
