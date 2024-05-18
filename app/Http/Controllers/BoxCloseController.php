@@ -162,31 +162,32 @@ class BoxCloseController extends Controller
                 })->get();
 
                 if($rules->isEmpty()){
-                    $idService = BranchServiceProfessional::where('professional_id', $professional->id)->whereHas('professional.branches', function ($query) use ($branch){
+                    $idService = BranchServiceProfessional::where('professional_id', $professional->id)->whereHas('branchService.branch', function ($query) use ($branch){
                         $query->where('branch_id', $branch->id);
                     })->where('meta', 1)->value('id');
+                    if($idService!=null){
+                        $orders = Order::where('branch_service_professional_id', $idService)->whereIn('car_id', $carIdsPay)->limit(4)->get();
+                        if(!$orders->isEmpty()){
+                            $cant = $orders->count();
+                            $amount = $orders->first()->price * $cant;
+                            $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
+                            if($professionalPayment == null)
+                            $professionalPayment = new ProfessionalPayment();
+                            $professionalPayment->branch_id = $branch->id;
+                            $professionalPayment->professional_id = $professional->id;
+                            $professionalPayment->date = Carbon::now();
+                            $professionalPayment->amount = $amount;
+                            $professionalPayment->type = 'Bono convivencias';
+                            $professionalPayment->cant = $cant;
+                            $professionalPayment->save();
+                        /*foreach($orders as $order){
+                            $order->percent_win = $order->price;
+                            $order->save();
+                        }*/
+                    }
+                    }
                 }
-                if($idService!=null){
-                    $orders = Order::where('branch_service_professional_id', $idService)->whereIn('car_id', $carIdsPay)->limit(4)->get();
-                    if(!$orders->isEmpty()){
-                        $cant = $orders->count();
-                        $amount = $orders->first()->price * $cant;
-                        $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
-                        if($professionalPayment == null)
-                        $professionalPayment = new ProfessionalPayment();
-                        $professionalPayment->branch_id = $branch->id;
-                        $professionalPayment->professional_id = $professional->id;
-                        $professionalPayment->date = Carbon::now();
-                        $professionalPayment->amount = $amount;
-                        $professionalPayment->type = 'Bono convivencias';
-                        $professionalPayment->cant = $cant;
-                        $professionalPayment->save();
-                    /*foreach($orders as $order){
-                        $order->percent_win = $order->price;
-                        $order->save();
-                    }*/
-                }
-                }
+
 
                 $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch->id)->first();
             
