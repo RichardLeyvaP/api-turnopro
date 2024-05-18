@@ -42,6 +42,7 @@ class Send_mail extends Mailable
     public $totalTransfer;
     public $totalOther;
     public $totalMount;
+    public $totalGiftcard;
 
      // Propiedades adicionales correspondientes a la plantilla restaurar_pass
      public $usser;
@@ -112,6 +113,7 @@ class Send_mail extends Mailable
                 'totalTransfer' => $this->totalTransfer,
                 'totalOther' => $this->totalOther,
                 'totalMount' => $this->totalMount,
+                'totalGiftcard' => $this->totalGiftcard,
 
                 // Propiedades adicionales a restaurar_pass
                 'usser' => $this->usser,

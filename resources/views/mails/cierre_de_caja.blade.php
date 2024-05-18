@@ -41,7 +41,8 @@
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
     <td><strong>Transferencia:</strong> {{ $totalTransfer }}</td>
-    <td colspan="2"><strong>Otros Méthodos:</strong> {{ $totalOther }}</td>
+    <td><strong>Total Giftcard:</strong> {{ $totalGiftcard }}</td>
+    <td><strong>Otros Méthodos:</strong> {{ $totalOther }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
     <td colspan="3" align="center"><strong>Total Ingresado:</strong> {{ $totalMount }}</td>
