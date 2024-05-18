@@ -14,10 +14,11 @@ class Box extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function closeboxes(){
+    public function boxClose(){
         return $this->hasOne(BoxClose::class);
     }
 
+    
     protected $casts = [
         'cashFound' => 'double',
         'extraction' => 'double',

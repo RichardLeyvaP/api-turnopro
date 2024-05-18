@@ -581,7 +581,7 @@ class CarController extends Controller
                 ];
                 //}
             })->sortBy('state')->values();
-            $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->get();
+            $box[] = Box::with('boxClose')->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
             return response()->json(['cars' => $cars, 'box' => $box], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
