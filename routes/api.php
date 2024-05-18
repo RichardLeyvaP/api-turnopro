@@ -231,6 +231,7 @@ Route::get('/move-products', [ProductStoreController::class, 'movement_products'
 
 Route::get('/branchstore', [BranchStoreController::class, 'index']);
 Route::get('/branchstore-show', [BranchStoreController::class, 'show']);
+Route::get('/branchstore-show-notInt', [BranchStoreController::class, 'show_notIn']);
 Route::post('/branchstore', [BranchStoreController::class, 'store']);
 Route::put('/branchstore', [BranchStoreController::class, 'update']);
 Route::post('/branchstore-destroy', [BranchStoreController::class, 'destroy']);
@@ -547,6 +548,7 @@ Route::post('/vacation-destroy', [VacationController::class, 'destroy']);
 
 Route::get('/enrollmentstore', [EnrollmentStoreController::class, 'index']);
 Route::get('/enrollmentstore-show', [EnrollmentStoreController::class, 'show']);
+Route::get('/enrollmentstore-show-notIn', [EnrollmentStoreController::class, 'show_notIn']);
 Route::post('/enrollmentstore', [EnrollmentStoreController::class, 'store']);
 Route::put('/enrollmentstore', [EnrollmentStoreController::class, 'update']);
 Route::post('/enrollmentstore-destroy', [EnrollmentStoreController::class, 'destroy']);

@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ProfessionalController extends Controller
 {
@@ -613,6 +614,15 @@ class ProfessionalController extends Controller
                 'retention' => 'required|numeric'
             ]);
             Log::info($request);
+            $professional = Professional::find($professionals_data['id']);
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|unique:professionals,email,' . $professional->id,
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 401);
+            }
             $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
             if($userName){
                 return response()->json([
@@ -624,7 +634,6 @@ class ProfessionalController extends Controller
             $user->email = $professionals_data['email'];
             $user->save();
 
-            $professional = Professional::find($professionals_data['id']);
             if ($request->hasFile('image_url')) {
                 if($professional->image_url != 'professionals/default.jpg'){
                 $destination = public_path("storage\\" . $professional->image_url);

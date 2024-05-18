@@ -74,6 +74,26 @@ class EnrollmentStoreController extends Controller
         }
     }
 
+    public function show_notIn(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar los almacenes de una sucursal");
+            $data = $request->validate([
+                'enrollment_id' => 'numeric'
+            ]);
+            $storeIds = Enrollment::find($data['enrollment_id'])->stores()->pluck('store_id');
+
+            // Obtener los associates que NO están en esa lista de IDs asociados
+            $storeNotInEnrollment = Store::whereNotIn('id', $storeIds)->get();
+
+                return response()->json(['stores' => $storeNotInEnrollment],200); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos"], 500);
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      */

@@ -46,15 +46,31 @@ class BranchStoreController extends Controller
         try {             
             Log::info( "Entra a buscar los almacenes de una sucursal o la sucursal de un almacén");
             $data = $request->validate([
-                'store_id' => 'numeric',
                 'branch_id' => 'numeric'
             ]);
-            if ($data['store_id']) {
-                return response()->json(['store' => Store::with('branches.branchstores')->find($data['store_id'])], 200);
-            }
-            if ($data['branch_id']) {
-                return response()->json(['branch' => Branch::with('stores.storebranchees')->find($data['branch_id'])],200); 
-            }
+            $branch = Branch::with('stores')->find($data['branch_id']);
+
+                return response()->json(['stores' => $branch->stores],200); 
+            
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos"], 500);
+        }
+    }
+
+    public function show_notIn(Request $request)
+    {
+        try {             
+            Log::info( "Entra a buscar los almacenes de una sucursal");
+            $data = $request->validate([
+                'branch_id' => 'numeric'
+            ]);
+            $storeIds = Branch::find($data['branch_id'])->stores()->pluck('store_id');
+
+            // Obtener los associates que NO están en esa lista de IDs asociados
+            $storeNotInBranch = Store::whereNotIn('id', $storeIds)->get();
+
+                return response()->json(['stores' => $storeNotInBranch],200); 
             
             } catch (\Throwable $th) {  
             Log::error($th);

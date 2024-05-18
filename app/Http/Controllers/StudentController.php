@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
@@ -39,14 +40,18 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->validate([
+            $data = Validator::make($request->all(), [
                 'name' => 'required|max:50',
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:clients',
+                'email' => 'required|max:50|email|unique:students',
                 'phone' => 'required|max:15'
             ]);
-
+            if ($data->fails()) {
+                return response()->json([
+                    'msg' => $data->errors()->all()
+                ], 400);
+            }
             
             $code = Str::random(8);
             $url = 'https://landingbh.simplifies.cl/student/?code=' . rawurlencode($code);
@@ -238,14 +243,23 @@ class StudentController extends Controller
                 'name' => 'required|max:50',
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email',
+                'email' => 'required|email|unique:associates,email,' . $request->id,
                 'phone' => 'required|max:15'
             ]);
+            
             Log::info($request['student_image']);
             $student = Student::find($data['id']);
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|unique:students,email,' . $student->id,
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
             if(!$student->code){
                 $code = Str::random(8);
-                $url = 'https://landingbh.simplifies.cl/student/?code='.$code;
+                $url = 'https://landingbh.simplifies.cl/student/?code='.$code . rawurlencode($code);
                 //$url = 'https://landingbh.simplifies.cl/?codigo='.$code;
             /*$datos = [
                 'code' => $code,
