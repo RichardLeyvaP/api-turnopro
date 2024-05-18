@@ -265,11 +265,13 @@ class ProductStoreController extends Controller
             })->whereHas('store.branches', function ($query) use ($data){              
                 $query->where('branches.id', $data['branch_id']);
         })->where('product_exit', '>', 0)->get()->map(function ($productStore) {
+            $product = $productStore->product;
                 return [
                     'id' => $productStore->id,
                     'product_exit' => $productStore->product_exit,
-                    'name' => $productStore->product->name.' ('.'Almacén:'.$productStore->store->address.')',
-                    'image_product' => $productStore->product->image_product
+                    'name' => $product->name.' ('.'Almacén:'.$productStore->store->address.')',
+                    'image_product' => $product->image_product,
+                    'price' => $product->sale_price
                 ];
             });
             return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);
