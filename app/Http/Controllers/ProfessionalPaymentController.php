@@ -393,8 +393,17 @@ class ProfessionalPaymentController extends Controller
         $averageEarnings = count($result) > 0 ? $totalEarnings / count($result) : 0;
         // Devolver el array de resultados
         $monthlyEarnings;
+        $meta = ProfessionalPayment::where('professional_id', $data['professional_id'])
+           ->whereYear('date', $data['year'])
+             ->where('branch_id', $data['branch_id'])
+             ->where(function($query) {
+                $query->where('type', 'Bono convivencias')
+                ->orwhere('type', 'Bono productos')
+                ->orwhere('type', 'Bono servicios');
+            })
+             ->get();
 
-                    return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings], 200);
+                    return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings, 'metaCant' => $meta->count(), 'metaAmount' => $meta->sum('amount')], 200);
                 } catch (\Throwable $th) {
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
