@@ -67,6 +67,7 @@ class TailService {
             $query->where('branch_id', $branch_id);
         })->whereIn('attended', [3,33])->get()->map(function ($tail){
             $professional = [];
+            $professionaltem = [];
             Log::info($tail);
                 $reservation = $tail->reservation;
                 Log::info('reservacion');
@@ -132,8 +133,8 @@ class TailService {
                 'total_time' => $reservation->total_time,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $client->id,
-                'idBarber' => $professionaltem->professional_id,
-                'nameBarber' => $professionaltem->professional->name.' '.$professionaltem->professional->surname,
+                'idBarber' => $professionaltem ? $professionaltem->professional_id : 0,
+                'nameBarber' => $professionaltem ? $professionaltem->professional->name.' '.$professionaltem->professional->surname : '',
                 'professional_id' => $professional ? $professional->id : 0,
                 'professional_name' => $professional ? $professional->name." ".$professional->surname : ' ',
                 'client_name' => $client->name." ".$client->surname, 

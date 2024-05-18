@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Box;
 use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\Business;
@@ -580,7 +581,8 @@ class CarController extends Controller
                 ];
                 //}
             })->sortBy('state')->values();
-            return response()->json(['cars' => $cars], 200, [], JSON_NUMERIC_CHECK);
+            $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->get();
+            return response()->json(['cars' => $cars, 'box' => $box], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);

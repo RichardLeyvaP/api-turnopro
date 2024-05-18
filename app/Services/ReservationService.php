@@ -212,7 +212,7 @@ class ReservationService
                 'image_data' => $branch->image_data ? $branch->image_data : 'branches/default.jpg',
                 'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
                 'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
-                'cantVisit' => $reservations->count(),
+                'cantVisit' => $reservation2->count(),
                 'endLook' => $comment ? $comment->look : null,
                 'lastDate' => $reservation->data,
                 'frecuencia' => $frecuencia,
