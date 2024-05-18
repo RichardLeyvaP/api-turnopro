@@ -63,7 +63,8 @@ class OperationTipController extends Controller
                 $carIds = $request->input('car_ids');
                 Car::whereIn('id', $carIds)->update(['operation_tip_id' => $operationTip->id]);
             }
-            $finance = Finance::where('branch_id', $data['branch_id'])->where('revenue_id', 6)->whereDate('data', Carbon::now())->first();
+            if($data['coffe_percent']){
+                $finance = Finance::where('branch_id', $data['branch_id'])->where('revenue_id', 6)->whereDate('data', Carbon::now())->first();
             if ($finance !== null) {
                 $finance->amount = $finance->amount + $data['coffe_percent'];
                 $finance->save();
@@ -85,6 +86,7 @@ class OperationTipController extends Controller
                 $finance->data = Carbon::now();
                 $finance->file = '';
                 $finance->save();
+            }
             }
 
             return response()->json($operationTip, 201);
