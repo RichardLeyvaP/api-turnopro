@@ -188,7 +188,7 @@ class BranchProfessionalController extends Controller
                 
                 if ($vacation->isEmpty()) {
                     // Si no hay vacaciones, inicializar el array de vacaciones como nulo
-                    $professional1['vacations'] = null;
+                    $professional1['vacations'] = [];
                 } else {
                     // Si hay vacaciones, mapearlas al formato deseado
                     $professional1['vacations'] = $vacation->map(function ($query) {
