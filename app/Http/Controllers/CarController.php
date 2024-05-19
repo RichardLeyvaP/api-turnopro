@@ -9,6 +9,7 @@ use App\Models\Business;
 use App\Models\Car;
 use App\Models\ClientProfessional;
 use App\Models\Comment;
+use App\Models\CourseProfessional;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Product;
@@ -930,7 +931,7 @@ class CarController extends Controller
        }
     }
 
-    public function tecnico_car(Request $request)
+public function tecnico_car(Request $request)
     {
         try {
             $data = $request->validate([
@@ -1007,7 +1008,7 @@ class CarController extends Controller
        }
     }
 
-    public function professional_car_notpay(Request $request)
+public function professional_car_notpay(Request $request)
     {
         try {
             $data = $request->validate([
@@ -1048,6 +1049,19 @@ class CarController extends Controller
                         'tip' => $car->tip * 0.80
                     ];
                 });
+
+                $cursesProf = CourseProfessional::where('professional_id', $data['professional_id'])->where('pay', 0)->get()->map(function ($courseProf){
+                    $course = $courseProf->course;
+                    return [
+                        'id' => $courseProf->id,
+                        'enrollment_id' => $course->enrollment_id,
+                        'nameEnrollment' => $course->enrollment->name,
+                        'nameCourse' => $course->name,
+                        'description' => $course->description,
+                        'startDate' => $course->startDate,
+                        'endDate' => $course->endDate,
+                    ];
+                });
            /*$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
            $cars = Car::where('professional_payment_id', Null)->whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
@@ -1072,7 +1086,7 @@ class CarController extends Controller
                     'tip' => $car->tip * 0.80
                 ];
            });*/
-           return response()->json($cars, 200);
+           return response()->json(['cars' => $cars, 'courses' => $cursesProf], 200);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
        }

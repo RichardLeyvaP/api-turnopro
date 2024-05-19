@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\CourseProfessional;
 use App\Models\Finance;
 use App\Models\Order;
 use App\Models\Professional;
@@ -36,12 +37,60 @@ class ProfessionalPaymentController extends Controller
                 'amount' => 'required|numeric',
                 'type' => 'required|string',
             ]);
-            $professionalPayment = new ProfessionalPayment();
-            $professionalPayment->branch_id = $data['branch_id'];
-            $professionalPayment->professional_id = $data['professional_id'];
-            $professionalPayment->date = Carbon::now();
-            $professionalPayment->amount = $data['amount'];
-            $professionalPayment->type = $data['type'];
+            if($data['type'] == 'Pago Academia'){
+                
+                Log::info('entra a pago los cursos');
+                $ids = $request->input('course_ids');
+                $courseProfessional = CourseProfessional::find($ids);
+                $enrollment_id = $courseProfessional->course->enrollment_id;
+                $professionalPayment = new ProfessionalPayment();
+                $professionalPayment->enrollment_id = $enrollment_id;
+                $professionalPayment->professional_id = $data['professional_id'];
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $data['amount'];
+                $professionalPayment->type = $data['type'];
+
+            // Guardar el modelo
+            $professionalPayment->save();
+            $courseProfessional->pay = $professionalPayment->id;
+            $courseProfessional->save();
+            /*Log::info($request->input('course_ids'));
+            if ($request->input('course_ids')) {
+                // Actualizar carros con professional_payment_id
+                Log::info('entra a pago los cursos');
+                $course_ids = $request->input('course_ids');
+                CourseProfessional::whereIn('id', $course_ids)->update(['professional_payment_id' => $professionalPayment->id]);
+            }*/
+
+            $professional = Professional::find($data['professional_id']);
+
+            $finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+                            
+            if($finance !== null)
+            {
+                $control = $finance->control+1;
+            }
+            else {
+                $control = 1;
+            }
+            $finance = new Finance();
+                            $finance->control = $control;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $data['amount'];
+                            $finance->comment = 'Gasto por pago de curso a '.$professional->name .' '.$professional->surname;
+                            $finance->enrollment_id = $enrollment_id;
+                            $finance->type = 'Academia';
+                            $finance->expense_id = 6;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
+            }else{
+                $professionalPayment = new ProfessionalPayment();
+                $professionalPayment->branch_id = $data['branch_id'];
+                $professionalPayment->professional_id = $data['professional_id'];
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $data['amount'];
+                $professionalPayment->type = $data['type'];
 
             // Guardar el modelo
             $professionalPayment->save();
@@ -75,6 +124,7 @@ class ProfessionalPaymentController extends Controller
                             $finance->data = Carbon::now();                
                             $finance->file = '';
                             $finance->save();
+            }
             return response()->json($professionalPayment, 201);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);

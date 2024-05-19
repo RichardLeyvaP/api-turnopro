@@ -83,6 +83,13 @@ class BoxCloseController extends Controller
             $idService=null;
             Log::info($data);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $request->branch_id)->first();
+           if (!$box) {                
+                $box = new Box();
+                $box->existence = 0;    
+                $box->data = Carbon::now();         
+                $box->branch_id = $request->branch_id;
+            }
+            $box->save();
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = BoxClose::where('box_id', $box->id)->first();
             if (!$boxClose) {

@@ -31,4 +31,9 @@ class Enrollment extends Model
     public function stores(){
         return $this->belongsToMany(Store::class, 'enrollment_store')->withTimestamps();
     }
+
+    public function professionalPayments()
+    {
+        return $this->hasMany(ProfessionalPayment::class, 'enrollment_id');
+    }
 }
