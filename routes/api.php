@@ -64,6 +64,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
+//agregando el import de websocket
+use App\Http\Controllers\TestingEventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +77,9 @@ use Illuminate\Support\Facades\File;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/testing-websocket', [TestingEventController::class, 'testingEvent']);
+Route::get('/fetch-data', [TestingEventController::class, 'fetchData']);
+
 Route::post('/register_client', [UserController::class, 'register_client']);
 Route::post('/register_professional', [UserController::class, 'register_professional']);
 Route::post('/login', [UserController::class, 'login']);

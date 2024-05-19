@@ -30,6 +30,10 @@ return [
 
     'connections' => [
 
+//         PUSHER_APP_ID=123456
+// PUSHER_APP_KEY=GoofNBCH
+// PUSHER_APP_SECRET=stronfdff
+
         'pusher' => [
             'driver' => 'pusher',
             'key' => env('PUSHER_APP_KEY'),
@@ -37,15 +41,19 @@ return [
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
-                'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
-                'port' => env('PUSHER_PORT', 443),
-                'scheme' => env('PUSHER_SCHEME', 'https'),
+                // 'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
+                'host' => '127.0.0.1',
+                // 'port' => env('PUSHER_PORT', 443),
+                'port' => 6001,
+                // 'scheme' => env('PUSHER_SCHEME', 'https'),
+                'scheme' => 'http',
                 'encrypted' => true,
-                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                // este no estaba comentado lo comente yo rlp 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
             ],
             'client_options' => [
                 'verify' => env('GUZZLE_SSL_VERIFY', true), // Esta opción controla si se realiza la verificación del certificado SSL
-                'cert' => env('GUZZLE_CERT', 'C:\Users\Richard\Documents\GitHub\api-turnopro\storage\app\public\licenc\cacert.pem'), // Esta opción especifica la ruta al archivo cacert.pem
+                'cert' => env('GUZZLE_CERT', 'C:\Users\Richard\Documents\GitHub\Simplifies\storage\app\public\licenc\cacert.pem'), // Esta opción especifica la ruta al archivo cacert.pem
+            
             ],
         ],
 
