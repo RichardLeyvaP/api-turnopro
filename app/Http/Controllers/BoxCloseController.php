@@ -189,10 +189,10 @@ class BoxCloseController extends Controller
                 }
 
 
-                $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch->id)->first();
+            $profesionalbonus = BranchProfessional::where('professional_id', 67)->where('branch_id', $branch->id)->first();
             
             //Venta de productos y servicios
-            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0);
+            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
             $orderServPay = $orderServs->sum('price');
             $catServices = $orderServs->count();
             if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
