@@ -304,6 +304,7 @@ Route::post('/order-destroy-solicitud', [OrderController::class, 'destroy_solici
 Route::get('/sales_periodo_branch', [OrderController::class, 'sales_periodo_branch']);
 
 Route::get('/reservation', [ReservationController::class, 'index']);
+Route::get('/reservation-send-mail', [ReservationController::class, 'reservation_send_mail']);//para enviar correos a las reservas de 2 dias en adelante comunicando que debn confirmar en 24hr
 Route::get('/reservation-show', [ReservationController::class, 'show']);
 Route::post('/reservation', [ReservationController::class, 'store']);
 Route::put('/reservation', [ReservationController::class, 'update']);

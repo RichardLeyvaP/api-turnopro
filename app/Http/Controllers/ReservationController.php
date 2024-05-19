@@ -450,6 +450,32 @@ class ReservationController extends Controller
         }
     }
 
+    public function reservation_send_mail()
+    {
+        try {
+            $twoDaysLater = Carbon::now()->addDays(2)->toDateString();
+
+            // Consultar reservas con fecha igual a dos días en adelante
+            $reservations = Reservation::with(['branch', 'car.clientProfessional'])->whereDate('data', $twoDaysLater)->get();
+            foreach($reservations as $reservation){
+                $branchName = $reservation['branch']['name'];
+                $branchAddress = $reservation['branch']['address'];
+                $client = $reservation['car']['clientProfessional']['client'];
+                $clientName = $client['name'].' '.$client['surname'];
+                $clientEmail = $client['email'];
+                $professional = $reservation['car']['clientProfessional']['professional'];
+                $professionalName = $professional['name'].' '.$professional['surname'];
+                $data = $reservation['data'];
+                $startTime = $reservation['start_time'];
+                $reservationId = $reservation['id'];
+            }
+            return response()->json(['reservaciones' => $reservationId], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
+        }
+    }
+
     public function update_confirmation(Request $request)
     {
         try {
