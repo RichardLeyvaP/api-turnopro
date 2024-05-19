@@ -88,7 +88,28 @@ class OperationTipController extends Controller
                 $finance->save();
             }
             }
-
+            $professional = Professional::find($data['professional_id']);
+            $finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+                            
+            if($finance !== null)
+            {
+                $control = $finance->control+1;
+            }
+            else {
+                $control = 1;
+            }
+            Log::info($control);
+            $finance = new Finance();
+                            $finance->control = $control;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $data['amount'];
+                            $finance->comment = 'Gasto por pago a cajero (a) '.$professional->name .' '.$professional->surname;
+                            $finance->branch_id = $data['branch_id'];
+                            $finance->type = 'Sucursal';
+                            $finance->expense_id = 4;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
             return response()->json($operationTip, 201);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);

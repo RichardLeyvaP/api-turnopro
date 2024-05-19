@@ -17,6 +17,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
+use App\Services\MetaService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -35,11 +36,13 @@ class BoxCloseController extends Controller
      */
     private SendEmailService $sendEmailService;
     private TraceService $traceService;
-    public function __construct(SendEmailService $sendEmailService, TraceService $traceService)
+    private MetaService $metaService;
+    public function __construct(SendEmailService $sendEmailService, TraceService $traceService, MetaService $metaService)
     {
 
         $this->sendEmailService = $sendEmailService;
         $this->traceService = $traceService;
+        $this->metaService = $metaService;
     }
 
     public function index()
@@ -137,129 +140,9 @@ class BoxCloseController extends Controller
                 $finance->save();
             //end agregar a tabla de ingresos
             //Revisar convivencias de professionales para pagar 100% del servicio
-            Log::info("LLega a professionals");
-            $professionals = Professional::whereHas('branches', function ($query) use ($branch){
-                $query->where('branch_id', $branch->id);
-            })->whereHas('charge', function ($query){
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->select('id')->get();
+            $this->metaService->store($branch);
             //$professionals = $professionals->toArray();
-            Log::info($professionals);
-            foreach($professionals as $professional){
-                Log::info($professional->id);
-                $cars = Car::whereHas('reservation', function ($query) use ($branch) {
-                    $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now());
-                })
-                ->with(['clientProfessional.client', 'reservation'])
-                ->whereHas('clientProfessional', function ($query) use ($professional) {
-                    $query->where('professional_id', $professional->id);
-                })
-                ->where('pay', 1)
-                ->get();
-                $carIdsPay = $cars->pluck('id');
-                $rules =  BranchRuleProfessional::where('professional_id', $professional->id)->whereHas('branchRule', function ($query) use ($branch){
-                    $query->where('branch_id', $branch->id)->where('estado', 3)->whereDate('data', Carbon::now());
-                })->get();
-
-                if($rules->isEmpty()){
-                    $idService = BranchServiceProfessional::where('professional_id', $professional->id)->whereHas('branchService.branch', function ($query) use ($branch){
-                        $query->where('branch_id', $branch->id);
-                    })->where('meta', 1)->value('id');
-                    if($idService!=null){
-                        $orders = Order::where('branch_service_professional_id', $idService)->whereIn('car_id', $carIdsPay)->limit(4)->get();
-                        if(!$orders->isEmpty()){
-                            $cant = $orders->count();
-                            $amount = $orders->first()->price * $cant;
-                            $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
-                            if($professionalPayment == null)
-                            $professionalPayment = new ProfessionalPayment();
-                            $professionalPayment->branch_id = $branch->id;
-                            $professionalPayment->professional_id = $professional->id;
-                            $professionalPayment->date = Carbon::now();
-                            $professionalPayment->amount = $amount;
-                            $professionalPayment->type = 'Bono convivencias';
-                            $professionalPayment->cant = $cant;
-                            $professionalPayment->save();
-                        /*foreach($orders as $order){
-                            $order->percent_win = $order->price;
-                            $order->save();
-                        }*/
-                    }
-                    }
-                }
-
-
-            $profesionalbonus = BranchProfessional::where('professional_id', 67)->where('branch_id', $branch->id)->first();
             
-            //Venta de productos y servicios
-            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
-            $orderServPay = $orderServs->sum('price');
-            $catServices = $orderServs->count();
-            if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
-                $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
-                if($professionalPayment == null)
-                $professionalPayment = new ProfessionalPayment();
-                $professionalPayment->branch_id = $branch->id;
-                $professionalPayment->professional_id = $professional->id;
-                $professionalPayment->date = Carbon::now();
-                $professionalPayment->amount = $profesionalbonus->mountpay;
-                $professionalPayment->type = 'Bono servicios';
-                $professionalPayment->cant = $catServices;
-                $professionalPayment->save();
-            }
-            $winProduct = 0;
-            $products = Order::whereIn('car_id', $carIdsPay)
-            ->where('is_product', 1)
-            ->groupBy('product_store_id')
-            ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
-            ->get();
-            $venta = $products->sum('total_cant');
-            $percent_win = $products->sum('total_percent_win');
-            Log::info('$venta');
-            Log::info($venta);
-            Log::info('$percent_win');
-            Log::info($percent_win);
-            if($venta <= 24){
-                $winProduct = $percent_win*0.15;
-            }else if($venta > 24 && $venta <= 49){
-                $winProduct = $percent_win*0.25;
-            }else{
-                $winProduct = $percent_win*0.50;
-            }
-            Log::info('$winProduct');
-            Log::info($winProduct);
-            /*foreach ($products  as $product) {
-                if($product->total_cant <= 24){
-                    $winProduct += $product->total_percent_win*0.15;
-                }
-                else if ($product->total_cant < 24 && $product->total_cant <= 49) {
-                    $winProduct += $product->total_percent_win*0.25;
-                }
-                else{
-                    $winProduct += $product->total_percent_win*0.50;
-                }
-            }*/
-            if ($winProduct > 0) {
-                $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
-                if($professionalPayment == null)
-                $professionalPayment = new ProfessionalPayment();
-
-                $professionalPayment->branch_id = $branch->id;
-                $professionalPayment->professional_id = $professional->id;
-                $professionalPayment->date = Carbon::now();
-                $professionalPayment->amount = $winProduct;
-                $professionalPayment->type = 'Bono productos';
-                $professionalPayment->cant = $venta;
-                $professionalPayment->save();
-            }
-            /*$mountProduct = $orderProdPay->sum('price');
-            if($cantProduct <= 24){
-
-            }*/
-            }
-
-
-
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\Finance;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
@@ -52,6 +53,28 @@ class ProfessionalPaymentController extends Controller
                 Car::whereIn('id', $carIds)->update(['professional_payment_id' => $professionalPayment->id]);
             }
 
+            $professional = Professional::find($data['professional_id']);
+
+            $finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+                            
+            if($finance !== null)
+            {
+                $control = $finance->control+1;
+            }
+            else {
+                $control = 1;
+            }
+            $finance = new Finance();
+                            $finance->control = $control;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $data['amount'];
+                            $finance->comment = 'Gasto por pago a '.$professional->name .' '.$professional->surname;
+                            $finance->branch_id = $data['branch_id'];
+                            $finance->type = 'Sucursal';
+                            $finance->expense_id = 4;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
             return response()->json($professionalPayment, 201);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
