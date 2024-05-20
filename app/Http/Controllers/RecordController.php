@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchRuleProfessional;
 use App\Models\Professional;
 use App\Models\Record;
+use App\Models\Schedule;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
@@ -39,7 +41,30 @@ class RecordController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
-            if(!$record){                
+            if(!$record){  
+                $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
+            $startTime = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->value('start_time');
+            if($startTime){
+                $startTimeCarbon = Carbon::createFromFormat('H:i:s', $startTime);
+                // Obtener la hora actual
+                $currentTime = Carbon::now();
+
+                // Comparar las horas
+                if ($currentTime->greaterThan($startTimeCarbon)) {
+                    $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id'])
+                        ->whereHas('rule', function ($query) {
+                            $query->where('type', 'Puntualidad')
+                                  ->where('automatic', 1);
+                        });;
+                    })->where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->orderByDesc('data')->first();
+                    if($branchRuleProfessionals){
+                        $branchRuleProfessionals->estado = 3;
+                        $branchRuleProfessionals->save();
+                    }
+                    //return "La hora actual es mayor que la hora de inicio de la sucursal ($startTime).";
+                }
+            }        
             $record = new Record();
             $record->professional_id = $data['professional_id'];
             $record->branch_id = $data['branch_id'];
@@ -51,7 +76,7 @@ class RecordController extends Controller
             }
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al crear un record'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al crear un record'], 500);
         }
     }
 
