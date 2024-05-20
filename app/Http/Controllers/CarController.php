@@ -1114,7 +1114,7 @@ public function professional_car_notpay(Request $request)
                     'tips' =>  (int)$car->tip,
                     'tips80' =>  $car->tip ? $car->tip * 0.80 : 0,
                     'Services' => $orderServ->count(),
-                    'totalServices' => $orderServ->sum('price'),
+                    'totalServices' => $orderServ->sum('percent_win'),
                     'Products' => $orderProd->sum('cant'),
                     'totalProducts' => $orderProd->sum('price'),
                     'choice' => $car->select_professional ? 'Seleccionado' : 'aleatorio',                    
