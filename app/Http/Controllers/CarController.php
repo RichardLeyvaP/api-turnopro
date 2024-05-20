@@ -827,7 +827,7 @@ class CarController extends Controller
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-            $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
+            $retention = Professional::where('id', $data['professional_id'])->first()->retention;
                 $cars = Car::with(['reservation', 'orders'])
                 ->whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
@@ -857,7 +857,7 @@ class CarController extends Controller
                     'totalProducts' => $orderProd->sum('price'),
                     'clientAleator' => $aleatorio,
                     'amountGenerate' => $orderServ->sum('percent_win'), //ganancia total del barbero ganancias servicios
-                    'retention' => $orderServ->sum('percent_win') * $retention,
+                    'retention' => ($orderServ->sum('percent_win') * $retention)/100,
                     //'metacant' => $meta->count(),
                     //'metaamount' => $meta->sum('amount')
 
@@ -1079,7 +1079,7 @@ public function professional_car_notpay(Request $request)
                 ->orwhere('type', 'Bono servicios');
             })
              ->get();
-           $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
+           $retention = Professional::where('id', $data['professional_id'])->first()->retention;
            $cars = Car::whereHas('reservation', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id'])->whereDate('data', $data['data']);
            })->whereHas('clientProfessional', function ($query) use ($data){
@@ -1122,7 +1122,7 @@ public function professional_car_notpay(Request $request)
                     'SpecialAmount' => $ServiceEspecial->sum('percent_win'),
                     'serviceRegular' => $ServiceRegular->count(),
                     'pay' => $car->professional_payment_id == null ? 0 : 1,
-                    'totalRetention' => intval($orderServ->sum('percent_win') * $retention),
+                    'totalRetention' => intval(($orderServ->sum('percent_win') * $retention)/100),
                     'totalGeneral' => $car->amount,
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),
