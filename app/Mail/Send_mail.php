@@ -25,6 +25,7 @@ class Send_mail extends Mailable
     public $branch_name;
     public $file;
     public $id_reservation;
+    public $branch_address;
 
     // Propiedades adicionales correspondientes a la plantilla final
     public $branchBusinessName;
