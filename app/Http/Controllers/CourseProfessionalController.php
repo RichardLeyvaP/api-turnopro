@@ -51,7 +51,7 @@ class CourseProfessionalController extends Controller
             $data = $request->validate([
                 'course_id' => 'nullable|numeric'
             ]);
-            $course = Course::find($data['course_id']);
+            //$course = Course::find($data['course_id']);
             
             $courseprofessional = CourseProfessional::where('course_id', $data['course_id'])->get()->map(function ($course){
                 $professional = $course->professional;
