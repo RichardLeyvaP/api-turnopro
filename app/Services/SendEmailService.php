@@ -32,12 +32,14 @@ class SendEmailService {
         }
         if ($branch) {
             $branch_name = $branch->name;
+            $branch_address = $branch->address;
         } else {
             // El cliente con id 5 no fue encontrado
             $branch_name = null; // o manejar de acuerdo a tus necesidades
+            $branch_address = null;
         }
               Log::info($client_email);
-              $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type);
+              $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type,$branch_address);
               $mail->id_reservation = $id_reservation;
               $this->sendEmail($client_email,$mail,'Confirmación de Reserva en Simplifies');
 

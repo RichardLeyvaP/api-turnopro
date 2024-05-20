@@ -18,10 +18,16 @@
     <li><strong>Hora de Reserva:</strong> {{$start_time}}</li>
     <li><strong>Barbero:</strong> {{$name_professional}}</li>
     <li><strong>Sucursal:</strong> {{$branch_name}}</li>
+    <li><strong>Dirección:</strong> {{$branch_address}}</li>
 </ul>
 
 <p style="color: #555;">
-    &#x1F603; Estamos ansiosos de brindarte una experiencia excepcional en nuestro salón. Por favor,&#x231A; llega unos minutos antes de tu cita para que podamos asegurarnos de ofrecerte el mejor servicio posible.
+    &#x1F603; Estamos ansiosos de brindarte una experiencia excepcional en nuestro salón.
+</p>
+
+<p style="color: #555;">
+    <span style="font-size: 1em; font-weight: bold;">¡IMPORTANTE!</span><br>
+Puede llegar 10 minutos antes o despues de la hora indicada y debe anunciarse en la caja para que se sitúe de primero en la lista de espera y así su barbero lo pueda atender después del servicio que este realizando.
 </p>
 
 <p style="color: #555;">
