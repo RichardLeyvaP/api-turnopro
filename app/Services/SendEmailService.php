@@ -47,6 +47,40 @@ class SendEmailService {
 
     }
 
+    public function rememberReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional,$recipient,$id_reservation,)
+    {
+        $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+        $template = 'send_mail_remember';        
+        $client = Client::where('id', $client_id)->first();
+        $branch = Branch::where('id', $branch_id)->first();
+        $recipient = $recipient;
+
+       
+
+        if ($client) {
+            $client_email = $client->email;
+            $client_name = $client->name.' '.$client->surname;
+        } else {
+            // El cliente con id 5 no fue encontrado
+            $client_email = null; // o manejar de acuerdo a tus necesidades
+        }
+        if ($branch) {
+            $branch_name = $branch->name;
+            $branch_address = $branch->address;
+        } else {
+            // El cliente con id 5 no fue encontrado
+            $branch_name = null; // o manejar de acuerdo a tus necesidades
+            $branch_address = null;
+        }
+              Log::info($client_email);
+              $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type,'');
+              $mail->id_reservation = $id_reservation;
+              $mail->branch_address = $branch_address;
+              $this->sendEmail($client_email,$mail,'Confirmación de Reserva en Simplifies');
+
+
+    }
+
     //este configurarlo para el envio de cierre de caja si hiciera falta
     public function emailRecuperarPass($client_email,$client_name, $usser, $pass)
     {
