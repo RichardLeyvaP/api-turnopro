@@ -828,33 +828,6 @@ class CarController extends Controller
                'branch_id' => 'required|numeric'
            ]);
             $retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
-           /*$cars = Car::whereHas('reservation', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->whereHas('clientProfessional', function ($query) use ($data){
-            $query->where('professional_id', $data['professional_id']);
-           })->where('pay', 1)/*->where('professional_payment_id', '!=', NULL)*//*->get()->map(function($car) use ($retention, $data){
-                /*$reservation = $car->reservation;
-                //$ordersServices = count($car->orders->where('is_product', 0));
-                $totalServicesWin = $car->orders->where('is_product', 0)->sum('percent_win');
-                //$totalServices = $car->orders->where('is_product', 0)->sum('price');
-                //$totalProducts = $car->orders->where('is_product', 1)->sum('price');
-                $aleatorio = !$car->select_professional? 1 : 0;
-                $orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
-                $orderProd = Order::where('car_id', $car->id)->where('is_product', 1)->get();*/
-                /*$meta = ProfessionalPayment::where('professional_id', $data['professional_id'])
-                                            ->where(function($query) {
-                                                $query->where('type', 'Bono convivencias')
-                                                ->orwhere('type', 'Bono productos')
-                                                ->orwhere('type', 'Bono servicios');
-                                            })
-                                        //->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
-                                         // ->where('branch_id', $data['branch_id'])
-                                          //->where('type', 'Bono convivencias')
-                                          //->orwhere('type', 'Bono productos')
-                                          //->orwhere('type', 'Bono servicios')
-                                          ->get();
-                                          $metacant = $meta->count();
-                                        $metaamount = $meta->sum('amount');*/
                 $cars = Car::with(['reservation', 'orders'])
                 ->whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
@@ -869,11 +842,7 @@ class CarController extends Controller
                     $orderServ = $car->orders->where('is_product', 0);
                     $orderProd = $car->orders->where('is_product', 1);
                     $aleatorio = !$car->select_professional? 1 : 0;
-                    
-                      //Log::info($car->data);
-                    /*$meta = $orderServ->filter(function ($order) {
-                        return $order->percent_win == $order->price;
-                    });*/
+
                 return [
                     'professional_id' => $data['professional_id'],
                     'branch_id' => $data['branch_id'],
@@ -918,14 +887,14 @@ class CarController extends Controller
                 'tips80' => $cars->sum('tipspercent'),
                 'clientAleator' => $cars->sum('clientAleator'),
                 'amountGenerate' => $cars->sum('amountGenerate'),
-                'totalRetention' => $cars->sum('retention'),
+                'totalRetention' => intval($cars->sum('retention')),
                 'metacant' => $meta->count() ? $meta->count() : 0,
                 'metaamount' => $meta->sum('amount') ? $meta->sum('amount') : 0
             ];
         })->sortByDesc('data')->values();
 
         //Log::info($cars->pluck('id'));
-           return response()->json(['car' => $cars], 200);
+           return response()->json(['car' => $cars], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
        }
@@ -1153,14 +1122,14 @@ public function professional_car_notpay(Request $request)
                     'SpecialAmount' => $ServiceEspecial->sum('percent_win'),
                     'serviceRegular' => $ServiceRegular->count(),
                     'pay' => $car->professional_payment_id == null ? 0 : 1,
-                    'totalRetention' => $orderServ->sum('percent_win') * $retention,
+                    'totalRetention' => intval($orderServ->sum('percent_win') * $retention),
                     'totalGeneral' => $car->amount,
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),
                     'metaAmount' => $meta->sum('amount'),
                 ];
            });
-           return response()->json(['car' => $cars], 200);
+           return response()->json(['car' => $cars], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
            return response()->json(['msg' => $th->getMessage()."Error al mostrar ls ordenes"], 500);
        }
