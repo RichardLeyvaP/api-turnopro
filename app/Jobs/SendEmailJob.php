@@ -139,7 +139,8 @@ class SendEmailJob implements ShouldQueue
                 $this->data['totalDebit'],
                 $this->data['totalTransfer'],
                 $this->data['totalOther'],
-                $this->data['totalMount']
+                $this->data['totalMount'],                
+                $this->data['totalCardGif'],
             );
         }
         if (isset($this->data['send_gift_card'])) {
