@@ -453,26 +453,43 @@ class ReservationController extends Controller
     public function reservation_send_mail()
     {
         try {
-            $twoDaysLater = Carbon::now()->addDays(2)->toDateString();
+            $twoDaysLater = Carbon::now()->addDays(1)->toDateString();
 
             // Consultar reservas con fecha igual a dos días en adelante
             $reservations = Reservation::with(['branch', 'car.clientProfessional'])->whereDate('data', $twoDaysLater)->get();
             foreach($reservations as $reservation){
-                $branchName = $reservation['branch']['name'];
-                $branchAddress = $reservation['branch']['address'];
-                $client = $reservation['car']['clientProfessional']['client'];
-                $clientName = $client['name'].' '.$client['surname'];
-                $clientEmail = $client['email'];
+                $branchId = $reservation['branch']['id'];
+                $id_client = $reservation['car']['clientProfessional']['client']['id'];
                 $professional = $reservation['car']['clientProfessional']['professional'];
                 $professionalName = $professional['name'].' '.$professional['surname'];
                 $data = $reservation['data'];
                 $startTime = $reservation['start_time'];
                 $reservationId = $reservation['id'];
+                $data = [
+                    'remember_reservation' => true, // Indica que es una confirmación de reserva
+                    'data_reservation' => $data, // Datos de la reserva
+                    'start_time' => $startTime, // Hora de inicio
+                    'client_id' => $id_client, // ID del cliente
+                    'branch_id' => $branchId, // ID de la sucursal
+                    'type' => null, // Tipo (en este caso, se deja como null)
+                    'name_professional' => $professionalName, // Nombre del profesional
+                    'recipient' => null, // Destinatario (en este caso, se deja como null),                
+                    'id_reservation' => $reservationId // Destinatario (en este caso, se deja como null),                
+                ];
+                
+                SendEmailJob::dispatch($data);
             }
-            return response()->json(['reservaciones' => $reservationId], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
+
+            return response()->json(['reservaciones' => 'Correos enviados'], 200, [], JSON_NUMERIC_CHECK);
+        } catch (TransportException $e) {
+    
+            return response()->json(['msg' => 'Correos de recordar reserva enviados'], 200);
+        }
+          catch (\Throwable $th) {
+              Log::error($th);
+            
+              DB::rollback();
+              return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
 
@@ -480,15 +497,32 @@ class ReservationController extends Controller
     {
         try {
             $data = $request->validate([
-                //'confirmation' => 'required|numeric',
+                'confirmation' => 'required|numeric',
                 'id' => 'required'
 
             ]);
+            $msg = '';
             $reservacion = Reservation::find($data['id']);
-            $reservacion->confirmation = 1;
-            $reservacion->save();
+            if($reservacion){
+            if (!Carbon::parse($reservacion->data)->isToday()  && Carbon::parse($reservacion->data)->isFuture())
+            {
+                $reservacion->confirmation = $data['confirmation'];
+                $reservacion->save();
+                if($data['confirmation'] == 1 ){
+                    $msg = 'Reservacion confirmada correctamente.';
+                }
+                else if($data['confirmation'] == 3 ){
+                    $msg = 'Reservación cancelada correctamente.'; 
+                }
+            }else{
+                $msg = 'Lo sentimos su reserva no puede ser confirmada.';
+            }
+        }else{
+            $msg = 'Lo sentimos su reserva no puede ser confirmada.';
+        }
+            
 
-            return response()->json(['msg' => 'Reservacion confirmada correctamente'], 200);
+            return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);

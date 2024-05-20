@@ -122,7 +122,7 @@ class SendEmailJob implements ShouldQueue
             );
         }
         if (isset($this->data['remember_reservation'])) {
-            $emailService->confirmReservation(
+            $emailService->rememberReservation(
                 $this->data['data_reservation'],
                 $this->data['start_time'],
                 $this->data['client_id'],
