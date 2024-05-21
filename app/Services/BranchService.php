@@ -816,14 +816,14 @@ class BranchService
                 })->whereHas('clientProfessional', function ($query) use ($professional){
                     $query->where('professional_id', $professional->id);
                 })->where('pay', 1)->get(); 
-                $retention = number_format($professional->retention/100, 2);
+                $retention = $professional->retention;
                 $winProfessional =$cars->sum(function ($car){
                     return $car->orders->sum('percent_win');
                 });
                 $amuntGenerate =$cars->sum(function ($car){
                     return $car->orders->sum('price');
                 });
-                $retentionPorcent = round($winProfessional * $retention);
+                $retentionPorcent = round(($winProfessional * $retention)/100);
                 $winTips =  round($cars->sum('tip') * 0.8, 2);
                 $dates [] =  [
                     'branchName' => $branch->name,
@@ -937,14 +937,14 @@ class BranchService
                 })->whereHas('clientProfessional', function ($query) use ($professional){
                     $query->where('professional_id', $professional->id);
                 })->where('pay', 1)->get(); 
-                $retention = number_format($professional->retention/100, 2);
+                $retention = $professional->retention;
                 $winProfessional =$cars->sum(function ($car){
                     return $car->orders->sum('percent_win');
                 });
                 $amuntGenerate =$cars->sum(function ($car){
                     return $car->orders->sum('price');
                 });
-                $retentionPorcent = round($winProfessional * $retention);
+                $retentionPorcent = round(($winProfessional * $retention) /100);
                 $winTips =  round($cars->sum('tip') * 0.8, 2);
                 $dates [] =  [
                     'branchName' => $branch->name,

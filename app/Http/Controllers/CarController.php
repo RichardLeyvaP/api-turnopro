@@ -880,13 +880,13 @@ class CarController extends Controller
                 'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana
                 'attendedClient' => $cars->sum('attendedClient'),
                 'services' => $cars->sum('services'),
-                'totalGeneral' => $cars->sum('totalGeneral'),
+                'totalGeneral' => intval($cars->sum('totalGeneral')),
                 'totalServices' => $cars->sum('totalServices'),
                 'totalProducts' => $cars->sum('totalProducts'),
-                'tips' => $cars->sum('tips'),
-                'tips80' => $cars->sum('tipspercent'),
+                'tips' => intval($cars->sum('tips')),
+                'tips80' => intval($cars->sum('tipspercent')),
                 'clientAleator' => $cars->sum('clientAleator'),
-                'amountGenerate' => $cars->sum('amountGenerate'),
+                'amountGenerate' => intval($cars->sum('amountGenerate')),
                 'totalRetention' => intval($cars->sum('retention')),
                 'metacant' => $meta->count() ? $meta->count() : 0,
                 'metaamount' => $meta->sum('amount') ? $meta->sum('amount') : 0
@@ -984,7 +984,7 @@ public function professional_car_notpay(Request $request)
                'professional_id' => 'required|numeric',
                'branch_id' => 'required|numeric'
            ]);
-           $retention = number_format(Professional::where('id', $data['professional_id'])->value('retention') / 100, 2);
+           $retention = Professional::where('id', $data['professional_id'])->value('retention');
 
             $cars = Car::where('professional_payment_id', null)
                 ->whereHas('reservation', function ($query) use ($data) {
@@ -1002,7 +1002,8 @@ public function professional_car_notpay(Request $request)
                         ->get();
 
                     $client = $car->clientProfessional->client;
-
+                    $retention = $retention ? ($orderServ->sum('percent_win') * $retention)/100 : 0;
+                    $amountServ = $orderServ->sum('percent_win');
                     return [
                         'id' => $car->id,
                         'professional_id' => $data['professional_id'],
@@ -1012,9 +1013,9 @@ public function professional_car_notpay(Request $request)
                         'data' => $car->reservation->data,
                         'attendedClient' => 1,
                         'services' => $orderServ->count(),
-                        'totalServices' => $retention ? $orderServ->sum('percent_win') - ($orderServ->sum('percent_win') * $retention) : $orderServ->sum('percent_win'),
+                        'totalServices' => intval($amountServ-$retention),
                         'clientAleator' => $car->select_professional,
-                        'amountGenerate' => $car->amount,
+                        'amountGenerate' => intval($car->amount),
                         'tip' => $car->tip * 0.80
                     ];
                 });
@@ -1122,7 +1123,7 @@ public function professional_car_notpay(Request $request)
                     'SpecialAmount' => $ServiceEspecial->sum('percent_win'),
                     'serviceRegular' => $ServiceRegular->count(),
                     'pay' => $car->professional_payment_id == null ? 0 : 1,
-                    'totalRetention' => intval(($orderServ->sum('percent_win') * $retention)/100),
+                    'totalRetention' => intval($orderServ->sum('percent_win') * $retention /100),
                     'totalGeneral' => $car->amount,
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),

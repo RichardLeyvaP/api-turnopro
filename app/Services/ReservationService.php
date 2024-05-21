@@ -68,7 +68,7 @@ class ReservationService
             Log::info("Crear ordenes");
             Log::info('$branchServiceProfessional->percent');
             Log::info($branchServiceProfessional->percent);
-            $percent = number_format($branchServiceProfessional->percent / 100, 2);
+            $percent = $branchServiceProfessional->percent ? $branchServiceProfessional->percent : 1;
             Log::info('$percent');
             Log::info($percent);
             $branch_service_professional_id = $branchServiceProfessional->id;
@@ -79,7 +79,7 @@ class ReservationService
             $order->data = $data['data'];
             $order->is_product = false;
             //logica de porciento de ganancia
-            $order->percent_win = $service->price_service * $percent;
+            $order->percent_win = $service->price_service * $percent/100;
             $order->price = $service->price_service;
             $order->request_delete = false;
             $order->save();
