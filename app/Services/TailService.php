@@ -416,6 +416,7 @@ class TailService {
                     'client_name' => $client->name." ".$client->surname,
                     'professional_name' => $professional->name." ".$professional->surname,
                     'client_id' => $client->id,
+                    'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
                     'professional_id' => $professional->id,
                     'professional_state' => $professional->state,
                     'attended' => $tail->attended

@@ -42,8 +42,8 @@ class StudentController extends Controller
         try {
             $data = Validator::make($request->all(), [
                 'name' => 'required|max:50',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:students',
                 'phone' => 'required|max:15'
             ]);
@@ -72,11 +72,11 @@ class StudentController extends Controller
             $student = new Student;
             $student->code = $code;
             $student->qr_url = $qrCodeFilePath;
-            $student->name = $data['name'];
-            $student->surname = $data['surname'];
-            $student->second_surname = $data['second_surname'];
-            $student->email = $data['email'];
-            $student->phone = $data['phone'];
+            $student->name = $request->name;
+            //$student->surname = $data['surname'];
+            //$student->second_surname = $data['second_surname'];
+            $student->email = $request->email;
+            $student->phone = $request->phone;
             $student->save();
 
             $filename = "students/default.jpg"; 
@@ -241,8 +241,8 @@ class StudentController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|email|unique:associates,email,' . $request->id,
                 'phone' => 'required|max:15'
             ]);
@@ -286,8 +286,8 @@ class StudentController extends Controller
                     $student->student_image = $request->file('student_image')->storeAs('students',$student->id.'.'.$request->file('student_image')->extension(),'public');
                 }
             $student->name = $data['name'];
-            $student->surname = $data['surname'];
-            $student->second_surname = $data['second_surname'];
+            //$student->surname = $data['surname'];
+            //$student->second_surname = $data['second_surname'];
             $student->email = $data['email'];
             $student->phone = $data['phone'];
             //$client->client_image = $filename;

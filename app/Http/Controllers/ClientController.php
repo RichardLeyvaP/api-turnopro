@@ -213,8 +213,8 @@ class ClientController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|max:50',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15',
                 //'user_id' => 'nullable|numeric'
@@ -231,8 +231,8 @@ class ClientController extends Controller
             ]);
             $client = new Client();
             $client->name = $request->name;
-            $client->surname = $request->surname;
-            $client->second_surname = $request->second_surname;
+            //$client->surname = $request->surname;
+            //$client->second_surname = $request->second_surname;
             $client->email = $request->email;
             $client->phone = $request->phone;
             $client->user_id = $user->id;
@@ -264,8 +264,8 @@ class ClientController extends Controller
             $clients_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email',
                 'phone' => 'required|max:15|string',
                 //'user_id' => 'required|numeric'
@@ -281,8 +281,8 @@ class ClientController extends Controller
                 $client->client_image = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
             $client->name = $clients_data['name'];
-            $client->surname = $clients_data['surname'];
-            $client->second_surname = $clients_data['second_surname'];
+            //$client->surname = $clients_data['surname'];
+            //$client->second_surname = $clients_data['second_surname'];
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
             //$client->user_id = $clients_data['user_id'];

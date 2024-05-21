@@ -204,13 +204,13 @@ class ProfessionalPaymentController extends Controller
                                           })->sortByDesc('date')->values();
                                           
                                           //pendiente por pagar
-                                          $retention = number_format(Professional::where('id', $request->professional_id)->value('retention') / 100, 2);
+                                          $retention = Professional::where('id', $request->professional_id)->value('retention');
                                           $paymentIds = $payments->pluck('id');
                                           
                 if($request->charge == 'Tecnico'){
                    $pendienteMount = 0;
-                    $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : 0;
-                    $clientAttended = Car::where('tecnico_id', $professionalId)->sum('select_professional');
+                    $pagadoMount = $payments->sum('amount') ? intval($payments->sum('amount')) : intval(0);
+                    $clientAttended = intval(Car::where('tecnico_id', $professionalId)->sum('select_professional'));
                     $servCant = 0;
                     $amountGenerate = 0;
                     $propina80 = 0;
@@ -236,7 +236,7 @@ class ProfessionalPaymentController extends Controller
                     $orderServPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
                     $orderProdPay = Order::whereIn('car_id', $carIdsPay)->where('is_product', 1)->get();
                     $servMountPay = $orderServPay->sum('percent_win');
-                    $retentionpay = $retention ? $servMountPay * $retention : 0;
+                    $retentionpay = $retention ? ($servMountPay * $retention)/100 : 0;
                     $metaPagado = $payments->where('type', 'Bono convivencias');
                     $clientAttended = $carPagado->count() ? $carPagado->count() : 0;
                     $servCant = $orderServPay->count() ? $orderServPay->count() : 0;
@@ -277,7 +277,7 @@ class ProfessionalPaymentController extends Controller
                 }
                 else{
                     $pendienteMount = 0;
-                    $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : 0;
+                    $pagadoMount = $payments->sum('amount') ? intval($payments->sum('amount')) : intval(0);
                     $clientAttended = 0;
                     $servCant = 0;
                     $amountGenerate = 0;

@@ -32,7 +32,7 @@ class ProfessionalController extends Controller
     public function index()
     {
         try {
-            $professionals = Professional::with('user', 'charge')->addSelect('*', DB::raw("CONCAT(name, ' ', surname, ' ', second_surname) AS fullName"))->get()->map(function ($professional) {
+            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) {
                 return [
                     'id' => $professional->id,
                     'name' => $professional->name,
@@ -528,8 +528,8 @@ class ProfessionalController extends Controller
             ]);
             $professional = new Professional();
             $professional->name = $data['name'];
-            $professional->surname = $data['surname'];
-            $professional->second_surname = $data['second_surname'];
+            //$professional->surname = $data['surname'];
+            //$professional->second_surname = $data['second_surname'];
             $professional->email = $data['email'];
             $professional->phone = $data['phone'];
             $professional->charge_id = $data['charge_id'];
@@ -603,8 +603,8 @@ class ProfessionalController extends Controller
             $professionals_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
@@ -644,8 +644,8 @@ class ProfessionalController extends Controller
                 $professional->image_url = $request->file('image_url')->storeAs('professionals', $professional->id . '.' . $request->file('image_url')->extension(), 'public');
             }
             $professional->name = $professionals_data['name'];
-            $professional->surname = $professionals_data['surname'];
-            $professional->second_surname = $professionals_data['second_surname'];
+            //$professional->surname = $professionals_data['surname'];
+            //$professional->second_surname = $professionals_data['second_surname'];
             $professional->email = $professionals_data['email'];
             $professional->phone = $professionals_data['phone'];
             $professional->charge_id = $professionals_data['charge_id'];

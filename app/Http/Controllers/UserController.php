@@ -50,8 +50,8 @@ class UserController extends Controller
                 'name' => 'required',
                 'user' => 'required',
                 'password' => 'required|confirmed',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15'
             ]);
@@ -69,8 +69,8 @@ class UserController extends Controller
 
             $client = new Client();
             $client->name = $request->name;
-            $client->surname = $request->surname;
-            $client->second_surname = $request->second_surname;
+            //$client->surname = $request->surname;
+            //$client->second_surname = $request->second_surname;
             $client->email = $request->email;
             $client->phone = $request->phone;
             $client->user_id = $user->id;
@@ -88,13 +88,14 @@ class UserController extends Controller
 
     public function register_professional(Request $request)
     {
+        DB::beginTransaction();
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required',
                 'user' => 'required',
                 'password' => 'required',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email|unique:professionals',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
@@ -123,8 +124,8 @@ class UserController extends Controller
             }*/
             $professional = new Professional();
             $professional->name = $request['name'];
-            $professional->surname = $request['surname'];
-            $professional->second_surname = $request['second_surname'];
+            //$professional->surname = $request['surname'];
+            //$professional->second_surname = $request['second_surname'];
             $professional->email = $request['email'];
             $professional->phone = $request['phone'];
             $professional->charge_id = $request['charge_id'];
@@ -139,7 +140,7 @@ class UserController extends Controller
             }
             $professional->image_url = $filename;
             $professional->save();
-
+            DB::commit();
             return response()->json([
                 'msg' => "Professional registrado correctamente!!!",
                 'user' => $user

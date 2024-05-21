@@ -296,6 +296,7 @@ class NotificationController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric',
             ]);
+            $notifications = [];
             $professional = Professional::find($data['professional_id']);
             $charge = $professional->charge->name;
             if ($data['branch_id'] == 0) {

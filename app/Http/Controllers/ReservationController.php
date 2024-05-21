@@ -130,9 +130,9 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'email_client' => 'required',
                 'phone_client' => 'required',
-                'name_client' => 'required',
-                'surname_client' => 'required',
-                'second_surname' => 'required',
+                'name_client' => 'required'//,
+                //'surname_client' => 'required',
+                //'second_surname' => 'required',
             ]);
             if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
@@ -163,8 +163,8 @@ class ReservationController extends Controller
 
                     $client = new Client();
                     $client->name = $data['name_client'];
-                    $client->surname = $data['surname_client'];
-                    $client->second_surname = $data['second_surname'];
+                    //$client->surname = $data['surname_client'];
+                    //$client->second_surname = $data['second_surname'];
                     $client->email = $data['email_client'];
                     $client->phone = $data['phone_client'];
                     $client->user_id = $user->id;
@@ -188,8 +188,8 @@ class ReservationController extends Controller
 
                 $client = new Client();
                 $client->name = $data['name_client'];
-                $client->surname = $data['surname_client'];
-                $client->second_surname = $data['second_surname'];
+                //$client->surname = $data['surname_client'];
+                //$client->second_surname = $data['second_surname'];
                 $client->email = $data['email_client'];
                 $client->phone = $data['phone_client'];
                 $client->client_image = 'comments/default.jpg';
