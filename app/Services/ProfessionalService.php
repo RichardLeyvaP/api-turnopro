@@ -935,39 +935,12 @@ class ProfessionalService
                 ->get();
                 $amountGenral = $cars->sum('technical_assistance') * 5000;
                 return $result = [
-                    'Monto Generado' => intval($amountGenral), //suma productos y servicios
-                    'Ganancia Barbero' => intval(0), //monto generado percent_win 
-                    'Retención' => intval(0), //monto generado percent_win % calculando la retención
-                    'Propina' => intval(0),
-                    'Propina 80%' => intval(0),
-                    'Ganancia Total Barbero' => intval(0), //ganancia barbero - retencion + propinas 80%
-                    'Servicios Realizados' => 0,
-                    'Productos Vendidos' => 0,
-                    'Servicios Regulares' => 0,
-                    'Servicios Especiales' => 0,
-                    'Monto Especial' => 0,
                     'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                    'Seleccionado' => 0,
-                    'Aleatorio' => 0
+                    'Monto Generado' => intval($amountGenral)
                 ];
         }
         else{
-            return $result = [
-                'Monto Generado' => 0, //suma productos y servicios
-                'Ganancia Barbero' => intval(0), //monto generado percent_win 
-                'Retención' => intval(0), //monto generado percent_win % calculando la retención
-                'Propina' => intval(0),
-                'Propina 80%' => intval(0),
-                'Ganancia Total Barbero' => intval(0), //ganancia barbero - retencion + propinas 80%
-                'Servicios Realizados' => 0,
-                'Productos Vendidos' => 0,
-                'Servicios Regulares' => 0,
-                'Servicios Especiales' => 0,
-                'Monto Especial' => 0,
-                'Clientes Atendidos' => 0,
-                'Seleccionado' => 0,
-                'Aleatorio' => 0
-            ];
+            return $result = [];
         }
     }
 
@@ -1034,39 +1007,12 @@ class ProfessionalService
                 ->get();
                 $amountGenral = $cars->sum('technical_assistance') * 5000;
                 return $result = [
-                    'Monto Generado' => intval($amountGenral), //suma productos y servicios
-                    'Ganancia Barbero' => intval(0), //monto generado percent_win 
-                    'Retención' => intval(0), //monto generado percent_win % calculando la retención
-                    'Propina' => intval(0),
-                    'Propina 80%' => intval(0),
-                    'Ganancia Total Barbero' => intval(0), //ganancia barbero - retencion + propinas 80%
-                    'Servicios Realizados' => 0,
-                    'Productos Vendidos' => 0,
-                    'Servicios Regulares' => 0,
-                    'Servicios Especiales' => 0,
-                    'Monto Especial' => 0,
                     'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                    'Seleccionado' => 0,
-                    'Aleatorio' => 0
+                    'Monto Generado' => intval($amountGenral)
                 ];
         }
         else{
-            return $result = [
-                'Monto Generado' => 0, //suma productos y servicios
-                'Ganancia Barbero' => intval(0), //monto generado percent_win 
-                'Retención' => intval(0), //monto generado percent_win % calculando la retención
-                'Propina' => intval(0),
-                'Propina 80%' => intval(0),
-                'Ganancia Total Barbero' => intval(0), //ganancia barbero - retencion + propinas 80%
-                'Servicios Realizados' => 0,
-                'Productos Vendidos' => 0,
-                'Servicios Regulares' => 0,
-                'Servicios Especiales' => 0,
-                'Monto Especial' => 0,
-                'Clientes Atendidos' => 0,
-                'Seleccionado' => 0,
-                'Aleatorio' => 0
-            ];
+            return $result = [];
         }
     }
 
@@ -1134,39 +1080,12 @@ class ProfessionalService
                 ->get();
                 $amountGenral = $cars->sum('technical_assistance') * 5000;
                 return $result = [
-                    'Monto Generado' => intval($amountGenral), //suma productos y servicios
-                    'Ganancia Barbero' => intval(0), //monto generado percent_win 
-                    'Retención' => intval(0), //monto generado percent_win % calculando la retención
-                    'Propina' => intval(0),
-                    'Propina 80%' => intval(0),
-                    'Ganancia Total Barbero' => intval(0), //ganancia barbero - retencion + propinas 80%
-                    'Servicios Realizados' => 0,
-                    'Productos Vendidos' => 0,
-                    'Servicios Regulares' => 0,
-                    'Servicios Especiales' => 0,
-                    'Monto Especial' => 0,
                     'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                    'Seleccionado' => 0,
-                    'Aleatorio' => 0
+                    'Monto Generado' => intval($amountGenral)
                 ];
         }
         else{
-            return $result = [
-                'Monto Generado' => 0, //suma productos y servicios
-                'Ganancia Barbero' => intval(0), //monto generado percent_win 
-                'Retención' => intval(0), //monto generado percent_win % calculando la retención
-                'Propina' => intval(0),
-                'Propina 80%' => intval(0),
-                'Ganancia Total Barbero' => intval(0), //ganancia barbero - retencion + propinas 80%
-                'Servicios Realizados' => 0,
-                'Productos Vendidos' => 0,
-                'Servicios Regulares' => 0,
-                'Servicios Especiales' => 0,
-                'Monto Especial' => 0,
-                'Clientes Atendidos' => 0,
-                'Seleccionado' => 0,
-                'Aleatorio' => 0
-            ];
+            return $result = [];
         }
     }
 
