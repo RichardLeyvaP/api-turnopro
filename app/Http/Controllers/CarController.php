@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\Business;
 use App\Models\Car;
+use App\Models\CashierSale;
 use App\Models\ClientProfessional;
 use App\Models\Comment;
 use App\Models\CourseProfessional;
@@ -16,6 +17,7 @@ use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
+use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Service;
 use App\Services\CarService;
@@ -583,7 +585,9 @@ class CarController extends Controller
                 //}
             })->sortBy('state')->values();
             $box[] = Box::with('boxClose')->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
-            return response()->json(['cars' => $cars, 'box' => $box], 200, [], JSON_NUMERIC_CHECK);
+            $payments = Payment::whereDate('created_at', Carbon::now())->where('branch_id', $data['branch_id'])->get();
+            $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->get();
+            return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar los carros"], 500);
@@ -1027,6 +1031,7 @@ public function professional_car_notpay(Request $request)
                         'enrollment_id' => $course->enrollment_id,
                         'nameEnrollment' => $course->enrollment->name,
                         'nameCourse' => $course->name,
+                        'price' => $course->price,
                         'description' => $course->description,
                         'startDate' => $course->startDate,
                         'endDate' => $course->endDate,

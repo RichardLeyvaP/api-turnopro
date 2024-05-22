@@ -57,6 +57,7 @@ use App\Http\Controllers\RestdayController;
 use App\Http\Controllers\TraceController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\OperationTipController;
+use App\Http\Controllers\CashierSaleController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
@@ -426,6 +427,7 @@ Route::post('/notification-destroy', [NotificationController::class, 'destroy'])
 Route::get('/payment', [PaymentController::class, 'index']);
 Route::get('/payment-show', [PaymentController::class, 'show']);
 Route::post('/payment', [PaymentController::class, 'store']);
+Route::post('/payment-product-sales', [PaymentController::class, 'product_sales']);//venta de productos
 Route::put('/payment', [PaymentController::class, 'update']);
 Route::post('/payment-destroy', [PaymentController::class, 'destroy']);
 
@@ -599,10 +601,15 @@ Route::post('/course-professional', [CourseProfessionalController::class, 'store
 Route::post('/course-professional-destroy', [CourseProfessionalController::class, 'destroy']);
 Route::get('/course-professional', [CourseProfessionalController::class, 'show']);
 Route::get('/course-professional-show-Notin', [CourseProfessionalController::class, 'show_Notin']);//devolver los professionales que no han sido asociados al curso
- 
 
 Route::get('/restday-show', [RestdayController::class, 'show']);
 Route::put('/restday', [RestdayController::class, 'update']);
+
+Route::get('/cashiersale', [CashierSaleController::class, 'index']);
+Route::get('/cashiersale-show', [CashierSaleController::class, 'show']);
+Route::post('/cashiersale', [CashierSaleController::class, 'store']);
+Route::put('/cashiersale', [CashierSaleController::class, 'update']);
+Route::post('/cashiersale-destroy', [CashierSaleController::class, 'destroy']);
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

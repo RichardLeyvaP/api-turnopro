@@ -29,6 +29,11 @@ class ProductStore extends Model
     return $this->belongsTo(Store::class);
     }
 
+    public function cashierSales()
+    {
+        return $this->hasMany(CashierSale::class);
+    }
+
     protected $casts = [
         'product_quantity' => 'integer',
         'product_exit' => 'integer',

@@ -26,6 +26,10 @@ class Product extends Model
         return $this->hasManyThrough(ProductSale::class, ProductStore::class);
     }
 
+    public function cashierSales(){
+        return $this->hasManyThrough(CashierSale::class, ProductStore::class);
+    }
+
     public function productStores(){
         return $this->hasMany(ProductStore::class);
     }

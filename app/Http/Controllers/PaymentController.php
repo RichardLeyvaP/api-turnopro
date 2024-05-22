@@ -7,6 +7,8 @@ use App\Models\Branch;
 use App\Models\Car;
 use App\Models\CardGift;
 use App\Models\CardGiftUser;
+use App\Models\CashierSale;
+use App\Models\Finance;
 use App\Services\TraceService;
 use App\Models\Payment;
 use Carbon\Carbon;
@@ -97,6 +99,7 @@ class PaymentController extends Controller
             $payment->transfer = $data['transfer'];
             $payment->other = $data['other'];
             $payment->cardGif = $data['cardGift'];
+            $payment->branch_id = $request->branch_id;
             $payment->save();
 
 
@@ -120,15 +123,109 @@ class PaymentController extends Controller
             $trace = [
                 'branch' => $branch->name,
                 'cashier' => $request->nameProfessional,
-                'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                'client' => $car->clientProfessional->client->name,
                 'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift'],
                 'operation' => 'Paga Carro',
                 'details' => 'Carro: '.$car->id,
-                'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                'description' => $car->clientProfessional->professional->name,
             ];
             $this->traceService->store($trace);
             Log::info('$trace');
             Log::info($trace);
+            return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error al realizar el pago'], 500);
+        }
+    }
+
+    public function product_sales(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'cash' => 'nullable|numeric',
+                'creditCard' => 'nullable|numeric',
+                'debit' => 'nullable|numeric',
+                'transfer' => 'nullable|numeric',
+                'other' => 'nullable|numeric',
+                'tip' => 'nullable|numeric',
+                'cardGift' => 'nullable|numeric',
+                'code' => 'nullable'
+            ]);     
+            
+            $ids = $request->input('ids');
+           $branch = Branch::where('id', $request->branch_id)->first();
+
+            Log::info($data['cardGift']);
+            if ($data['cardGift'] != 0) {
+                Log::info($data['code']);
+                $cardGiftUser = CardGiftUser::where('code',$data['code'])->first();
+                Log::info('tarjeta asignada');
+                Log::info($cardGiftUser);
+                if($cardGiftUser->exist - $data['cardGift'] <= 0){
+                    $cardGiftUser->state = "Redimida";
+                }
+                $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
+                $cardGiftUser->save();
+            }
+            //Log::info($cardGiftUser);
+            $payment = new Payment();
+            $payment->cash = $data['cash'];
+            $payment->creditCard = $data['creditCard'];
+            $payment->debit = $data['debit'];
+            $payment->transfer = $data['transfer'];
+            $payment->other = $data['other'];
+            $payment->cardGif = $data['cardGift'];
+            $payment->branch_id = $request->branch_id;
+            $payment->save();
+
+            CashierSale::whereIn('id', $ids)->update(['pay' => 1]);
+            if($data['cash']){
+                $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
+                if (!$box) {                
+                        $box = new Box();
+                        $box->existence = $data['cash'];    
+                        $box->data = Carbon::now();         
+                        $box->branch_id = $branch->id;
+                    }else{                
+                        $box->existence = $box->existence + $data['cash'];
+                    }
+            $box->save();
+            }
+            $trace = [
+                'branch' => $branch->name,
+                'cashier' => $request->nameProfessional,
+                'client' => '',
+                'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift']+$data['tip'],
+                'operation' => 'Paga Productos vendidos',
+                'details' => 'Productos vendidos: '.implode(', ', $ids),
+                'description' => '',
+            ];
+            $this->traceService->store($trace);
+            
+            $finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 7)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+                            
+            if($finance !== null)
+            {
+                $control = $finance->control+1;
+            }
+            else {
+                $control = 1;
+            }
+            $finance = new Finance();
+                            $finance->control = $control;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift'];
+                            $finance->comment = 'Ingreso por venta de producto en la caja';
+                            $finance->branch_id = $branch->id;
+                            $finance->type = 'Sucursal';
+                            $finance->revenue_id = 7;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

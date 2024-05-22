@@ -100,6 +100,16 @@ class Branch extends Model
         return $this->belongsToMany(Associated::class, 'associate_branch')->withPivot('id')->withTimestamps();
     }
 
+    public function cashierSales()
+    {
+        return $this->hasMany(CashierSale::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function clientSurveys(){
         return $this->hasMany(ClientSurvey::class);
     }
