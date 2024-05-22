@@ -36,11 +36,11 @@ class ReservationService
         Log::info('Crear el carro');
         $car = new Car();
         $car->client_professional_id = $client_professional_id;
-        $car->amount = 0.0;
+        $car->amount = 0;
         $car->pay = false;
         $car->active = 1;
         $car->select_professional = $data['select_professional'];
-        $car->tip = 0.0;
+        $car->tip = 0;
         $car->save();
         $total_amount = 0;
         $total_time = 0;
@@ -83,6 +83,8 @@ class ReservationService
             $order->price = $service->price_service;
             $order->request_delete = false;
             $order->save();
+            Log::info('$service->price_service Precio del servicio');
+            Log::info($service->price_service);
             $total_amount = $total_amount + $service->price_service;
             $total_time = $total_time + $service->duration_service;
         } //end foreach

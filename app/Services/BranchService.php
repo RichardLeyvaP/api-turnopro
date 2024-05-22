@@ -32,7 +32,45 @@ class BranchService
        if(!$totalClients = $cars->count()){
         return $transformedResult;
        }
-        $products = Product::with(['orders' => function ($query) use ($carIds) {
+       $products = Product::with([
+        'orders' => function ($query) use ($carIds) {
+            $query->selectRaw('product_id, SUM(cant) as total_cant')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        },
+        'cashierSales' => function ($query) use ($branch_id) {
+            $query->selectRaw('product_id, SUM(cant) as total_sales')
+                ->groupBy('product_id')
+                ->where('cashierSales.branch_id', $branch_id)
+                ->whereDate('data', Carbon::now());
+        }
+        ])->get()->filter(function ($product) {
+            // Filtra productos que tienen órdenes o ventas de productos no vacías
+            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+        })->map(function ($product) {
+            // Crea una estructura de datos simplificada con la suma de las cantidades
+            $totalOrders = $product->orders->sum('total_cant');
+            $totalSales = $product->cashierSales->sum('total_sales');
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'reference' => $product->reference,
+                'code' => $product->code,
+                'description' => $product->description,
+                'status_product' => $product->status_product,
+                'purchase_price' => $product->purchase_price,
+                'sale_price' => $product->sale_price,
+                'image_product' => $product->image_product,
+                'product_category_id' => $product->product_category_id,
+                'total_quantity' => $totalOrders + $totalSales,
+            ];
+        })->sortByDesc('total_quantity')->values();
+        
+        $mostSoldProductName = $products ? $products->first()['name']: '';
+        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
+        $totalSoldProducts = $products->sum('total_quantity');
+        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
             $query->selectRaw('SUM(cant) as total_sale_price')
                 ->groupBy('product_id')
                 ->whereIn('car_id', $carIds)
@@ -50,7 +88,7 @@ class BranchService
         $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
         $totalSoldProducts = $products->sum(function ($product) {
             return $product->orders->sum('total_cant');
-        });
+        });*/
         $services = Service::withCount(['orders' => function ($query) use ($carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
@@ -100,7 +138,45 @@ class BranchService
        if(!$totalClients = $cars->count()){
         return $transformedResult;
        }
-        $products = Product::with(['orders' => function ($query) use ($carIds) {
+       $products = Product::with([
+        'orders' => function ($query) use ($carIds) {
+            $query->selectRaw('product_id, SUM(cant) as total_cant')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        },
+        'cashierSales' => function ($query) use ($branch_id, $month, $year) {
+            $query->selectRaw('product_id, SUM(cant) as total_sales')
+                ->groupBy('product_id')
+                ->where('cashierSales.branch_id', $branch_id)
+                ->whereMonth('data', $month)->whereYear('data', $year);
+        }
+        ])->get()->filter(function ($product) {
+            // Filtra productos que tienen órdenes o ventas de productos no vacías
+            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+        })->map(function ($product) {
+            // Crea una estructura de datos simplificada con la suma de las cantidades
+            $totalOrders = $product->orders->sum('total_cant');
+            $totalSales = $product->cashierSales->sum('total_sales');
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'reference' => $product->reference,
+                'code' => $product->code,
+                'description' => $product->description,
+                'status_product' => $product->status_product,
+                'purchase_price' => $product->purchase_price,
+                'sale_price' => $product->sale_price,
+                'image_product' => $product->image_product,
+                'product_category_id' => $product->product_category_id,
+                'total_quantity' => $totalOrders + $totalSales,
+            ];
+        })->sortByDesc('total_quantity')->values();
+        
+        $mostSoldProductName = $products ? $products->first()['name']: '';
+        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
+        $totalSoldProducts = $products->sum('total_quantity');
+        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
             $query->selectRaw('SUM(cant) as total_cant')
                 ->groupBy('product_id')
                 ->whereIn('car_id', $carIds)
@@ -118,7 +194,7 @@ class BranchService
         $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
         $totalSoldProducts = $products->sum(function ($product) {
             return $product->orders->sum('total_cant');
-        });
+        });*/
         $services = Service::withCount(['orders' => function ($query) use ($carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
@@ -169,11 +245,50 @@ class BranchService
        if(!$totalClients = $cars->count()){
         return $transformedResult;
        }
+       $products = Product::with([
+        'orders' => function ($query) use ($carIds) {
+            $query->selectRaw('product_id, SUM(cant) as total_cant')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        },
+        'cashierSales' => function ($query) use ($branch_id, $startDate, $endDate) {
+            $query->selectRaw('product_id, SUM(cant) as total_sales')
+                ->groupBy('product_id')
+                ->where('cashierSales.branch_id', $branch_id)
+                ->whereDate('data', '>=', $startDate)
+                ->whereDate('data', '<=', $endDate);
+        }
+        ])->get()->filter(function ($product) {
+            // Filtra productos que tienen órdenes o ventas de productos no vacías
+            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+        })->map(function ($product) {
+            // Crea una estructura de datos simplificada con la suma de las cantidades
+            $totalOrders = $product->orders->sum('total_cant');
+            $totalSales = $product->cashierSales->sum('total_sales');
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'reference' => $product->reference,
+                'code' => $product->code,
+                'description' => $product->description,
+                'status_product' => $product->status_product,
+                'purchase_price' => $product->purchase_price,
+                'sale_price' => $product->sale_price,
+                'image_product' => $product->image_product,
+                'product_category_id' => $product->product_category_id,
+                'total_quantity' => $totalOrders + $totalSales,
+            ];
+        })->sortByDesc('total_quantity')->values();
+        
+        $mostSoldProductName = $products ? $products->first()['name']: '';
+        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
+        $totalSoldProducts = $products->sum('total_quantity');
         /*$products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 1);
         }])->orderByDesc('orders_count')->first();
         Log::info("obtener los servicios");*/
-        $products = Product::with(['orders' => function ($query) use ($carIds) {
+        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
             $query->selectRaw('SUM(cant) as total_cant')
                 ->groupBy('product_id')
                 ->whereIn('car_id', $carIds)
@@ -191,7 +306,7 @@ class BranchService
         $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
         $totalSoldProducts = $products->sum(function ($product) {
             return $product->orders->sum('total_cant');
-        });
+        });*/
         $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
@@ -245,7 +360,42 @@ class BranchService
             $query->whereIn('car_id', $carIds)->where('is_product', 1);
         }])->orderByDesc('orders_count')->first();
         Log::info("obtener los servicios");*/
-        $products = Product::with(['orders' => function ($query) use ($carIds) {
+        $products = Product::with([
+            'orders' => function ($query) use ($carIds) {
+                $query->selectRaw('product_id, SUM(cant) as total_cant')
+                    ->groupBy('product_id')
+                    ->whereIn('car_id', $carIds)
+                    ->where('is_product', 1);
+            },
+            'cashierSales' => function ($query) use ($branch_id, $startDate, $endDate) {
+                $query->selectRaw('product_id, SUM(cant) as total_sales')
+                    ->groupBy('product_id')
+                    ->where('cashierSales.branch_id', $branch_id)
+                    ->whereDate('data', '>=', $startDate)
+                    ->whereDate('data', '<=', $endDate);
+            }
+        ])->get()->filter(function ($product) {
+            // Filtra productos que tienen órdenes o ventas de productos no vacías
+            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+        })->map(function ($product) {
+            // Crea una estructura de datos simplificada con la suma de las cantidades
+            $totalOrders = $product->orders->sum('total_cant');
+            $totalSales = $product->cashierSales->sum('total_sales');
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'reference' => $product->reference,
+                'code' => $product->code,
+                'description' => $product->description,
+                'status_product' => $product->status_product,
+                'purchase_price' => $product->purchase_price,
+                'sale_price' => $product->sale_price,
+                'image_product' => $product->image_product,
+                'product_category_id' => $product->product_category_id,
+                'total_quantity' => $totalOrders + $totalSales,
+            ];
+        })->sortByDesc('total_quantity')->values();
+        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
             $query->selectRaw('SUM(cant) as total_cant')
                 ->groupBy('product_id')
                 ->whereIn('car_id', $carIds)
@@ -256,14 +406,24 @@ class BranchService
         })->values()->sortByDesc(function ($product) {
             return $product->orders->sum('total_cant');
         });
-        $mostSoldProduct = $products->first();
+
+        $productsCashier = Product::with(['cashierSales' => function ($query) use ($branch_id) {
+            $query->selectRaw('SUM(cant) as total_cant')
+                ->groupBy('product_id')
+                ->where('cashierSales.branch_id', $branch_id);
+        }])
+        ->get()->filter(function ($product) {
+            return !$product->cashierSales->isEmpty();
+        })->values()->sortByDesc(function ($product) {
+            return $product->cashierSales->sum('total_cant');
+        });*/
+
+        //$mostSoldProduct = $products->first();
 
         // Obtener el nombre y la cantidad del producto más vendido
-        $mostSoldProductName = $mostSoldProduct ? $mostSoldProduct->name: '';
-        $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
-        $totalSoldProducts = $products->sum(function ($product) {
-            return $product->orders->sum('total_cant');
-        });
+        $mostSoldProductName = $products ? $products->first()['name']: '';
+        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
+        $totalSoldProducts = $products->sum('total_quantity');
         $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
@@ -427,11 +587,50 @@ class BranchService
        if(!$totalClients = $cars->count()){
         return $transformedResult;
        }
+
+       $products = Product::with([
+        'orders' => function ($query) use ($carIds) {
+            $query->selectRaw('product_id, SUM(cant) as total_cant')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $carIds)
+                ->where('is_product', 1);
+        },
+        'cashierSales' => function ($query) use ($branch_id) {
+            $query->selectRaw('product_id, SUM(cant) as total_sales')
+                ->groupBy('product_id')
+                ->where('cashierSales.branch_id', $branch_id)
+                ->whereDate('data', Carbon::now());
+        }
+        ])->get()->filter(function ($product) {
+            // Filtra productos que tienen órdenes o ventas de productos no vacías
+            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+        })->map(function ($product) {
+            // Crea una estructura de datos simplificada con la suma de las cantidades
+            $totalOrders = $product->orders->sum('total_cant');
+            $totalSales = $product->cashierSales->sum('total_sales');
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'reference' => $product->reference,
+                'code' => $product->code,
+                'description' => $product->description,
+                'status_product' => $product->status_product,
+                'purchase_price' => $product->purchase_price,
+                'sale_price' => $product->sale_price,
+                'image_product' => $product->image_product,
+                'product_category_id' => $product->product_category_id,
+                'total_quantity' => $totalOrders + $totalSales,
+            ];
+        })->sortByDesc('total_quantity')->values();
+    
+        $mostSoldProductName = $products ? $products->first()['name']: '';
+        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
+        $totalSoldProducts = $products->sum('total_quantity');
         /*$products = Product::withCount(['orders' => function ($query) use ($carIds){
             $query->whereIn('car_id', $carIds)->where('is_product', 1)->whereDate('data', Carbon::now());
         }])->orderByDesc('orders_count')->first();*/
         //$carIds = $cars->pluck('car_id');
-        $products = Product::with(['orders' => function ($query) use ($carIds) {
+        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
             $query->selectRaw('SUM(cant) as total_sale_price')
                 ->groupBy('product_id')
                 ->whereIn('car_id', $carIds)
@@ -449,7 +648,7 @@ class BranchService
         $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
         $totalSoldProducts = $products->sum(function ($product) {
             return $product->orders->sum('total_cant');
-        });
+        });*/
         $services = Service::withCount(['orders' => function ($query) use ($carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();

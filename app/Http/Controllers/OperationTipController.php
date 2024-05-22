@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\CashierSale;
 use App\Models\Finance;
 use App\Models\OperationTip;
 use App\Models\Professional;
+use App\Models\ProfessionalPayment;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -134,7 +136,7 @@ class OperationTipController extends Controller
             $professionalId = $request->professional_id;
             $branchId = $request->branch_id;
 
-            $payments = OperationTip::where('professional_id', $professionalId)
+            $payments1 = OperationTip::where('professional_id', $professionalId)
                 ->where('branch_id', $branchId)
                 ->get()->map(function ($query) {
                     return [
@@ -144,11 +146,32 @@ class OperationTipController extends Controller
                         'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
-                        'amount' => $query->amount
+                        'amount' => $query->amount,
+                        'car' => 1
                     ];
                 });
 
-            return response()->json($payments, 200);
+                $payments2 = ProfessionalPayment::where('professional_id', $professionalId)
+                ->where('branch_id', $branchId)
+                ->get()
+                ->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'branch_id' => $query->branch_id,
+                        'professional_id' => $query->professional_id,
+                        'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
+                        'type' => $query->type,
+                        'coffe_percent' => 0, // Valor por defecto ya que no existe en esta tabla
+                        'amount' => $query->amount,
+                        'car' => 0
+                    ];
+                });
+
+                $combinedPayments = $payments1->concat($payments2)
+                             ->sortByDesc('date')
+                             ->values();
+
+            return response()->json($combinedPayments, 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
@@ -337,7 +360,22 @@ class OperationTipController extends Controller
                     'tipCoffe' => $tipCoffe
                 ];
             });
-            return response()->json(['cars' => $cars], 200);
+
+            $sales = [];
+            
+            $cashierSales = CashierSale::where('professional_id', $request->professional_id)->where('branch_id', $data['branch_id'])->where('pay', 1)->where('paycashier', 0)->get();
+            foreach ($cashierSales as $cashierSale) {
+                $product = $cashierSale['productStore']['product'];
+                $sales[] = [
+                    'id' => $cashierSale['id'],
+                    'price' => intval($cashierSale['price']),
+                    'pay' => $cashierSale['pay'],
+                    'cant' => $cashierSale['cant'],
+                    'name' => $product['name'],
+                    'image_product' => $product['image_product']
+                ];
+            }
+            return response()->json(['cars' => $cars, 'sales' => $sales], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
@@ -414,28 +452,37 @@ class OperationTipController extends Controller
     {
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'type' => 'required|numeric'
             ]);
-            // Buscar el pago de profesional a eliminar
-            $operationTip = OperationTip::findOrFail($data['id']);
+            if($data['type'] == 1){
+                $operationTip = OperationTip::findOrFail($data['id']);
 
-            // Buscar y actualizar los carros asociados para establecer el campo professional_payment_id en null
-            Car::where('operation_tip_id', $data['id'])->update(['operation_tip_id' => null]);
-
-            $finance = Finance::where('branch_id', $operationTip->branch_id)->where('revenue_id', 6)->whereDate('data', $operationTip->date)->first();
-            if ($finance !== null) {
-                $amount = $finance->amount - $operationTip->coffe_percent;
-                if ($amount <= 0) {
-                    $finance->delete();
-                } else {
-                    $finance->amount = $amount;
-                    $finance->save();
+                // Buscar y actualizar los carros asociados para establecer el campo professional_payment_id en null
+                Car::where('operation_tip_id', $data['id'])->update(['operation_tip_id' => null]);
+    
+                $finance = Finance::where('branch_id', $operationTip->branch_id)->where('revenue_id', 6)->whereDate('data', $operationTip->date)->first();
+                if ($finance !== null) {
+                    $amount = $finance->amount - $operationTip->coffe_percent;
+                    if ($amount <= 0) {
+                        $finance->delete();
+                    } else {
+                        $finance->amount = $amount;
+                        $finance->save();
+                    }
                 }
+    
+    
+                // Eliminar el pago de profesional
+                $operationTip->delete();
+    
+            }else{
+                $professionalPayment = ProfessionalPayment::findOrFail($data['id']);
+                $finance = Finance::where('branch_id', $professionalPayment->branch_id)->where('expense_id', 4)->whereDate('data', $professionalPayment->date)->where('amount', $professionalPayment->amount)->first();
+                CashierSale::where('paycashier', $data['id'])->update(['paycashier' => 0]);
+                $professionalPayment->delete();
+                $finance->delete();
             }
-
-
-            // Eliminar el pago de profesional
-            $operationTip->delete();
             return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);
         } catch (QueryException $e) {
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);

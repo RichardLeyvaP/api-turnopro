@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\CashierSale;
 use App\Models\CourseProfessional;
 use App\Models\Finance;
 use App\Models\Order;
@@ -134,6 +135,66 @@ class ProfessionalPaymentController extends Controller
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
+
+    public function store_cashier(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required',
+                'professional_id' => 'required',
+                'amount' => 'required|numeric',
+                'type' => 'required|string',
+            ]);
+            
+                $professionalPayment = new ProfessionalPayment();
+                $professionalPayment->branch_id = $data['branch_id'];
+                $professionalPayment->professional_id = $data['professional_id'];
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $data['amount'];
+                $professionalPayment->type = $data['type'];
+
+            // Guardar el modelo
+            $professionalPayment->save();
+            Log::info($request->input('ids'));
+            if ($request->input('ids')) {
+                // Actualizar carros con professional_payment_id
+                Log::info('entra a pago los carros');
+                $Ids = $request->input('ids');
+                CashierSale::whereIn('id', $Ids)->update(['paycashier' => $professionalPayment->id]);
+            }
+
+            $professional = Professional::find($data['professional_id']);
+
+            $finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+                            
+            if($finance !== null)
+            {
+                $control = $finance->control+1;
+            }
+            else {
+                $control = 1;
+            }
+            $finance = new Finance();
+                            $finance->control = $control;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $data['amount'];
+                            $finance->comment = 'Gasto por pago a '.$professional->name;
+                            $finance->branch_id = $data['branch_id'];
+                            $finance->type = 'Sucursal';
+                            $finance->expense_id = 4;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
+
+            return response()->json($professionalPayment, 201);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
+    }
     
 
     /**
@@ -210,7 +271,7 @@ class ProfessionalPaymentController extends Controller
                 if($request->charge == 'Tecnico'){
                    $pendienteMount = 0;
                     $pagadoMount = $payments->sum('amount') ? intval($payments->sum('amount')) : intval(0);
-                    $clientAttended = intval(Car::where('tecnico_id', $professionalId)->sum('select_professional'));
+                    $clientAttended = intval(Car::where('tecnico_id', $professionalId)->where('pay', 1)->sum('technical_assistance'));
                     $servCant = 0;
                     $amountGenerate = 0;
                     $propina80 = 0;
@@ -251,7 +312,7 @@ class ProfessionalPaymentController extends Controller
                     $ServBono = $payments->where('type', 'Bono servicios');
                     $servBonoCant = $ServBono ? $ServBono->sum('cant') : 0;
                     $servAmount = $ServBono ? $ServBono->sum('amount') : 0;
-                    $pagadoMount = $servMountPay - $retentionpay + $propinaPay80;
+                    $pagadoMount = $payments->sum('amount') ? intval($payments->sum('amount')) : intval(0);
 
                     $winnerRetention = $servMountPay-$retentionpay;
                     $winnerAmount = $servMountPay - $retentionpay + $propinaPay80;
@@ -271,7 +332,7 @@ class ProfessionalPaymentController extends Controller
                     $propinaPend80 = $propinaPen * 0.80;
                     $orderServ = Order::whereIn('car_id', $carIdsPend)->where('is_product', 0)->get();
                     $orderServPen = $orderServ->sum('percent_win');
-                    $servMountPenRet = $orderServPen * $retention;
+                    $servMountPenRet = $orderServPen * $retention/100;
                     $pendienteMount = $orderServPen - $servMountPenRet + $propinaPend80 ? $orderServPen - $servMountPenRet + $propinaPend80 : 0;
 
                 }

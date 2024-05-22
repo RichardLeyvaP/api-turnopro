@@ -499,7 +499,8 @@ class ProfessionalController extends Controller
             $data = $request->validate([
 
                 'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
+                'professional_id' => 'required|numeric',
+                'charge' => 'nullable'
             ]);
             if ($request->has('mes')) {
                 return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_month($data, $request->mes, $request->year)], 200, [], JSON_NUMERIC_CHECK);
