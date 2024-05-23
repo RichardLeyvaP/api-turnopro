@@ -509,7 +509,7 @@ class ReservationController extends Controller
                 $reservacion->confirmation = $data['confirmation'];
                 $reservacion->save();
                 if($data['confirmation'] == 1 ){
-                    $msg = 'Reservacion confirmada correctamente.';
+                    $msg = 'Reservación confirmada correctamente.';
                 }
                 else if($data['confirmation'] == 3 ){
                     $msg = 'Reservación cancelada correctamente.'; 

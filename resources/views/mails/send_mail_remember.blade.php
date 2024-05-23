@@ -2,16 +2,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holaaa.. estamos aqui para Recordar su Reserva</title>
+    <title>Asunto: Recordatorio de tu cita en {{$branch_name}}
+    </title>
 </head>
 <body style="font-family: Arial, sans-serif;">
 
-<h2 style="color: #F18254;">Hola {{$client_name}} &#x1F44B;,</h2>
+<h2 style="color: #F18254;">Asunto: Recordatorio de tu cita en {{$branch_name}} &#x1F44B;,</h2><br>
+<h2 style="color: #F18254;">Estimado/a {{$client_name}} &#x1F44B;,</h2>
 
 <p style="color: #333;">
-    &#x1F64F; ¡Gracias por elegir Simplifies! Estamos encantados de confirmar tu reserva para el siguiente servicio:
+    &#x1F64F; ¡Esperamos que estés teniendo un excelente día!
 </p>
 <img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: auto; width: auto;">
+
+<p style="color: #333;">
+    &#x1F64F; Queremos recordarte que tienes una cita programada en {{$branch_name}} mañana. Aquí están los detalles de tu reserva:
+</p>
 
 <ul>
     <li><strong>Fecha de Reserva:</strong> {{$data}}</li>
@@ -22,7 +28,7 @@
 </ul>
 
 <p style="color: #555;">
-    &#x1F603; Estamos ansiosos de brindarte una experiencia excepcional en nuestro salón.
+    &#x1F603; En {{$branch_name}}, nos esforzamos por ofrecerte una experiencia de primera clase y estamos ansiosos por atenderte.
 </p>
 
 <p style="color: #555;">
@@ -31,11 +37,7 @@ Puede llegar 10 minutos antes o despues de la hora indicada y debe anunciarse en
 </p>
 
 <p style="color: #555;">
-    Si tienes alguna pregunta o necesitas cambiar tu reserva, no dudes en ponerte en contacto con nosotros. ¡Estamos aquí para ayudarte!
-</p>
-
-<p style="color: #555;">
-    &#x1F917; Por favor, has click en el botón de abajo para confirmar tu reserva con id={{$id_reservation}}.
+    &#x1F917; Por favor, has click en los botones de abajo para confirmar o cancelar tu reserva.
 </p>
 
 <!-- Botón de Confirmación -->
@@ -49,9 +51,6 @@ Puede llegar 10 minutos antes o despues de la hora indicada y debe anunciarse en
         CANCELAR
     </button>
 </a>
-<p style="color: #555;">
-    &#x1F917; Gracias de nuevo por confiar en nosotros. ¡Esperamos verte pronto!
-</p>
 
 <p style="color: #555;">
     Atentamente,<br>

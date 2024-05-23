@@ -38,6 +38,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfessionalPaymentController;
 use App\Http\Controllers\ProfessionalWorkPlaceController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AssistantController;
@@ -611,6 +612,10 @@ Route::get('/cashiersale-show', [CashierSaleController::class, 'show']);
 Route::post('/cashiersale', [CashierSaleController::class, 'store']);
 Route::put('/cashiersale', [CashierSaleController::class, 'update']);
 Route::post('/cashiersale-destroy', [CashierSaleController::class, 'destroy']);
+
+Route::get('/retention', [RetentionController::class, 'index']);
+Route::post('/retention', [RetentionController::class, 'store']);
+
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");

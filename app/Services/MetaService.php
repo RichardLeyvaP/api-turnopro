@@ -10,6 +10,7 @@ use App\Models\Finance;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
+use App\Models\Retention;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +20,7 @@ class MetaService {
             $query->where('branch_id', $branch->id);
         })->whereHas('charge', function ($query){
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->select('id', 'name', 'surname')->get();
+        })->select('id', 'name', 'surname', 'retention')->get();
         
         
         $finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
@@ -44,6 +45,22 @@ class MetaService {
                 })
                 ->where('pay', 1)
                 ->get();
+                //retention
+                if(!$cars->isEmpty())
+                    if($professional->retention){
+                        foreach ($cars as $car) {
+                            $percentWinSum = $car->orders->where('is_product', 0)->sum('percent_win');
+                        }
+                        if($percentWinSum){
+                            $retention = new Retention();
+                            $retention->branch_id = $branch->id;
+                            $retention->professional_id = $professional->id;
+                            $retention->data = Carbon::now();
+                            $retention->retention = $percentWinSum*$professional->retention/100;
+                            $retention->save();
+                        }
+                    }
+                //end Retention
                 $carIdsPay = $cars->pluck('id');
                 $rules =  BranchRuleProfessional::where('professional_id', $professional->id)->whereHas('branchRule', function ($query) use ($branch){
                     $query->where('branch_id', $branch->id)->where('estado', 3)->whereDate('data', Carbon::now());

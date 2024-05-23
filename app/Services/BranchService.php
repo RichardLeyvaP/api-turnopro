@@ -8,6 +8,7 @@ use App\Models\Order;
 use Carbon\Carbon;
 use App\Models\Product;
 use App\Models\Professional;
+use App\Models\Retention;
 use App\Models\Service;
 use Illuminate\Support\Facades\Log;
 
@@ -424,6 +425,9 @@ class BranchService
         $mostSoldProductName = $products ? $products->first()['name']: '';
         $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
         $totalSoldProducts = $products->sum('total_quantity');
+
+        $TotalRetention = Retention::where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
+
         $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
             $query->whereIn('car_id', $carIds)->where('is_product', 0);
         }])->orderByDesc('orders_count')->first();
@@ -443,6 +447,7 @@ class BranchService
         $result = [
             'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
             'Propina' => round($cars->sum('tip'), 2),
+            'Total Retenciones' => round($TotalRetention),
             'Producto más Vendido' => $mostSoldProductName,
             'Cantidad del Producto' => $mostSoldProductQuantity,
             'Total de Productos Vendidos' => $totalSoldProducts,
@@ -458,6 +463,7 @@ class BranchService
         $iconColorMapping = [
             'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
             'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
+            'Total Retenciones' => ['icon' => 'mdi-account-multiple', 'color' =>'grey'],
             'Producto más Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
             'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
             'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],
@@ -626,6 +632,7 @@ class BranchService
         $mostSoldProductName = $products ? $products->first()['name']: '';
         $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
         $totalSoldProducts = $products->sum('total_quantity');
+        $TotalRetention = Retention::where('branch_id', $branch_id)->whereDate('data', Carbon::now())->sum('retention');
         /*$products = Product::withCount(['orders' => function ($query) use ($carIds){
             $query->whereIn('car_id', $carIds)->where('is_product', 1)->whereDate('data', Carbon::now());
         }])->orderByDesc('orders_count')->first();*/
@@ -668,6 +675,7 @@ class BranchService
         $result = [
             'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
             'Propina' => round($cars->sum('tip'), 2),
+            'Total Retenciones' => round($TotalRetention),
             'Producto más Vendido' => $mostSoldProductName,
             'Cantidad del Producto' => $mostSoldProductQuantity,
             'Total de Productos Vendidos' => $totalSoldProducts,
@@ -683,6 +691,7 @@ class BranchService
         $iconColorMapping = [
             'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
             'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
+            'Total Retenciones' => ['icon' => 'mdi-account-multiple', 'color' =>'grey'],
             'Producto más Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
             'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
             'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],

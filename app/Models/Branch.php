@@ -114,4 +114,8 @@ class Branch extends Model
         return $this->hasMany(ClientSurvey::class);
     }
 
+    public function retentions(){
+        return $this->hasMany(Retention::class);
+    }
+
 }

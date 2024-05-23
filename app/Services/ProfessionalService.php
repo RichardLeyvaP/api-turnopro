@@ -911,10 +911,10 @@ class ProfessionalService
         return $result = [
             'Monto Generado' => intval($amountGenral), //suma productos y servicios
             'Ganancia Barbero' => intval($winProfessional), //monto generado percent_win 
+            'Monto Líquido' => intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips), //ganancia barbero - retencion + propinas 80%
             'Retención' => intval($winProfessional * $retention/100), //monto generado percent_win % calculando la retención
             'Propina' => intval($cars->sum('tip')),
             'Propina 80%' => intval($winTips),
-            'Ganancia Total Barbero' => intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips), //ganancia barbero - retencion + propinas 80%
             'Servicios Realizados' => $services,
             'Productos Vendidos' => $products,
             'Servicios Regulares' => $ServiceRegular->count(),
@@ -983,10 +983,10 @@ class ProfessionalService
         return $result = [
             'Monto Generado' => intval($amountGenral), //suma productos y servicios
             'Ganancia Barbero' => intval($winProfessional), //monto generado percent_win 
+            'Monto Líquido' => intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips), //ganancia barbero - retencion + propinas 80%
             'Retención' => intval($winProfessional * $retention/100), //monto generado percent_win % calculando la retención
             'Propina' => intval($cars->sum('tip')),
             'Propina 80%' => intval($winTips),
-            'Ganancia Total Barbero' => intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips), //ganancia barbero - retencion + propinas 80%
             'Servicios Realizados' => $services,
             'Productos Vendidos' => $products,
             'Servicios Regulares' => $ServiceRegular->count(),
@@ -1055,10 +1055,10 @@ class ProfessionalService
             return $result = [
                 'Monto Generado' => intval($amountGenral), //suma productos y servicios
                 'Ganancia Barbero' => intval($winProfessional), //monto generado percent_win 
+                'Monto Líquido' => intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips), //ganancia barbero - retencion + propinas 80%
                 'Retención' => intval($winProfessional * $retention/100), //monto generado percent_win % calculando la retención
                 'Propina' => intval($cars->sum('tip')),
                 'Propina 80%' => intval($winTips),
-                'Ganancia Total Barbero' => intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips), //ganancia barbero - retencion + propinas 80%
                 'Servicios Realizados' => $services,
                 'Productos Vendidos' => $products,
                 'Servicios Regulares' => $ServiceRegular->count(),

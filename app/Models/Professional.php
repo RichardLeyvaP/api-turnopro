@@ -106,5 +106,9 @@ class Professional extends Model
         return $this->hasMany(CashierSale::class);
     }
 
+    public function retentions(){
+        return $this->hasMany(Retention::class);
+    }
+
     protected $table = "professionals";
 }

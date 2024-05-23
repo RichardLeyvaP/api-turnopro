@@ -413,8 +413,10 @@ class OrderController extends Controller
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
                 $reservation->save();
             }
+            $amountTemp = $car->amount - $order->price;
+            $car->amount = $amountTemp;
             $order->delete();
-            if($car->amount = $car->amount - $order->price)
+            if($amountTemp)
             {
                 $car->save();
             }

@@ -126,6 +126,10 @@ class ProductController extends Controller
             }, 'productSales' => function ($query) {
                 $query->selectRaw('SUM(cant) as total_cant')
                     ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
+            },'cashiersales' => function ($query) {
+                $query->selectRaw('product_id, SUM(cant) as total_cashier')
+                    ->groupBy('product_id')
+                    ->whereDate('data', Carbon::now());
             }])/*->whereHas('productStores', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
                 })*/
@@ -133,9 +137,10 @@ class ProductController extends Controller
             ->map(function ($product) {
                 $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
                 $total_cant = $product->productSales->isEmpty() ? 0 : $product->productSales->first()->total_cant;
+                $total_cashier = $product->cashiersales->isEmpty() ? 0 : $product->cashiersales->first()->total_cashier;
                 
                 // Calcular el valor total de ventas y sumarle total_cant
-                $total_sales = $total_sale_price + $total_cant;
+                $total_sales = $total_sale_price + $total_cant + $total_cashier;
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
@@ -212,6 +217,9 @@ class ProductController extends Controller
             }, 'productSales' => function ($query) {
                 $query->selectRaw('SUM(cant) as total_cant')
                     ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
+            },'cashiersales' => function ($query)  use($data){
+                $query->selectRaw('product_id, SUM(cant) as total_cashier')
+                    ->groupBy('product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
             }])/*->whereHas('productStores', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
                 })*/
@@ -219,9 +227,10 @@ class ProductController extends Controller
             ->map(function ($product) {
                 $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
                 $total_cant = $product->productSales->isEmpty() ? 0 : $product->productSales->first()->total_cant;
+                $total_cashier = $product->cashiersales->isEmpty() ? 0 : $product->cashiersales->first()->total_cashier;
                 
                 // Calcular el valor total de ventas y sumarle total_cant
-                $total_sales = $total_sale_price + $total_cant;
+                $total_sales = $total_sale_price + $total_cant + $total_cashier;
                 return [
                     'id' => $product->id,
                     'name' => $product->name,

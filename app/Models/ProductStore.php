@@ -29,7 +29,7 @@ class ProductStore extends Model
     return $this->belongsTo(Store::class);
     }
 
-    public function cashierSales()
+    public function cashiersales()
     {
         return $this->hasMany(CashierSale::class);
     }

@@ -53,7 +53,7 @@ class OrderService {
             $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
             
                 $service = $branchServiceprofessional->branchService->service;
-                $percent = number_format($branchServiceprofessional->percent/100, 2);
+                $percent = $branchServiceprofessional->percent;
                     $car->amount = $car->amount + $service->price_service;
                 $car->save();
                 $car_id = $car->id;
@@ -63,7 +63,7 @@ class OrderService {
                  $order->product_store_id = null;
                  $order->branch_service_professional_id = $data['service_id'];
                  $order->data = Carbon::now();
-                 $order->percent_win = $service->price_service*$percent;
+                 $order->percent_win = $service->price_service*$percent/100;
                  $order->is_product = false;
                  $order->price = $service->price_service;   
                  $order->request_delete = false;
@@ -75,7 +75,7 @@ class OrderService {
         $car = Car::findOrFail($data['car_id']);
         $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
             $service = $branchServiceprofessional->branchService->service;
-            $percent = number_format($branchServiceprofessional->percent/100, 2);
+            $percent = $branchServiceprofessional->percent;
             $duration = $service->duration_service;
             $car->amount = $car->amount + $service->price_service;
             $car->save();
@@ -86,7 +86,7 @@ class OrderService {
              $order->product_store_id = null;
              $order->branch_service_professional_id = $data['service_id'];
              $order->data = Carbon::now();
-             $order->percent_win = $service->price_service*$percent;
+             $order->percent_win = $service->price_service*$percent/100;
              $order->is_product = false;
              $order->price = $service->price_service;   
              $order->request_delete = false;

@@ -920,23 +920,23 @@ class CarController extends Controller
             $carsData = $cars->map(function ($car) use ($data) {
                 $reservation = $car->reservation;
                 return [
-                    'professional_id' => $car->tecnico_id,
-                    'branch_id' => $data['branch_id'],
-                    'date' => $reservation->data,
+                    'professional_id' =>intval($car->tecnico_id),
+                    'branch_id' => intval($data['branch_id']),
+                    'data' => $reservation->data,
                     'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($reservation->data)->locale('es_ES')->isoFormat('dddd'))),
-                    'attendedClient' => $car->technical_assistance,
-                    'amountGenerate' => $car->technical_assistance * 5000
+                    'attendedClient' =>intval($car->technical_assistance),
+                    'amountGenerate' =>intval($car->technical_assistance * 5000)
                 ];
             });
 
             $groupedCars = $carsData->groupBy('data')->map(function ($cars) {
                 return [
-                    'professional_id' => $cars[0]['professional_id'],
-                    'branch_id' => $cars[0]['branch_id'],
-                    'date' => $cars[0]['date'],
+                    'professional_id' => intval($cars[0]['professional_id']),
+                    'branch_id' => intval($cars[0]['branch_id']),
+                    'data' => $cars[0]['data'],
                     'day_of_week' => $cars[0]['day_of_week'],
-                    'attendedClient' => $cars->sum('attendedClient'),
-                    'amountGenerate' => $cars->sum('amountGenerate')
+                    'attendedClient' => intval($cars->sum('attendedClient')),
+                    'amountGenerate' => intval($cars->sum('amountGenerate'))
                 ];
             })->values();
 
@@ -1117,7 +1117,7 @@ class CarController extends Controller
                     'id' => $car->id,
                     'clientName' => $client->name . " " . $client->surname,
                     'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
-                    'data' => $reservation->data . ' ' . $reservation->start_time,
+                    'date' => $reservation->data . ' ' . $reservation->start_time,
                     'time' => $reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
                     'tips' =>  (int)$tips,
@@ -1136,7 +1136,7 @@ class CarController extends Controller
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),
                     'metaAmount' => $meta->sum('amount'),
-                    'winPay' => $amountGenerate - $totalRetention + $tipspercent,
+                    'winPay' => intval($amountGenerate - $totalRetention + $tipspercent),
                 ];
             });
             return response()->json(['car' => $cars], 200, [], JSON_NUMERIC_CHECK);
