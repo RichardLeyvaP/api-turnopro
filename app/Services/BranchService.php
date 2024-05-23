@@ -40,19 +40,19 @@ class BranchService
                 ->whereIn('car_id', $carIds)
                 ->where('is_product', 1);
         },
-        'cashierSales' => function ($query) use ($branch_id) {
+        'cashiersales' => function ($query) use ($branch_id) {
             $query->selectRaw('product_id, SUM(cant) as total_sales')
                 ->groupBy('product_id')
-                ->where('cashierSales.branch_id', $branch_id)
+                ->where('cashiersales.branch_id', $branch_id)
                 ->whereDate('data', Carbon::now());
         }
         ])->get()->filter(function ($product) {
             // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
         })->map(function ($product) {
             // Crea una estructura de datos simplificada con la suma de las cantidades
             $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashierSales->sum('total_sales');
+            $totalSales = $product->cashiersales->sum('total_sales');
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -146,19 +146,19 @@ class BranchService
                 ->whereIn('car_id', $carIds)
                 ->where('is_product', 1);
         },
-        'cashierSales' => function ($query) use ($branch_id, $month, $year) {
+        'cashiersales' => function ($query) use ($branch_id, $month, $year) {
             $query->selectRaw('product_id, SUM(cant) as total_sales')
                 ->groupBy('product_id')
-                ->where('cashierSales.branch_id', $branch_id)
+                ->where('cashiersales.branch_id', $branch_id)
                 ->whereMonth('data', $month)->whereYear('data', $year);
         }
         ])->get()->filter(function ($product) {
             // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
         })->map(function ($product) {
             // Crea una estructura de datos simplificada con la suma de las cantidades
             $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashierSales->sum('total_sales');
+            $totalSales = $product->cashiersales->sum('total_sales');
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -253,20 +253,20 @@ class BranchService
                 ->whereIn('car_id', $carIds)
                 ->where('is_product', 1);
         },
-        'cashierSales' => function ($query) use ($branch_id, $startDate, $endDate) {
+        'cashiersales' => function ($query) use ($branch_id, $startDate, $endDate) {
             $query->selectRaw('product_id, SUM(cant) as total_sales')
                 ->groupBy('product_id')
-                ->where('cashierSales.branch_id', $branch_id)
+                ->where('cashiersales.branch_id', $branch_id)
                 ->whereDate('data', '>=', $startDate)
                 ->whereDate('data', '<=', $endDate);
         }
         ])->get()->filter(function ($product) {
             // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
         })->map(function ($product) {
             // Crea una estructura de datos simplificada con la suma de las cantidades
             $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashierSales->sum('total_sales');
+            $totalSales = $product->cashiersales->sum('total_sales');
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -368,20 +368,20 @@ class BranchService
                     ->whereIn('car_id', $carIds)
                     ->where('is_product', 1);
             },
-            'cashierSales' => function ($query) use ($branch_id, $startDate, $endDate) {
+            'cashiersales' => function ($query) use ($branch_id, $startDate, $endDate) {
                 $query->selectRaw('product_id, SUM(cant) as total_sales')
                     ->groupBy('product_id')
-                    ->where('cashierSales.branch_id', $branch_id)
+                    ->where('cashiersales.branch_id', $branch_id)
                     ->whereDate('data', '>=', $startDate)
                     ->whereDate('data', '<=', $endDate);
             }
         ])->get()->filter(function ($product) {
             // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
         })->map(function ($product) {
             // Crea una estructura de datos simplificada con la suma de las cantidades
             $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashierSales->sum('total_sales');
+            $totalSales = $product->cashiersales->sum('total_sales');
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -408,15 +408,15 @@ class BranchService
             return $product->orders->sum('total_cant');
         });
 
-        $productsCashier = Product::with(['cashierSales' => function ($query) use ($branch_id) {
+        $productsCashier = Product::with(['cashiersales' => function ($query) use ($branch_id) {
             $query->selectRaw('SUM(cant) as total_cant')
                 ->groupBy('product_id')
-                ->where('cashierSales.branch_id', $branch_id);
+                ->where('cashiersales.branch_id', $branch_id);
         }])
         ->get()->filter(function ($product) {
-            return !$product->cashierSales->isEmpty();
+            return !$product->cashiersales->isEmpty();
         })->values()->sortByDesc(function ($product) {
-            return $product->cashierSales->sum('total_cant');
+            return $product->cashiersales->sum('total_cant');
         });*/
 
         //$mostSoldProduct = $products->first();
@@ -601,19 +601,19 @@ class BranchService
                 ->whereIn('car_id', $carIds)
                 ->where('is_product', 1);
         },
-        'cashierSales' => function ($query) use ($branch_id) {
+        'cashiersales' => function ($query) use ($branch_id) {
             $query->selectRaw('product_id, SUM(cant) as total_sales')
                 ->groupBy('product_id')
-                ->where('cashierSales.branch_id', $branch_id)
+                ->where('cashiersales.branch_id', $branch_id)
                 ->whereDate('data', Carbon::now());
         }
         ])->get()->filter(function ($product) {
             // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashierSales->isEmpty();
+            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
         })->map(function ($product) {
             // Crea una estructura de datos simplificada con la suma de las cantidades
             $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashierSales->sum('total_sales');
+            $totalSales = $product->cashiersales->sum('total_sales');
             return [
                 'id' => $product->id,
                 'name' => $product->name,

@@ -391,10 +391,10 @@ class TailService {
     }
 
     public function cola_branch_tecnico($branch_id, $professional_id){
-        $workplace = ProfessionalWorkPlace::where('professional_id', $professional_id)->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first()->places;
+        $workplace = ProfessionalWorkPlace::where('professional_id', $professional_id)->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first();
 
-        if ($workplace) {
-            $places = json_decode($workplace, true);
+        if ($workplace != null) {
+            $places = json_decode($workplace->places, true);
             $professionals = ProfessionalWorkPlace::whereHas('workplace', function ($query) use($places){
                 $query->whereIn('id', $places)->where('select', 1);
             })->where('state', 1)->whereDate('data', Carbon::now())->orderByDesc('created_at')->get()->pluck('professional_id');

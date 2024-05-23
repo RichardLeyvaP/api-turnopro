@@ -101,7 +101,7 @@ class Professional extends Model
         return $this->hasMany(Restday::class);
     }
 
-    public function cashierSales()
+    public function cashiersales()
     {
         return $this->hasMany(CashierSale::class);
     }

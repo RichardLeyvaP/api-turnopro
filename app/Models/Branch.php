@@ -100,7 +100,7 @@ class Branch extends Model
         return $this->belongsToMany(Associated::class, 'associate_branch')->withPivot('id')->withTimestamps();
     }
 
-    public function cashierSales()
+    public function cashiersales()
     {
         return $this->hasMany(CashierSale::class);
     }
