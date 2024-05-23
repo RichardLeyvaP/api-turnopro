@@ -840,7 +840,10 @@ class CarController extends Controller
                     $orderServ = $car->orders->where('is_product', 0);
                     $orderProd = $car->orders->where('is_product', 1);
                     $aleatorio = !$car->select_professional ? 1 : 0;
-
+                    $amountGenerate = $orderServ->sum('percent_win');
+                    $retent = $retention ? $amountGenerate * $retention /100 : 0;
+                    $tips = $car->tip ? $car->tip : 0;
+                    $tipspercent = $tips*0.80;
                     return [
                         'professional_id' => $data['professional_id'],
                         'branch_id' => $data['branch_id'],
@@ -849,14 +852,14 @@ class CarController extends Controller
                         'attendedClient' => 1,
                         'services' => $orderServ->count(),
                         'totalServices' => $orderServ->sum('price'),
-                        'tips' => $car->tip ? $car->tip : 0,
-                        'tipspercent' => $car->tip ? $car->tip * 0.80 : 0,
+                        'tips' => $tips,
+                        'tipspercent' => $tipspercent,
                         'totalGeneral' => $car->amount,
                         'totalProducts' => $orderProd->sum('price'),
                         'clientAleator' => $aleatorio,
-                        'amountGenerate' => $orderServ->sum('percent_win'), //ganancia total del barbero ganancias servicios
-                        'retention' => ($orderServ->sum('percent_win') * $retention) / 100,
-                        //'metacant' => $meta->count(),
+                        'amountGenerate' => $amountGenerate, //ganancia total del barbero ganancias servicios
+                        'retention' => $retent,
+                        'winPay' => $amountGenerate - $retent + $tipspercent,
                         //'metaamount' => $meta->sum('amount')
 
                     ];
@@ -887,7 +890,8 @@ class CarController extends Controller
                         'amountGenerate' => intval($cars->sum('amountGenerate')),
                         'totalRetention' => intval($cars->sum('retention')),
                         'metacant' => $meta->count() ? $meta->count() : 0,
-                        'metaamount' => $meta->sum('amount') ? $meta->sum('amount') : 0
+                        'metaamount' => $meta->sum('amount') ? $meta->sum('amount') : 0,
+                        'winPay' => intval($cars->sum('winPay'))
                     ];
                 })->sortByDesc('data')->values();
 
@@ -1103,6 +1107,11 @@ class CarController extends Controller
                 });*/
                 //$reservation = $car->reservation;
                 //Log:info('$ServicesSpecial');
+                $amountGenerate = $orderServ->sum('percent_win');
+                    //$retent = $retention ? $amountGenerate * $retention /100 : 0;
+                    $tips = $car->tip ? $car->tip : 0;
+                    $tipspercent = $tips*0.80;
+                $totalRetention = $retention ? $amountGenerate * $retention / 100 : 0;
                 Log::info($ServiceEspecial);
                 return [
                     'id' => $car->id,
@@ -1111,8 +1120,8 @@ class CarController extends Controller
                     'data' => $reservation->data . ' ' . $reservation->start_time,
                     'time' => $reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
-                    'tips' =>  (int)$car->tip,
-                    'tips80' =>  $car->tip ? $car->tip * 0.80 : 0,
+                    'tips' =>  (int)$tips,
+                    'tips80' =>  $tipspercent,
                     'Services' => $orderServ->count(),
                     'totalServices' => $orderServ->sum('price'),
                     'Products' => $orderProd->sum('cant'),
@@ -1122,11 +1131,12 @@ class CarController extends Controller
                     'SpecialAmount' => $ServiceEspecial->sum('percent_win'),
                     'serviceRegular' => $ServiceRegular->count(),
                     'pay' => $car->professional_payment_id == null ? 0 : 1,
-                    'totalRetention' => intval($orderServ->sum('percent_win') * $retention / 100),
+                    'totalRetention' => intval($totalRetention),
                     'totalGeneral' => $car->amount,
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),
                     'metaAmount' => $meta->sum('amount'),
+                    'winPay' => $amountGenerate - $totalRetention + $tipspercent,
                 ];
             });
             return response()->json(['car' => $cars], 200, [], JSON_NUMERIC_CHECK);
