@@ -357,7 +357,7 @@ class ProfessionalPaymentController extends Controller
                 }
                 
 
-            return response()->json(['payments' => intval($payments), 'pendiente' => intval($pendienteMount), 'pagado' => intval($pagadoMount), 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => intval($amountGenerate), 'propina80' => intval($propina80), 'metaCant' => $metaCant, 'metaAmount' => intval($metaAmount), 'productBonoCant' => $productBonoCant, 'productAmount' => $productAmount, 'servBonoCant' => $servBonoCant, 'servAmount' => $servAmount, 'retention' => $retentionpay, 'winnerRetention' => intval($winnerRetention), 'winnerAmount' => intval($winnerAmount), 'productCant' => $productCant], 200);
+            return response()->json(['payments' => $payments, 'pendiente' => intval($pendienteMount), 'pagado' => intval($pagadoMount), 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => intval($amountGenerate), 'propina80' => intval($propina80), 'metaCant' => $metaCant, 'metaAmount' => intval($metaAmount), 'productBonoCant' => $productBonoCant, 'productAmount' => $productAmount, 'servBonoCant' => $servBonoCant, 'servAmount' => $servAmount, 'retention' => $retentionpay, 'winnerRetention' => intval($winnerRetention), 'winnerAmount' => intval($winnerAmount), 'productCant' => $productCant], 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
