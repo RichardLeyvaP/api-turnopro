@@ -253,19 +253,23 @@ class UserController extends Controller
                 ], 400);
             }
             $user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
-
-            if (Hash::check($request->password, $user->password)){
-                $branches = $user->professional->branches->map(function ($branch){
-                    return [
-                        'branch_id' => $branch->id,
-                        'nameBranch' => $branch->name
-                    ];
-
-                });
+            if($user != null){
+                if (Hash::check($request->password, $user->password)){
+                    $branches = $user->professional->branches->map(function ($branch){
+                        return [
+                            'branch_id' => $branch->id,
+                            'nameBranch' => $branch->name
+                        ];
+    
+                    });
+                }
+                else{
+                    $branches = [];
+                }
+            }else{
+                $branches = [];  
             }
-            else{
-                $branches = [];
-            }
+            
             return response()->json(['branches' => $branches], 200);
         } catch (\Throwable $th) {
             Log::error($th);
