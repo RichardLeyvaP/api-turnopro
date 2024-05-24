@@ -125,53 +125,64 @@ class CarController extends Controller
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', $fechaFormateada);
                 })->get();
 
-                $products = Product::has('orders', '>', 0)
-                    ->with(['orders' => function ($query) use ($data) {
-                        $query->selectRaw('SUM(cant) as total_cant')
+                $products = Product::with(['orders' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', Carbon::now())
                             ->whereHas('car.reservation', function ($query) use ($data) {
                                 $query->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id']);
                             })
                             ->where('is_product', 1);
-                    }])
-                    ->get()->filter(function ($product) {
-                        return !$product->orders->isEmpty();
-                    })->values()->sortByDesc(function ($product) {
-                        return $product->orders->sum('total_cant');
-                    })->map(function ($product) {
-                        return [
-                            'name' => $product->name,
-                            'total_cant' => $product->orders->sum('total_cant')
-                        ];
-                    });
+                    },
+                    'cashiersales' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->where('cashiersales.branch_id', $data['branch_id'])
+                            ->whereDate('data', Carbon::now());
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                })->values()->sortByDesc(function ($product) {
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
+                    ];
+                });
 
-                $productsAnt = Product::has('orders', '>', 0)
-                    ->with(['orders' => function ($query) use ($data, $fechaFormateada) {
-                        $query->selectRaw('SUM(cant) as total_cant')
+                $productsAnt = Product::with(['orders' => function ($query) use ($data, $fechaFormateada) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', $fechaFormateada)
                             ->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
                                 $query->whereDate('data', $fechaFormateada)->where('branch_id', $data['branch_id']);
                             })
                             ->where('is_product', 1);
-                    }])
-                    ->get()->filter(function ($product) {
-                        return !$product->orders->isEmpty();
+                    },
+                    'cashiersales' => function ($query) use ($data, $fechaFormateada) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->where('cashiersales.branch_id', $data['branch_id'])
+                            ->whereDate('data', $fechaFormateada);
+                    }])->get()->filter(function ($product) {
+                        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
                     })->values()->sortByDesc(function ($product) {
-                        return $product->orders->sum('total_cant');
+                        return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
                     })->map(function ($product) {
                         return [
                             'name' => $product->name,
-                            'total_cant' => $product->orders->sum('total_cant')
+                            'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
+                            'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
                         ];
                     });
                 $resultPproduct[] = [
                     //'name' => $mostSoldProductName,
-                    'cant' => $ordersAct->where('is_product', 1)->sum('price'),
+                    'cant' => $products->sum('total_price'),
                     'products' => $products,
                     //'nameAnt' => $mostSoldProductNameAnt,
-                    'cantAnt' => $ordersAnt->where('is_product', 1)->sum('price'),
+                    'cantAnt' => $productsAnt->sum('total_price'),
                     'productsAnt' => $productsAnt,
                 ];
                 //Servicios
@@ -213,55 +224,64 @@ class CarController extends Controller
                 $ordersAnt = Order::whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
                     $query->whereDate('data', $fechaFormateada);
                 })->get();
-                $products = Product::has('orders', '>', 0)
-                    ->with(['orders' => function ($query) use ($data) {
-                        $query->selectRaw('SUM(cant) as total_cant')
+                $products = Product::with(['orders' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', Carbon::now())
                             ->whereHas('car.reservation', function ($query) use ($data) {
                                 $query->whereDate('data', Carbon::now())/*->where('branch_id', $data['branch_id'])*/;
                             })
                             ->where('is_product', 1);
-                    }])
-                    ->get()->filter(function ($product) {
-                        return !$product->orders->isEmpty();
-                    })->values()->sortByDesc(function ($product) {
-                        return $product->orders->sum('total_cant');
-                    })->map(function ($product) {
-                        return [
-                            'name' => $product->name,
-                            'total_cant' => $product->orders->sum('total_cant')
-                        ];
-                    });
+                    },
+                    'cashiersales' => function ($query){
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->whereDate('data', Carbon::now());
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                })->values()->sortByDesc(function ($product) {
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
+                    ];
+                });
 
-                $productsAnt = Product::has('orders', '>', 0)
-                    ->with(['orders' => function ($query) use ($data, $fechaFormateada) {
-                        $query->selectRaw('SUM(cant) as total_cant')
+                $productsAnt = Product::with(['orders' => function ($query) use ($fechaFormateada) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', $fechaFormateada)
-                            ->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
+                            ->whereHas('car.reservation', function ($query) use ($fechaFormateada) {
                                 $query->whereDate('data', $fechaFormateada)/*->where('branch_id', $data['branch_id'])*/;
                             })
                             ->where('is_product', 1);
-                    }])
-                    ->get()->filter(function ($product) {
-                        return !$product->orders->isEmpty();
+                    },
+                    'cashiersales' => function ($query) use ($fechaFormateada) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->whereDate('data', $fechaFormateada);
+                    }])->get()->filter(function ($product) {
+                        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
                     })->values()->sortByDesc(function ($product) {
-                        return $product->orders->sum('total_cant');
+                        return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
                     })->map(function ($product) {
                         return [
                             'name' => $product->name,
-                            'total_cant' => $product->orders->sum('total_cant')
+                            'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
+                            'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
                         ];
                     });
-                $resultPproduct[] = [
-                    //'name' => $mostSoldProductName,
-                    'cant' => $ordersAct->where('is_product', 1)->sum('price'),
-                    'products' => $products,
-                    //'nameAnt' => $mostSoldProductNameAnt,
-                    'cantAnt' => $ordersAnt->where('is_product', 1)->sum('price'),
-                    'productsAnt' => $productsAnt,
-                ];
+                    $resultPproduct[] = [
+                        //'name' => $mostSoldProductName,
+                        'cant' => $products->sum('total_price'),
+                        'products' => $products,
+                        //'nameAnt' => $mostSoldProductNameAnt,
+                        'cantAnt' => $productsAnt->sum('total_price'),
+                        'productsAnt' => $productsAnt,
+                    ];
                 //Servicios
                 $services = Service::has('orders')
                     ->withCount(['orders' => function ($query) use ($data) {
