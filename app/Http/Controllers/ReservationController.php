@@ -509,20 +509,24 @@ class ReservationController extends Controller
                 $reservacion->confirmation = $data['confirmation'];
                 $reservacion->save();
                 if($data['confirmation'] == 1 ){
-                    $msg = 'Reservación confirmada correctamente.';
+                    return redirect('https://administracion.simplifies.cl/reserv/confirmation');
+                    //return redirect('http://localhost:3000/reserv/confirmation');
                 }
                 else if($data['confirmation'] == 3 ){
-                    $msg = 'Reservación cancelada correctamente.'; 
+                    return redirect('https://administracion.simplifies.cl/reserv/cancelation');
+                    //return redirect('http://localhost:3000/reserv/cancelation');
                 }
             }else{
-                $msg = 'Lo sentimos su reserva no puede ser confirmada.';
+                return redirect('https://administracion.simplifies.cl/reserv/denied');
+                //return redirect('http://localhost:3000/reserv/denied');
             }
         }else{
-            $msg = 'Lo sentimos su reserva no puede ser confirmada.';
+            return redirect('https://administracion.simplifies.cl/reserv/denied');
+            //return redirect('http://localhost:3000/reserv/denied');
         }
             
 
-            return response()->json(['msg' => $msg], 200);
+            //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
