@@ -1423,7 +1423,7 @@ class CarController extends Controller
                 'car_id' => 'required|numeric'
             ]);
 
-            $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', false)->get();
+            $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $data['car_id'])->where('is_product', 0)->get();
             $services = $orderServicesDatas->map(function ($orderData) {
                 $service = $orderData->branchServiceProfessional->branchService->service;
                 return [
