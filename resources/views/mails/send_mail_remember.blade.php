@@ -13,7 +13,7 @@
 <p style="color: #333;">
     &#x1F64F; ¡Esperamos que estés teniendo un excelente día!
 </p>
-<img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: auto; width: auto;">
+<img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">
 
 <p style="color: #333;">
     &#x1F64F; Queremos recordarte que tienes una cita programada en {{$branch_name}} mañana. Aquí están los detalles de tu reserva:

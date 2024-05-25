@@ -11,7 +11,7 @@
 <p style="color: #333;">
     &#x1F64F; ¡Gracias por elegir Simplifies! Estamos encantados de confirmar tu reserva para el siguiente servicio:
 </p>
-<img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: auto; width: auto;">
+<img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">
 
 <ul>
     <li><strong>Fecha de Reserva:</strong> {{$data}}</li>

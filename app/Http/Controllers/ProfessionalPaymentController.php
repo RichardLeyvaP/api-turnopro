@@ -246,11 +246,11 @@ class ProfessionalPaymentController extends Controller
             $professionalId = $request->professional_id;
             $branchId = $request->branch_id;
 
-            //$startOfMonth = now()->startOfMonth()->toDateString();
-            //$endOfMonth = now()->endOfMonth()->toDateString();
+            $startOfMonth = now()->startOfMonth()->toDateString();
+            $endOfMonth = now()->endOfMonth()->toDateString();
 
             $payments = ProfessionalPayment::where('professional_id', $professionalId)
-                                        //->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
+                                        ->whereDate('date', '>=', $startOfMonth)->whereDate('date', '<=', $endOfMonth)
                                           ->where('branch_id', $branchId)
                                           ->get()->map(function ($query){
                                             return [

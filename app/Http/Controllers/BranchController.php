@@ -138,17 +138,17 @@ class BranchController extends Controller
     public function branch_professionals_winner(Request $request)
     {
         try {
-            /*$data = $request->validate([
+            $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
 
-            if ($request->has('mes')) {
+            /*if ($request->has('mes')) {
                 return response()->json($this->branchService->branch_professionals_winner_month($data['branch_id'], $request->mes, $request->year), 200, [], JSON_NUMERIC_CHECK);
             }*/
             if ($request->has('startDate') && $request->has('endDate')) {
-                return response()->json($this->branchService->branch_professionals_winner_periodo($request->startDate, $request->endDate), 200, [], JSON_NUMERIC_CHECK);
+                return response()->json($this->branchService->branch_professionals_winner_periodo($request->startDate, $request->endDate, $data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             } else {
-                return response()->json($this->branchService->branch_professionals_winner_date(), 200, [], JSON_NUMERIC_CHECK);
+                return response()->json($this->branchService->branch_professionals_winner_date($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "La branch no obtuvo ganancias en este dia"], 500);
