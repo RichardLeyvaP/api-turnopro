@@ -150,7 +150,7 @@ class ProductCategoryController extends Controller
             ];
         });
 
-        return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels], 200);
+        return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
     } catch (\Throwable $th) {
         return response()->json(['msg' => $th->getMessage()." Error interno del sistema"], 500);
     }
