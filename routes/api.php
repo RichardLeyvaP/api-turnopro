@@ -301,6 +301,7 @@ Route::get('/order', [OrderController::class, 'index']);
 Route::get('/order-delete-show', [OrderController::class, 'order_delete_show']);
 Route::get('/order-show', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
+Route::post('/store-products', [OrderController::class, 'store_products']);
 Route::post('/order-web', [OrderController::class, 'store_web']); //para registrar en traces la operacion que realiza
 Route::put('/order', [OrderController::class, 'update']);
 Route::put('/order2', [OrderController::class, 'update2']);

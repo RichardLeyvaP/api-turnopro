@@ -67,9 +67,9 @@ class OrderController extends Controller
                     'id' => $order['id'],
                     'car_id' => $order['car_id'],
                     'price' => $order['price'],
-                    'nameProfessional' => $professional['name'].' '.$professional['surname'].' '.$professional['second_surname'],
+                    'nameProfessional' => $professional['name'],
                     'image_url' => $professional['image_url'],
-                    'nameClient' => $client['name'].' '.$client['surname'].' '.$client['second_surname'],
+                    'nameClient' => $client['name'],
                     'client_image' => $client['client_image'],
                     'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
                     'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
@@ -112,6 +112,61 @@ class OrderController extends Controller
         }
     }
 
+    public function store_products(Request $request)
+    {
+        Log::info("Compra de Productos y servicio prestado");
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'car_id' => 'required|numeric',
+                'product_id' => 'required|numeric',
+                'category_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+
+            ]);
+            //$productsArray = [];
+            $data['cant'] = 1;
+                $order = $this->orderService->product_order_store($data);
+                $productStores = ProductStore::with(['product' => function ($query) use ($data) {
+                    $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
+                          ->where('status_product', '=', 'En venta');
+                }])
+                ->whereHas('product', function ($query) use ($data) {
+                    $query->where('product_category_id', $data['category_id']);
+                })
+                ->whereHas('store.branches', function ($query) use ($data){
+                    $query->where('branches.id', $data['branch_id']);
+                })
+                ->where('product_exit', '>', 0)
+                ->select(['id', 'product_exit', 'product_id', 'store_id'])
+                ->get();
+        
+                $productsArray = $productStores->map(function ($productStore) {
+                    $product = $productStore->product; // Almacenar producto en una variable local
+                    return [
+                        'id' => $productStore->id,
+                        'product_exit' => $productStore->product_exit,
+                        'product_id' => $productStore->product_id,
+                        'name' => $product->name,
+                        'reference' => $product->reference,
+                        'code' => $product->code,
+                        'description' => $product->description,
+                        'status_product' => $product->status_product,
+                        'purchase_price' => $product->purchase_price,
+                        'sale_price' => $product->sale_price,
+                        'image_product' => $product->image_product
+                    ];
+                });
+             return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
+            DB::commit();
+        } catch (\Throwable $th) {
+            Log::error($th);
+            DB::rollback();
+            Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
+        }
+    }
+
     public function store_web(Request $request)
     {
         Log::info("Compra de Productos y servicio prestado");
@@ -129,8 +184,8 @@ class OrderController extends Controller
         Log::info($data);
             $car = Car::find($data['car_id']);            
             $branch = Branch::where('id', $request->branch_id)->first();
-            $clientName = $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname;
-            $professionalName = $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname;
+            $clientName = $car->clientProfessional->client->name;
+            $professionalName = $car->clientProfessional->professional->name;
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 $order = $this->orderService->product_order_store($data);
                 $trace = [
