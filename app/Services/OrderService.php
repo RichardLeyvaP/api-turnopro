@@ -25,8 +25,8 @@ class OrderService {
                 $product = $productStore->product()->first();
                 $sale_price = $product->sale_price;
                 $percent_wint = $sale_price - $product->purchase_price;
-                    $car->amount = $car->amount + $sale_price * $data['cant'];
-                    $car->save();
+                $car->amount = $car->amount + $sale_price * $data['cant'];
+                $car->save();
                 $car_id = $car->id;
                     //rebajar la existencia
                 $productstore = ProductStore::find($data['product_id']);
@@ -36,7 +36,7 @@ class OrderService {
                 //todo pendiente para revisar importante
                 //$this->actualizarProductExit($productstore->product_id, $productstore->store_id);            
                  $order = new Order();
-                 $order->car_id = $car_id;
+                 $order->car_id = $data['car_id'];
                  $order->product_store_id = $data['product_id'];
                  $order->branch_service_professional_id = null;
                  $order->data = Carbon::now();

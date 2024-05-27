@@ -126,7 +126,7 @@ class OrderController extends Controller
             ]);
             //$productsArray = [];
             $data['cant'] = 1;
-                $order = $this->orderService->product_order_store($data);
+            $order = $this->orderService->product_order_store($data);
                 $productStores = ProductStore::with(['product' => function ($query) use ($data) {
                     $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
                           ->where('status_product', '=', 'En venta');
@@ -157,8 +157,8 @@ class OrderController extends Controller
                         'image_product' => $product->image_product
                     ];
                 });
-             return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
             DB::commit();
+             return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             DB::rollback();
