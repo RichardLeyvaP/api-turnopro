@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Car;
 use App\Models\CashierSale;
 use App\Models\Finance;
@@ -48,6 +49,7 @@ class OperationTipController extends Controller
                 $operationTip->coffe_percent = $operationTip->coffe_percent + $data['coffe_percent'];
                 $operationTip->save();
             } else {*/
+                $branch = Branch::find($data['branch_id']);
                 $operationTip = new OperationTip();
                 $operationTip->branch_id = $data['branch_id'];
                 $operationTip->professional_id = $data['professional_id'];
@@ -66,12 +68,12 @@ class OperationTipController extends Controller
                 Car::whereIn('id', $carIds)->update(['operation_tip_id' => $operationTip->id]);
             }
             if($data['coffe_percent']){
-                $finance = Finance::where('branch_id', $data['branch_id'])->where('revenue_id', 6)->whereDate('data', Carbon::now())->first();
-            if ($finance !== null) {
+                $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first(); 
+            /*if ($finance !== null) {
                 $finance->amount = $finance->amount + $data['coffe_percent'];
                 $finance->save();
             } else {
-                $finance = Finance::where('branch_id', $data['branch_id'])->orderByDesc('control')->first();
+                $finance = Finance::where('branch_id', $data['branch_id'])->orderByDesc('control')->first();*/
                 if ($finance) {
                     $control = $finance->control + 1;
                 } else {
@@ -81,18 +83,18 @@ class OperationTipController extends Controller
                 $finance->control = $control;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['coffe_percent'];
-                $finance->comment = 'Ingreso por concepto de 10% de propinas';
+                $finance->comment = 'Ingreso por concepto de 10% de propinas en sucursal  '.$branch->name;
                 $finance->branch_id = $data['branch_id'];
                 $finance->type = 'Sucursal';
                 $finance->revenue_id = 6;
                 $finance->data = Carbon::now();
                 $finance->file = '';
                 $finance->save();
-            }
+            //}
             }
             $professional = Professional::find($data['professional_id']);
-            $finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-                            
+            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();              
             if($finance !== null)
             {
                 $control = $finance->control+1;
@@ -105,7 +107,7 @@ class OperationTipController extends Controller
                             $finance->control = $control;
                             $finance->operation = 'Gasto';
                             $finance->amount = $data['amount'];
-                            $finance->comment = 'Gasto por pago a cajero (a) '.$professional->name .' '.$professional->surname;
+                            $finance->comment = 'Gasto por pago a cajero (a) '.$professional->name;
                             $finance->branch_id = $data['branch_id'];
                             $finance->type = 'Sucursal';
                             $finance->expense_id = 4;
@@ -349,9 +351,9 @@ class OperationTipController extends Controller
                 return [
                     'id' => $car->id,
                     'professional_id' => $professional->id,
-                    'clientName' => $client->name . ' ' . $client->surname,
+                    'clientName' => $client->name,
                     'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
-                    'professionalName' => $professional->name . ' ' . $professional->surname,
+                    'professionalName' => $professional->name,
                     'image_url' => $professional->image_url,
                     'branch_id' => $car->reservation->branch_id,
                     'data' => $car->reservation->data,

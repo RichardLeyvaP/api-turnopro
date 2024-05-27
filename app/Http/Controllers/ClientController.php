@@ -24,11 +24,21 @@ class ClientController extends Controller
         try {
 
             Log::info("entra a cliente");
-
+            $now = Carbon::now();
             $clients = Client::with('user')
             ->addSelect('*', DB::raw("CONCAT(name, ' ', surname, ' ', second_surname) AS fullName"))
             ->get();
-            return response()->json(['clients' => $clients], 200);
+            $dates = $clients->map(function ($client) use ($now){
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'email' => $client->email,
+                    'phone' => $client->phone,
+                    'client_image' => $client->client_image.'?$'.$now,
+                    'user_id' => $client->user_id
+                ];
+            });
+            return response()->json(['clients' => $dates], 200);
         } catch (\Throwable $th) {
             Log::error($th);
 

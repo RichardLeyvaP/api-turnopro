@@ -416,6 +416,7 @@ Route::post('/comment-destroy', [CommentController::class, 'destroy']);
 Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
 
 Route::get('/notification', [NotificationController::class, 'index']);
+Route::get('/whatsapp-notification', [NotificationController::class, 'whatsapp_notification']);//dado un numero de telefono enviar una notificacion a whatsApp
 Route::get('/notification-show', [NotificationController::class, 'show']);
 Route::get('/notification-professional', [NotificationController::class, 'professional_show']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
 Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional

@@ -65,8 +65,8 @@ class ProfessionalPaymentController extends Controller
 
             $professional = Professional::find($data['professional_id']);
 
-            $finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-                            
+            //$finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();             
             if($finance !== null)
             {
                 $control = $finance->control+1;
@@ -78,7 +78,7 @@ class ProfessionalPaymentController extends Controller
                             $finance->control = $control;
                             $finance->operation = 'Gasto';
                             $finance->amount = $data['amount'];
-                            $finance->comment = 'Gasto por pago de curso a '.$professional->name .' '.$professional->surname;
+                            $finance->comment = 'Gasto por pago de curso a '.$professional->name;
                             $finance->enrollment_id = $enrollment_id;
                             $finance->type = 'Academia';
                             $finance->expense_id = 6;
@@ -105,8 +105,8 @@ class ProfessionalPaymentController extends Controller
 
             $professional = Professional::find($data['professional_id']);
 
-            $finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-                            
+            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();         
             if($finance !== null)
             {
                 $control = $finance->control+1;
@@ -118,7 +118,7 @@ class ProfessionalPaymentController extends Controller
                             $finance->control = $control;
                             $finance->operation = 'Gasto';
                             $finance->amount = $data['amount'];
-                            $finance->comment = 'Gasto por pago a '.$professional->name .' '.$professional->surname;
+                            $finance->comment = 'Gasto por pago a '.$professional->name;
                             $finance->branch_id = $data['branch_id'];
                             $finance->type = 'Sucursal';
                             $finance->expense_id = 4;
@@ -165,7 +165,7 @@ class ProfessionalPaymentController extends Controller
 
             $professional = Professional::find($data['professional_id']);
 
-            $finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();
                             
             if($finance !== null)
             {
@@ -434,7 +434,7 @@ class ProfessionalPaymentController extends Controller
                                                 'id' => $query->id,
                                                 'branch_id ' =>$query->branch_id,
                                                 'professional_id' => $query->professional_id,
-                                                'nameProfessional' => $query->professional->name.' '.$query->professional->surname.' '.$query->professional->second_surname,
+                                                'nameProfessional' => $query->professional->name,
                                                 'image_url' => $query->professional->image_url,
                                                 'date' => $query->date,
                                                 'type' => $query->type,

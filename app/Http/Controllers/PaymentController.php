@@ -206,7 +206,7 @@ class PaymentController extends Controller
             ];
             $this->traceService->store($trace);
             
-            $finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 7)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
                             
             if($finance !== null)
             {
@@ -219,7 +219,7 @@ class PaymentController extends Controller
                             $finance->control = $control;
                             $finance->operation = 'Ingreso';
                             $finance->amount = $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift'];
-                            $finance->comment = 'Ingreso por venta de producto en la caja';
+                            $finance->comment = 'Ingreso por venta de producto en la caja de la sucursal '.$branch->name;
                             $finance->branch_id = $branch->id;
                             $finance->type = 'Sucursal';
                             $finance->revenue_id = 7;

@@ -27,8 +27,8 @@ class MetaService
         })->select('id', 'name', 'surname', 'retention')->get();
 
 
-        $finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-
+        //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+        $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();
         if ($finance !== null) {
             $control = $finance->control + 1;
         } else {
@@ -97,7 +97,7 @@ class MetaService
                             $finance->control = $control++;
                             $finance->operation = 'Gasto';
                             $finance->amount = $amount;
-                            $finance->comment = 'Gasto por pago de bono de convivencias a ' . $professional->name . ' ' . $professional->surname;
+                            $finance->comment = 'Gasto por pago de bono de convivencias a ' . $professional->name;
                             $finance->branch_id = $branch->id;
                             $finance->type = 'Sucursal';
                             $finance->expense_id = 5;
@@ -141,7 +141,7 @@ class MetaService
                     $finance->control = $control++;
                     $finance->operation = 'Gasto';
                     $finance->amount = $profesionalbonus->mountpay;
-                    $finance->comment = 'Gasto por pago de bono de servicios a ' . $professional->name . ' ' . $professional->surname;
+                    $finance->comment = 'Gasto por pago de bono de servicios a ' . $professional->name;
                     $finance->branch_id = $branch->id;
                     $finance->type = 'Sucursal';
                     $finance->expense_id = 5;
@@ -202,7 +202,7 @@ class MetaService
                     $finance->control = $control++;
                     $finance->operation = 'Gasto';
                     $finance->amount = $winProduct;
-                    $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name . ' ' . $professional->surname;
+                    $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
                     $finance->branch_id = $branch->id;
                     $finance->type = 'Sucursal';
                     $finance->expense_id = 5;

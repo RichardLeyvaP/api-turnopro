@@ -6,6 +6,7 @@ use App\Models\BranchService;
 use App\Models\Service;
 use App\Services\ServiceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -15,7 +16,13 @@ class ServiceController extends Controller
     {
         try {             
             Log::info( "Entra a buscar servicios");
-            return response()->json(['services' => Service::all()], 200, [], JSON_NUMERIC_CHECK);
+            $now = Carbon::now();
+            $services = Service::all();
+            foreach ($services as $service) {
+                // Agrega el dato adicional que necesitas al campo image_product
+                $service->image_service = $service->image_service.'?$'.$now;
+            }
+            return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios"], 500);

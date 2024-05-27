@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\CourseProfessional;
 use App\Models\Professional;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class CourseProfessionalController extends Controller
@@ -52,8 +53,8 @@ class CourseProfessionalController extends Controller
                 'course_id' => 'nullable|numeric'
             ]);
             //$course = Course::find($data['course_id']);
-            
-            $courseprofessional = CourseProfessional::where('course_id', $data['course_id'])->get()->map(function ($course){
+            $now = Carbon::now();
+            $courseprofessional = CourseProfessional::where('course_id', $data['course_id'])->get()->map(function ($course) use ($now){
                 $professional = $course->professional;
                 return [
                     'id' => $course->id,
@@ -61,7 +62,7 @@ class CourseProfessionalController extends Controller
                     'professional_id' => $course->professional_id,
                     'name' => $professional->name.' '.$professional->surname,
                     'email' => $professional->email,
-                    'image_url' => $professional->image_url,
+                    'image_url' => $professional->image_url.'?$'.$now,
                     'charge' => $professional->charge->name
                 ];
             });

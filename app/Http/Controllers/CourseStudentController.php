@@ -235,7 +235,7 @@ class CourseStudentController extends Controller
            $course = Course::find($data['course_id']);  
            //$finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
             //return $course->enrollment_id;       
-            $finance = Finance::where('enrollment_id', $course->enrollment_id)->where('revenue_id', 3)->whereDate('data', Carbon::now())->first();
+            /*$finance = Finance::where('enrollment_id', $course->enrollment_id)->where('revenue_id', 3)->whereDate('data', Carbon::now())->first();
             if($finance){
                 Log::info('existe');
                 if($totalAnt != $data['total_payment']){
@@ -252,9 +252,9 @@ class CourseStudentController extends Controller
                 $finance->file = '';
                 $finance->save();
             }
-            else{
-                Log::info('no existe');
-                $finance = Finance::where('enrollment_id', $course->enrollment_id)->orderByDesc('control')->first();
+            else{*/
+                //Log::info('no existe');
+                $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
                 if($finance)
                     {
                         $control = $finance->control+1;
@@ -266,14 +266,14 @@ class CourseStudentController extends Controller
                 $finance->control = $control;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['total_payment'];
-                $finance->comment = 'Ingreso por matrícula de estudiante en curso';
+                $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
                 $finance->enrollment_id = $course->enrollment_id;
                 $finance->type = 'Academia';
                 $finance->revenue_id = 3;
                 $finance->data = Carbon::now();                
                 $finance->file = '';
                 $finance->save();
-            }
+            //}
 
             return response()->json(['msg' => 'Estudiante actualizado correctamente'], 200);
         } catch (\Throwable $th) {

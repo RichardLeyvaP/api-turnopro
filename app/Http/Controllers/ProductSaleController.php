@@ -64,7 +64,7 @@ class ProductSaleController extends Controller
             }
             //$productSale = new ProductSale();
             //agregar a finanzas a ingresos
-            $finance = Finance::where('enrollment_id', $data['enrollment_id'])->where('revenue_id', 4)->whereDate('data', Carbon::now())->first();
+            /*$finance = Finance::where('enrollment_id', $data['enrollment_id'])->where('revenue_id', 4)->whereDate('data', Carbon::now())->first();
             if($finance){
                 Log::info('existe');
                 $finance->operation = 'Ingreso';
@@ -78,8 +78,8 @@ class ProductSaleController extends Controller
                 $finance->save();
             }
             else{
-                Log::info('no existe');
-                $finance = Finance::where('enrollment_id', $data['enrollment_id'])->orderByDesc('control')->first();
+                Log::info('no existe');*/
+                $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
                 if($finance)
                     {
                         $control = $finance->control+1;
@@ -98,7 +98,7 @@ class ProductSaleController extends Controller
                 $finance->data = Carbon::now();                
                 $finance->file = '';
                 $finance->save();
-            }
+            //}
             
              return response()->json(['msg' =>'Producto asigando correctamente',], 200);
         } catch (\Throwable $th) {

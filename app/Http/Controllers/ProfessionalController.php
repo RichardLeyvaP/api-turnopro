@@ -32,7 +32,8 @@ class ProfessionalController extends Controller
     public function index()
     {
         try {
-            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) {
+            $now = Carbon::now();
+            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) use ($now){
                 return [
                     'id' => $professional->id,
                     'name' => $professional->name,
@@ -43,7 +44,7 @@ class ProfessionalController extends Controller
                     'phone' => $professional->phone,
                     'user_id' => $professional->user_id,
                     'state' => $professional->state,
-                    'image_url' => $professional->image_url,
+                    'image_url' => $professional->image_url.'?$'.$now,
                     'charge_id' => $professional->charge_id,
                     'user' => $professional->user->name,
                     'charge' => $professional->charge->name,
@@ -52,7 +53,7 @@ class ProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => "Error al mostrar las professionales"], 500);
+            return response()->json(['msg' => $th->getMessage()."Error al mostrar las professionales"], 500);
         }
     }
     /*public function index()

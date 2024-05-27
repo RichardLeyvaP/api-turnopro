@@ -17,7 +17,13 @@ class ProductController extends Controller
     {
         try {             
             Log::info( "Entra a buscar productos");
-            return response()->json(['products' => Product::with('productcategory')->get()], 200, [], JSON_NUMERIC_CHECK);
+            $now = Carbon::now();
+            $products = Product::with('productcategory')->get();
+            foreach ($products as $product) {
+                // Agrega el dato adicional que necesitas al campo image_product
+                $product->image_product = $product->image_product.'?$'.$now;
+            }
+            return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar los productos"], 500);

@@ -74,6 +74,7 @@ class BranchProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
+            $now = Carbon::now();
             $professionals = BranchProfessional::where('branch_id', $data['branch_id'])->with('professional.charge')->get()/*->map(function ($query){
                 $professional = $query->professional;
                 return [
@@ -93,8 +94,8 @@ class BranchProfessionalController extends Controller
                     'ponderation' => $branchprofessional['ponderation'],
                     'limit' => $branchprofessional['limit'],
                     'mountpay' => $branchprofessional['mountpay'],
-                    'name' => $branchprofessional['professional']['name'] . ' ' . $branchprofessional['professional']['surname'],
-                    'image_url' => $branchprofessional['professional']['image_url'],
+                    'name' => $branchprofessional['professional']['name'],
+                    'image_url' => $branchprofessional['professional']['image_url'].'?$'.$now,
                     'charge' => $branchprofessional['professional']['charge']['name'],
                 ];
             }

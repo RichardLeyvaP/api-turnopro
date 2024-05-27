@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\BranchServiceProfessional;
+use App\Models\Car;
 use App\Models\Order;
 use App\Models\ProductCategory;
 use App\Models\ProductStore;
@@ -150,7 +151,17 @@ class ProductCategoryController extends Controller
             ];
         });
 
-        return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
+        $car = Car::find($data['car_id']);
+        if ($car != null) {
+            $services = $car->orders->where('is_product', 0)->count();
+            $products = $car->orders->where('is_product', 1)->sum('cant');
+        }
+        else{
+            $services = 0;
+            $products = 0;
+        }
+
+        return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels, 'product_select' => intval($products), 'service_select' => intval($services)], 200, [], JSON_NUMERIC_CHECK);
     } catch (\Throwable $th) {
         return response()->json(['msg' => $th->getMessage()." Error interno del sistema"], 500);
     }

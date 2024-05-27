@@ -153,6 +153,20 @@ class NotificationController extends Controller
         }
     }
 
+    public function whatsapp_notification(Request $request)
+    {
+        Log::info('Eviar notificacion whatsApp');
+        try {
+            $data = $request->validate([
+                'telefone_client' => 'required'
+            ]);
+
+            return response()->json("Este es el numero de celular ".$data['telefone_client'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
+        }
+    }
+
     public function professional_show(Request $request)
     {
         Log::info('Dada una sucursal y un professional devuelve las notificaciones');
@@ -388,7 +402,6 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
-
 
     public function update(Request $request)
     {

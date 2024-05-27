@@ -124,7 +124,8 @@ class BoxCloseController extends Controller
             Log::info('$trace');
             Log::info($trace);
             //Agregar a tabla de ingresos
-            $finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            //$finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
+            $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
                             Log::info('no existe');
                 //$finance = Finance::where('branch_id', $branch->id)->orderByDesc('control')->first();
                 if($finance !== null)
@@ -138,7 +139,7 @@ class BoxCloseController extends Controller
                 $finance->control = $control;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['totalMount'];
-                $finance->comment = 'Ingreso diario';
+                $finance->comment = 'Ingreso diario en sucursal '.$branch->name;
                 $finance->branch_id = $branch->id;
                 $finance->type = 'Sucursal';
                 $finance->revenue_id = 5;
