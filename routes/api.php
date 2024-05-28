@@ -131,6 +131,7 @@ Route::get('/update-state', [ProfessionalController::class, 'update_state']); //
 Route::get('/branch-professionals-service', [ProfessionalController::class, 'branch_professionals_service1']); // los professionales de una branch que realizan x servicios
 Route::get('/branch-professionals-service-new', [ProfessionalController::class, 'branch_professionals_serviceNew']); // los professionales de una branch que realizan x servicios
 Route::get('/verify-tec-prof', [ProfessionalController::class, 'verifi_tec_profe']); // dado una email devolver el nombre y el typo de cargo
+Route::get('/professional-email', [ProfessionalController::class, 'professional_email']); // dado una email devolver si ya existe como cliente o professional
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);

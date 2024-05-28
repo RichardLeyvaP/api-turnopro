@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BranchProfessional;
 use App\Models\Car;
+use App\Models\Client;
 use App\Models\ClientProfessional;
 use App\Models\Professional;
 use App\Models\Schedule;
@@ -697,6 +698,39 @@ class ProfessionalController extends Controller
             ]);
             $professional = $this->professionalService->professionals_state($data['branch_id'], $data['reservation_id']);
             return response()->json(['professionals' => $professional], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
+        }
+    }
+
+    public function professional_email(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|unique:professionals'
+            ]);
+            if ($validator->fails()) {
+                $user = '';
+                $clientName = '';
+                $clientImage = '';
+                $type = 'Professional';
+                return response()->json(['user' => $user, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
+                
+            }
+            $client = Client::with('user')->where('email', $request->email)->first();
+            //$professional = Professional::with('user')->where('email', $request->email)->first();
+            if($client != null){
+                $user = $client->user->id;
+                $clientName = $client->name;
+                $clientImage = $client->client_image;
+                $type = 'Client';
+            }else {
+                $user = '';
+                $clientName = '';
+                $clientImage = '';
+                $type = 'No';
+            }
+            return response()->json(['user' => $user, 'clientName' => $clientName, 'clientImage' => $clientImage, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
         }

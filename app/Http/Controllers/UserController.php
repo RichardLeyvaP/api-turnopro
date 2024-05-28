@@ -96,7 +96,7 @@ class UserController extends Controller
                 'password' => 'required',
                 //'surname' => 'required|max:50',
                 //'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:professionals|unique:users',
+                'email' => 'required|max:50|email|unique:professionals',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
                 'image_url' => 'nullable',
@@ -123,11 +123,18 @@ class UserController extends Controller
                     'msg' => $validator->errors()->all()
                 ], 400);
             }
+            if($request->user_id){
+                $user = User::find($request->user_id);
+                $user->name = $request->user;
+                $user->password = Hash::make($request->password);
+                $user->save();
+            }else{
             $user = User::create([
                 'name' => $request->user,
                 'email' => $request->email,
                 'password' => Hash::make($request->password)
             ]);
+            }
             /*$filename = "image/default.png";
             if ($request->hasFile('image_url')) {
                 $filename = $request->file('image_url')->storeAs('professionals', $request->file('image_url')->getClientOriginalName(), 'public');
