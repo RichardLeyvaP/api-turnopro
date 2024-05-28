@@ -410,13 +410,16 @@ class TailController extends Controller
                 'detached' => 'required|numeric',
                 'clock' => 'required|numeric'
             ]);
+            //esta comparación esta porque llego en null en una ocasion y da error
+            Log::info('Variable que llegó null ($data["timeClock"])');
+            if ($data['timeClock']!=null) {
+                $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
 
-            $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
-
-            $tail->timeClock = $data['timeClock'];
-            $tail->detached = $data['detached'];
-            $tail->clock = $data['clock'];
-            $tail->save();
+                $tail->timeClock = $data['timeClock'];
+                $tail->detached = $data['detached'];
+                $tail->clock = $data['clock'];
+                $tail->save();
+            }
             return response()->json(['msg' => 'Estado del tiempo del reloj y estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

@@ -220,19 +220,29 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|max:50',
                 //'surname' => 'required|max:50',
                 //'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:clients',
+                'email' => 'required|max:50|email|unique:clients|unique:users',
                 'phone' => 'required|max:15',
                 //'user_id' => 'nullable|numeric'
             ]);
             if ($validator->fails()) {
-                return response()->json([
-                    'msg' => $validator->errors()->all()
-                ], 400);
+                $errors = $validator->errors();
+    
+            // Verifica si el error es por el campo 'email'
+                if ($errors->has('email')){
+                    return response()->json([
+                        'msg' => $validator->errors()->all()
+                    ], 401);
+                }else{
+                    return response()->json([
+                        'msg' => $validator->errors()->all()
+                    ], 400);
+                }
             }
             $user = User::create([
                 'name' => $request->name,
@@ -256,7 +266,7 @@ class ClientController extends Controller
             }
             $client->client_image = $filename;
             $client->save();
-
+            DB::commit();
             return response()->json(['msg' => 'Cliente insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

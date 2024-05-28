@@ -343,153 +343,129 @@ class BranchService
     }
 
     public function branch_winner_periodo_icon($branch_id, $startDate, $endDate)
-    {
-       $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
-            $query->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->where('branch_id', $branch_id);
-        })->where('pay', 1)->get();
-        $carIds = $cars->pluck('id');
-        $totalClients = 0;
-        $totalservices = 0;
-        $totalproducts = 0;
-        $seleccionado = 0;
-        $aleatorio = 0;
-        $transformedResult = [];
-        $totalClients = $cars->count();
-       if(!$totalClients = $cars->count()){
-        return $transformedResult;
-       }
-        /*$products = Product::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
-            $query->whereIn('car_id', $carIds)->where('is_product', 1);
-        }])->orderByDesc('orders_count')->first();
-        Log::info("obtener los servicios");*/
-        $products = Product::with([
-            'orders' => function ($query) use ($carIds) {
-                $query->selectRaw('product_id, SUM(cant) as total_cant')
-                    ->groupBy('product_id')
-                    ->whereIn('car_id', $carIds)
-                    ->where('is_product', 1);
-            },
-            'cashiersales' => function ($query) use ($branch_id, $startDate, $endDate) {
-                $query->selectRaw('product_id, SUM(cant) as total_sales')
-                    ->groupBy('product_id')
-                    ->where('cashiersales.branch_id', $branch_id)
-                    ->whereDate('data', '>=', $startDate)
-                    ->whereDate('data', '<=', $endDate);
-            }
-        ])->get()->filter(function ($product) {
-            // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
-        })->map(function ($product) {
-            // Crea una estructura de datos simplificada con la suma de las cantidades
-            $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashiersales->sum('total_sales');
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'reference' => $product->reference,
-                'code' => $product->code,
-                'description' => $product->description,
-                'status_product' => $product->status_product,
-                'purchase_price' => $product->purchase_price,
-                'sale_price' => $product->sale_price,
-                'image_product' => $product->image_product,
-                'product_category_id' => $product->product_category_id,
-                'total_quantity' => $totalOrders + $totalSales,
-            ];
-        })->sortByDesc('total_quantity')->values();
-        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
-            $query->selectRaw('SUM(cant) as total_cant')
-                ->groupBy('product_id')
-                ->whereIn('car_id', $carIds)
-                ->where('is_product', 1);
-        }])
-        ->get()->filter(function ($product) {
-            return !$product->orders->isEmpty();
-        })->values()->sortByDesc(function ($product) {
-            return $product->orders->sum('total_cant');
-        });
+{
+    $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
+        $query->whereDate('data', '>=', $startDate)
+              ->whereDate('data', '<=', $endDate)
+              ->where('branch_id', $branch_id);
+    })->where('pay', 1)->get();
 
-        $productsCashier = Product::with(['cashiersales' => function ($query) use ($branch_id) {
-            $query->selectRaw('SUM(cant) as total_cant')
-                ->groupBy('product_id')
-                ->where('cashiersales.branch_id', $branch_id);
-        }])
-        ->get()->filter(function ($product) {
-            return !$product->cashiersales->isEmpty();
-        })->values()->sortByDesc(function ($product) {
-            return $product->cashiersales->sum('total_cant');
-        });*/
-
-        //$mostSoldProduct = $products->first();
-
-        // Obtener el nombre y la cantidad del producto más vendido
-        $mostSoldProductName = $products ? $products->first()['name']: '';
-        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
-        $totalSoldProducts = $products->sum('total_quantity');
-
-        $TotalRetention = Retention::where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
-
-        $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
-            $query->whereIn('car_id', $carIds)->where('is_product', 0);
-        }])->orderByDesc('orders_count')->first();
-        foreach ($cars as $car) {
-            if ($car->select_professional == 1) {
-                $seleccionado = $seleccionado + 1;
-            } else {
-                $aleatorio = $aleatorio + 1;
-            }
-            $totalservices = $totalservices + count($car->orders->where('is_product', 0));
-            //$totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
-        }
-        $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
-            $query->where('type_service', 'Especial');
-        })->get();
-        //Log::info($services);
-        $result = [
-            'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
-            'Propina' => round($cars->sum('tip'), 2),
-            'Total Retenciones' => round($TotalRetention),
-            'Producto más Vendido' => $mostSoldProductName,
-            'Cantidad del Producto' => $mostSoldProductQuantity,
-            'Total de Productos Vendidos' => $totalSoldProducts,
-            'Servicio más Brindado' => $services->orders_count ? $services->name : null,
-            'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
-            'Total de Servicios Brindados' => $totalservices,
-            'Clientes Seleccionados' => $seleccionado,
-            'Clientes Aleatorios' => $aleatorio,
-            'Servicios Especiales' => $orders->count(),
-            'Monto Servicios Especiales' => round($orders->sum('price'), 2),
-            'Clientes Atendidos' => $totalClients
-        ];
-        $iconColorMapping = [
-            'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
-            'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
-            'Total Retenciones' => ['icon' => 'mdi-account-multiple', 'color' =>'grey'],
-            'Producto más Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
-            'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
-            'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],
-            'Servicio más Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
-            'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
-            'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Clientes Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Clientes Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
-            'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
-            'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
-            'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
-        ];
-
-        $transformedResult = [];
-
-        foreach ($result as $key => $value) {
-            $transformedResult[$key] = [
-                'value' => $value,
-                'icon' => $iconColorMapping[$key]['icon'] ?? 'default_icon',
-                'color' => $iconColorMapping[$key]['color'] ?? 'default_color',
-            ];
-        }
-
-        return $transformedResult;
+    if ($cars->isEmpty()) {
+        return [];
     }
+
+    $carIds = $cars->pluck('id');
+    $totalClients = $cars->count();
+    $totalservices = 0;
+    $seleccionado = 0;
+    $aleatorio = 0;
+
+    $products = Product::with([
+        'orders' => function ($query) use ($carIds) {
+            $query->selectRaw('product_id, SUM(cant) as total_cant')
+                  ->groupBy('product_id')
+                  ->whereIn('car_id', $carIds)
+                  ->where('is_product', 1);
+        },
+        'cashiersales' => function ($query) use ($branch_id, $startDate, $endDate) {
+            $query->selectRaw('product_id, SUM(cant) as total_sales')
+                  ->groupBy('product_id')
+                  ->where('cashiersales.branch_id', $branch_id)
+                  ->whereDate('data', '>=', $startDate)
+                  ->whereDate('data', '<=', $endDate);
+        }
+    ])->get()->filter(function ($product) {
+        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+    })->map(function ($product) {
+        $totalOrders = $product->orders->sum('total_cant');
+        $totalSales = $product->cashiersales->sum('total_sales');
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'reference' => $product->reference,
+            'code' => $product->code,
+            'description' => $product->description,
+            'status_product' => $product->status_product,
+            'purchase_price' => $product->purchase_price,
+            'sale_price' => $product->sale_price,
+            'image_product' => $product->image_product,
+            'product_category_id' => $product->product_category_id,
+            'total_quantity' => $totalOrders + $totalSales,
+        ];
+    })->sortByDesc('total_quantity')->values();
+
+    $mostSoldProductName = $products->isNotEmpty() ? $products->first()['name'] : '';
+    $mostSoldProductQuantity = $products->isNotEmpty() ? $products->first()['total_quantity'] : 0;
+    $totalSoldProducts = $products->sum('total_quantity');
+
+    $TotalRetention = Retention::where('branch_id', $branch_id)
+        ->whereDate('data', '>=', $startDate)
+        ->whereDate('data', '<=', $endDate)
+        ->sum('retention');
+
+    $services = Service::withCount(['orders' => function ($query) use ($startDate, $endDate, $carIds) {
+        $query->whereIn('car_id', $carIds)->where('is_product', 0);
+    }])->orderByDesc('orders_count')->first();
+
+    foreach ($cars as $car) {
+        if ($car->select_professional == 1) {
+            $seleccionado++;
+        } else {
+            $aleatorio++;
+        }
+        $totalservices += $car->orders->where('is_product', 0)->count();
+    }
+
+    $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+        $query->where('type_service', 'Especial');
+    })->get();
+
+    $result = [
+        'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
+        'Propina' => round($cars->sum('tip'), 2),
+        'Total Retenciones' => round($TotalRetention),
+        'Producto más Vendido' => $mostSoldProductName,
+        'Cantidad del Producto' => $mostSoldProductQuantity,
+        'Total de Productos Vendidos' => $totalSoldProducts,
+        'Servicio más Brindado' => $services ? $services->name : null,
+        'Cantidad del Servicio' => $services ? $services->orders_count : 0,
+        'Total de Servicios Brindados' => $totalservices,
+        'Clientes Seleccionados' => $seleccionado,
+        'Clientes Aleatorios' => $aleatorio,
+        'Servicios Especiales' => $orders->count(),
+        'Monto Servicios Especiales' => round($orders->sum('price'), 2),
+        'Clientes Atendidos' => $totalClients
+    ];
+
+    $iconColorMapping = [
+        'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
+        'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
+        'Total Retenciones' => ['icon' => 'mdi-account-multiple', 'color' => 'grey'],
+        'Producto más Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
+        'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
+        'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],
+        'Servicio más Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
+        'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
+        'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
+        'Clientes Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
+        'Clientes Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
+        'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
+        'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
+        'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' => 'indigo'],
+    ];
+
+    $transformedResult = [];
+
+    foreach ($result as $key => $value) {
+        $transformedResult[$key] = [
+            'value' => $value,
+            'icon' => $iconColorMapping[$key]['icon'] ?? 'default_icon',
+            'color' => $iconColorMapping[$key]['color'] ?? 'default_color',
+        ];
+    }
+
+    return $transformedResult;
+}
 
     /*public function branch_winner_month_icon($branch_id, $month, $year)
     {
@@ -577,146 +553,126 @@ class BranchService
     }*/
 
     public function branch_winner_date_icon($branch_id)
-    {
-        $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
-        })->where('pay', 1)->get();
-        $carIds = $cars->pluck('id');
-        
-        $totalservices = 0;
-        $totalproducts = 0;
-        $seleccionado = 0;
-        $aleatorio = 0;
-        $totalClients = 0;
-        
-        $transformedResult = [];
-        $totalClients = $cars->count();
-       if(!$totalClients = $cars->count()){
-        return $transformedResult;
-       }
+{
+    $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
+        $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
+    })->where('pay', 1)->get();
 
-       $products = Product::with([
+    if ($cars->isEmpty()) {
+        return [];
+    }
+
+    $carIds = $cars->pluck('id');
+    $totalClients = $cars->count();
+    $totalservices = 0;
+    $seleccionado = 0;
+    $aleatorio = 0;
+
+    $products = Product::with([
         'orders' => function ($query) use ($carIds) {
             $query->selectRaw('product_id, SUM(cant) as total_cant')
-                ->groupBy('product_id')
-                ->whereIn('car_id', $carIds)
-                ->where('is_product', 1);
+                  ->groupBy('product_id')
+                  ->whereIn('car_id', $carIds)
+                  ->where('is_product', 1);
         },
         'cashiersales' => function ($query) use ($branch_id) {
             $query->selectRaw('product_id, SUM(cant) as total_sales')
-                ->groupBy('product_id')
-                ->where('cashiersales.branch_id', $branch_id)
-                ->whereDate('data', Carbon::now());
+                  ->groupBy('product_id')
+                  ->where('cashiersales.branch_id', $branch_id)
+                  ->whereDate('data', Carbon::now());
         }
-        ])->get()->filter(function ($product) {
-            // Filtra productos que tienen órdenes o ventas de productos no vacías
-            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
-        })->map(function ($product) {
-            // Crea una estructura de datos simplificada con la suma de las cantidades
-            $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashiersales->sum('total_sales');
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'reference' => $product->reference,
-                'code' => $product->code,
-                'description' => $product->description,
-                'status_product' => $product->status_product,
-                'purchase_price' => $product->purchase_price,
-                'sale_price' => $product->sale_price,
-                'image_product' => $product->image_product,
-                'product_category_id' => $product->product_category_id,
-                'total_quantity' => $totalOrders + $totalSales,
-            ];
-        })->sortByDesc('total_quantity')->values();
-    
-        $mostSoldProductName = $products ? $products->first()['name']: '';
-        $mostSoldProductQuantity = $products ? $products->first()['total_quantity'] : 0;
-        $totalSoldProducts = $products->sum('total_quantity');
-        $TotalRetention = Retention::where('branch_id', $branch_id)->whereDate('data', Carbon::now())->sum('retention');
-        /*$products = Product::withCount(['orders' => function ($query) use ($carIds){
-            $query->whereIn('car_id', $carIds)->where('is_product', 1)->whereDate('data', Carbon::now());
-        }])->orderByDesc('orders_count')->first();*/
-        //$carIds = $cars->pluck('car_id');
-        /*$products = Product::with(['orders' => function ($query) use ($carIds) {
-            $query->selectRaw('SUM(cant) as total_sale_price')
-                ->groupBy('product_id')
-                ->whereIn('car_id', $carIds)
-                ->where('is_product', 1);
-        }])
-        ->get()->filter(function ($product) {
-            return !$product->orders->isEmpty();
-        })->values()->sortByDesc(function ($product) {
-            return $product->orders->sum('total_cant');
-        });
-        $mostSoldProduct = $products->first();
-
-        // Obtener el nombre y la cantidad del producto más vendido
-        $mostSoldProductName = $mostSoldProduct ? $mostSoldProduct->name: '';
-        $mostSoldProductQuantity = $mostSoldProduct ? $mostSoldProduct->orders->sum('total_cant') : 0;
-        $totalSoldProducts = $products->sum(function ($product) {
-            return $product->orders->sum('total_cant');
-        });*/
-        $services = Service::withCount(['orders' => function ($query) use ($carIds) {
-            $query->whereIn('car_id', $carIds)->where('is_product', 0);
-        }])->orderByDesc('orders_count')->first();
-        foreach ($cars as $car) {
-            if ($car->select_professional == 1) {
-                $seleccionado = $seleccionado + 1;
-            } else {
-                $aleatorio = $aleatorio + 1;
-            }
-            $totalservices = $totalservices + count($car->orders->where('is_product', 0));
-            //$totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
-        }
-        $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
-            $query->where('type_service', 'Especial');
-        })->get();
-        //Log::info($services);
-        $result = [
-            'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
-            'Propina' => round($cars->sum('tip'), 2),
-            'Total Retenciones' => round($TotalRetention),
-            'Producto más Vendido' => $mostSoldProductName,
-            'Cantidad del Producto' => $mostSoldProductQuantity,
-            'Total de Productos Vendidos' => $totalSoldProducts,
-            'Servicio más Brindado' => $services->orders_count ? $services->name : null,
-            'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
-            'Total de Servicios Brindados' => $totalservices,
-            'Clientes Seleccionados' => $seleccionado,
-            'Clientes Aleatorios' => $aleatorio,
-            'Servicios Especiales' => $orders->count(),
-            'Monto Servicios Especiales' => round($orders->sum('price'), 2),
-            'Clientes Atendidos' => $totalClients
+    ])->get()->filter(function ($product) {
+        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+    })->map(function ($product) {
+        $totalOrders = $product->orders->sum('total_cant');
+        $totalSales = $product->cashiersales->sum('total_sales');
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'reference' => $product->reference,
+            'code' => $product->code,
+            'description' => $product->description,
+            'status_product' => $product->status_product,
+            'purchase_price' => $product->purchase_price,
+            'sale_price' => $product->sale_price,
+            'image_product' => $product->image_product,
+            'product_category_id' => $product->product_category_id,
+            'total_quantity' => $totalOrders + $totalSales,
         ];
-        $iconColorMapping = [
-            'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
-            'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
-            'Total Retenciones' => ['icon' => 'mdi-account-multiple', 'color' =>'grey'],
-            'Producto más Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
-            'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
-            'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],
-            'Servicio más Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
-            'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
-            'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Clientes Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Clientes Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
-            'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
-            'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
-            'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
-        ];
+    })->sortByDesc('total_quantity')->values();
 
+    $mostSoldProductName = $products->isNotEmpty() ? $products->first()['name'] : '';
+    $mostSoldProductQuantity = $products->isNotEmpty() ? $products->first()['total_quantity'] : 0;
+    $totalSoldProducts = $products->sum('total_quantity');
 
-        foreach ($result as $key => $value) {
-            $transformedResult[$key] = [
-                'value' => $value,
-                'icon' => $iconColorMapping[$key]['icon'] ?? 'default_icon',
-                'color' => $iconColorMapping[$key]['color'] ?? 'default_color',
-            ];
+    $TotalRetention = Retention::where('branch_id', $branch_id)
+        ->whereDate('data', Carbon::now())
+        ->sum('retention');
+
+    $services = Service::withCount(['orders' => function ($query) use ($carIds) {
+        $query->whereIn('car_id', $carIds)->where('is_product', 0);
+    }])->orderByDesc('orders_count')->first();
+
+    foreach ($cars as $car) {
+        if ($car->select_professional == 1) {
+            $seleccionado++;
+        } else {
+            $aleatorio++;
         }
-
-        return $transformedResult;
+        $totalservices += $car->orders->where('is_product', 0)->count();
     }
+
+    $orders = Order::whereIn('car_id', $carIds)->whereHas('branchServiceProfessional', function ($query) {
+        $query->where('type_service', 'Especial');
+    })->get();
+
+    $result = [
+        'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
+        'Propina' => round($cars->sum('tip'), 2),
+        'Total Retenciones' => round($TotalRetention),
+        'Producto más Vendido' => $mostSoldProductName,
+        'Cantidad del Producto' => $mostSoldProductQuantity,
+        'Total de Productos Vendidos' => $totalSoldProducts,
+        'Servicio más Brindado' => $services ? $services->name : null,
+        'Cantidad del Servicio' => $services ? $services->orders_count : 0,
+        'Total de Servicios Brindados' => $totalservices,
+        'Clientes Seleccionados' => $seleccionado,
+        'Clientes Aleatorios' => $aleatorio,
+        'Servicios Especiales' => $orders->count(),
+        'Monto Servicios Especiales' => round($orders->sum('price'), 2),
+        'Clientes Atendidos' => $totalClients
+    ];
+
+    $iconColorMapping = [
+        'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
+        'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
+        'Total Retenciones' => ['icon' => 'mdi-account-multiple', 'color' => 'grey'],
+        'Producto más Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
+        'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
+        'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],
+        'Servicio más Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
+        'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
+        'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
+        'Clientes Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
+        'Clientes Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
+        'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
+        'Monto Servicios Especiales' => ['icon' => 'mdi-cash', 'color' => 'blue'],
+        'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' => 'indigo'],
+    ];
+
+    $transformedResult = [];
+
+    foreach ($result as $key => $value) {
+        $transformedResult[$key] = [
+            'value' => $value,
+            'icon' => $iconColorMapping[$key]['icon'] ?? 'default_icon',
+            'color' => $iconColorMapping[$key]['color'] ?? 'default_color',
+        ];
+    }
+
+    return $transformedResult;
+}
+
 
     /*public function company_close_car_month($month, $year, $data)
     {

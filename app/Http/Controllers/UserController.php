@@ -96,16 +96,26 @@ class UserController extends Controller
                 'password' => 'required',
                 //'surname' => 'required|max:50',
                 //'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:professionals',
+                'email' => 'required|max:50|email|unique:professionals|unique:users',
                 'phone' => 'required|max:15',
                 'charge_id' => 'required|numeric',
                 'image_url' => 'nullable',
                 'retention' => 'nullable'
             ]);
             if ($validator->fails()) {
+                $errors = $validator->errors();
+    
+            // Verifica si el error es por el campo 'email'
+            if ($errors->has('email')){
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 401);
+            }else{
                 return response()->json([
                     'msg' => $validator->errors()->all()
                 ], 400);
+            }
+                
             }
             $userName = User::where('name', $request->user)->first();
             if($userName){
@@ -230,7 +240,7 @@ class UserController extends Controller
         } catch (TransportException $e) {
     
             return response()->json(['msg' => 'Password modificada correctamente.Error al enviar el correo electrónico '], 200);
-  }
+        }
           catch (\Throwable $th) {
               Log::error($th);
             
