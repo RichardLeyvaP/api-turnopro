@@ -48,11 +48,14 @@ class CommentController extends Controller
             $filename = "comments/default.jpg";
             if ($request->hasFile('client_look')) {
                 $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+                //$client = Client::find($comment->clientProfessional->client->id);
+                $client->client_image = $filename;
+                $client->save();
              }
             $comment->image_look = $filename;
             $comment->save();
-            $client->client_image = $filename;
-            $client->save();
+            //$client->client_image = $filename;
+            //$client->save();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -80,6 +83,9 @@ class CommentController extends Controller
 
             if ($request->hasFile('client_look')) {
                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+               $client = Client::find($reservation->car->clientProfessional->client->id);
+               $client->client_image = $filename;
+                $client->save();
             }          
             $comment->client_look = $filename;
             $comment->save();
@@ -128,14 +134,14 @@ class CommentController extends Controller
                         File::delete($destination);
                     }              
                         $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
+                        $client = Client::find($comment->clientProfessional->client->id);
+                        $client->client_image = $filename;
+                        $client->save();
                     }
                 }
             $comment->look = $data['look'];
             $comment->client_look = $filename;
             $comment->save();
-            $client = Client::find($comment->clientProfessional->client->id);
-            $client->client_image = $filename;
-            $client->save();
             return response()->json(['msg' => 'Comment actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
