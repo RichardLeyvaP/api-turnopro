@@ -119,7 +119,7 @@ class ClientController extends Controller
             $reservation = $reservations->first();
             $professional = $reservation->car->clientProfessional->professional;
             $details = [
-                'professionalName' => $professional->name . ' ' . $professional->surname,
+                'professionalName' => $professional->name,
                 'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
                 'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
                 'cantVisit' => $reservations->count(),
@@ -131,7 +131,7 @@ class ClientController extends Controller
                 }
                 if ($professional = $user->professional) {
                     $id = $professional->id;
-                    $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
+                    $name = $professional->name;
                     $image = $professional->image_url;
                     $details = [];
                 }
