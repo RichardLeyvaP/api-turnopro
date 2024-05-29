@@ -732,7 +732,7 @@ class ProfessionalController extends Controller
             }
             return response()->json(['user' => $user, 'clientName' => $clientName, 'clientImage' => $clientImage, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
 }

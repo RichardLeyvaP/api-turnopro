@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\Car;
 use App\Models\Client;
 use App\Models\Comment;
+use App\Models\Professional;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -226,7 +227,7 @@ class ClientController extends Controller
                 'name' => 'required|max:50',
                 //'surname' => 'required|max:50',
                 //'second_surname' => 'required|max:50',
-                'email' => 'required|max:50|email|unique:clients|unique:users',
+                'email' => 'required|max:50|email|unique:clients',
                 'phone' => 'required|max:15',
                 //'user_id' => 'nullable|numeric'
             ]);
@@ -244,11 +245,15 @@ class ClientController extends Controller
                     ], 400);
                 }
             }
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->email)
-            ]);
+            if($request->user_id){
+                $user = User::find($request->user_id);
+            }else{
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->email)
+                ]);
+            }
             $client = new Client();
             $client->name = $request->name;
             //$client->surname = $request->surname;
@@ -544,6 +549,39 @@ class ClientController extends Controller
             return response()->json(['client' => Client::Where('email', $request->email)->orwhere('phone', $request->email)->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
+        }
+    }
+
+    public function client_email(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|unique:clients'
+            ]);
+            if ($validator->fails()) {
+                $user = '';
+                $clientName = '';
+                $clientImage = '';
+                $type = 'Client';
+                return response()->json(['user' => $user, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
+                
+            }
+            //$client = Client::with('user')->where('email', $request->email)->first();
+            $professional = Professional::with('user')->where('email', $request->email)->first();
+            if($professional != null){
+                $user = $professional->user->id;
+                $clientName = $professional->name;
+                $clientImage = $professional->image_url;
+                $type = 'Professional';
+            }else {
+                $user = '';
+                $clientName = '';
+                $clientImage = '';
+                $type = 'No';
+            }
+            return response()->json(['user' => $user, 'clientName' => $clientName, 'clientImage' => $clientImage, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
 }

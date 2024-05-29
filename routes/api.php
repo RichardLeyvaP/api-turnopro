@@ -131,7 +131,7 @@ Route::get('/update-state', [ProfessionalController::class, 'update_state']); //
 Route::get('/branch-professionals-service', [ProfessionalController::class, 'branch_professionals_service1']); // los professionales de una branch que realizan x servicios
 Route::get('/branch-professionals-service-new', [ProfessionalController::class, 'branch_professionals_serviceNew']); // los professionales de una branch que realizan x servicios
 Route::get('/verify-tec-prof', [ProfessionalController::class, 'verifi_tec_profe']); // dado una email devolver el nombre y el typo de cargo
-Route::get('/professional-email', [ProfessionalController::class, 'professional_email']); // dado una email devolver si ya existe como cliente o professional
+Route::get('/professional-email', [ProfessionalController::class, 'professional_email']); // dado una email devolver si ya existe como cliente
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);
@@ -147,7 +147,7 @@ Route::get('/client-frecuente', [ClientController::class, 'client_frecuente']);/
 Route::get('/client-email-phone', [ClientController::class, 'client_email_phone']);///dado un numero de telefono o un email devolver si es client
 Route::get('/clients-frecuence-state', [ClientController::class, 'clients_frecuence_state']);///dado una business o branch devolver la cantidad de visitas a por clientes
 Route::get('/clients-frecuence-periodo', [ClientController::class, 'clients_frecuence_periodo']);///dado una business o branch devolver la cantidad de visitas a por clientes
-
+Route::get('/client-email', [ClientController::class, 'client_email']); // dado una email devolver si ya existe como professional
 
 Route::get('/business', [BusinessController::class, 'index']);
 Route::get('/business-show', [BusinessController::class, 'show']);
@@ -321,6 +321,7 @@ Route::put('/reservation', [ReservationController::class, 'update']);
 Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
 Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
 Route::get('/professional_reservations', [ReservationController::class, 'professional_reservations']);
+Route::get('/professional-reservations-periodo', [ReservationController::class, 'professional_reservations_periodo']);//dado un professional y una branch devolver las reservacioes
 Route::get('/professional_reservationDate', [ReservationController::class, 'professional_reservationDate']);
 Route::post('/reservation_store', [ReservationController::class, 'reservation_store']);//Hacer una reservation en una fecha dada
 Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch

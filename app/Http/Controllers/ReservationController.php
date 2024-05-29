@@ -279,6 +279,36 @@ class ReservationController extends Controller
         }
     }
 
+    public function professional_reservations_periodo(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar las reservaciones de un professionals en una fecha dada");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date'
+            ]);
+            $dates = [];
+            $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })->where('branch_id', $data['branch_id'])->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->orderBy('data')->get();
+            foreach ($reservations as $reservation) {   
+                $client = $reservation['car']['clientProfessional']['client'];             
+            $dates[] = [
+                'startDate' => Carbon::parse($reservation['data'].' '.$reservation['start_time'])->toDateTimeString(),
+                'endDate' => Carbon::parse($reservation['data'].' '.$reservation['final_hour'])->toDateTimeString(),
+                'clientName' => $client['name']
+            ];
+            }
+            $sortedDates = collect($dates)->sortBy('startDate')->values()->all();
+            return response()->json(['reservaciones' => $sortedDates], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
+        }
+    }
+
     public function reservations_count(Request $request)
     {
         try {

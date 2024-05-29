@@ -96,7 +96,7 @@ class FinanceController extends Controller
                 'enrollment_id' => 'nullable'
             ]);
             if($data['type'] == 'Negocio'){
-                $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                     return [
                         'id' => $query->id,
                         'data' => $query->data,
@@ -118,7 +118,7 @@ class FinanceController extends Controller
                 });
             }
             if ($data['type'] == 'Sucursal'){
-                $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                     return [
                         'id' => $query->id,
                         'data' => $query->data,
@@ -140,7 +140,7 @@ class FinanceController extends Controller
                 });
             }
             if ($data['type'] == 'Academia'){
-                $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                     return [
                         'id' => $query->id,
                         'data' => $query->data,
@@ -162,7 +162,7 @@ class FinanceController extends Controller
                 });
             }
             if ($data['type'] == 'Todas'){
-                $finances = Finance::with(['expense', 'revenue'])->orderByDesc('control')->get()->map(function ($query) {
+                $finances = Finance::with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                     return [
                         'id' => $query->id,
                         'data' => $query->data,
