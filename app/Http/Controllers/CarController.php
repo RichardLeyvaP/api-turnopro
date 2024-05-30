@@ -1086,7 +1086,7 @@ class CarController extends Controller
                         'id' => $car->id,
                         'professional_id' => $data['professional_id'],
                         'clientName' => $client->name . ' ' . $client->surname,
-                        'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
+                        'client_image' => $client->client_image ? $client->client_image.'?$'.Carbon::now() : 'comments/default.jpg',
                         'branch_id' => $data['branch_id'],
                         'data' => $car->reservation->data,
                         'attendedClient' => 1,

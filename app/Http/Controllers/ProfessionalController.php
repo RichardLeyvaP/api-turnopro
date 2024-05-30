@@ -357,16 +357,17 @@ class ProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
+            $now = Carbon::now();
             $professionals = Professional::whereHas('branches', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })/*->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })*/->get()->map(function ($query){
+        })*/->get()->map(function ($query) use ($now){
             return [
                 'id' => $query->id,
-                'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
+                'name' => $query->name,
                 'charge' => $query->charge->name,
-                'image_url' => $query->image_url,
+                'image_url' => $query->image_url.'?$'.$now,
                 'email' => $query->email
             ];
            });
