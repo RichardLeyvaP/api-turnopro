@@ -49,7 +49,7 @@ class AssistantController extends Controller
             $professional_id = $professional->id;
             Log::info('Dada una sucursal y un professional devuelve la cola del día');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
+                $query->where('branch_id', $branch_id)->where('confirmation', 4);
             })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
                 $query->where('professional_id', $professional_id);
             })->whereNot('attended', [2])->get();

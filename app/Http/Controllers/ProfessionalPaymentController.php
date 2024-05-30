@@ -499,13 +499,13 @@ class ProfessionalPaymentController extends Controller
 
         // Obtener los datos de la base de datos
         $result = DB::table('professionals_payments')
-            ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
-            ->whereYear('date', $data['year'])
-            ->where('professional_id', $data['professional_id'])
-            ->where('branch_id', $data['branch_id'])
-            ->groupBy(DB::raw('MONTH(date)'))
-            ->orderBy('month')
-            ->get();
+    ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
+    ->whereYear('date', $data['year'])
+    ->where('professional_id', $data['professional_id'])
+    ->where('branch_id', $data['branch_id'])
+    ->groupBy(DB::raw('MONTH(date)'))
+    ->orderBy('month')
+    ->get();
 
         // Inicializar el array de resultados
         $monthlyEarnings = [];
@@ -513,7 +513,8 @@ class ProfessionalPaymentController extends Controller
 
         // Llenar el array con los nombres de los meses en español y sus ganancias correspondientes
         for ($month = 1; $month <= 12; $month++) {
-            $monthName = Carbon::createFromDate($year, $month)->locale('es_ES')->monthName;
+            // Usamos el día 1 para asegurar que todos los meses son válidos
+            $monthName = Carbon::createFromDate($year, $month, 1)->locale('es_ES')->monthName;
             $monthlyEarnings[$monthName] = 0;
         }
 

@@ -204,7 +204,7 @@ class TailService {
 
     public function cola_branch_professional($branch_id, $professional_id){
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id){
-            $query->where('branch_id', $branch_id);
+            $query->where('branch_id', $branch_id)->where('confirmation', 4);
         })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
         })->whereNot('attended', [2])->get();

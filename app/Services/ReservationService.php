@@ -108,8 +108,18 @@ class ReservationService
             }
         }
         else{
-            //$code = 'RP'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 2);
-            $code = 'RESERVA';
+            $code = 'RE'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+            //$code = 'RESERVA';
+        }
+        $confirmation = 0;
+        if ($fechaCarbon->isToday()) {
+            if ($data['from_home'] == 0) {
+                $confirmation = 4;
+            } elseif ($data['from_home'] == 1) {
+                $confirmation = 1;
+            }
+        } else {
+            $confirmation = 0;
         }
         $reservation = new Reservation();
         $reservation->start_time = Carbon::parse($data['start_time'])->toTimeString();
@@ -119,7 +129,7 @@ class ReservationService
         $reservation->from_home = $data['from_home'];
         $reservation->branch_id = $data['branch_id'];
         $reservation->car_id = $car->id;
-        $reservation->confirmation = $fechaCarbon->isToday() ? 1 : 0;
+        $reservation->confirmation = $confirmation;
         $reservation->code = $code;
         $reservation->save();
         Log::info('Crea la reservación');

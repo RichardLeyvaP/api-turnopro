@@ -28,7 +28,7 @@ class ExpenseController extends Controller
     {
         try {
             $data = $request->validate([
-                'name' => 'required|unique:expenses',
+                'name' => 'required',
 
             ]);
 
@@ -68,7 +68,7 @@ class ExpenseController extends Controller
 
             $data = $request->validate([
                 'id' => 'required|numeric',
-                'name' => 'required|unique:expenses'
+                'name' => 'required'
             ]);
             $expense = Expense::find($data['id']);
             $expense->name = $data['name'];
@@ -77,7 +77,7 @@ class ExpenseController extends Controller
             return response()->json(['msg' => 'Operación de Gasto actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error interno del sistema'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 
