@@ -77,7 +77,7 @@ class ProfessionalController extends Controller
                 return [
                     'id' => intval($professional->id),
                     'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
-                    'image_url' => $professional->image_url,
+                    'image_url' => $professional->image_url.'?$'.Carbon::now(),
                     'charge' => $professional->charge->name
 
                 ];
