@@ -604,6 +604,36 @@ class ReservationController extends Controller
         }
     }
 
+    public function update_confirmation_code(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'code' => 'required',                
+                'branch_id' => 'required|numeric',                
+
+            ]);
+            $reservacion = Reservation::where('code', $data['code'])->where('branch_id', $data['branch_id'])->first();
+            if($reservacion!=null){
+                if($reservacion->confirmation == 3){
+                    return response()->json(3, 200, [], JSON_NUMERIC_CHECK);
+                }else{
+                    $reservacion->confirmation = 4;
+                    $reservacion->save();
+                    return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
+                }
+        }else{
+            return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
+            //return redirect('http://localhost:3000/reserv/denied');
+        }
+            
+
+            //return response()->json(['msg' => $msg], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
+        }
+    }
+
 
     public function reservation_tail()
     {

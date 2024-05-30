@@ -28,7 +28,7 @@ class RevenueController extends Controller
     {
         try {
             $data = $request->validate([
-                'name' => 'required|unique:expenses',
+                'name' => 'required',
 
             ]);
 
@@ -68,7 +68,7 @@ class RevenueController extends Controller
 
             $data = $request->validate([
                 'id' => 'required|numeric',
-                'name' => 'required|unique:expenses'
+                'name' => 'required'
             ]);
             $revenue = Revenue::find($data['id']);
             $revenue->name = $data['name'];
