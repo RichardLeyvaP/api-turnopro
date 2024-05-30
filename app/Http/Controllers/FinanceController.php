@@ -165,6 +165,9 @@ class FinanceController extends Controller
                     if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                         $typeDetail = 'Gasto Producto';
                     }
+                    if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                        $typeDetail = 'Gasto Propina';
+                    }
                     if($query->expense){
                         if($query->expense->name == 'Compra de productos'){
                             $typeDetail = 'Gasto Producto';

@@ -107,7 +107,7 @@ class OperationTipController extends Controller
                             $finance->control = $control;
                             $finance->operation = 'Gasto';
                             $finance->amount = $data['amount'];
-                            $finance->comment = 'Gasto por pago a cajero (a) '.$professional->name;
+                            $finance->comment = 'Gasto por pago de 10% de propinas a cajero (a) '.$professional->name;
                             $finance->branch_id = $data['branch_id'];
                             $finance->type = 'Sucursal';
                             $finance->expense_id = 4;
