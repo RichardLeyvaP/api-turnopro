@@ -13,7 +13,7 @@ use App\Models\Client;
 class SendEmailService {
    
 
-    public function confirmReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional,$recipient,$id_reservation,)
+    public function confirmReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional,$recipient,$id_reservation,$code_reserva)
     {
         $logoUrl = 'https://api2.simplifies.cl/api/images/image/imagen_reservas.png'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'send_mail_reservation';        
@@ -42,12 +42,13 @@ class SendEmailService {
               $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type,'');
               $mail->id_reservation = $id_reservation;
               $mail->branch_address = $branch_address;
+              $mail->code_reserva = $code_reserva;
               $this->sendEmail($client_email,$mail,'Confirmación de Reserva en Simplifies');
 
 
     }
 
-    public function rememberReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional,$recipient,$id_reservation,)
+    public function rememberReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional,$recipient,$id_reservation,$code_reserva)
     {
         $logoUrl = 'https://api2.simplifies.cl/api/images/image/confirme.png'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'send_mail_remember';        
@@ -76,6 +77,7 @@ class SendEmailService {
               $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type,'');
               $mail->id_reservation = $id_reservation;
               $mail->branch_address = $branch_address;
+              $mail->code_reserva = $code_reserva;
               $this->sendEmail($client_email,$mail,'Confirmación de Reserva en Simplifies');
 
 

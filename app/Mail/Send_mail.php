@@ -26,6 +26,7 @@ class Send_mail extends Mailable
     public $file;
     public $id_reservation;
     public $branch_address;
+   
 
     // Propiedades adicionales correspondientes a la plantilla final
     public $branchBusinessName;
@@ -44,6 +45,7 @@ class Send_mail extends Mailable
     public $totalOther;
     public $totalMount;
     public $totalGiftcard;
+    public $code_reserva;
 
      // Propiedades adicionales correspondientes a la plantilla restaurar_pass
      public $usser;
@@ -115,6 +117,7 @@ class Send_mail extends Mailable
                 'totalOther' => $this->totalOther,
                 'totalMount' => $this->totalMount,
                 'totalGiftcard' => $this->totalGiftcard,
+                'code_reserva' => $this->code_reserva,
 
                 // Propiedades adicionales a restaurar_pass
                 'usser' => $this->usser,

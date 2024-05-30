@@ -19,6 +19,7 @@
     <li><strong>Barbero:</strong> {{$name_professional}}</li>
     <li><strong>Sucursal:</strong> {{$branch_name}}</li>
     <li><strong>Dirección:</strong> {{$branch_address}}</li>
+    <li><strong>Código de Reserva:</strong> {{$code_reserva}}</li>
 </ul>
 
 <p style="color: #555;">
