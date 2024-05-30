@@ -146,6 +146,7 @@ class ReservationController extends Controller
             }
             $servs = $request->input('services');
             $id_client = 0;
+            $code = '';
             //1-Verificar que el usuario no este registrado
             $user = User::where('email', $data['email_client'])->first();
             // Verificar si se encontró un usuario
@@ -219,8 +220,9 @@ class ReservationController extends Controller
                 $this->reservation_tail();
                 Log::info("5.actualice la cola");
             }
-
-            //optener nombre del professional
+            if($data['from_home'] == 1){
+                $code = $reservation->code;
+                //optener nombre del professional
             $professional = Professional::find($data['professional_id']);
             $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
             //todo *************** llamando al servicio de envio de email *******************
@@ -243,10 +245,12 @@ class ReservationController extends Controller
                 'type' => null, // Tipo (en este caso, se deja como null)
                 'name_professional' => $name, // Nombre del profesional
                 'recipient' => null, // Destinatario (en este caso, se deja como null),                
-                'id_reservation' => $id // Destinatario (en este caso, se deja como null),                
+                'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
+                'code_reserva' => $code                
             ];
             
             SendEmailJob::dispatch($data);
+            }
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {
     
@@ -536,6 +540,7 @@ class ReservationController extends Controller
                 $data = $reservation['data'];
                 $startTime = $reservation['start_time'];
                 $reservationId = $reservation['id'];
+                $code_reserva = $reservation['code'];
                 $data = [
                     'remember_reservation' => true, // Indica que es una confirmación de reserva
                     'data_reservation' => $data, // Datos de la reserva
@@ -545,7 +550,8 @@ class ReservationController extends Controller
                     'type' => null, // Tipo (en este caso, se deja como null)
                     'name_professional' => $professionalName, // Nombre del profesional
                     'recipient' => null, // Destinatario (en este caso, se deja como null),                
-                    'id_reservation' => $reservationId // Destinatario (en este caso, se deja como null),                
+                    'id_reservation' => $reservationId, // Destinatario (en este caso, se deja como null),
+                    'code_reserva' => $code_reserva                
                 ];
                 
                 SendEmailJob::dispatch($data);

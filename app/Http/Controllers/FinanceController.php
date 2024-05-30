@@ -95,8 +95,35 @@ class FinanceController extends Controller
                 'type' => 'required|string',
                 'enrollment_id' => 'nullable'
             ]);
+            //str_contains($expenseName, $phrase)
             if($data['type'] == 'Negocio'){
                 $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                    $typeDetail = '';
+                    if($query->revenue){
+                        if($query->revenue == 'Ingreso venta de productos en la caja'){
+                            $typeDetail = 'Ingreso Producto';
+                        }
+                        if($query->revenue == 'Ingresos por porciento de propinas'){
+                            $typeDetail = 'Ingreso Propina';
+                        }
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                        $typeDetail = 'Gasto Servicio';
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                        $typeDetail = 'Gasto Servicio';
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
+                        $typeDetail = 'Gasto Producto';
+                    }
+                    if($query->expense){
+                        if($query->expense->name == 'Compra de productos'){
+                            $typeDetail = 'Gasto Producto';
+                        }
+                        if($query->expense->name == 'Productos'){
+                            $typeDetail = 'Gasto Producto';
+                        }
+                    }
                     return [
                         'id' => $query->id,
                         'data' => $query->data,
@@ -114,11 +141,38 @@ class FinanceController extends Controller
                         'revenue_id' => $query->revenue_id,
                         'type' => $query->type,
                         'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                        'typeDetail' => $typeDetail,
                     ];
                 });
             }
             if ($data['type'] == 'Sucursal'){
                 $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                    $typeDetail = '';
+                    if($query->revenue){
+                        if($query->revenue->name == 'Ingreso venta de productos en la caja'){
+                            $typeDetail = 'Ingreso Producto';
+                        }
+                        if($query->revenue->name == 'Ingresos por porciento de propinas'){
+                            $typeDetail = 'Ingreso Propina';
+                        }
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                        $typeDetail = 'Gasto Servicio';
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                        $typeDetail = 'Gasto Servicio';
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
+                        $typeDetail = 'Gasto Producto';
+                    }
+                    if($query->expense){
+                        if($query->expense->name == 'Compra de productos'){
+                            $typeDetail = 'Gasto Producto';
+                        }
+                        if($query->expense->name == 'Productos'){
+                            $typeDetail = 'Gasto Producto';
+                        }
+                    }
                     return [
                         'id' => $query->id,
                         'data' => $query->data,
@@ -136,6 +190,7 @@ class FinanceController extends Controller
                         'revenue_id' => $query->revenue_id,
                         'type' => $query->type,
                         'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                        'typeDetail' => $typeDetail
                     ];
                 });
             }
@@ -158,6 +213,7 @@ class FinanceController extends Controller
                         'revenue_id' => $query->revenue_id,
                         'type' => $query->type,
                         'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                        'typeDetail' => '',
                     ];
                 });
             }
@@ -180,6 +236,7 @@ class FinanceController extends Controller
                         'revenue_id' => $query->revenue_id,
                         'type' => $query->type,
                         'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                        'typeDetail' => ''
                     ];
                 })->sortByDesc('data')->values();
             }
