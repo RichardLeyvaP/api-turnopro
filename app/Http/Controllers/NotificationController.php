@@ -167,6 +167,19 @@ class NotificationController extends Controller
         }
     }
 
+    public function notification_truncate()
+    {
+        try { 
+            
+            Log::info( "Mandar a eliminar las notificaciones");
+            Notification::truncate();
+            return response()->json(['msg' => "Notificaciones eliminadas correctamente"], 200);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => "Error interno del sistema"], 500);
+                } 
+    }
+
     public function professional_show(Request $request)
     {
         Log::info('Dada una sucursal y un professional devuelve las notificaciones');
