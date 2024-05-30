@@ -355,7 +355,7 @@ class BranchService
             }
         }
 
-        return $products = Product::with([
+        $products = Product::with([
             'orders' => function ($query) use ($carIds) {
                 $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
                     ->groupBy('product_id')
