@@ -618,7 +618,7 @@ class ReservationController extends Controller
                 'branch_id' => 'required|numeric',                
 
             ]);
-            $reservacion = Reservation::where('code', $data['code'])->where('branch_id', $data['branch_id'])->first();
+            $reservacion = Reservation::where('code', $data['code'])->where('branch_id', $data['branch_id'])->where('data', Carbon::now())->first();
             if($reservacion!=null){
                 if($reservacion->confirmation == 3){
                     return response()->json(3, 200, [], JSON_NUMERIC_CHECK);
