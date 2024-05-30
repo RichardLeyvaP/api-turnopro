@@ -410,9 +410,10 @@ class TailController extends Controller
                 'detached' => 'required|numeric',
                 'clock' => 'required|numeric'
             ]);
-            //esta comparación esta porque llego en null en una ocasion y da error
-            Log::info('Variable que llegó null ($data["timeClock"])');
-            if ($data['timeClock']!=null) {
+            //esta comparacin esta porque llego en null en una ocasion y da error
+            Log::info('Variable que lleg null ($data["timeClock"])');
+            Log::info($data['timeClock']);
+            if ($data['timeClock'] !== null && is_int($data['timeClock'])) {
                 $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
 
                 $tail->timeClock = $data['timeClock'];

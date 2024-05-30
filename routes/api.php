@@ -314,7 +314,7 @@ Route::post('/order-destroy-solicitud', [OrderController::class, 'destroy_solici
 Route::get('/sales_periodo_branch', [OrderController::class, 'sales_periodo_branch']);
 
 Route::get('/reservation', [ReservationController::class, 'index']);
-Route::get('/reservation-send-mail', [ReservationController::class, 'reservation_send_mail']);//para enviar correos a las reservas de 2 dias en adelante comunicando que debn confirmar en 24hr
+Route::get('/reservation-send-mail', [ReservationController::class, 'reservation_send_mail']);//para enviar correos a las reservas de 1 dia en adelante comunicando que debn confirmar en 24hr
 Route::get('/reservation-show', [ReservationController::class, 'show']);
 Route::post('/reservation', [ReservationController::class, 'store']);
 Route::put('/reservation', [ReservationController::class, 'update']);
@@ -322,6 +322,7 @@ Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
 Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
 Route::get('/professional_reservations', [ReservationController::class, 'professional_reservations']);
 Route::get('/professional-reservations-periodo', [ReservationController::class, 'professional_reservations_periodo']);//dado un professional y una branch devolver las reservacioes
+Route::get('/branch-reservations-periodo', [ReservationController::class, 'branch_reservations_periodo']);//dado una branch devolver las reservacioes
 Route::get('/professional_reservationDate', [ReservationController::class, 'professional_reservationDate']);
 Route::post('/reservation_store', [ReservationController::class, 'reservation_store']);//Hacer una reservation en una fecha dada
 Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch
