@@ -58,6 +58,28 @@ class Kernel extends ConsoleKernel
                 Log::error('Excepción al hacer la solicitud a /workplace-reset: ' . $e->getMessage());
             }
         })->dailyAt('01:30'); // Segunda tarea a las 1:30 AM
+       
+        // Definir la segunda/despues tarea, Limpiar las notificaciones
+        $schedule->call(function () {
+            Log::info('Iniciando la otra despues de la segunda tarea programada.Limpiar las notificaciones');
+
+            // Crear un cliente HTTP
+            $client = new Client();
+
+            try {
+                // Hacer una solicitud GET a la segunda ruta completa de la API
+                $response = $client->get('https://api2.simplifies.cl/api/notification-truncate');
+
+                // Verificar la respuesta
+                if ($response->getStatusCode() == 200) {
+                    Log::info('La solicitud a /notification-truncate se ejecutó correctamente.');
+                } else {
+                    Log::error('Error al ejecutar la solicitud a /notification-truncate: ' . $response->getStatusCode());
+                }
+            } catch (Exception $e) {
+                Log::error('Excepción al hacer la solicitud a /notification-truncate: ' . $e->getMessage());
+            }
+        })->dailyAt('02:00'); // Segunda tarea a las 1:30 AM
 
         
         // Definir la tercera tarea-Envio de email de confirmación de reserva
