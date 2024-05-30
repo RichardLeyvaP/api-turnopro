@@ -1140,6 +1140,7 @@ class ProfessionalService
         // Verificar la disponibilidad del profesional en su lugar de trabajo
         $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
             ->whereDate('data', Carbon::now())
+            ->where('state', 1)
             ->whereHas('workplace', function ($query) use ($branch_id){
                 $query->where('busy', 1)->where('branch_id', $branch_id);
             })->first();

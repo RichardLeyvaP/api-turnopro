@@ -106,10 +106,10 @@ class MetaService
                             $finance->save();
                         }
 
-                        /*foreach($orders as $order){
-                            $order->percent_win = $order->price;
+                        foreach($orders as $order){
+                            $order->meta = 1;
                             $order->save();
-                        }*/
+                        }
                     }
                 }
             }
