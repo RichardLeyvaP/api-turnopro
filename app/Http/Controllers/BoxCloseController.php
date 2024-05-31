@@ -147,7 +147,6 @@ class BoxCloseController extends Controller
             //end agregar a tabla de ingresos
             //Revisar convivencias de professionales para pagar 100% del servicio
             $bonus = $this->metaService->store($branch);
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'bonus' => $bonus], 200);
             //$professionals = $professionals->toArray();
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
@@ -343,6 +342,7 @@ class BoxCloseController extends Controller
                 $emailassociated = $branch->associates()->pluck('email');
                 $emailArray = $emailassociated->toArray();
                 $mergedEmails = $emails->merge($emailArray);
+                $this->sendEmailService->emailBoxClosureMonthly($mergedEmails, '', $branch->business['name'], $branch->name, $añoAnterior.'-'.$mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2),round($gasto, 2),round($ingreso-$gasto, 2),$professionalsData);
             }
             return response()->json(['$boxClose' => $boxCloseData, 'professionalBonus' => $professionalsData], 200);
         } catch (TransportException $e) {

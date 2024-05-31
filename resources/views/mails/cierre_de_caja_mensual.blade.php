@@ -9,17 +9,17 @@
 <table width="100%" height="100%" style="border-collapse: collapse; border: 1.5px solid black">
 <tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
     <td><strong>Empresa:</strong> {{ $branchBusinessName }}</td>
-    <td><strong>Sucursal:</strong> {{ $branch_name }}</td>
+    <td><strong>Sucursal:</strong> {{ $branchName }}</td>
     <td><strong>Fecha:</strong> {{ $boxData }}</td>
 </tr>
-<tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
+<!--<tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
     <td colspan="3" align="center"><strong>Estado de la caja:</strong></td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
     <td><strong>Fondo Inicio del día:</strong> {{ $boxCashFound }}</td>
     <td><strong>Existencia:</strong> {{ $boxExistence }}</td>
     <td><strong>Extracción:</strong> {{ $boxExtraction }}</td>
-</tr>
+</tr>-->
 <tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
     <td colspan="3" align="center"><strong>Cierre de las Cuentas y Formas de Pago:</strong></td>
 </tr>
@@ -35,13 +35,13 @@
     <td colspan="3" align="center"><strong>Formas de pago</strong></td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td><strong>Efectivo en caja:</strong> {{ $totalCash }}</td>
+    <td><strong>Efectivo:</strong> {{ $totalCash }}</td>
     <td><strong>Tarjeta de Créditos:</strong> {{ $totalCreditCard }}</td>
     <td><strong>Débito:</strong> {{ $totalDebit }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
     <td><strong>Transferencia:</strong> {{ $totalTransfer }}</td>
-    <td><strong>Total Giftcard:</strong> {{ $totalcardGif }}</td>
+    <td><strong>Total Giftcard:</strong> {{ $totalGiftcard }}</td>
     <td><strong>Otros Méthodos:</strong> {{ $totalOther }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
