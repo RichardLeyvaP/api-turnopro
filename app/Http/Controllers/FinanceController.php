@@ -95,33 +95,46 @@ class FinanceController extends Controller
                 'type' => 'required|string',
                 'enrollment_id' => 'nullable'
             ]);
-            //str_contains($expenseName, $phrase)
+            //str_contains($expenseName, $phrase)            
+            $comment = '';
             if($data['type'] == 'Negocio'){
                 $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                     $typeDetail = '';
+                    $comment = 'HH ';
                     if($query->revenue){
-                        if($query->revenue == 'Ingreso venta de productos en la caja'){
+                        if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                             $typeDetail = 'Ingreso Producto';
+                            $comment = 'IP '.$query->comment;
                         }
-                        if($query->revenue == 'Ingresos por porciento de propinas'){
+                        if($query->revenue->name == 'Ingresos por porciento de propinas'){
                             $typeDetail = 'Ingreso Propina';
+                            $comment = 'IS '.$query->comment;
                         }
                     }
                     if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
                         $typeDetail = 'Gasto Servicio';
+                        $comment = 'GS '.$query->comment;
                     }
                     if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
                         $typeDetail = 'Gasto Servicio';
+                        $comment = 'GS '.$query->comment;
                     }
                     if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                         $typeDetail = 'Gasto Producto';
+                        $comment = 'GP '.$query->comment;
+                    }
+                    if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                        $typeDetail = 'Gasto Propina';
+                        $comment = 'GS '.$query->comment;
                     }
                     if($query->expense){
                         if($query->expense->name == 'Compra de productos'){
                             $typeDetail = 'Gasto Producto';
+                            $comment = 'GP '.$query->comment;
                         }
                         if($query->expense->name == 'Productos'){
                             $typeDetail = 'Gasto Producto';
+                            $comment = 'GP '.$query->comment;
                         }
                     }
                     return [
@@ -132,7 +145,7 @@ class FinanceController extends Controller
                         'amount' => $query->amount,
                         'expense' => $query->expense ? $query->amount : '',
                         'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => $query->comment,
+                        'comment' => $comment,
                         'file' => $query->file,
                         'branch_id' => $query->branch_id,
                         'business_id' => $query->business_id,
@@ -141,39 +154,48 @@ class FinanceController extends Controller
                         'revenue_id' => $query->revenue_id,
                         'type' => $query->type,
                         'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                        'typeDetail' => $typeDetail,
+                        'typeDetail' => $typeDetail
                     ];
                 });
             }
             if ($data['type'] == 'Sucursal'){
                 $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                     $typeDetail = '';
+                    $comment = 'HH ';
                     if($query->revenue){
                         if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                             $typeDetail = 'Ingreso Producto';
+                            $comment = 'IP '.$query->comment;
                         }
                         if($query->revenue->name == 'Ingresos por porciento de propinas'){
                             $typeDetail = 'Ingreso Propina';
+                            $comment = 'IS '.$query->comment;
                         }
                     }
                     if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
                         $typeDetail = 'Gasto Servicio';
+                        $comment = 'GS '.$query->comment;
                     }
                     if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
                         $typeDetail = 'Gasto Servicio';
+                        $comment = 'GS '.$query->comment;
                     }
                     if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                         $typeDetail = 'Gasto Producto';
+                        $comment = 'GP '.$query->comment;
                     }
                     if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
                         $typeDetail = 'Gasto Propina';
+                        $comment = 'GS '.$query->comment;
                     }
                     if($query->expense){
                         if($query->expense->name == 'Compra de productos'){
                             $typeDetail = 'Gasto Producto';
+                            $comment = 'GP '.$query->comment;
                         }
                         if($query->expense->name == 'Productos'){
                             $typeDetail = 'Gasto Producto';
+                            $comment = 'GP '.$query->comment;
                         }
                     }
                     return [
@@ -184,7 +206,7 @@ class FinanceController extends Controller
                         'amount' => $query->amount,
                         'expense' => $query->expense ? $query->amount : '',
                         'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => $query->comment,
+                        'comment' => $comment,
                         'file' => $query->file,
                         'branch_id' => $query->branch_id,
                         'business_id' => $query->business_id,
@@ -207,7 +229,7 @@ class FinanceController extends Controller
                         'amount' => $query->amount,
                         'expense' => $query->expense ? $query->amount : '',
                         'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => $query->comment,
+                        'comment' => 'HH '.$query->comment,
                         'file' => $query->file,
                         'branch_id' => $query->branch_id,
                         'business_id' => $query->business_id,
@@ -230,7 +252,7 @@ class FinanceController extends Controller
                         'amount' => $query->amount,
                         'expense' => $query->expense ? $query->amount : '',
                         'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => $query->comment,
+                        'comment' => 'HH '.$query->comment,
                         'file' => $query->file,
                         'branch_id' => $query->branch_id,
                         'business_id' => $query->business_id,
@@ -892,5 +914,58 @@ class FinanceController extends Controller
             } catch (\Throwable $th) {
                 return response()->json(['msg' => 'Error interno del sistema'], 500);
             }
+    }
+
+    public function finances_detail_operation_month(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable',
+                'month' => 'nullable'
+            ]);
+            $financeDates = [];
+            $finances = Finance::Where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->whereMonth('data', $data)->get();
+            foreach($finances as $finance){
+                $financeDates [] = [
+                    'data' => $finance['data'],
+                    'operation' => $finance['operation'],
+                    'amount' => $finance['amount'],
+                    'file' => $finance['file'],
+                    'comment' => $finance['comment'],                    
+                    'typeOperation' => $finance['revenue_id'] ? $finance['revenue']['name'] : $finance['expense']['name'],                    
+                ];
+            }
+            // Devolvemos el resultado
+            return response()->json(['finances' => $financeDates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }
+
+    public function finances_detail_operation(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable'
+            ]);
+            $financeDates = [];
+            $finances = Finance::Where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->get();
+            foreach($finances as $finance){
+                $financeDates [] = [
+                    'data' => $finance['data'],
+                    'operation' => $finance['operation'],
+                    'amount' => $finance['amount'],
+                    'file' => $finance['file'],
+                    'comment' => $finance['comment'],                    
+                    'typeOperation' => $finance['revenue_id'] ? $finance['revenue']['name'] : $finance['expense']['name'],                    
+                ];
+            }
+            // Devolvemos el resultado
+            return response()->json(['finances' => $financeDates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
     }
 }

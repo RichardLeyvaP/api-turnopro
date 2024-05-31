@@ -58,7 +58,7 @@ class Kernel extends ConsoleKernel
                 Log::error('Excepción al hacer la solicitud a /workplace-reset: ' . $e->getMessage());
             }
         })->dailyAt('01:30'); // Segunda tarea a las 1:30 AM
-       
+
         // Definir la segunda/despues tarea, Limpiar las notificaciones
         $schedule->call(function () {
             Log::info('Iniciando la otra despues de la segunda tarea programada.Limpiar las notificaciones');
@@ -81,7 +81,7 @@ class Kernel extends ConsoleKernel
             }
         })->dailyAt('02:00'); // Segunda tarea a las 1:30 AM
 
-        
+
         // Definir la tercera tarea-Envio de email de confirmación de reserva
         $schedule->call(function () {
             Log::info('Iniciando la tercera tarea programada.Envio de email de confirmación de reserva');
@@ -105,24 +105,44 @@ class Kernel extends ConsoleKernel
         })->dailyAt('06:00'); // Tercera tarea a las 6:00 AM
 
         // Definir la cuarta tarea-Actualizar la cola del dia
-       $schedule->call(function () {
+        $schedule->call(function () {
             Log::info('Iniciando la tercera tarea programada.Actualizar la cola del dia');
-        // Crear un cliente HTTP
-         $client = new Client();
-         try {
-          // Hacer una solicitud GET a la tercera ruta completa de la API
-          $response = $client->get('https://api2.simplifies.cl/api/reservation_tail');
+            // Crear un cliente HTTP
+            $client = new Client();
+            try {
+                // Hacer una solicitud GET a la tercera ruta completa de la API
+                $response = $client->get('https://api2.simplifies.cl/api/reservation_tail');
 
-        // Verificar la respuesta
-        if ($response->getStatusCode() == 200) {
-            Log::info('La solicitud a /reservation_tail se ejecutó correctamente.');
-        } else {
-            Log::error('Error al ejecutar la solicitud a /reservation_tail: ' . $response->getStatusCode());
-        }
-     } catch (Exception $e) {
-        Log::error('Excepción al hacer la solicitud a /reservation_tail: ' . $e->getMessage());
-     }
-})->dailyAt('07:00'); // Cuarta tarea a las 7:00 AM
+                // Verificar la respuesta
+                if ($response->getStatusCode() == 200) {
+                    Log::info('La solicitud a /reservation_tail se ejecutó correctamente.');
+                } else {
+                    Log::error('Error al ejecutar la solicitud a /reservation_tail: ' . $response->getStatusCode());
+                }
+            } catch (Exception $e) {
+                Log::error('Excepción al hacer la solicitud a /reservation_tail: ' . $e->getMessage());
+            }
+        })->dailyAt('07:00'); // Cuarta tarea a las 7:00 AM
+
+        // Definir la quinta tarea-correo de cierre de caja mensual
+        $schedule->call(function () {
+            Log::info('Iniciando la quinta tarea programada.correo de cierre de caja mensual');
+            // Crear un cliente HTTP
+            $client = new Client();
+            try {
+                // Hacer una solicitud GET a la tercera ruta completa de la API
+                $response = $client->get('https://api2.simplifies.cl/api/closebox-month');
+
+                // Verificar la respuesta
+                if ($response->getStatusCode() == 200) {
+                    Log::info('La solicitud a /closebox-month se ejecutó correctamente.');
+                } else {
+                    Log::error('Error al ejecutar la solicitud a /closebox-month: ' . $response->getStatusCode());
+                }
+            } catch (Exception $e) {
+                Log::error('Excepción al hacer la solicitud a /closebox-month: ' . $e->getMessage());
+            }
+        })->monthlyOn(1, '04:00'); // Tarea mensual el día 1 a las 4:00 AM
 
 
         //
@@ -137,7 +157,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
         require base_path('routes/console.php');
     }
 }

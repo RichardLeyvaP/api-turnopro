@@ -553,6 +553,8 @@ Route::get('/revenue-expense-analysis', [FinanceController::class, 'revenue_expe
 Route::get('/revenue-expense-details', [FinanceController::class, 'revenue_expense_details']);//devolver las finanzas detalladas del año
 Route::get('/details-operations', [FinanceController::class, 'details_operations']);//devolver las finanzas por detalle de operacion de un año
 Route::get('/details-operations-month', [FinanceController::class, 'details_operations_month']);//devolver las finanzas por detalle de operacion de un mes
+Route::get('/finances-detail-operation', [FinanceController::class, 'finances_detail_operation']);//devolver las finanzas por detalle de operacion de un año
+Route::get('/finances-detail-operation-month', [FinanceController::class, 'finances_detail_operation_month']);//devolver las finanzas por detalle de operacion de un mes
 
 Route::get('/traces-branch-day', [TraceController::class, 'traces_branch_day']);
 Route::get('/traces-branch-month', [TraceController::class, 'traces_branch_month']);

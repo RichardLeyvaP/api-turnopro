@@ -237,16 +237,16 @@ class BoxCloseController extends Controller
             // Obtener el mes y año del mes anterior
             $mesAnterior = $now->subMonth()->month;
             $añoAnterior = $now->subMonth()->year;
-            $boxCloseData = [];
+            //$boxCloseData = [];
             $professionalsData = [];
-            
+
             $ingreso = 0;
             $gasto = 0;
             $branches = Branch::all();
             foreach ($branches as $branch) {
                 $boxCloseData = [];
-            $professionalsData = [];
-                $boxClose = BoxClose::whereHas('box', function($query) use ($branch){
+                $professionalsData = [];
+                $boxClose = BoxClose::whereHas('box', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
                 })->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->selectRaw('
                 SUM(totalMount) as totalMount,
@@ -260,57 +260,57 @@ class BoxCloseController extends Controller
                 SUM(totalOther) as totalOther,
                 SUM(totalcardGif) as totalCardGif
             ')->first();
-            $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
-            if (!$finances->isEmpty()) {
-    
-                foreach ($finances as $finance) {
-                    if ($finance->operation == 'Gasto') {
-                        $gasto = $gasto + $finance->amount;
-                    } else {
-                        $ingreso = $ingreso + $finance->amount;
+                $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
+                if (!$finances->isEmpty()) {
+
+                    foreach ($finances as $finance) {
+                        if ($finance->operation == 'Gasto') {
+                            $gasto = $gasto + $finance->amount;
+                        } else {
+                            $ingreso = $ingreso + $finance->amount;
+                        }
                     }
                 }
-            }
-            $boxCloseArray = [
-                'totalMount' => $boxClose->totalMount ?? 0,
-                'totalService' => $boxClose->totalService ?? 0,
-                'totalProduct' => $boxClose->totalProduct ?? 0,
-                'totalTip' => $boxClose->totalTip ?? 0,
-                'totalCash' => $boxClose->totalCash ?? 0,
-                'totalDebit' => $boxClose->totalDebit ?? 0,
-                'totalCreditCard' => $boxClose->totalCreditCard ?? 0,
-                'totalTransfer' => $boxClose->totalTransfer ?? 0,
-                'totalOther' => $boxClose->totalOther ?? 0,
-                'totalcardGif' => $boxClose->totalcardGif ?? 0,
-                'branch_name' => $branch->name,
-                'ingreso' => round($ingreso, 2),
-                'gasto' => round($gasto, 2),
-                'utilidad' => round($ingreso-$gasto, 2)
-            ];
-        
-            // Agregar al array de resultados
-            $boxCloseData[] = $boxCloseArray;
-            $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
-                $query->where('branch_id', $branch->id);
-            })->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->select('id', 'name', 'surname', 'retention')->get();
-            foreach ($professionals as $professional) {
-                $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
-                    $query->where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior);
-                })
-                    ->with(['clientProfessional.client', 'reservation'])
-                    ->whereHas('clientProfessional', function ($query) use ($professional) {
-                        $query->where('professional_id', $professional->id);
+                /*$boxCloseArray = [
+                    'totalMount' => $boxClose->totalMount ?? 0,
+                    'totalService' => $boxClose->totalService ?? 0,
+                    'totalProduct' => $boxClose->totalProduct ?? 0,
+                    'totalTip' => $boxClose->totalTip ?? 0,
+                    'totalCash' => $boxClose->totalCash ?? 0,
+                    'totalDebit' => $boxClose->totalDebit ?? 0,
+                    'totalCreditCard' => $boxClose->totalCreditCard ?? 0,
+                    'totalTransfer' => $boxClose->totalTransfer ?? 0,
+                    'totalOther' => $boxClose->totalOther ?? 0,
+                    'totalcardGif' => $boxClose->totalcardGif ?? 0,
+                    'branch_name' => $branch->name,
+                    'ingreso' => round($ingreso, 2),
+                    'gasto' => round($gasto, 2),
+                    'utilidad' => round($ingreso - $gasto, 2)
+                ];
+
+                // Agregar al array de resultados
+                $boxCloseData[] = $boxCloseArray;*/
+                $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branch_id', $branch->id);
+                })->whereHas('charge', function ($query) {
+                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                })->select('id', 'name', 'surname', 'retention')->get();
+                foreach ($professionals as $professional) {
+                    $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
+                        $query->where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior);
                     })
-                    ->where('pay', 1)
-                    ->get();
+                        ->with(['clientProfessional.client', 'reservation'])
+                        ->whereHas('clientProfessional', function ($query) use ($professional) {
+                            $query->where('professional_id', $professional->id);
+                        })
+                        ->where('pay', 1)
+                        ->get();
                     $carIdsPay = $cars->pluck('id');
                     $products = Order::whereIn('car_id', $carIdsPay)
-                    ->where('is_product', 1)
-                    ->groupBy('product_store_id')
-                    ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
-                    ->get();
+                        ->where('is_product', 1)
+                        ->groupBy('product_store_id')
+                        ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
+                        ->get();
                     $venta = $products->sum('total_cant');
                     $percent_win = $products->sum('total_percent_win');
                     if ($venta <= 24) {
@@ -344,9 +344,9 @@ class BoxCloseController extends Controller
                 $emailassociated = $branch->associates()->pluck('email');
                 $emailArray = $emailassociated->toArray();
                 $mergedEmails = $emails->merge($emailArray);
-                $this->sendEmailService->emailBoxClosureMonthly($mergedEmails, '', $branch->business['name'], $branch->name, $añoAnterior.'-'.$mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2),round($gasto, 2),round($ingreso-$gasto, 2),$professionalsData);
+                $this->sendEmailService->emailBoxClosureMonthly($mergedEmails, '', $branch->business['name'], $branch->name, $añoAnterior . '-' . $mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2), round($gasto, 2), round($ingreso - $gasto, 2), $professionalsData);
             }
-            return response()->json(['$boxClose' => $boxCloseData, 'professionalBonus' => $professionalsData], 200);
+            return response()->json(['msg' => 'Cierre de caja mensual efectuado correctamente'], 200);
         } catch (TransportException $e) {
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
