@@ -134,6 +134,62 @@ class SendEmailService {
 
     }
 
+
+    //este configurarlo para el envio de cierre de caja del mes
+    public function emailBoxClosureMonthly(
+        $client_email,
+        $type,
+        $branchBusinessName,
+        $branchName,
+        $boxData,
+        $boxCashFound,
+        $boxExistence,
+        $boxExtraction,
+        $totalTip,
+        $totalProduct,
+        $totalService,
+        $totalCash,
+        $totalCreditCard,
+        $totalDebit,
+        $totalTransfer,
+        $totalOther,
+        $totalMount,
+        $totalGiftcard,
+        $ingreso,
+        $gasto,
+        $utilidad,
+        $professionalBonus // Este es un array de objetos
+    ) {
+        $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+        $template = 'cierre_de_caja_mensual'; // Asegúrate de que este es el nombre correcto de tu plantilla de correo
+    
+        Log::info($client_email);
+        $mail = new Send_mail($logoUrl, '$client_name', '', '$data_reservation', $template, '$start_time', '$branch_name', $type);
+        $mail->branchBusinessName = $branchBusinessName;
+        $mail->branchName = $branchName;
+        $mail->boxData = $boxData;
+        $mail->boxCashFound = $boxCashFound;
+        $mail->boxExistence = $boxExistence;
+        $mail->boxExtraction = $boxExtraction;
+        $mail->totalTip = $totalTip;
+        $mail->totalProduct = $totalProduct;
+        $mail->totalService = $totalService;
+        $mail->totalCash = $totalCash;
+        $mail->totalCreditCard = $totalCreditCard;
+        $mail->totalDebit = $totalDebit;
+        $mail->totalTransfer = $totalTransfer;
+        $mail->totalOther = $totalOther;
+        $mail->totalMount = $totalMount;
+        $mail->totalGiftcard = $totalGiftcard;
+        $mail->ingreso = $ingreso;
+        $mail->gasto = $gasto;
+        $mail->utilidad = $utilidad;
+        $mail->professionalBonus = $professionalBonus; // Asegúrate de que tu plantilla maneja este array correctamente
+    
+        $this->sendEmail($client_email, $mail, 'Cierre de Caja Mensual');
+    }
+    
+
     //este configurarlo para el envio de cierre de caja si hiciera falta
     public function emailGitCard($client_email,$client_name, $code, $value_card,$expiration_date)
     {
