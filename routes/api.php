@@ -448,6 +448,7 @@ Route::post('/box-destroy', [BoxController::class, 'destroy']);
 
 Route::get('/closebox', [BoxCloseController::class, 'index']);
 Route::get('/closebox-show', [BoxCloseController::class, 'show']);
+Route::get('/closebox-month', [BoxCloseController::class, 'box_close_month']);//para tarea progradad enviar el cierre de caja
 Route::post('/closebox', [BoxCloseController::class, 'store']);
 Route::put('/closebox', [BoxCloseController::class, 'update']);
 Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);

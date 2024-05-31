@@ -19,12 +19,13 @@ class MetaService
     public function store($branch)
     {        
         $idService=null;
+        $bonus = [];
         
         $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
             $query->where('branch_id', $branch->id);
         })->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->select('id', 'name', 'surname', 'retention')->get();
+        })->select('id', 'name', 'image_url', 'retention')->get();
 
 
         //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
@@ -92,7 +93,12 @@ class MetaService
                             $professionalPayment->type = 'Bono convivencias';
                             $professionalPayment->cant = $cant;
                             $professionalPayment->save();
-
+                            $bonus[] = [
+                                'name' => $professional->name,
+                                'image_url' => $professional->image_url,
+                                'bonus' => 'Bono convivencias',
+                                'amount' => $amount,
+                            ];
                             $finance = new Finance();
                             $finance->control = $control++;
                             $finance->operation = 'Gasto';
@@ -136,7 +142,12 @@ class MetaService
                     $professionalPayment->type = 'Bono servicios';
                     $professionalPayment->cant = $catServices;
                     $professionalPayment->save();
-
+                    $bonus[] = [
+                        'name' => $professional->name,
+                        'image_url' => $professional->image_url,
+                        'bonus' => 'Bono servicios',
+                        'amount' => intval($profesionalbonus->mountpay),
+                    ];
                     $finance = new Finance();
                     $finance->control = $control++;
                     $finance->operation = 'Gasto';
@@ -150,7 +161,7 @@ class MetaService
                     $finance->save();
                 }
             }
-            $winProduct = 0;
+            /*$winProduct = 0;
             $products = Order::whereIn('car_id', $carIdsPay)
                 ->where('is_product', 1)
                 ->groupBy('product_store_id')
@@ -182,7 +193,7 @@ class MetaService
                     $winProduct += $product->total_percent_win*0.50;
                 }
             }*/
-            if ($winProduct > 0) {
+            /*if ($winProduct > 0) {
                 $filteredPayments = $professionalPayments->filter(function ($payment) {
                     return $payment->type == 'Bono productos';
                 });
@@ -216,5 +227,6 @@ class MetaService
 
             }*/
         }
+        return $bonus;
     }
 }

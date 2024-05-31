@@ -183,10 +183,7 @@ class ProfessionalController extends Controller
             if ($professional && $professional->reservations->isNotEmpty()) {
                 // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
                 if (Carbon::parse($data['data'])->isToday()){
-                    $reservations = $professional->reservations->where(function($query) {
-                        $query->where('confirmation', 1)
-                              ->orWhere('confirmation', 4);
-                    })->map(function ($reservation){
+                    $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation){
                         $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                         $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
     
