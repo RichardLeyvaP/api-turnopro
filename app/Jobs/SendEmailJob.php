@@ -157,6 +157,32 @@ class SendEmailJob implements ShouldQueue
                 $this->data['totalCardGif'],
             );
         }
+        if (isset($this->data['email_box_closure_monthly'])) {
+            $emailService->emailBoxClosureMonthly(
+                $this->data['client_email'],
+                $this->data['type'],
+                $this->data['branchBusinessName'],
+                $this->data['branchName'],
+                $this->data['boxData'],
+                $this->data['boxCashFound'],
+                $this->data['boxExistence'],
+                $this->data['boxExtraction'],
+                $this->data['totalTip'],
+                $this->data['totalProduct'],
+                $this->data['totalService'],
+                $this->data['totalCash'],
+                $this->data['totalCreditCard'],
+                $this->data['totalDebit'],
+                $this->data['totalTransfer'],
+                $this->data['totalOther'],
+                $this->data['totalMount'],
+                $this->data['totalCardGif'],
+                $this->data['ingreso'],
+                $this->data['gasto'],
+                $this->data['utilidad'],
+                $this->data['professionalBonus'] // Agrega este campo
+            );
+        }
         if (isset($this->data['send_gift_card'])) {
             $emailService->emailGitCard(
                 $this->data['client_email'],

@@ -20,7 +20,7 @@ class SendMailController extends Controller
             ]);         
             Log::info( "Entra a send_email");
             
-            Mail::to($data['email'])->send(new Send_mail('q','w','e','r','t','t','y'));
+            Mail::to($data['email'])->send(new Send_mail('q','w','e','r','t','t','y','z'));
             Log::info( "Enviado send_email");
             return response()->json(['Response' => "Email enviado correctamente"], 200);
         } catch (\Throwable $th) {  
@@ -72,7 +72,7 @@ public function emailBoxClosure($client_email,$type)
        
 
               Log::info($client_email);
-              $mail = new Send_mail($logoUrl, '$client_name','$data_reservation',$template,'$start_time','$branch_name',$type);
+              $mail = new Send_mail($logoUrl, '$client_name','$data_reservation',$template,'$start_time','$branch_name',$type,'');
               $this->sendEmail($client_email,$mail);
             } catch (\Throwable $th) {  
                 Log::error($th);

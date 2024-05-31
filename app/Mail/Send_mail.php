@@ -46,6 +46,12 @@ class Send_mail extends Mailable
     public $totalMount;
     public $totalGiftcard;
     public $code_reserva;
+    //
+    public $ingreso;
+    public $gasto;
+    public $utilidad;
+    public $professionalBonus;
+    
 
      // Propiedades adicionales correspondientes a la plantilla restaurar_pass
      public $usser;
