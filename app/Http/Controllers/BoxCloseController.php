@@ -244,6 +244,8 @@ class BoxCloseController extends Controller
             $gasto = 0;
             $branches = Branch::all();
             foreach ($branches as $branch) {
+                $boxCloseData = [];
+            $professionalsData = [];
                 $boxClose = BoxClose::whereHas('box', function($query) use ($branch){
                     $query->where('branch_id', $branch->id);
                 })->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->selectRaw('
