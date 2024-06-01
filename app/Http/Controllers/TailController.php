@@ -413,13 +413,18 @@ class TailController extends Controller
             //esta comparacin esta porque llego en null en una ocasion y da error
             Log::info('Variable que lleg null ($data["timeClock"])');
             Log::info($data['timeClock']);
-            if ($data['timeClock'] !== null && is_int($data['timeClock'])) {
+            if ($data['timeClock'] !== null ) {
                 $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
-
+                if($tail)
+                {
                 $tail->timeClock = $data['timeClock'];
                 $tail->detached = $data['detached'];
                 $tail->clock = $data['clock'];
                 $tail->save();
+
+                }
+
+                
             }
             return response()->json(['msg' => 'Estado del tiempo del reloj y estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
