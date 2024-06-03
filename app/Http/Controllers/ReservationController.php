@@ -326,11 +326,12 @@ class ReservationController extends Controller
             $professionalDates = [];
             $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->orderBy('data')->get();
             foreach ($reservations as $reservation) {   
-                $client = $reservation['car']['clientProfessional']['client'];             
+                $client = $reservation['car']['clientProfessional']['client'];  
+                $startTime = Carbon::parse($reservation['start_time']);           
             $dates[] = [
                 'startDate' => Carbon::parse($reservation['data'].' '.$reservation['start_time'])->toDateTimeString(),
                 'endDate' => Carbon::parse($reservation['data'].' '.$reservation['final_hour'])->toDateTimeString(),
-                'clientName' => $client['name']
+                'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
             ];
             }
             $sortedDates = collect($dates)->sortBy('startDate')->values()->all();

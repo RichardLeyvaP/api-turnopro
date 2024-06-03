@@ -76,8 +76,8 @@ class ProfessionalController extends Controller
             $professionals = Professional::whereNotin('id', $branchProfessionals)->with('charge')->get()->map(function ($professional) {
                 return [
                     'id' => intval($professional->id),
-                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
-                    'image_url' => $professional->image_url.'?$'.Carbon::now(),
+                    'name' => $professional->name,
+                    'image_url' => $professional->image_url,
                     'charge' => $professional->charge->name
 
                 ];

@@ -93,178 +93,351 @@ class FinanceController extends Controller
                 'branch_id' => 'nullable|numeric',
                 'business_id' => 'nullable',
                 'type' => 'required|string',
-                'enrollment_id' => 'nullable'
+                'enrollment_id' => 'nullable',
+                'year' => 'nullable'
             ]);
             //str_contains($expenseName, $phrase)            
             $comment = '';
-            if($data['type'] == 'Negocio'){
-                $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
-                    $typeDetail = '';
-                    $comment = 'HH ';
-                    if($query->revenue){
-                        if($query->revenue->name == 'Ingreso venta de productos en la caja'){
-                            $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
+            if($request->mounth){
+                if($data['type'] == 'Negocio'){
+                    $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                        $typeDetail = '';
+                        $comment = 'HH ';
+                        if($query->revenue){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
+                                $typeDetail = 'Ingreso Producto';
+                                $comment = 'IP '.$query->comment;
+                            }
+                            if($query->revenue->name == 'Ingresos por porciento de propinas'){
+                                $typeDetail = 'Ingreso Propina';
+                                $comment = 'IS '.$query->comment;
+                            }
                         }
-                        if($query->revenue->name == 'Ingresos por porciento de propinas'){
-                            $typeDetail = 'Ingreso Propina';
-                            $comment = 'IS '.$query->comment;
+                        if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
                         }
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
-                        $typeDetail = 'Gasto Servicio';
-                        $comment = 'GS '.$query->comment;
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
-                        $typeDetail = 'Gasto Servicio';
-                        $comment = 'GS '.$query->comment;
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
-                        $typeDetail = 'Gasto Producto';
-                        $comment = 'GP '.$query->comment;
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
-                        $typeDetail = 'Gasto Propina';
-                        $comment = 'GS '.$query->comment;
-                    }
-                    if($query->expense){
-                        if($query->expense->name == 'Compra de productos'){
+                        if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
                             $comment = 'GP '.$query->comment;
                         }
-                        if($query->expense->name == 'Productos'){
+                        if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                            $typeDetail = 'Gasto Propina';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if($query->expense){
+                            if($query->expense->name == 'Compra de productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                        }
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => $comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => $typeDetail
+                        ];
+                    });
+                }
+                if ($data['type'] == 'Sucursal'){
+                    $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                        $typeDetail = '';
+                        $comment = 'HH ';
+                        if($query->revenue){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
+                                $typeDetail = 'Ingreso Producto';
+                                $comment = 'IP '.$query->comment;
+                            }
+                            if($query->revenue->name == 'Ingresos por porciento de propinas'){
+                                $typeDetail = 'Ingreso Propina';
+                                $comment = 'IS '.$query->comment;
+                            }
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
                             $comment = 'GP '.$query->comment;
                         }
-                    }
-                    return [
-                        'id' => $query->id,
-                        'data' => $query->data,
-                        'control' => $query->control,
-                        'operation' => $query->operation,
-                        'amount' => $query->amount,
-                        'expense' => $query->expense ? $query->amount : '',
-                        'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => $comment,
-                        'file' => $query->file,
-                        'branch_id' => $query->branch_id,
-                        'business_id' => $query->business_id,
-                        'enrollment_id' => $query->enrollment_id,
-                        'expense_id' => $query->expense_id,
-                        'revenue_id' => $query->revenue_id,
-                        'type' => $query->type,
-                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                        'typeDetail' => $typeDetail
-                    ];
-                });
-            }
-            if ($data['type'] == 'Sucursal'){
-                $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
-                    $typeDetail = '';
-                    $comment = 'HH ';
-                    if($query->revenue){
-                        if($query->revenue->name == 'Ingreso venta de productos en la caja'){
-                            $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
+                        if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                            $typeDetail = 'Gasto Propina';
+                            $comment = 'GS '.$query->comment;
                         }
-                        if($query->revenue->name == 'Ingresos por porciento de propinas'){
-                            $typeDetail = 'Ingreso Propina';
-                            $comment = 'IS '.$query->comment;
+                        if($query->expense){
+                            if($query->expense->name == 'Compra de productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
                         }
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
-                        $typeDetail = 'Gasto Servicio';
-                        $comment = 'GS '.$query->comment;
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
-                        $typeDetail = 'Gasto Servicio';
-                        $comment = 'GS '.$query->comment;
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
-                        $typeDetail = 'Gasto Producto';
-                        $comment = 'GP '.$query->comment;
-                    }
-                    if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
-                        $typeDetail = 'Gasto Propina';
-                        $comment = 'GS '.$query->comment;
-                    }
-                    if($query->expense){
-                        if($query->expense->name == 'Compra de productos'){
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => $comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => $typeDetail
+                        ];
+                    });
+                }
+                if ($data['type'] == 'Academia'){
+                    $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => 'HH '.$query->comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => '',
+                        ];
+                    });
+                }
+                if ($data['type'] == 'Todas'){
+                    $finances = Finance::with(['expense', 'revenue'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->orderByDesc('id')->get()->map(function ($query) {
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => 'HH '.$query->comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => ''
+                        ];
+                    })->sortByDesc('data')->values();
+                }
+            }else{
+                if($data['type'] == 'Negocio'){
+                    $finances = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                        $typeDetail = '';
+                        $comment = 'HH ';
+                        if($query->revenue){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
+                                $typeDetail = 'Ingreso Producto';
+                                $comment = 'IP '.$query->comment;
+                            }
+                            if($query->revenue->name == 'Ingresos por porciento de propinas'){
+                                $typeDetail = 'Ingreso Propina';
+                                $comment = 'IS '.$query->comment;
+                            }
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
                             $comment = 'GP '.$query->comment;
                         }
-                        if($query->expense->name == 'Productos'){
+                        if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                            $typeDetail = 'Gasto Propina';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if($query->expense){
+                            if($query->expense->name == 'Compra de productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                        }
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => $comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => $typeDetail
+                        ];
+                    });
+                }
+                if ($data['type'] == 'Sucursal'){
+                    $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                        $typeDetail = '';
+                        $comment = 'HH ';
+                        if($query->revenue){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
+                                $typeDetail = 'Ingreso Producto';
+                                $comment = 'IP '.$query->comment;
+                            }
+                            if($query->revenue->name == 'Ingresos por porciento de propinas'){
+                                $typeDetail = 'Ingreso Propina';
+                                $comment = 'IS '.$query->comment;
+                            }
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
                             $comment = 'GP '.$query->comment;
                         }
-                    }
-                    return [
-                        'id' => $query->id,
-                        'data' => $query->data,
-                        'control' => $query->control,
-                        'operation' => $query->operation,
-                        'amount' => $query->amount,
-                        'expense' => $query->expense ? $query->amount : '',
-                        'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => $comment,
-                        'file' => $query->file,
-                        'branch_id' => $query->branch_id,
-                        'business_id' => $query->business_id,
-                        'enrollment_id' => $query->enrollment_id,
-                        'expense_id' => $query->expense_id,
-                        'revenue_id' => $query->revenue_id,
-                        'type' => $query->type,
-                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                        'typeDetail' => $typeDetail
-                    ];
-                });
+                        if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                            $typeDetail = 'Gasto Propina';
+                            $comment = 'GS '.$query->comment;
+                        }
+                        if($query->expense){
+                            if($query->expense->name == 'Compra de productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Productos'){
+                                $typeDetail = 'Gasto Producto';
+                                $comment = 'GP '.$query->comment;
+                            }
+                        }
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => $comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => $typeDetail
+                        ];
+                    });
+                }
+                if ($data['type'] == 'Academia'){
+                    $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => 'HH '.$query->comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => '',
+                        ];
+                    });
+                }
+                if ($data['type'] == 'Todas'){
+                    $finances = Finance::with(['expense', 'revenue'])->whereYear('data', $data['year'])->orderByDesc('id')->get()->map(function ($query) {
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $query->expense ? $query->amount : '',
+                            'revenue' => $query->revenue ? $query->amount : '',
+                            'comment' => 'HH '.$query->comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,
+                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'typeDetail' => ''
+                        ];
+                    })->sortByDesc('data')->values();
+                }
             }
-            if ($data['type'] == 'Academia'){
-                $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
-                    return [
-                        'id' => $query->id,
-                        'data' => $query->data,
-                        'control' => $query->control,
-                        'operation' => $query->operation,
-                        'amount' => $query->amount,
-                        'expense' => $query->expense ? $query->amount : '',
-                        'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => 'HH '.$query->comment,
-                        'file' => $query->file,
-                        'branch_id' => $query->branch_id,
-                        'business_id' => $query->business_id,
-                        'enrollment_id' => $query->enrollment_id,
-                        'expense_id' => $query->expense_id,
-                        'revenue_id' => $query->revenue_id,
-                        'type' => $query->type,
-                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                        'typeDetail' => '',
-                    ];
-                });
-            }
-            if ($data['type'] == 'Todas'){
-                $finances = Finance::with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
-                    return [
-                        'id' => $query->id,
-                        'data' => $query->data,
-                        'control' => $query->control,
-                        'operation' => $query->operation,
-                        'amount' => $query->amount,
-                        'expense' => $query->expense ? $query->amount : '',
-                        'revenue' => $query->revenue ? $query->amount : '',
-                        'comment' => 'HH '.$query->comment,
-                        'file' => $query->file,
-                        'branch_id' => $query->branch_id,
-                        'business_id' => $query->business_id,
-                        'enrollment_id' => $query->enrollment_id,
-                        'expense_id' => $query->expense_id,
-                        'revenue_id' => $query->revenue_id,
-                        'type' => $query->type,
-                        'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                        'typeDetail' => ''
-                    ];
-                })->sortByDesc('data')->values();
-            }
+            
             
             return response()->json(['finances' => $finances], 200);
         } catch (\Throwable $th) {
@@ -274,33 +447,33 @@ class FinanceController extends Controller
     }
 
     public function combinedData(Request $request)
-{
-    try {
-        $businesses = Business::with(['professional', 'branches'])->get();
-        $expenses = Expense::all();
-        $revenues = Revenue::all();
+    {
+        try {
+            $businesses = Business::with(['professional', 'branches'])->get();
+            $expenses = Expense::all();
+            $revenues = Revenue::all();
 
-        $data = $request->validate([
-            'business_id' => 'required|numeric'
-        ]);
-        $branches = Branch::where('business_id', $data['business_id'])->get();
+            $data = $request->validate([
+                'business_id' => 'required|numeric'
+            ]);
+            $branches = Branch::where('business_id', $data['business_id'])->get();
 
-        $enrollments = Enrollment::where('business_id', $data['business_id'])->with(['business'])->get();
+            $enrollments = Enrollment::where('business_id', $data['business_id'])->with(['business'])->get();
 
-        $responseData = [
-            'businesses' => $businesses,
-            'expenses' => $expenses,
-            'revenues' => $revenues,
-            'branches' => $branches,
-            'enrollments' => $enrollments
-        ];
+            $responseData = [
+                'businesses' => $businesses,
+                'expenses' => $expenses,
+                'revenues' => $revenues,
+                'branches' => $branches,
+                'enrollments' => $enrollments
+            ];
 
-        return response()->json($responseData, 200, [], JSON_NUMERIC_CHECK);
-    } catch (\Throwable $th) {
-        Log::error($th);
-        return response()->json(['msg' => "Error interno del sistema"], 500);
+            return response()->json($responseData, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error interno del sistema"], 500);
+        }
     }
-}
 
     /**
      * Update the specified resource in storage.
