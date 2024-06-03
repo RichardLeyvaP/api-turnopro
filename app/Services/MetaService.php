@@ -20,7 +20,7 @@ class MetaService
     {        
         $idService=null;
         $bonus = [];
-        
+        $percentWinSum = 0;
         $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
             $query->where('branch_id', $branch->id);
         })->whereHas('charge', function ($query) {
@@ -52,7 +52,7 @@ class MetaService
             if (!$cars->isEmpty())
                 if ($professional->retention) {
                     foreach ($cars as $car) {
-                        $percentWinSum = $car->orders->where('is_product', 0)->sum('percent_win');
+                        $percentWinSum += $car->orders->where('is_product', 0)->sum('percent_win');
                     }
                     if ($percentWinSum) {
                         $retention = new Retention();
