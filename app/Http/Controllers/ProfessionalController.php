@@ -682,11 +682,16 @@ class ProfessionalController extends Controller
                     File::delete($destination);
                 }
             }
-            Professional::destroy($professionals_data['id']);
-            User::destroy($professional->user_id);
+            $user = User::find($professional->user_id);
+            if ($user) {
+                Professional::destroy($professionals_data['id']);
+            }else{         
+                Professional::destroy($professionals_data['id']);  
+            User::destroy($user->id);
+            }
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al eliminar la professional'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al eliminar la professional'], 500);
         }
     }
 

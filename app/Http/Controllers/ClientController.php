@@ -335,12 +335,18 @@ class ClientController extends Controller
                     File::delete($destination);
                 }
             }
-            Client::destroy($clients_data['id']);
-            User::destroy($client->user_id);
-
+            
+            //User::destroy($client->user_id);
+            $user = User::find($client->user_id);
+            if ($user) {
+                Client::destroy($clients_data['id']);
+            }else{         
+                Client::destroy($clients_data['id']);  
+            User::destroy($user->id);
+            }
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al eliminar el cliente'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al eliminar el cliente'], 500);
         }
     }
 

@@ -9,6 +9,7 @@ use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
@@ -160,7 +161,26 @@ class NotificationController extends Controller
             $data = $request->validate([
                 'telefone_client' => 'required'
             ]);
+            /*//funcion
+            $phone = $data['telefone_client'];
+            $token = 'EAA3HxwytmSQBADakuNZBHzsml9rFraMyxz1668dyZC2FU0Cf0HAOQh4OGwJQZBrGh2jfpcCIM3mVcbfQBPver5m3ULY1ID6Pu61dIqGa8ZAZCpPhwgqXj9EPu6OIi4NIRszGXnk7PZB0JUWXSuo7VtElBjBnwe5HXbiMhURmDWuIJC8kF2DTC7T4bwQN029NDbYhLBKxULEVDMoZBCLiksR';
+        // $carbon = new Carbon();
+        $body = [
+            'messaging_product' => 'whatsapp',
+            'to' => $phone,
+            'type' => 'template',
+            'template' => [
+                'name' => 'hello_world',
+                'language' => [
+                    'code' => 'en_us'
+                ],
 
+            ]
+        ];
+
+        $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
+        Log::error('scanner');
+        Log::info($response);*/
             return response()->json("Este es el numero de celular ".$data['telefone_client'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
