@@ -49,6 +49,7 @@ class MetaService
                 ->where('pay', 1)
                 ->get();
             //retention
+            $percentWinSum = 0;
             if (!$cars->isEmpty())
                 if ($professional->retention) {
                     foreach ($cars as $car) {
