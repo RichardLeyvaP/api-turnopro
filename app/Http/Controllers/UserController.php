@@ -534,7 +534,7 @@ class UserController extends Controller
                 $datos = [
                     'id' => $professional->user->id,
                     'userName' => $professional->user->name,
-                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'name' => $professional->name,
                     'email' => $professional->email,
                     'branch_id' => $data['branch_id'],
                     'professional_id' => $professional_workplace['professional_id'],
