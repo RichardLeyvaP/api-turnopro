@@ -161,9 +161,9 @@ class NotificationController extends Controller
             $data = $request->validate([
                 'telefone_client' => 'required'
             ]);
-            /*//funcion
+            //funcion
             $phone = $data['telefone_client'];
-            $token = 'EAA3HxwytmSQBADakuNZBHzsml9rFraMyxz1668dyZC2FU0Cf0HAOQh4OGwJQZBrGh2jfpcCIM3mVcbfQBPver5m3ULY1ID6Pu61dIqGa8ZAZCpPhwgqXj9EPu6OIi4NIRszGXnk7PZB0JUWXSuo7VtElBjBnwe5HXbiMhURmDWuIJC8kF2DTC7T4bwQN029NDbYhLBKxULEVDMoZBCLiksR';
+            $token = env('WHATSAPP_TOKEN');
         // $carbon = new Carbon();
         $body = [
             'messaging_product' => 'whatsapp',
@@ -180,7 +180,7 @@ class NotificationController extends Controller
 
         $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
         Log::error('scanner');
-        Log::info($response);*/
+        Log::info($response);
             return response()->json("Este es el numero de celular ".$data['telefone_client'], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
