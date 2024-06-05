@@ -36,47 +36,63 @@ class RecordController extends Controller
         Log::info("Guardar");
         Log::info($request);
         try {
+            // Validación de los datos de entrada
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required|numeric',
             ]);
-            $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
-            if(!$record){  
+    
+            // Verificar si ya existe un registro para hoy
+            $record = Record::where('branch_id', $data['branch_id'])
+                            ->where('professional_id', $data['professional_id'])
+                            ->whereDate('start_time', Carbon::now())
+                            ->first();
+    
+            if (!$record) {
+                // Obtener el nombre del día en español
                 $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
-            $startTime = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->value('start_time');
-            if($startTime){
-                $startTimeCarbon = Carbon::createFromFormat('H:i:s', $startTime);
-                // Obtener la hora actual
-                $currentTime = Carbon::now();
-
-                // Comparar las horas
-                if ($currentTime->greaterThan($startTimeCarbon)) {
-                    $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
-                        $query->where('branch_id', $data['branch_id'])
-                        ->whereHas('rule', function ($query) {
-                            $query->where('type', 'Puntualidad')
-                                  ->where('automatic', 1);
-                        });;
-                    })->where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->orderByDesc('data')->first();
-                    if($branchRuleProfessionals){
-                        $branchRuleProfessionals->estado = 3;
-                        $branchRuleProfessionals->save();
+                $startTime = Schedule::where('branch_id', $data['branch_id'])
+                                     ->where('day', $nombreDia)
+                                     ->value('start_time');
+    
+                if ($startTime) {
+                    $startTimeCarbon = Carbon::createFromFormat('H:i:s', $startTime);
+                    $currentTime = Carbon::now();
+    
+                    // Comparar la hora actual con la hora de inicio
+                    if ($currentTime->greaterThan($startTimeCarbon)) {
+                        $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data) {
+                            $query->where('branch_id', $data['branch_id'])
+                                  ->whereHas('rule', function ($query) {
+                                      $query->where('type', 'Puntualidad')
+                                            ->where('automatic', 1);
+                                  });
+                        })->where('professional_id', $data['professional_id'])
+                          ->whereDate('data', Carbon::now())
+                          ->orderByDesc('data')
+                          ->first();
+    
+                        if ($branchRuleProfessionals) {
+                            $branchRuleProfessionals->estado = 3;
+                            $branchRuleProfessionals->save();
+                        }
                     }
-                    //return "La hora actual es mayor que la hora de inicio de la sucursal ($startTime).";
                 }
-            }        
-            $record = new Record();
-            $record->professional_id = $data['professional_id'];
-            $record->branch_id = $data['branch_id'];
-            $record->start_time = Carbon::now();
-            $record->save();            
-            return response()->json(['msg' => 'Record creado correctamente'], 200);
-            }else{                
-            return response()->json(['msg' => 'Ya registro entrada en el dia de hoy'], 200);
+    
+                // Crear un nuevo registro
+                $record = new Record();
+                $record->professional_id = $data['professional_id'];
+                $record->branch_id = $data['branch_id'];
+                $record->start_time = Carbon::now();
+                $record->save();
+    
+                return response()->json(['msg' => 'Record creado correctamente'], 200);
+            } else {
+                return response()->json(['msg' => 'Ya registró entrada en el día de hoy'], 200);
             }
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage().'Error al crear un record'], 500);
+            return response()->json(['msg' => 'Error al crear un record: ' . $th->getMessage()], 500);
         }
     }
 
