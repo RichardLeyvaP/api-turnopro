@@ -124,11 +124,12 @@ class RecordController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $recordProfessional = Record::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $data['professional_id'])
-                ->first();
+    ->where('professional_id', $data['professional_id'])
+    ->whereDate('start_time', Carbon::today())
+    ->first();
 
             if ($recordProfessional != null) {
-                return Carbon::parse($recordProfessional->start_time)->format('H:i');
+                return 1;
             } else {
                 return 0;
             }
