@@ -354,7 +354,7 @@ class TailService {
                 // Verifica si car no es null
                 if ($tail->reservation->car !== null) {
                     foreach ($tail->reservation->car->orders->where('is_product', 0) as $orderData) {
-                        if ($orderData->branchServiceProfessional->branchService->service->simultaneous == 1) {
+                        if ($orderData->branchServiceProfessional->branchService->service->simultaneou == 1) {
                             return true;
                         }
                     }
