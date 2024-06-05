@@ -499,6 +499,7 @@ Route::post('/course-student-destroy', [CourseStudentController::class, 'destroy
 
 Route::get('/record', [RecordController::class, 'index']);
 Route::get('/record-show', [RecordController::class, 'show']);
+Route::get('/record-show-professional', [RecordController::class, 'record_show_professional']);//devolver la hora de entrada de un professional en una sucursal del dia actual
 Route::post('/record', [RecordController::class, 'store']);
 Route::put('/record', [RecordController::class, 'update']);
 Route::post('/record-destroy', [RecordController::class, 'destroy']);

@@ -67,7 +67,7 @@ class MetaService
             //end Retention
             $carIdsPay = $cars->pluck('id');
             $rules =  BranchRuleProfessional::where('professional_id', $professional->id)->whereHas('branchRule', function ($query) use ($branch) {
-                $query->where('branch_id', $branch->id)->where('estado', 3)->whereDate('data', Carbon::now());
+                $query->where('branch_id', $branch->id)->where('estado', 0)->whereDate('data', Carbon::now());
             })->get();
 
             $professionalPayments = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->get();

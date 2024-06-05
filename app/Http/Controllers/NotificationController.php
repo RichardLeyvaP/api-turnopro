@@ -163,7 +163,7 @@ class NotificationController extends Controller
             ]);
             //funcion
             $phone = $data['telefone_client'];
-            $token = env('WHATSAPP_TOKEN');
+            $token = 'EAAagNvvUedwBOZBRlNnV1vpITV9yY021G4IrEy6UJqoB7ErYIA13abKyZA54ZBWm64KS9PTZBaRYBh2zWLn594NZBcPMjt2R14Cx3IB6nOfpfyZBH6a6mNeVxDZC3q6GbBZAs4ZAFI0ZChhY957058Y7tk20s72Se2mk9unBNrfdc7eapXtI9KxWu62mE43lIxpsR3Ob7lwO7ZByB6ZBaslLlQ7JgeqXb7IZD';
         // $carbon = new Carbon();
         $body = [
             'messaging_product' => 'whatsapp',
@@ -177,6 +177,7 @@ class NotificationController extends Controller
 
             ]
         ];
+     
 
         $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
         Log::error('scanner');

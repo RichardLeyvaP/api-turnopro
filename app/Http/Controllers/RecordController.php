@@ -41,51 +41,55 @@ class RecordController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric',
             ]);
-    
+
             // Verificar si ya existe un registro para hoy
             $record = Record::where('branch_id', $data['branch_id'])
-                            ->where('professional_id', $data['professional_id'])
-                            ->whereDate('start_time', Carbon::now())
-                            ->first();
-    
+                ->where('professional_id', $data['professional_id'])
+                ->whereDate('start_time', Carbon::now())
+                ->first();
+
             if (!$record) {
                 // Obtener el nombre del día en español
                 $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
                 $startTime = Schedule::where('branch_id', $data['branch_id'])
-                                     ->where('day', $nombreDia)
-                                     ->value('start_time');
-    
+                    ->where('day', $nombreDia)
+                    ->value('start_time');
+
                 if ($startTime) {
                     $startTimeCarbon = Carbon::createFromFormat('H:i:s', $startTime);
                     $currentTime = Carbon::now();
-    
+                    $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id'])
+                            ->whereHas('rule', function ($query) {
+                                $query->where('type', 'Puntualidad')
+                                    ->where('automatic', 1);
+                            });
+                    })->where('professional_id', $data['professional_id'])
+                        ->whereDate('data', Carbon::now())
+                        ->orderByDesc('data')
+                        ->first();
                     // Comparar la hora actual con la hora de inicio
                     if ($currentTime->greaterThan($startTimeCarbon)) {
-                        $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data) {
-                            $query->where('branch_id', $data['branch_id'])
-                                  ->whereHas('rule', function ($query) {
-                                      $query->where('type', 'Puntualidad')
-                                            ->where('automatic', 1);
-                                  });
-                        })->where('professional_id', $data['professional_id'])
-                          ->whereDate('data', Carbon::now())
-                          ->orderByDesc('data')
-                          ->first();
-    
+
                         if ($branchRuleProfessionals) {
-                            $branchRuleProfessionals->estado = 3;
+                            $branchRuleProfessionals->estado = 0;
+                            $branchRuleProfessionals->save();
+                        }
+                    } else {
+                        if ($branchRuleProfessionals) {
+                            $branchRuleProfessionals->estado = 1;
                             $branchRuleProfessionals->save();
                         }
                     }
                 }
-    
+
                 // Crear un nuevo registro
                 $record = new Record();
                 $record->professional_id = $data['professional_id'];
                 $record->branch_id = $data['branch_id'];
                 $record->start_time = Carbon::now();
                 $record->save();
-    
+
                 return response()->json(['msg' => 'Record creado correctamente'], 200);
             } else {
                 return response()->json(['msg' => 'Ya registró entrada en el día de hoy'], 200);
@@ -109,6 +113,27 @@ class RecordController extends Controller
             return response()->json(['records' => Record::with('professional', 'branch')->where('branch_id', $branch_data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
+        }
+    }
+
+    public function record_show_professional(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $recordProfessional = Record::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $data['professional_id'])
+                ->first();
+
+            if ($recordProfessional != null) {
+                return Carbon::parse($recordProfessional->start_time)->format('H:i');
+            } else {
+                return 0;
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => $th->getmessage() . "Error interno del sistema"], 500);
         }
     }
 
@@ -163,7 +188,7 @@ class RecordController extends Controller
             ]);
             $llegadasTardias = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
-                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate) //->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()
                 ->filter(function ($registro) use ($data) {
                     // Obtiene el nombre del día de la semana en español
@@ -425,7 +450,7 @@ class RecordController extends Controller
                 ->whereDate('start_time', $today)
                 ->get()
                 ->filter(function ($registro) {
-                   // Obtiene el nombre del día de la semana en español
+                    // Obtiene el nombre del día de la semana en español
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
@@ -498,39 +523,39 @@ class RecordController extends Controller
             $professionalId = Professional::find($data['professional_id']);
             if ($branchId && $professionalId) {
                 $llegadasTardias = Record::where('branch_id', $branchId->id)->where('professional_id', $professionalId->id)
-                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
+                    ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate) //->whereBetween('start_time', [$request->startDate, $request->endDate])
                     ->get()
                     ->filter(function ($registro) {
                         // Obtiene el nombre del día de la semana en español
-                    //$diaSemana = $registro->start_time->formatLocalized('%A');
-                    $diaSemana = new DateTime($registro->start_time);
-                    $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
-                    // Días de la semana en español
-                    $diasSemanaEspañol = [
-                        'Monday' => 'Lunes',
-                        'Tuesday' => 'Martes',
-                        'Wednesday' => 'Miércoles',
-                        'Thursday' => 'Jueves',
-                        'Friday' => 'Viernes',
-                        'Saturday' => 'Sábado',
-                        'Sunday' => 'Domingo',
-                    ];
+                        //$diaSemana = $registro->start_time->formatLocalized('%A');
+                        $diaSemana = new DateTime($registro->start_time);
+                        $nombreDia = $diaSemana->format('l');
+                        Log::info($nombreDia);
+                        // Días de la semana en español
+                        $diasSemanaEspañol = [
+                            'Monday' => 'Lunes',
+                            'Tuesday' => 'Martes',
+                            'Wednesday' => 'Miércoles',
+                            'Thursday' => 'Jueves',
+                            'Friday' => 'Viernes',
+                            'Saturday' => 'Sábado',
+                            'Sunday' => 'Domingo',
+                        ];
 
-                    // Reemplazamos el día de la semana en inglés por su equivalente en español
-                    $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
-                    // Obtiene el horario de inicio correspondiente al día de la semana del registro
-                    $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
-                    // Si no hay horario de inicio para ese día, no se considera como llegada tardía
-                    if (!$schedule) {
-                        return false;
-                    }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
-                    // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
+                        // Reemplazamos el día de la semana en inglés por su equivalente en español
+                        $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
+                        Log::info($diaSemanaEspañol);
+                        // Obtiene el horario de inicio correspondiente al día de la semana del registro
+                        $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
+                        Log::info($schedule);
+                        // Si no hay horario de inicio para ese día, no se considera como llegada tardía
+                        if (!$schedule) {
+                            return false;
+                        }
+                        Log::info($schedule->start_time);
+                        Log::info(Carbon::parse($registro->start_time)->format('H:i'));
+                        // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
+                        return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                     })->map(function ($group) use ($cant) {
                         return [
                             /*'professional_id' => $group->first()->professional_id,
@@ -578,35 +603,35 @@ class RecordController extends Controller
                     ->get()
                     ->filter(function ($registro) {
                         // Obtiene el nombre del día de la semana en español
-                    //$diaSemana = $registro->start_time->formatLocalized('%A');
-                    $diaSemana = new DateTime($registro->start_time);
-                    $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
-                    // Días de la semana en español
-                    $diasSemanaEspañol = [
-                        'Monday' => 'Lunes',
-                        'Tuesday' => 'Martes',
-                        'Wednesday' => 'Miércoles',
-                        'Thursday' => 'Jueves',
-                        'Friday' => 'Viernes',
-                        'Saturday' => 'Sábado',
-                        'Sunday' => 'Domingo',
-                    ];
+                        //$diaSemana = $registro->start_time->formatLocalized('%A');
+                        $diaSemana = new DateTime($registro->start_time);
+                        $nombreDia = $diaSemana->format('l');
+                        Log::info($nombreDia);
+                        // Días de la semana en español
+                        $diasSemanaEspañol = [
+                            'Monday' => 'Lunes',
+                            'Tuesday' => 'Martes',
+                            'Wednesday' => 'Miércoles',
+                            'Thursday' => 'Jueves',
+                            'Friday' => 'Viernes',
+                            'Saturday' => 'Sábado',
+                            'Sunday' => 'Domingo',
+                        ];
 
-                    // Reemplazamos el día de la semana en inglés por su equivalente en español
-                    $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
-                    // Obtiene el horario de inicio correspondiente al día de la semana del registro
-                    $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
-                    // Si no hay horario de inicio para ese día, no se considera como llegada tardía
-                    if (!$schedule) {
-                        return false;
-                    }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
-                    // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
-                    return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
+                        // Reemplazamos el día de la semana en inglés por su equivalente en español
+                        $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
+                        Log::info($diaSemanaEspañol);
+                        // Obtiene el horario de inicio correspondiente al día de la semana del registro
+                        $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
+                        Log::info($schedule);
+                        // Si no hay horario de inicio para ese día, no se considera como llegada tardía
+                        if (!$schedule) {
+                            return false;
+                        }
+                        Log::info($schedule->start_time);
+                        Log::info(Carbon::parse($registro->start_time)->format('H:i'));
+                        // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
+                        return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                     })->map(function ($group) use ($cant) {
                         return [
                             /*'professional_id' => $group->first()->professional_id,
@@ -646,7 +671,7 @@ class RecordController extends Controller
             ]);
             $llegadasTardias = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
-                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate) //->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()
                 ->filter(function ($registro) use ($data) {
                     // Obtiene el nombre del día de la semana en español
@@ -692,10 +717,10 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-                //Llegadas puntuales
-                $llegadasTime = Record::withCount('professional')
+            //Llegadas puntuales
+            $llegadasTime = Record::withCount('professional')
                 ->where('branch_id', $data['branch_id'])
-                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate)//->whereBetween('start_time', [$request->startDate, $request->endDate])
+                ->whereDate('start_time', '>=', $request->startDate)->whereDate('start_time', '<=', $request->endDate) //->whereBetween('start_time', [$request->startDate, $request->endDate])
                 ->get()
                 ->filter(function ($registro) use ($data) {
                     // Obtiene el nombre del día de la semana en español
@@ -849,7 +874,7 @@ class RecordController extends Controller
                             'cant' => $group->sum('professional_count')
                         ];
                     })->sortByDesc('cant')->values();*/
-                    $llegadasTardias = Record::withCount('professional')->with('professional')
+            $llegadasTardias = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
                 ->whereDate('start_time', $today)
                 ->get()
@@ -897,7 +922,7 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-                return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
             //return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . 'Error'], 500);

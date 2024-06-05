@@ -9,6 +9,8 @@ class Record extends Model
 {
     use HasFactory;
 
+    protected $table = 'records';
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);
