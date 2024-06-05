@@ -40,11 +40,13 @@ Puede llegar 10 minutos antes o despues de la hora indicada y debe anunciarse en
 </p>
 
 <!-- Botón de Confirmación -->
+@if ($data !== date('Y-m-d'))
 <a href="https://api2.simplifies.cl/api/update-confirmation?id={{$id_reservation}}&confirmation=1" style="text-decoration: none;">
     <button style="background-color: #4470F3; color: #FFFFFF; border: none; border-radius: 6px; padding: 12px 24px; font-size: 16px;">
         CONFIRMACIÓN
     </button>
 </a>
+@endif
 <p style="color: #555;">
     &#x1F917; Gracias de nuevo por confiar en nosotros. ¡Esperamos verte pronto!
 </p>

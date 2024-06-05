@@ -220,7 +220,7 @@ class ReservationController extends Controller
                 $this->reservation_tail();
                 Log::info("5.actualice la cola");
             }
-            if($data['from_home'] == 1 && $data['data'] != $fechaFormateada){
+            if($data['from_home'] == 1){
                 $code = $reservation->code;
                 //optener nombre del professional
             $professional = Professional::find($data['professional_id']);
