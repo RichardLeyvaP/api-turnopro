@@ -220,11 +220,11 @@ class ReservationController extends Controller
                 $this->reservation_tail();
                 Log::info("5.actualice la cola");
             }
-            if($data['from_home'] == 1){
+            if($data['from_home'] == 1 && $data['data'] != $fechaFormateada){
                 $code = $reservation->code;
                 //optener nombre del professional
             $professional = Professional::find($data['professional_id']);
-            $name = $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname;
+            $name = $professional->name;
             //todo *************** llamando al servicio de envio de email *******************
             //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
             //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
