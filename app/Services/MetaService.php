@@ -115,6 +115,7 @@ class MetaService
 
                         foreach($orders as $order){
                             $order->meta = 1;
+                            $order->percent_win = $order->price;
                             $order->save();
                         }
                     }

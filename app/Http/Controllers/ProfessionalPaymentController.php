@@ -452,6 +452,41 @@ class ProfessionalPaymentController extends Controller
         }
     }
 
+    public function branch_payment_show_bonus(Request $request)
+    {
+        try {
+            $request->validate([
+                'branch_id' => 'required|exists:branches,id',
+            ]);
+
+            $branchId = $request->branch_id;
+            $bonusPay = [];
+            // Obtener la fecha actual
+                $day = Carbon::today();
+
+                // Consultar los pagos realizados en el día actual para la sucursal dada
+                $bonus = ProfessionalPayment::where('branch_id', $branchId)
+                    ->whereDate('date', $day)
+                    ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
+                    ->get();
+                foreach($bonus as $bono){
+                    $professional = $bono['professional'];
+                    $bonusPay[] = [
+                        'name' => $professional->name,
+                                'image_url' => $professional->image_url,
+                                'bonus' => $bono['type'],
+                                'amount' => $bono['amount'],
+                    ];
+                }
+            return response()->json(['bonus' => $bonusPay], 200, [], JSON_NUMERIC_CHECK);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
+    }
     /**
      * Update the specified resource in storage.
      */
@@ -499,13 +534,13 @@ class ProfessionalPaymentController extends Controller
 
         // Obtener los datos de la base de datos
         $result = DB::table('professionals_payments')
-    ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
-    ->whereYear('date', $data['year'])
-    ->where('professional_id', $data['professional_id'])
-    ->where('branch_id', $data['branch_id'])
-    ->groupBy(DB::raw('MONTH(date)'))
-    ->orderBy('month')
-    ->get();
+        ->selectRaw('MONTH(date) AS month, SUM(amount) AS earnings')
+        ->whereYear('date', $data['year'])
+        ->where('professional_id', $data['professional_id'])
+        ->where('branch_id', $data['branch_id'])
+        ->groupBy(DB::raw('MONTH(date)'))
+        ->orderBy('month')
+        ->get();
 
         // Inicializar el array de resultados
         $monthlyEarnings = [];
