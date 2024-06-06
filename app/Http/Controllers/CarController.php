@@ -428,7 +428,7 @@ class CarController extends Controller
                 });*/
                 
                 $finances = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
-                if(!$finances->isEmpty()){
+                /*if(!$finances->isEmpty()){
 
                 foreach($finances as $finance){
                     if($finance->operation == 'Gasto'){
@@ -437,7 +437,9 @@ class CarController extends Controller
                         $ingreso = $ingreso + $finance->amount;
                     }
                 }
-                }
+                }*/
+                $ingreso = $finances->where('operation', 'Ingreso')->sum('amount');
+                $gasto = $finances->where('operation', 'Gasto')->sum('amount');
                 $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 })->where('pay', 1);
@@ -450,8 +452,7 @@ class CarController extends Controller
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->technical_assistance * 5000,
-                        'utilidad' => $ingreso-$gasto
+                        'total' => $car->amount + $car->technical_assistance * 5000
                     ];
                 });
                 $resultDetails[] = [
@@ -461,10 +462,10 @@ class CarController extends Controller
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
                     'total' => round($carsDetail->sum('total'), 2),
-                    'utilidad' => round($carsDetail->sum('utilidad'), 2),
+                    'utilidad' => round($ingreso-$gasto, 2),
                 ];
                 $financesA = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
-                if(!$financesA->isEmpty()){
+                /*if(!$financesA->isEmpty()){
 
                 foreach($financesA as $finance){
                     if($finance->operation == 'Gasto'){
@@ -473,7 +474,9 @@ class CarController extends Controller
                         $ingresoA = $ingresoA + $finance->amount;
                     }
                 }
-                }
+                }*/
+                $ingresoA = $financesA->where('operation', 'Ingreso')->sum('amount');
+                $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');
                 $carsAnt = Car::whereHas('reservation', function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
@@ -486,8 +489,7 @@ class CarController extends Controller
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->technical_assistance * 5000,
-                        'utilidad' => $ingresoA-$gastoA
+                        'total' => $car->amount + $car->technical_assistance * 5000
                     ];
                 });
                 $resultDetailsAnt[] = [
@@ -497,7 +499,7 @@ class CarController extends Controller
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
                     'total' => round($carsDetailAnt->sum('total'), 2),
-                    'utilidad' => round($carsDetail->sum('utilidad'), 2),
+                    'utilidad' => round($ingresoA-$gastoA, 2),
                 ];
                 $cars = $cars->sum('amount') + $cars->sum('technical_assistance') * 5000;
                 $carsAnt = $carsAnt->sum('amount') + $carsAnt->sum('technical_assistance') * 5000;
@@ -519,7 +521,7 @@ class CarController extends Controller
                 return $amount;
             });*/
             $financesA = Finance::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
-                if(!$financesA->isEmpty()){
+                /*if(!$financesA->isEmpty()){
 
                 foreach($financesA as $finance){
                     if($finance->operation == 'Gasto'){
@@ -528,7 +530,9 @@ class CarController extends Controller
                         $ingresoA = $ingresoA + $finance->amount;
                     }
                 }
-                }
+                }*/
+                $ingresoA = $financesA->where('operation', 'Ingreso')->sum('amount');
+                $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');
                 $carsAnt = Car::whereHas('reservations', function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
                     $query->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
@@ -541,8 +545,7 @@ class CarController extends Controller
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->technical_assistance * 5000,
-                        'utilidad' => $ingresoA-$gastoA
+                        'total' => $car->amount + $car->technical_assistance * 5000
                     ];
                 });
                 $resultDetailsAnt[] = [
@@ -552,10 +555,10 @@ class CarController extends Controller
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
                     'total' => round($carsDetailAnt->sum('total'), 2),
-                    'utilidad' => round($carsDetailAnt->sum('utilidad'), 2)
+                    'utilidad' => round($ingresoA-$gastoA, 2)
                 ];
                 $finances = Finance::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
-                if(!$finances->isEmpty()){
+                /*if(!$finances->isEmpty()){
 
                 foreach($finances as $finance){
                     if($finance->operation == 'Gasto'){
@@ -564,7 +567,9 @@ class CarController extends Controller
                         $ingreso = $ingreso + $finance->amount;
                     }
                 }
-                }
+                }*/
+                $ingreso = $finances->where('operation', 'Ingreso')->sum('amount');
+                $gasto = $finances->where('operation', 'Gasto')->sum('amount');
                 $cars = Car::whereHas('reservations', function ($query) use ($startOfMonth, $endOfMonth) {
                     $query->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 })->where('pay', 1);
@@ -577,8 +582,7 @@ class CarController extends Controller
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->technical_assistance * 5000,
-                        'utilidad' => $ingreso-$gasto
+                        'total' => $car->amount + $car->technical_assistance * 5000
                     ];
                 });
                 $resultDetails[] = [
@@ -588,7 +592,7 @@ class CarController extends Controller
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
                     'total' => round($carsDetail->sum('total'), 2),
-                    'utilidad' => round($carsDetail->sum('utilidad'), 2)
+                    'utilidad' => round($ingreso-$gasto, 2)
                 ];
                 $carsAnt = $carsAnt->sum('amount') + $carsAnt->sum('technical_assistance') * 5000;
                 $cars = $cars->sum('amount') + $cars->sum('technical_assistance') * 5000;

@@ -147,9 +147,15 @@ class BoxCloseController extends Controller
             //end agregar a tabla de ingresos
             //Revisar convivencias de professionales para pagar 100% del servicio
             $bonus = $this->metaService->store($branch);
+            $bonusCollection = collect($bonus);
+
+            // Calcular la suma de 'amount'
+            $totalBonus = $bonusCollection->sum('amount');
+            Log::info('$totalBonus Bonussssssss');
+            Log::info($totalBonus);
             //$professionals = $professionals->toArray();
             Log::info("Generar PDF");
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             //Log::info($reporte);
             // Envía el correo electrónico con el PDF adjunto
@@ -168,7 +174,7 @@ class BoxCloseController extends Controller
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
-            $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif']);
+            $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);
             //SendEmailJob::dispatch()->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount']);
             /*$data = [
                 'email_box_closure' => true, // Indica que es un correo de cierre de caja

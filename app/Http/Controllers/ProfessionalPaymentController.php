@@ -212,7 +212,10 @@ class ProfessionalPaymentController extends Controller
             $branchId = $request->branch_id;
 
             $payments = ProfessionalPayment::where('professional_id', $professionalId)
-                                          ->where('branch_id', $branchId)
+                                            ->where(function($query) use ($branchId) {
+                                                $query->where('branch_id', $branchId)
+                                                    ->orWhere('enrollment_id', '!=', null);
+                                            })
                                           ->get()->map(function ($query){
                                             return [
                                                 'id' => $query->id,
@@ -381,7 +384,10 @@ class ProfessionalPaymentController extends Controller
             $branchId = $request->branch_id;
 
             $payments = ProfessionalPayment::where('professional_id', $professionalId)
-                                          ->where('branch_id', $branchId)
+                                            ->where(function($query) use ($branchId) {
+                                                $query->where('branch_id', $branchId)
+                                                    ->orWhere('enrollment_id', '!=', null);
+                                            })
                                           ->whereDate('date', '>=', $request->startDate)
                                           ->whereDate('date', '<=', $request->endDate)
                                           ->get()->map(function ($query){

@@ -44,7 +44,8 @@
     <td><strong>Otros Méthodos:</strong> {{ $data['totalOther'] }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Total Ingresado:</strong> {{ $data['totalMount'] }}</td>
+    <td align="center"><strong>Total Bonos:</strong> {{ $totalBonus }}</td>
+    <td colspan="2" align="center"><strong>Total Ingresado:</strong> {{ $data['totalMount'] }}</td>
 </tr>
 </table>
 </body>

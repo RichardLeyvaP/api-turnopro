@@ -106,7 +106,7 @@ class SendEmailService {
 
 
     //este configurarlo para el envio de cierre de caja si hiciera falta
-    public function emailBoxClosure($client_email, $type,$branchBusinessName, $branchName, $boxData, $boxCashFound, $boxExistence, $boxExtraction, $totalTip, $totalProduct, $totalService, $totalCash, $totalCreditCard, $totalDebit, $totalTransfer, $totalOther, $totalMount, $totalGiftcard)
+    public function emailBoxClosure($client_email, $type,$branchBusinessName, $branchName, $boxData, $boxCashFound, $boxExistence, $boxExtraction, $totalTip, $totalProduct, $totalService, $totalCash, $totalCreditCard, $totalDebit, $totalTransfer, $totalOther, $totalMount, $totalGiftcard, $totalBonus)
     {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'cierre_de_caja';
@@ -130,6 +130,7 @@ class SendEmailService {
               $mail->totalOther = $totalOther;
               $mail->totalMount = $totalMount;
               $mail->totalGiftcard = $totalGiftcard;
+              $mail->totalBonus = $totalBonus;
               $this->sendEmail($client_email,$mail,'Cierre de Caja');
 
     }

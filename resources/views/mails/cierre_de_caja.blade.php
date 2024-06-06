@@ -111,7 +111,8 @@
             <td><strong>Otros Métodos:</strong> {{ $totalOther }}</td>
         </tr>
         <tr class="total-row">
-            <td colspan="3"><strong>Total Ingresado:</strong> {{ $totalMount }}</td>
+            <td><strong>Total de Bonos:</strong> {{ $totalBonus }}</td>
+            <td colspan="2"><strong>Total Ingresado:</strong> {{ $totalMount }}</td>
         </tr>
     </table>
     <div class="footer">

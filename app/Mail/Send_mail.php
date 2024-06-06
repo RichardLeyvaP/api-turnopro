@@ -45,6 +45,7 @@ class Send_mail extends Mailable
     public $totalOther;
     public $totalMount;
     public $totalGiftcard;
+    public $totalBonus;
     public $code_reserva;
     //
     public $ingreso;
@@ -123,6 +124,7 @@ class Send_mail extends Mailable
                 'totalOther' => $this->totalOther,
                 'totalMount' => $this->totalMount,
                 'totalGiftcard' => $this->totalGiftcard,
+                'totalBonus' => $this->totalBonus,
                 'code_reserva' => $this->code_reserva,
 
                 // Propiedades adicionales a restaurar_pass
