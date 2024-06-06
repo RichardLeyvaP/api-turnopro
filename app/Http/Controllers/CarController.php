@@ -20,6 +20,7 @@ use App\Models\Professional;
 use App\Models\ProfessionalPayment;
 use App\Models\Payment;
 use App\Models\Reservation;
+use App\Models\Retention;
 use App\Models\Service;
 use App\Services\CarService;
 use App\Services\TraceService;
@@ -953,6 +954,9 @@ class CarController extends Controller
                                 ->orwhere('type', 'Bono servicios');
                         })
                         ->get();
+                        $retentionP = Retention::where('professional_id', $data['professional_id'])
+                        ->whereDate('data', $cars[0]['data'])
+                        ->where('branch_id', $data['branch_id'])->get();
                     return [
 
                         'professional_id' => intval($cars[0]['professional_id']),
@@ -968,7 +972,7 @@ class CarController extends Controller
                         'tips80' => intval($cars->sum('tipspercent')),
                         'clientAleator' => $cars->sum('clientAleator'),
                         'amountGenerate' => intval($cars->sum('amountGenerate')),
-                        'totalRetention' => intval($cars->sum('retention')),
+                        'totalRetention' => intval($retentionP->sum('retention')),
                         'metacant' => $meta->count() ? $meta->count() : 0,
                         'metaamount' => $meta->sum('amount') ? $meta->sum('amount') : 0,
                         'winPay' => intval($cars->sum('winPay'))
