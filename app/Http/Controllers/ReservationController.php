@@ -642,6 +642,30 @@ class ReservationController extends Controller
         }
     }
 
+    public function update_confirmation_client(Request $request)
+    {
+        try {
+            $data = $request->validate([               
+                'reservation_id' => 'required|numeric',                
+
+            ]);
+            $reservacion = Reservation::find($data['reservation_id']);
+            if($reservacion){
+                    $reservacion->confirmation = 4;
+                    $reservacion->save();
+                    return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
+                }else{
+            return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
+            //return redirect('http://localhost:3000/reserv/denied');
+        }           
+
+            //return response()->json(['msg' => $msg], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
+        }
+    }
+
 
     public function reservation_tail()
     {

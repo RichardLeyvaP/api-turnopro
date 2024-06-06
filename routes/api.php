@@ -135,6 +135,7 @@ Route::get('/professional-email', [ProfessionalController::class, 'professional_
 
 Route::get('/client', [ClientController::class, 'index']);
 Route::get('/client-index-autocomplete', [ClientController::class, 'index_autocomplete']);
+Route::get('/client-reservation', [ClientController::class, 'client_reservation']);//devolver clientes que tienen reservaciones en el dia para anunciar llegada
 Route::get('/client-show', [ClientController::class, 'show']);
 Route::post('/client', [ClientController::class, 'store']);
 Route::post('/client-update', [ClientController::class, 'update']);
@@ -328,6 +329,7 @@ Route::post('/reservation_store', [ReservationController::class, 'reservation_st
 Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch
 Route::get('/update-confirmation', [ReservationController::class, 'update_confirmation']);//Dado una branch y actualizar la confirmation
 Route::get('/update-confirmation-code', [ReservationController::class, 'update_confirmation_code']);//Dado un code y actualizar la confirmation
+Route::get('/update-confirmation-client', [ReservationController::class, 'update_confirmation_client']);//Dado una reservacion anunciar la llegada
 Route::get('/reservation-notconfirm', [ReservationController::class, 'reserve_noconfirm']);//Reservas no confirmadas, eliminarlas, tarea programada
 Route::get('/branch-reservations', [ReservationController::class, 'branch_reservations']);//Dado una branch devolver las reservations del dia
 Route::get('/reservations-count', [ReservationController::class, 'reservations_count']);//Dado un business devolver las reservations del dia reservations_count_week

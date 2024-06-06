@@ -55,7 +55,7 @@ class ClientController extends Controller
             $clients = Client::with('user')->get()->map(function ($client) {
                 return [
                     'id' => $client->id,
-                    'name' => $client->name . ' ' . $client->surname . ' ' . $client->second_surname,
+                    'name' => $client->name,
                     'client_image' => $client->client_image
 
                 ];
@@ -65,6 +65,57 @@ class ClientController extends Controller
             Log::error($th);
 
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
+        }
+    }
+
+    public function client_reservation(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $clients = [];
+            Log::info("entra a cliente");
+            $concatenatedServices = '';
+            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('confirmation', 1)->orderBy('start_time')->with('car.clientProfessional.client', 'car.orders.branchServiceProfessional.branchService.service')->get();
+            foreach ($reservations as $reservation) {
+                $client = $reservation['car']['clientProfessional']['client'];
+                $professional = $reservation['car']['clientProfessional']['professional'];
+                // Asegurarse de que $servicesOrders sea una colección
+                $servicesOrders = $reservation['car']['orders'] ? collect($reservation['car']['orders'])->where('is_product', 0) : collect();
+            
+                $concatenatedServices = '';
+                $serviceNames = [];
+
+                foreach ($servicesOrders as $servicesOrder) {
+                    $serviceName = $servicesOrder->branchServiceProfessional->branchService->service->name ?? '';
+                    if ($serviceName) {
+                        $serviceNames[] = $serviceName;
+                        // Concatenar el nombre del servicio a la variable
+                        //$concatenatedServices .= $serviceName . ', ';
+                    }
+                }
+                $concatenatedServices = implode(', ', $serviceNames);
+                    
+                $clients[] = [
+                    'id' => $reservation['id'],
+                    'name' => $client['name'],
+                    'email' => $client['email'],
+                    'client_image' => $client['client_image'],
+                    'professionalName' => $professional['name'],
+                    'start_time' => $reservation['start_time'],
+                    'final_hour' => $reservation['final_hour'],
+                    'services' => $concatenatedServices
+                ];
+                
+                // Eliminar la coma final y el espacio
+                //$concatenatedServices = rtrim($concatenatedServices, ', ');
+            }
+            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            return response()->json(['msg' => $th->getmessage()."Error al mostrar los clientes"], 500);
         }
     }
 

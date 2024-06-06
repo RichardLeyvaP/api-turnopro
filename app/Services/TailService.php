@@ -336,32 +336,44 @@ class TailService {
     }
 
     public function type_of_service($branch_id, $professional_id){
-        $tails = Tail::with(['reservation' => function ($query) use ($branch_id){
+        Log::info('Entrando a type_of_service');
+        $tails = Tail::with(['reservation' => function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
-        }])->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
+        }])->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
             $query->where('professional_id', $professional_id);
-        })->where('attended', 1)->get();
-        if (count($tails) > 3) {
-            Log::info('$tails>3');
-            return false;
-        }elseif (count($tails) < 1) {
-            Log::info('$tails<1');
+        })->whereIn('attended', [1, 11, 111, 33, 4, 5])->get();
+
+        //primera condicion es ver si es vacio
+        if ($tails->isEmpty()) {
+            Log::info('type_of_service - > Vacia');
             return true;
         }
+        else
+        if (count($tails) > 3) {//Solo se pueden atender maximo 4 clientes
+            Log::info('type_of_service - > $tails>3');
+            return false;
+        }             
+       
         else {
-            Log::info('else');  
+            Log::info('type_of_service - > No está Vacia y no hay mas de 4 atendiendose'); 
             foreach ($tails as $tail) {
                 // Verifica si car no es null
                 if ($tail->reservation->car !== null) {
-                    foreach ($tail->reservation->car->orders->where('is_product', 0) as $orderData) {
+                    $cantServ = 0;
+                    foreach ($tail->reservation->car->orders->where('is_product', 0) as $orderData) {  
+                        $cantServ++;                      
                         if ($orderData->branchServiceProfessional->branchService->service->simultaneou == 1) {
+                            Log::info('type_of_service - > foreach -> hay un servicio simultaneo : '.$orderData->branchServiceProfessional->branchService->service->name);
                             return true;
                         }
                     }
+                    Log::info('type_of_service - > foreach -> cat servicios = '.$cantServ); 
                 }
             }
-        }
+            //sini llega aca es que no hay servicios simultaneos
         return false;
+        }
+
     }
 
     public function cola_branch_capilar($branch_id){
