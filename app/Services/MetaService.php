@@ -28,8 +28,8 @@ class MetaService
         })->select('id', 'name', 'image_url', 'retention')->get();
 
 
-        //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-        $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();
+        //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+        $finance = Finance::orderBy('control', 'desc')->first();
         if ($finance !== null) {
             $control = $finance->control + 1;
         } else {
@@ -108,7 +108,7 @@ class MetaService
 
                             foreach($orders as $order){
                                 $order->meta = 1;
-                                $order->percent_win = $order->price;
+                                //$order->percent_win = $order->price;
                                 $order->save();
                             }
                         }
@@ -121,7 +121,7 @@ class MetaService
 
             //Venta de productos y servicios
             $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
-            $orderServPay = $orderServs->sum('price');
+            $orderServPay = $orderServs->where('meta', 0)->sum('price');
             $catServices = $orderServs->count();
             if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
                 $filteredPayments = $professionalPayments->filter(function ($payment) {

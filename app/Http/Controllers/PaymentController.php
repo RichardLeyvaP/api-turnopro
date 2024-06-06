@@ -9,6 +9,7 @@ use App\Models\CardGift;
 use App\Models\CardGiftUser;
 use App\Models\CashierSale;
 use App\Models\Finance;
+use App\Models\Order;
 use App\Services\TraceService;
 use App\Models\Payment;
 use Carbon\Carbon;
@@ -68,6 +69,7 @@ class PaymentController extends Controller
                 'code' => 'nullable'
             ]);
             Log::info($data);
+            $control = 0;
             $car = Car::find($data['car_id']);            
            $branch = Branch::where('id', $request->branch_id)->first();
             Log::info($branch);
@@ -102,8 +104,43 @@ class PaymentController extends Controller
             $payment->branch_id = $request->branch_id;
             $payment->save();
 
-
-
+            $finance = Finance::orderBy('control', 'desc')->first();
+            if ($finance !== null) {
+                $control = $finance->control + 1;
+            } else {
+                $control = 1;
+            }
+            $client = $car->clientProfessional->client->name;
+            $winProducts = Order::where('car_id', $data['car_id'])->where('is_product', 1)->sum('percent_win');
+            $services = Order::where('car_id', $data['car_id'])->where('is_product', 0)->get();
+            $winServices = $services->sum('price') - $services->sum('percent_win');
+            if($winProducts){
+                $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $winProducts;
+                            $finance->comment = 'Ingreso venta de productos a cliente ' . $client;
+                            $finance->branch_id = $request->branch_id;
+                            $finance->type = 'Sucursal';
+                            $finance->revenue_id = 7;
+                            $finance->data = Carbon::now();
+                            $finance->file = '';
+                            $finance->save();
+            }
+            if($winServices){
+                //Servicios
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $winServices;
+                $finance->comment = 'Ingreso por pago de servicios de cliente ' . $client;
+                $finance->branch_id = $request->branch_id;
+                $finance->type = 'Sucursal';
+                $finance->revenue_id = 8;
+                $finance->data = Carbon::now();
+                $finance->file = '';
+                $finance->save();
+            }
             $car->pay = 1;
             $car->active = 0;
             $car->tip = $data['tip'];
@@ -182,7 +219,9 @@ class PaymentController extends Controller
             $payment->branch_id = $request->branch_id;
             $payment->save();
 
-            CashierSale::whereIn('id', $ids)->update(['pay' => 1]);
+            CashierSale::whereIn('id', $ids)->update(['pay' => 1])->sum('percent_win');
+            $cashierSales = CashierSale::whereIn('id', $ids)->get();
+            $win = $cashierSales->sum('percent_wint');
             if($data['cash']){
                 $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
                 if (!$box) {                
@@ -206,7 +245,7 @@ class PaymentController extends Controller
             ];
             $this->traceService->store($trace);
             
-            $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
+            $finance = Finance::orderBy('control', 'desc')->first();
                             
             if($finance !== null)
             {
@@ -218,7 +257,7 @@ class PaymentController extends Controller
             $finance = new Finance();
                             $finance->control = $control;
                             $finance->operation = 'Ingreso';
-                            $finance->amount = $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift'];
+                            $finance->amount = $win;
                             $finance->comment = 'Ingreso por venta de producto en la caja de la sucursal '.$branch->name;
                             $finance->branch_id = $branch->id;
                             $finance->type = 'Sucursal';

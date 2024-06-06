@@ -65,8 +65,8 @@ class ProfessionalPaymentController extends Controller
 
             $professional = Professional::find($data['professional_id']);
 
-            //$finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();             
+            //$finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+            $finance = Finance::orderBy('control', 'desc')->first();             
             if($finance !== null)
             {
                 $control = $finance->control+1;
@@ -75,13 +75,25 @@ class ProfessionalPaymentController extends Controller
                 $control = 1;
             }
             $finance = new Finance();
-                            $finance->control = $control;
+                            $finance->control = $control++;
                             $finance->operation = 'Gasto';
                             $finance->amount = $data['amount'];
                             $finance->comment = 'Gasto por pago de curso a '.$professional->name;
                             $finance->enrollment_id = $enrollment_id;
                             $finance->type = 'Academia';
                             $finance->expense_id = 6;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
+
+                            $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $courseProfessional->course->price-$data['amount'];
+                            $finance->comment = 'Ingreso por pago de curso a '.$professional->name;
+                            $finance->enrollment_id = $enrollment_id;
+                            $finance->type = 'Academia';
+                            $finance->revenue_id = 9;
                             $finance->data = Carbon::now();                
                             $finance->file = '';
                             $finance->save();
@@ -105,8 +117,8 @@ class ProfessionalPaymentController extends Controller
 
             $professional = Professional::find($data['professional_id']);
 
-            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();         
+            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+            $finance = Finance::orderBy('control', 'desc')->first();         
             if($finance !== null)
             {
                 $control = $finance->control+1;
@@ -165,7 +177,7 @@ class ProfessionalPaymentController extends Controller
 
             $professional = Professional::find($data['professional_id']);
 
-            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();
+            $finance = Finance::orderBy('control', 'desc')->first();
                             
             if($finance !== null)
             {

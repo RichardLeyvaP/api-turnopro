@@ -43,6 +43,7 @@ class OperationTipController extends Controller
                 'coffe_percent' => 'required|numeric',
                 'type' => 'required|string',
             ]);
+            $control = 0;
             /*$operationTip = OperationTip::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->first();
             if ($operationTip !== null) {
                 $operationTip->amount = $operationTip->amount + $data['amount'];
@@ -68,19 +69,19 @@ class OperationTipController extends Controller
                 Car::whereIn('id', $carIds)->update(['operation_tip_id' => $operationTip->id]);
             }
             if($data['coffe_percent']){
-                $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first(); 
+                $finance = Finance::orderBy('control', 'desc')->first(); 
             /*if ($finance !== null) {
                 $finance->amount = $finance->amount + $data['coffe_percent'];
                 $finance->save();
             } else {
-                $finance = Finance::where('branch_id', $data['branch_id'])->orderByDesc('control')->first();*/
+                $finance = Finance::where('branch_id', $data['branch_id'])orderBy('control', 'desc')->first();*/
                 if ($finance) {
                     $control = $finance->control + 1;
                 } else {
                     $control = 1;
                 }
                 $finance = new Finance();
-                $finance->control = $control;
+                $finance->control = $control++;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['coffe_percent'];
                 $finance->comment = 'Ingreso por concepto de 10% de propinas en sucursal  '.$branch->name;
@@ -93,18 +94,18 @@ class OperationTipController extends Controller
             //}
             }
             $professional = Professional::find($data['professional_id']);
-            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-            $finance = Finance::where('operation', 'Gasto')->orderByDesc('control')->first();              
+            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+            /*$finance = Finance::orderBy('control', 'desc')->first();              
             if($finance !== null)
             {
                 $control = $finance->control+1;
             }
             else {
                 $control = 1;
-            }
+            }*/
             Log::info($control);
             $finance = new Finance();
-                            $finance->control = $control;
+                            $finance->control = $control++;
                             $finance->operation = 'Gasto';
                             $finance->amount = $data['amount'];
                             $finance->comment = 'Gasto por pago de 10% de propinas a cajero (a) '.$professional->name;

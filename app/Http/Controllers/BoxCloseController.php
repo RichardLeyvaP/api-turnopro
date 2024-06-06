@@ -124,10 +124,10 @@ class BoxCloseController extends Controller
             Log::info('$trace');
             Log::info($trace);
             //Agregar a tabla de ingresos
-            //$finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 5)->whereDate('data', Carbon::now())->orderByDesc('control')->first();
-            $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
+            //$finance = Finance::where('branch_id', $branch->id)->where('revenue_id', 5)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+            $finance = Finance::orderBy('control', 'desc')->first();
             Log::info('no existe');
-            //$finance = Finance::where('branch_id', $branch->id)->orderByDesc('control')->first();
+            //$finance = Finance::where('branch_id', $branch->id)orderBy('control', 'desc')->first();
             if ($finance !== null) {
                 $control = $finance->control + 1;
             } else {

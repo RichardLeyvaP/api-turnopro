@@ -79,7 +79,7 @@ class ProductSaleController extends Controller
             }
             else{
                 Log::info('no existe');*/
-                $finance = Finance::where('operation', 'Ingreso')->orderByDesc('control')->first();
+                $finance = Finance::orderBy('control', 'desc')->first();
                 if($finance)
                     {
                         $control = $finance->control+1;
