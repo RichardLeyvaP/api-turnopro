@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Comment;
+use App\Models\Professional;
 use App\Models\Tail;
 use App\Models\Reservation;
 use App\Services\TailService;
@@ -467,6 +468,48 @@ class TailController extends Controller
             } catch (\Throwable $th) {  
                 Log::error($th);
                     return response()->json(['msg' => $th->getMessage()."Error al mostrar las Cola"], 500);
+            } 
+    }
+
+    public function reasigned_client_totem(Request $request)
+    {
+        try { 
+            
+            Log::info( "Reasignar Cliente a barbero");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
+            ]);
+            $tail = Tail::whereHas('reservation', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
+            })->where('aleatorie', 1)->first();
+            if ($tail==null) {
+                return response()->json('Si', 200);
+            }else {
+                $car = $tail->reservation->car;
+                $client = $car->clientProfessional->client;
+                $professional = Professional::find($data['professional_id']);
+                $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+                if(!$client_professional){
+                    Log::info("no existe");
+                    $professional->clients()->attach($client->id);
+                    $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+                    Log::info($client_professional_id);
+                }
+                else{
+                    $client_professional_id = $client_professional->pivot->id;
+                    Log::info($client_professional_id);
+                }
+                $car->client_professional_id = $client_professional_id;
+                $car->save();
+                $tail->aleatorie = 2;
+                $tail->save();                
+            return response()->json('No', 200);
+            }
+            
+            } catch (\Throwable $th) {  
+                Log::error($th);
+                    return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
             } 
     }
 }

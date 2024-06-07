@@ -708,7 +708,12 @@ class ReservationController extends Controller
                 ->whereDoesntHave('tail')
                 ->orderBy('start_time')->get();
             foreach ($reservations as $reservation) {
-                $cola = $reservation->tail()->create();
+                if ($reservation->car->select_professional == 0) {
+                    $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                }else {
+                    $cola = $reservation->tail()->create();
+                }
+                
             }
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {

@@ -285,6 +285,9 @@ class TailService {
     public function tail_attended($reservation_id, $attended){
         $tecnicoId = 0;
         $tail = Tail::where('reservation_id', $reservation_id)->first();
+        if ($attended == 1) {
+            $tail->aleatorie = 0;
+        }
         $tail->attended = $attended;
         $tail->save();
         if($attended == 2){

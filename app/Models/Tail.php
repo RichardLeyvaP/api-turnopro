@@ -9,6 +9,7 @@ class Tail extends Model
 {
     use HasFactory;
     
+    protected $guarded = [];
     public function reservation() {
         
         return $this->belongsTo(Reservation::class);
