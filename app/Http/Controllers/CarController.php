@@ -1102,7 +1102,8 @@ class CarController extends Controller
                         'totalServices' => intval($amountServ - $retention),
                         'clientAleator' => $car->select_professional,
                         'amountGenerate' => intval($car->amount),
-                        'tip' => $car->tip * 0.80
+                        'tip' => $car->tip * 0.80,
+                        'meta' => ($orderServ->count() == 1 && $amountServ == 0) ? 'Si' : 'No'  
                     ];
                 });
 

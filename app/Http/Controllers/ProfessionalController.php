@@ -34,7 +34,7 @@ class ProfessionalController extends Controller
     {
         try {
             $now = Carbon::now();
-            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) use ($now){
+            $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) use ($now) {
                 return [
                     'id' => $professional->id,
                     'name' => $professional->name,
@@ -54,7 +54,7 @@ class ProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar las professionales"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las professionales"], 500);
         }
     }
     /*public function index()
@@ -67,7 +67,7 @@ class ProfessionalController extends Controller
     }*/
     public function show_autocomplete_Notin(Request $request)
     {
-        try {             
+        try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -82,14 +82,13 @@ class ProfessionalController extends Controller
 
                 ];
             });
-                return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
-          
-            } catch (\Throwable $th) {  
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
             Log::error($th);
-        return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
-    
+
     public function show_autocomplete(Request $request)
     {
         try {
@@ -114,7 +113,7 @@ class ProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->get()->map(function ($professional) {
                 return [
@@ -149,12 +148,12 @@ class ProfessionalController extends Controller
                 'id' => 'required|numeric'
             ]);
             $professional = Professional::where('id', $professionals_data['id'])->first();
-            if($professional !== null)
-            return $professional->state;
-        else
-        return -1;
+            if ($professional !== null)
+                return $professional->state;
+            else
+                return -1;
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
 
@@ -182,37 +181,65 @@ class ProfessionalController extends Controller
             // Verificar si hay reservas para este profesional y día
             if ($professional && $professional->reservations->isNotEmpty()) {
                 // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
-                if (Carbon::parse($data['data'])->isToday()){
-                    $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation){
+                if (Carbon::parse($data['data'])->isToday()) {
+                    $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation) {
                         $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                         $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-    
+
                         $intervalos = [$startFormatted];
                         $startTime = Carbon::parse($startFormatted);
-                        $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
-    
+                        //$finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '15' : ($finalMinutes <= 30 ? '30' : ($finalMinutes <= 45 ? '45' : '00')));
+                                                
+                                                $finalTime = Carbon::parse($reservation->final_hour);
+                        $finalMinutes = $finalTime->minute;
+
+                        if ($finalMinutes <= 15) {
+                            $roundedMinutes = '15';
+                        } elseif ($finalMinutes <= 30) {
+                            $roundedMinutes = '30';
+                        } elseif ($finalMinutes <= 45) {
+                            $roundedMinutes = '45';
+                        } else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '00';
+                        }
+
+                        $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                         $finalTime = Carbon::parse($finalFormatted);
                         $horaActual = Carbon::now();
+                        $horaActualMas2Horas = $horaActual->copy()->addHours(2);
+
                         if ($finalTime->lessThan($horaActual)) {
+                            // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
+                            $finalTime = $horaActual;
+                        }
+                        // Si $finalTime es menor que la hora actual más 2 horas, asignar la hora actual más 2 horas a $finalTime
+                        if ($finalTime->lessThan($horaActualMas2Horas)) {
+                            $finalTime = $horaActualMas2Horas;
+                        }
+                        while ($startTime->addMinutes(15) <= $finalTime) {
+                            $intervalos[] = $startTime->format('H:i');
+                        }
+                        /*if ($finalTime->lessThan($horaActual)) {
                             // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
                             $finalTime = $horaActual;
                         }
                         // Agregar las horas intermedias de 15 en 15 minutos
                         while ($startTime->addMinutes(15) <= $finalTime) {
                             $intervalos[] = $startTime->format('H:i');
-                        }
-    
+                        }*/
+
                         return $intervalos;
                     })->flatten()->values()->all();
-                }else{
-                    $reservations = $professional->reservations->map(function ($reservation){
+                } else {
+                    $reservations = $professional->reservations->map(function ($reservation) {
                         $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                         $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-    
+
                         $intervalos = [$startFormatted];
                         $startTime = Carbon::parse($startFormatted);
                         $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
-    
+
                         $finalTime = Carbon::parse($finalFormatted);
                         $horaActual = Carbon::now();
                         if ($finalTime->lessThan($horaActual)) {
@@ -223,11 +250,11 @@ class ProfessionalController extends Controller
                         while ($startTime->addMinutes(15) <= $finalTime) {
                             $intervalos[] = $startTime->format('H:i');
                         }
-    
+
                         return $intervalos;
                     })->flatten()->values()->all();
                 }
-                
+
                 if (Carbon::parse($data['data'])->isToday()) {
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
@@ -250,11 +277,11 @@ class ProfessionalController extends Controller
                     // Verificar si la hora actual es menor que el primer start_time de las reservas del día
                     //$firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
                     //if ($currentDateTime->lessThan($firstReservationStartTime)) {
-                        $startTime = Carbon::parse($start_time);
-                        while ($startTime <= $currentDateTime) {
-                            $reservations[] = $startTime->format('H:i');
-                            $startTime->addMinutes(15);
-                        }
+                    $startTime = Carbon::parse($start_time);
+                    while ($startTime <= $currentDateTime) {
+                        $reservations[] = $startTime->format('H:i');
+                        $startTime->addMinutes(15);
+                    }
                     //}
                 }
                 //$reservations = [];
@@ -358,20 +385,20 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $now = Carbon::now();
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })/*->whereHas('charge', function ($query) {
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })/*->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })*/->get()->map(function ($query) use ($now){
-            return [
-                'id' => $query->id,
-                'name' => $query->name,
-                'charge' => $query->charge->name,
-                'image_url' => $query->image_url.'?$'.$now,
-                'email' => $query->email
-            ];
-           });
-           
+        })*/->get()->map(function ($query) use ($now) {
+                return [
+                    'id' => $query->id,
+                    'name' => $query->name,
+                    'charge' => $query->charge->name,
+                    'image_url' => $query->image_url . '?$' . $now,
+                    'email' => $query->email
+                ];
+            });
+
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
@@ -384,18 +411,18 @@ class ProfessionalController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->whereHas('charge', function ($query) {
-            $query->where('name', 'Cajero (a)');
-        })->get()->map(function ($query){
-            return [
-                'id' => $query->id,
-                'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
-                'charge' => $query->charge->name
-            ];
-           });
-           
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })->whereHas('charge', function ($query) {
+                $query->where('name', 'Cajero (a)');
+            })->get()->map(function ($query) {
+                return [
+                    'id' => $query->id,
+                    'name' => $query->name . ' ' . $query->surname . ' ' . $query->second_surname,
+                    'charge' => $query->charge->name
+                ];
+            });
+
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
@@ -492,7 +519,7 @@ class ProfessionalController extends Controller
             $ganancias = $this->professionalService->professionals_ganancias($data);
             return response()->json(['earningByDay' => $ganancias], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Profssional no obtuvo ganancias en este período"], 500);
+            return response()->json(['msg' => $th->getMessage() . "Profssional no obtuvo ganancias en este período"], 500);
         }
     }
 
@@ -628,7 +655,7 @@ class ProfessionalController extends Controller
                 ], 401);
             }
             $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
-            if($userName){
+            if ($userName) {
                 return response()->json([
                     'msg' => 'Usuario ya existe'
                 ], 400);
@@ -639,12 +666,12 @@ class ProfessionalController extends Controller
             $user->save();
 
             if ($request->hasFile('image_url')) {
-                if($professional->image_url != 'professionals/default.jpg'){
-                $destination = public_path("storage\\" . $professional->image_url);
-                if (File::exists($destination)) {
-                    File::delete($destination);
+                if ($professional->image_url != 'professionals/default.jpg') {
+                    $destination = public_path("storage\\" . $professional->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
                 }
-                }    
                 $professional->image_url = $request->file('image_url')->storeAs('professionals', $professional->id . '.' . $request->file('image_url')->extension(), 'public');
             }
             $professional->name = $professionals_data['name'];
@@ -655,7 +682,7 @@ class ProfessionalController extends Controller
             $professional->charge_id = $professionals_data['charge_id'];
             $professional->state = $professionals_data['state'];
             $professional->retention = $professionals_data['retention'];
-            
+
             //$professional->image_url = $filename;
             $professional->save();
 
@@ -685,13 +712,13 @@ class ProfessionalController extends Controller
             $user = User::find($professional->user_id);
             if ($user) {
                 Professional::destroy($professionals_data['id']);
-            }else{         
-                Professional::destroy($professionals_data['id']);  
-            User::destroy($user->id);
+            } else {
+                Professional::destroy($professionals_data['id']);
+                User::destroy($user->id);
             }
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage().'Error al eliminar la professional'], 500);
+            return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la professional'], 500);
         }
     }
 
@@ -721,16 +748,15 @@ class ProfessionalController extends Controller
                 $clientImage = '';
                 $type = 'Professional';
                 return response()->json(['user' => $user, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
-                
             }
             $client = Client::with('user')->where('email', $request->email)->first();
             //$professional = Professional::with('user')->where('email', $request->email)->first();
-            if($client != null){
+            if ($client != null) {
                 $user = $client->user->id;
                 $clientName = $client->name;
                 $clientImage = $client->client_image;
                 $type = 'Client';
-            }else {
+            } else {
                 $user = '';
                 $clientName = '';
                 $clientImage = '';

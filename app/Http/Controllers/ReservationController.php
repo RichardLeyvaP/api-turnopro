@@ -130,7 +130,7 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'email_client' => 'required',
                 'phone_client' => 'required',
-                'name_client' => 'required'//,
+                'name_client' => 'required' //,
                 //'surname_client' => 'required',
                 //'second_surname' => 'required',
             ]);
@@ -220,47 +220,45 @@ class ReservationController extends Controller
                 $this->reservation_tail();
                 Log::info("5.actualice la cola");
             }
-            if($data['from_home'] == 1){
+            if ($data['from_home'] == 1) {
                 $code = $reservation->code;
                 //optener nombre del professional
-            $professional = Professional::find($data['professional_id']);
-            $name = $professional->name;
-            //todo *************** llamando al servicio de envio de email *******************
-            //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
-            //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
-            if($reservation != null){
-                $id = $reservation->id;
-            }
-            else{
-                $id = 0; 
-            }
-            Log::info('Id de la reservacion');
-            Log::info($id);
-            $data = [
-                'confirm_reservation' => true, // Indica que es una confirmación de reserva
-                'data_reservation' => $data['data'], // Datos de la reserva
-                'start_time' => $data['start_time'], // Hora de inicio
-                'client_id' => $id_client, // ID del cliente
-                'branch_id' => $data['branch_id'], // ID de la sucursal
-                'type' => null, // Tipo (en este caso, se deja como null)
-                'name_professional' => $name, // Nombre del profesional
-                'recipient' => null, // Destinatario (en este caso, se deja como null),                
-                'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
-                'code_reserva' => $code                
-            ];
-            
-            SendEmailJob::dispatch($data);
+                $professional = Professional::find($data['professional_id']);
+                $name = $professional->name;
+                //todo *************** llamando al servicio de envio de email *******************
+                //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+                //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+                if ($reservation != null) {
+                    $id = $reservation->id;
+                } else {
+                    $id = 0;
+                }
+                Log::info('Id de la reservacion');
+                Log::info($id);
+                $data = [
+                    'confirm_reservation' => true, // Indica que es una confirmación de reserva
+                    'data_reservation' => $data['data'], // Datos de la reserva
+                    'start_time' => $data['start_time'], // Hora de inicio
+                    'client_id' => $id_client, // ID del cliente
+                    'branch_id' => $data['branch_id'], // ID de la sucursal
+                    'type' => null, // Tipo (en este caso, se deja como null)
+                    'name_professional' => $name, // Nombre del profesional
+                    'recipient' => null, // Destinatario (en este caso, se deja como null),                
+                    'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
+                    'code_reserva' => $code
+                ];
+
+                SendEmailJob::dispatch($data);
             }
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {
-    
+
             return response()->json(['msg' => 'Reservación realizada correctamente.Error al enviar el correo electrónico '], 200);
-        }
-          catch (\Throwable $th) {
-              Log::error($th);
-            
-              DB::rollback();
-              return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
 
@@ -296,15 +294,15 @@ class ReservationController extends Controller
             $dates = [];
             $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->where('branch_id', $data['branch_id'])->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->orderBy('data')->get();
-            foreach ($reservations as $reservation) {   
-                $client = $reservation['car']['clientProfessional']['client'];   
-                $startTime = Carbon::parse($reservation['start_time']);            
-            $dates[] = [
-                'startDate' => Carbon::parse($reservation['data'].' '.$reservation['start_time'])->toDateTimeString(),
-                'endDate' => Carbon::parse($reservation['data'].' '.$reservation['final_hour'])->toDateTimeString(),
-                'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
-            ];
+            })->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
+            foreach ($reservations as $reservation) {
+                $client = $reservation['car']['clientProfessional']['client'];
+                $startTime = Carbon::parse($reservation['start_time']);
+                $dates[] = [
+                    'startDate' => Carbon::parse($reservation['data'] . ' ' . $reservation['start_time'])->toDateTimeString(),
+                    'endDate' => Carbon::parse($reservation['data'] . ' ' . $reservation['final_hour'])->toDateTimeString(),
+                    'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
+                ];
             }
             $sortedDates = collect($dates)->sortBy('startDate')->values()->all();
             return response()->json(['reservaciones' => $sortedDates], 200, [], JSON_NUMERIC_CHECK);
@@ -313,7 +311,7 @@ class ReservationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
-    
+
     public function branch_reservations_periodo(Request $request)
     {
         try {
@@ -325,15 +323,15 @@ class ReservationController extends Controller
             ]);
             $dates = [];
             $professionalDates = [];
-            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->orderBy('data')->get();
-            foreach ($reservations as $reservation) {   
-                $client = $reservation['car']['clientProfessional']['client'];  
-                $startTime = Carbon::parse($reservation['start_time']);           
-            $dates[] = [
-                'startDate' => Carbon::parse($reservation['data'].' '.$reservation['start_time'])->toDateTimeString(),
-                'endDate' => Carbon::parse($reservation['data'].' '.$reservation['final_hour'])->toDateTimeString(),
-                'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
-            ];
+            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
+            foreach ($reservations as $reservation) {
+                $client = $reservation['car']['clientProfessional']['client'];
+                $startTime = Carbon::parse($reservation['start_time']);
+                $dates[] = [
+                    'startDate' => Carbon::parse($reservation['data'] . ' ' . $reservation['start_time'])->toDateTimeString(),
+                    'endDate' => Carbon::parse($reservation['data'] . ' ' . $reservation['final_hour'])->toDateTimeString(),
+                    'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
+                ];
             }
             $sortedDates = collect($dates)->sortBy('startDate')->values()->all();
             $professionals = Professional::with('charge')->whereHas('branches', function ($query) use ($data) {
@@ -341,7 +339,7 @@ class ReservationController extends Controller
             })->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
             })->get();
-            foreach($professionals as $professional){
+            foreach ($professionals as $professional) {
                 $professionalDates[] = [
                     'id' => $professional['id'],
                     'name' => $professional['name'],
@@ -432,9 +430,9 @@ class ReservationController extends Controller
                         'start_time' => $reservation->start_time,
                         'end_time' => $reservation->final_hour,
                         'total_time' => $reservation->total_time
-    
+
                     ];
-                }); 
+                });
 
                 for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $reservations->where('data', $date->toDateString())->count();
@@ -462,9 +460,9 @@ class ReservationController extends Controller
                         'start_time' => $reservation->start_time,
                         'end_time' => $reservation->final_hour,
                         'total_time' => $reservation->total_time
-    
+
                     ];
-                }); 
+                });
                 for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $reservations->where('data', $date->toDateString())->count();
                     //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
@@ -534,11 +532,11 @@ class ReservationController extends Controller
 
             // Consultar reservas con fecha igual a dos días en adelante
             $reservations = Reservation::with(['branch', 'car.clientProfessional'])->whereDate('data', $twoDaysLater)->get();
-            foreach($reservations as $reservation){
+            foreach ($reservations as $reservation) {
                 $branchId = $reservation['branch']['id'];
                 $id_client = $reservation['car']['clientProfessional']['client']['id'];
                 $professional = $reservation['car']['clientProfessional']['professional'];
-                $professionalName = $professional['name'].' '.$professional['surname'];
+                $professionalName = $professional['name'] . ' ' . $professional['surname'];
                 $data = $reservation['data'];
                 $startTime = $reservation['start_time'];
                 $reservationId = $reservation['id'];
@@ -553,22 +551,21 @@ class ReservationController extends Controller
                     'name_professional' => $professionalName, // Nombre del profesional
                     'recipient' => null, // Destinatario (en este caso, se deja como null),                
                     'id_reservation' => $reservationId, // Destinatario (en este caso, se deja como null),
-                    'code_reserva' => $code_reserva                
+                    'code_reserva' => $code_reserva
                 ];
-                
+
                 SendEmailJob::dispatch($data);
             }
 
             return response()->json(['reservaciones' => 'Correos enviados'], 200, [], JSON_NUMERIC_CHECK);
         } catch (TransportException $e) {
-    
+
             return response()->json(['msg' => 'Correos de recordar reserva enviados'], 200);
-        }
-          catch (\Throwable $th) {
-              Log::error($th);
-            
-              DB::rollback();
-              return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
 
@@ -582,33 +579,31 @@ class ReservationController extends Controller
             ]);
             $msg = '';
             $reservacion = Reservation::find($data['id']);
-            if($reservacion){
-            if (!Carbon::parse($reservacion->data)->isToday()  && Carbon::parse($reservacion->data)->isFuture())
-            {
-                $reservacion->confirmation = $data['confirmation'];
-                $reservacion->save();
-                if($data['confirmation'] == 1 ){
-                    return redirect('https://administracion.simplifies.cl/reserv/confirmation');
-                    //return redirect('http://localhost:3000/reserv/confirmation');
+            if ($reservacion) {
+                if (!Carbon::parse($reservacion->data)->isToday()  && Carbon::parse($reservacion->data)->isFuture()) {
+                    $reservacion->confirmation = $data['confirmation'];
+                    $reservacion->save();
+                    if ($data['confirmation'] == 1) {
+                        return redirect('https://administracion.simplifies.cl/reserv/confirmation');
+                        //return redirect('http://localhost:3000/reserv/confirmation');
+                    } else if ($data['confirmation'] == 3) {
+                        return redirect('https://administracion.simplifies.cl/reserv/cancelation');
+                        //return redirect('http://localhost:3000/reserv/cancelation');
+                    }
+                } else {
+                    return redirect('https://administracion.simplifies.cl/reserv/denied');
+                    //return redirect('http://localhost:3000/reserv/denied');
                 }
-                else if($data['confirmation'] == 3 ){
-                    return redirect('https://administracion.simplifies.cl/reserv/cancelation');
-                    //return redirect('http://localhost:3000/reserv/cancelation');
-                }
-            }else{
+            } else {
                 return redirect('https://administracion.simplifies.cl/reserv/denied');
                 //return redirect('http://localhost:3000/reserv/denied');
             }
-        }else{
-            return redirect('https://administracion.simplifies.cl/reserv/denied');
-            //return redirect('http://localhost:3000/reserv/denied');
-        }
-            
+
 
             //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
+            return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);
         }
     }
 
@@ -616,53 +611,91 @@ class ReservationController extends Controller
     {
         try {
             $data = $request->validate([
-                'code' => 'required',                
-                'branch_id' => 'required|numeric',                
+                'code' => 'required',
+                'branch_id' => 'required|numeric',
 
             ]);
             $reservacion = Reservation::where('code', $data['code'])->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->first();
-            if($reservacion!=null){
-                if($reservacion->confirmation == 3){
+            if ($reservacion != null) {
+                if ($reservacion->confirmation == 3) {
                     return response()->json(3, 200, [], JSON_NUMERIC_CHECK);
-                }else{
+                } else {
                     $reservacion->confirmation = 4;
                     $reservacion->save();
                     return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
                 }
-        }else{
-            return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
-            //return redirect('http://localhost:3000/reserv/denied');
-        }
-            
+            } else {
+                return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
+                //return redirect('http://localhost:3000/reserv/denied');
+            }
+
 
             //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
+            return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);
         }
     }
 
     public function update_confirmation_client(Request $request)
     {
         try {
-            $data = $request->validate([               
-                'reservation_id' => 'required|numeric',                
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
 
             ]);
             $reservacion = Reservation::find($data['reservation_id']);
-            if($reservacion){
+            $professional = $reservacion->car->clientProfessional->professional;
+            $branch_id = $reservacion->branch_id;
+            $horaInicioReservacion = Carbon::createFromFormat('H:i:s', $reservacion->start_time);
+
+            // Sumamos 10 minutos al start_time
+            $horaInicioMas10Minutos = $horaInicioReservacion->addMinutes(10);
+
+            // Obtenemos la hora actual
+            $horaActual = Carbon::now();
+
+            if ($horaInicioMas10Minutos->gt($horaActual)) {
+                if ($reservacion) {
                     $reservacion->confirmation = 4;
                     $reservacion->save();
+                }
+                return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
+            } else {
+                $professionals = Professional::where('id', $professional->id)->where(function ($query) {
+                    $query->orWhereDoesntHave('tails')
+                        ->orWhereHas('tails', function ($subquery) {
+                            $subquery->whereIn('attended', [0, 2, 3]);
+                        })
+                        ->orWhereHas('tails', function ($subquery) {
+                            $subquery->where('attended', '!=', 1)
+                                ->orWhereNull('start_time');
+                        });
+                })->get();
+                if ($professionals->isNotEmpty()) {
+                    if ($reservacion) {
+                        $reservacion->confirmation = 4;
+                        $reservacion->save();
+                    }
                     return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
-                }else{
-            return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
-            //return redirect('http://localhost:3000/reserv/denied');
-        }           
+                }
+                else{
+                return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
+                }
+            }
+            /*if ($reservacion) {
+                $reservacion->confirmation = 4;
+                $reservacion->save();
+                return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
+            } else {
+                return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
+                //return redirect('http://localhost:3000/reserv/denied');
+            }*/
 
             //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getmessage().'Error al actualizar la reservacion'], 500);
+            return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);
         }
     }
 
@@ -733,13 +766,13 @@ class ReservationController extends Controller
             $reservacionIds = Reservation::whereDate('data', $fechaCarbon)->where('confirmation', 0)->pluck('id');
             foreach ($reservacionIds as $reservacionId) {
                 $reservation = Reservation::find($reservacionId);
-            $reservation->cause = 'No confimada';
-            $reservation->save();
-            $tail = Tail::where('reservation_id', $reservation->id);
-            if ($tail) {
-                $tail->delete();
-            }
-            $reservation->delete();
+                $reservation->cause = 'No confimada';
+                $reservation->save();
+                $tail = Tail::where('reservation_id', $reservation->id);
+                if ($tail) {
+                    $tail->delete();
+                }
+                $reservation->delete();
             }
 
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
