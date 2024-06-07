@@ -108,7 +108,7 @@ class MetaService
 
                             foreach($orders as $order){
                                 $order->meta = 1;
-                                //$order->percent_win = $order->price;
+                                $order->percent_win = 0;
                                 $order->save();
                             }
                         }
@@ -170,9 +170,9 @@ class MetaService
             $percentWinSum = 0;
             if (!$cars->isEmpty())
                 if ($retentionP) {
-                    foreach ($cars as $car) {
-                        $percentWinSum += $car->orders->where('is_product', 0)->sum('percent_win');
-                    }
+                    //foreach ($cars as $car) {
+                        $percentWinSum = $orderServs->where('meta', 0)->sum('percent_win');
+                    //}
                     if ($percentWinSum) {
                         if($retentionP){
                             $retention = new Retention();
