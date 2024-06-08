@@ -484,7 +484,7 @@ class TailController extends Controller
                 $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
             })->where('aleatorie', 1)->first();
             if ($tail==null) {
-                return response()->json('Si', 200);
+                return response()->json(0, 200);
             }else {
                 $car = $tail->reservation->car;
                 $client = $car->clientProfessional->client;
@@ -504,7 +504,7 @@ class TailController extends Controller
                 $car->save();
                 $tail->aleatorie = 2;
                 $tail->save();                
-            return response()->json('No', 200);
+            return response()->json(1, 200);
             }
             
             } catch (\Throwable $th) {  
