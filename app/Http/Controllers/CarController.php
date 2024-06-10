@@ -1103,7 +1103,8 @@ class CarController extends Controller
                         'clientAleator' => $car->select_professional,
                         'amountGenerate' => intval($car->amount),
                         'tip' => $car->tip * 0.80,
-                        'meta' => ($orderServ->count() == 1 && $amountServ == 0) ? 'Si' : 'No'  
+                        'meta' => ($orderServ->count() == 1 && $amountServ == 0) ? 'Si' : 'No',
+                        'selectable' => ($orderServ->count() == 1 && $amountServ == 0) ? false : true
                     ];
                 });
 
