@@ -155,6 +155,7 @@ class SendEmailJob implements ShouldQueue
                 $this->data['totalOther'],
                 $this->data['totalMount'],                
                 $this->data['totalCardGif'],
+                $this->data['totalBonus']
             );
         }
         if (isset($this->data['email_box_closure_monthly'])) {
