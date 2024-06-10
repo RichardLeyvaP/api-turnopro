@@ -1104,7 +1104,7 @@ class CarController extends Controller
                         'amountGenerate' => intval($car->amount),
                         'tip' => $car->tip * 0.80,
                         'meta' => ($orderServ->count() == 1 && $amountServ == 0) ? 'Si' : 'No',
-                        'selectable' => ($orderServ->count() == 1 && $amountServ == 0) ? false : true
+                        'selectable' => ($orderServ->count() == 1 && $amountServ == 0 && ($car->tip * 0.80)<=0) ? false : true
                     ];
                 });
 
