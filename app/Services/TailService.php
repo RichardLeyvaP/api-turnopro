@@ -493,6 +493,13 @@ class TailService {
             $client_professional_id = $client_professional->pivot->id;
             Log::info($client_professional_id);
         }
+        $tail = $reservation->tail;
+        if ($tail) {
+            if ($tail->aleatorie != 0) {
+                $tail->aleatorie = 1;
+                $tail->save();
+            }
+        }
         $car->client_professional_id = $client_professional_id;
         $car->save();
         

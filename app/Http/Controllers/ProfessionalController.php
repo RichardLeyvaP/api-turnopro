@@ -190,7 +190,7 @@ class ProfessionalController extends Controller
                         $startTime = Carbon::parse($startFormatted);
                         //$finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '15' : ($finalMinutes <= 30 ? '30' : ($finalMinutes <= 45 ? '45' : '00')));
                                                 
-                                                $finalTime = Carbon::parse($reservation->final_hour);
+                        $finalTime = Carbon::parse($reservation->final_hour);
                         $finalMinutes = $finalTime->minute;
 
                         if ($finalMinutes <= 15) {
@@ -238,8 +238,23 @@ class ProfessionalController extends Controller
 
                         $intervalos = [$startFormatted];
                         $startTime = Carbon::parse($startFormatted);
-                        $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '00' : ($finalMinutes <= 30 ? '15' : ($finalMinutes <= 45 ? '30' : '45')));
+                        //$finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '15' : ($finalMinutes <= 30 ? '30' : ($finalMinutes <= 45 ? '45' : '00')));
+                                                
+                        $finalTime = Carbon::parse($reservation->final_hour);
+                        $finalMinutes = $finalTime->minute;
 
+                        if ($finalMinutes <= 15) {
+                            $roundedMinutes = '15';
+                        } elseif ($finalMinutes <= 30) {
+                            $roundedMinutes = '30';
+                        } elseif ($finalMinutes <= 45) {
+                            $roundedMinutes = '45';
+                        } else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '00';
+                        }
+
+                        $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                         $finalTime = Carbon::parse($finalFormatted);
                         $horaActual = Carbon::now();
                         if ($finalTime->lessThan($horaActual)) {
