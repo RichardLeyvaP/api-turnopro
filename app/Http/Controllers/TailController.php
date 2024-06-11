@@ -2,11 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Box;
+use App\Models\BoxClose;
 use App\Models\Branch;
+use App\Models\Car;
+use App\Models\CashierSale;
+use App\Models\Client;
 use App\Models\Comment;
+use App\Models\Finance;
+use App\Models\Notification;
+use App\Models\OperationTip;
+use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Professional;
+use App\Models\ProfessionalPayment;
+use App\Models\ProfessionalWorkPlace;
+use App\Models\Record;
 use App\Models\Tail;
 use App\Models\Reservation;
+use App\Models\Retention;
+use App\Models\Trace;
+use App\Models\User;
 use App\Services\TailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -374,6 +390,38 @@ class TailController extends Controller
                 } catch (\Throwable $th) {  
                     Log::error($th);
                     return response()->json(['msg' => "Error al eliminar la Tail"], 500);
+                } 
+    }
+
+    public function table_test_truncate()
+    {
+        try { 
+            
+            Log::info( "Vaciar tablas para prueba");
+           // Eliminar todos los registros de la tabla box_closes
+            BoxClose::query()->delete();
+
+            // Eliminar todos los registros de la tabla boxes
+            Box::query()->delete(); 
+            Car::query()->delete();//car, reservation, tail y orders
+            Finance::truncate();//Finance
+            OperationTip::query()->delete();//pago a cajera de cars
+            Payment::query()->delete();//pago de cars
+            ProfessionalPayment::query()->delete();//pago a professionales
+            CashierSale::truncate();//pago a professionales
+            Retention::truncate();//Retenciones de los professionales
+            Trace::truncate();//Operaciones realizadas en la caja
+            Notification::truncate();//Notificaciones
+            Comment::truncate();//Clientes
+            Client::query()->delete();//Clientes
+            ProfessionalWorkPlace::truncate();//Professionals puestos de trabajo
+            Record::truncate();//Hora de entrada y salida de los professionales
+            User::whereDoesntHave('professional')->delete();//borrar los usuarios que no professionales
+
+            return response()->json(['msg' => "Tablas vaciadas correctamente"], 200);
+                } catch (\Throwable $th) {  
+                    Log::error($th);
+                    return response()->json(['msg' => $th->getMessage()."Error al eliminar la Tail"], 500);
                 } 
     }
 

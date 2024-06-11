@@ -343,6 +343,7 @@ Route::get('/cola_branch_data2', [TailController::class, 'cola_branch_data2']); 
 Route::get('/cola_branch_professional', [TailController::class, 'cola_branch_professional']); //dado un branch_id  y un professional_id devolver la cola de esa branch
 Route::get('/cola_branch_professional_new', [TailController::class, 'cola_branch_professional_new']); //dado un branch_id  y un professional_id devolver la cola de esa branch y los servicios por carros
 Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar la cola
+Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate']); //vaciar la cola
 Route::get('/cola_branch_delete', [TailController::class, 'cola_branch_delete']); //vaciar la cola de una branch_id
 Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado
 Route::get('/type_of_service', [TailController::class, 'type_of_service']); //Saber si dentro del cliente q esta atendido uno de los servicios es simutaneu
