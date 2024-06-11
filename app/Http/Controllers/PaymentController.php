@@ -219,7 +219,7 @@ class PaymentController extends Controller
             $payment->branch_id = $request->branch_id;
             $payment->save();
 
-            CashierSale::whereIn('id', $ids)->update(['pay' => 1])->sum('percent_win');
+            CashierSale::whereIn('id', $ids)->update(['pay' => 1]);
             $cashierSales = CashierSale::whereIn('id', $ids)->get();
             $win = $cashierSales->sum('percent_wint');
             if($data['cash']){
@@ -258,7 +258,7 @@ class PaymentController extends Controller
                             $finance->control = $control;
                             $finance->operation = 'Ingreso';
                             $finance->amount = $win;
-                            $finance->comment = 'Ingreso por venta de producto en la caja de la sucursal '.$branch->name;
+                            $finance->comment = 'Ingreso venta de productos en la caja de la sucursal '.$branch->name;
                             $finance->branch_id = $branch->id;
                             $finance->type = 'Sucursal';
                             $finance->revenue_id = 7;

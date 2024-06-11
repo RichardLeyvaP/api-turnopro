@@ -267,6 +267,23 @@ class OrderController extends Controller
                     'category' => $order->is_product ? $product->productCategory->name : $order->branchServiceProfessional->type_service,
                 ];
             });
+            if($car->technical_assistance){
+                // Agregar una nueva fila al arreglo
+                $newRow = [
+                    'id' => null, // o el valor que corresponda
+                    'car_id' => $car->id,
+                    'request_delete' => false, // o el valor que corresponda
+                    'name' => 'Técnico', // nombre predeterminado o dinámico
+                    'image' => '', // imagen predeterminada o dinámica
+                    'price' => 5000*$car->technical_assistance, // precio predeterminado o dinámico
+                    'category' => '' // categoría predeterminada o dinámica
+                ];
+
+                $orders[] = $newRow; // Agregar la nueva fila al arreglo
+
+                // Si necesitas convertirlo de nuevo a una colección
+                $orders = collect($orders);
+            }
             return response()->json(['orders' => $orders], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);

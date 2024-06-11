@@ -104,7 +104,7 @@ class FinanceController extends Controller
                         $typeDetail = '';
                         $comment = 'HH '.$query->comment;
                         if($query->revenue){
-                            if($query->revenue->name == 'Ingresos venta de productos en la caja'){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
                                 $comment = 'IP '.$query->comment;
                             }
@@ -122,6 +122,10 @@ class FinanceController extends Controller
                             $comment = 'GS '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
+                            $typeDetail = 'Ingreso Producto';
+                            $comment = 'IP '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Ingreso venta de producto en la caja')){
                             $typeDetail = 'Ingreso Producto';
                             $comment = 'IP '.$query->comment;
                         }
@@ -173,7 +177,7 @@ class FinanceController extends Controller
                         $typeDetail = '';
                         $comment = 'HH '.$query->comment;
                         if($query->revenue){
-                            if($query->revenue->name == 'Ingresos venta de productos en la caja'){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
                                 $comment = 'IP '.$query->comment;
                             }
@@ -289,7 +293,7 @@ class FinanceController extends Controller
                         $typeDetail = '';
                         $comment = 'HH '.$query->comment;
                         if($query->revenue){
-                            if($query->revenue->name == 'Ingresos venta de productos en la caja'){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
                                 $comment = 'IP '.$query->comment;
                             }
@@ -356,9 +360,9 @@ class FinanceController extends Controller
                 if ($data['type'] == 'Sucursal'){
                     $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                         $typeDetail = '';
-                        $comment = 'HH '.$query->comment;
+                        $comment = $query->comment;
                         if($query->revenue){
-                            if($query->revenue->name == 'Ingresos venta de productos en la caja'){
+                            if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
                                 $comment = 'IP '.$query->comment;
                             }

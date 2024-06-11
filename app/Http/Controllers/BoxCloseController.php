@@ -133,7 +133,7 @@ class BoxCloseController extends Controller
             } else {
                 $control = 1;
             }
-            $finance = new Finance();
+            /*$finance = new Finance();
             $finance->control = $control;
             $finance->operation = 'Ingreso';
             $finance->amount = $data['totalMount'];
@@ -143,7 +143,7 @@ class BoxCloseController extends Controller
             $finance->revenue_id = 5;
             $finance->data = Carbon::now();
             $finance->file = '';
-            $finance->save();
+            $finance->save();*/
             //end agregar a tabla de ingresos
             //Revisar convivencias de professionales para pagar 100% del servicio
             $bonus = $this->metaService->store($branch);

@@ -99,7 +99,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
 });
 Route::get('/time', function () {
     //return now(); // Devuelve la hora actual.
-    return Carbon::parse(now())->timezone('America/Santiago')->format('Y-m-d H:i:s');
+    return Carbon::parse(now())->timezone('America/Santiago')->format('Y-m-d H:i');
 
 });
 

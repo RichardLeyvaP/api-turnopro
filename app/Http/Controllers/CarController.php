@@ -350,12 +350,22 @@ class CarController extends Controller
                         'earnings' => $car->amount + ($car->technical_assistance * 5000)
                     ];
                 });
-                for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
+                $sales = CashierSale::where('branch_id', $data['branch_id'])
+                    ->whereDate('data', '>=', $start)
+                    ->whereDate('data', '<=', $end)
+                    ->get()
+                    ->map(function ($sale) {
+                        return [
+                            'date' => $sale->data,
+                            'earnings' => $sale->price + $sale->pay
+                        ];
+                    });
+                /*for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
                     //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
                     $dates[$i] = $machingResult ? $machingResult : 0;
                 }
-                return $dates;
+                return $dates;*/
                 /*for($start; $start <= $end; $start->addDay()){                            
                                 $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch) use ($start){
                                     $amount = $branch->cars()->whereHas('reservation', function ($query) use ($start){
@@ -369,6 +379,17 @@ class CarController extends Controller
                 });
                 $array [] = $branches;
             }*/
+            // Combinar los resultados de las reservas y las ventas en efectivo
+                $combinedEarnings = $cars->concat($sales);
+
+                // Inicializar el array de resultados
+                $dates = [];
+
+                for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
+                    $matchingResult = $combinedEarnings->where('date', $date->toDateString())->sum('earnings');
+                    $dates[$i] = $matchingResult ? $matchingResult : 0;
+                }
+                return $dates;
             } else {
                 $cars = Car::whereHas('reservations', function ($query) use ($start, $end) {
                     $query->whereDate('data', '>=', $start)->whereDate('data', '<=', $end);
@@ -378,10 +399,24 @@ class CarController extends Controller
                         'earnings' => $car->amount + ($car->technical_assistance * 5000)
                     ];
                 });
+                $sales = CashierSale::whereDate('data', '>=', $start)
+                    ->whereDate('data', '<=', $end)
+                    ->get()
+                    ->map(function ($sale) {
+                        return [
+                            'date' => $sale->data,
+                            'earnings' => $sale->price + $sale->pay
+                        ];
+                    });
+            // Combinar los resultados de las reservas y las ventas en efectivo
+                $combinedEarnings = $cars->concat($sales);
+
+                // Inicializar el array de resultados
+                $dates = [];
+
                 for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
-                    $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
-                    //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
-                    $dates[$i] = $machingResult ? $machingResult : 0;
+                    $matchingResult = $combinedEarnings->where('date', $date->toDateString())->sum('earnings');
+                    $dates[$i] = $matchingResult ? $matchingResult : 0;
                 }
                 return $dates;
             }
@@ -444,6 +479,8 @@ class CarController extends Controller
                 $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 })->where('pay', 1);
+                $cashierSale = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
+                $cashierSaleAmount = $cashierSale->sum('price');
                 $carsDetail = $cars->get()->map(function ($car) use ($gasto, $ingreso){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
@@ -457,12 +494,12 @@ class CarController extends Controller
                     ];
                 });
                 $resultDetails[] = [
-                    'productsAmount' => round($carsDetail->sum('productsAmount'), 2),
+                    'productsAmount' => round(($carsDetail->sum('productsAmount') + $cashierSaleAmount), 2),
                     'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetail->sum('earnings'), 2),
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
-                    'total' => round($carsDetail->sum('total'), 2),
+                    'total' => round($carsDetail->sum('total') + $cashierSaleAmount, 2),
                     'utilidad' => round($ingreso-$gasto, 2),
                 ];
                 $financesA = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
@@ -481,6 +518,8 @@ class CarController extends Controller
                 $carsAnt = Car::whereHas('reservation', function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
+                $cashierSaleA = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->where('pay', 1);
+                $cashierSaleAmountA = $cashierSaleA->sum('price');
                 $carsDetailAnt = $carsAnt->get()->map(function ($car) use ($gastoA, $ingresoA){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
@@ -494,16 +533,16 @@ class CarController extends Controller
                     ];
                 });
                 $resultDetailsAnt[] = [
-                    'productsAmount' => round($carsDetailAnt->sum('productsAmount'), 2),
+                    'productsAmount' => round(($carsDetailAnt->sum('productsAmount') + $cashierSaleAmountA), 2),
                     'servicesAmount' => round($carsDetailAnt->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetailAnt->sum('earnings'), 2),
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
-                    'total' => round($carsDetailAnt->sum('total'), 2),
+                    'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA, 2),
                     'utilidad' => round($ingresoA-$gastoA, 2),
                 ];
-                $cars = $cars->sum('amount') + $cars->sum('technical_assistance') * 5000;
-                $carsAnt = $carsAnt->sum('amount') + $carsAnt->sum('technical_assistance') * 5000;
+                $cars = $resultDetails[0]['total'];
+                $carsAnt = $resultDetailsAnt[0]['total'];
 
                 return response()->json(['cars' => $cars, 'carsDetail' => $resultDetails, 'carsDetailAnt' => $resultDetailsAnt, 'carsAnt' => $carsAnt], 200);
             } else {
@@ -537,6 +576,8 @@ class CarController extends Controller
                 $carsAnt = Car::whereHas('reservations', function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
                     $query->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
+                $cashierSaleA = CashierSale::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->where('pay', 1);
+                $cashierSaleAmountA = $cashierSaleA->sum('price');
                 $carsDetailAnt = $carsAnt->get()->map(function ($car)  use ($gastoA, $ingresoA){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
@@ -550,12 +591,12 @@ class CarController extends Controller
                     ];
                 });
                 $resultDetailsAnt[] = [
-                    'productsAmount' => round($carsDetailAnt->sum('productsAmount'), 2),
+                    'productsAmount' => round(($carsDetailAnt->sum('productsAmount') + $cashierSaleAmountA), 2),
                     'servicesAmount' => round($carsDetailAnt->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetailAnt->sum('earnings'), 2),
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
-                    'total' => round($carsDetailAnt->sum('total'), 2),
+                    'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA, 2),
                     'utilidad' => round($ingresoA-$gastoA, 2)
                 ];
                 $finances = Finance::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
@@ -574,6 +615,9 @@ class CarController extends Controller
                 $cars = Car::whereHas('reservations', function ($query) use ($startOfMonth, $endOfMonth) {
                     $query->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 })->where('pay', 1);
+                
+                $cashierSale = CashierSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
+                $cashierSaleAmount = $cashierSale->sum('price');
                 $carsDetail = $cars->get()->map(function ($car)  use ($gasto, $ingreso){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
@@ -587,16 +631,16 @@ class CarController extends Controller
                     ];
                 });
                 $resultDetails[] = [
-                    'productsAmount' => round($carsDetail->sum('productsAmount'), 2),
+                    'productsAmount' => round(($carsDetail->sum('productsAmount') + $cashierSaleAmount), 2),
                     'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetail->sum('earnings'), 2),
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
-                    'total' => round($carsDetail->sum('total'), 2),
+                    'total' => round($carsDetail->sum('total') + $cashierSaleAmount, 2),
                     'utilidad' => round($ingreso-$gasto, 2)
                 ];
-                $carsAnt = $carsAnt->sum('amount') + $carsAnt->sum('technical_assistance') * 5000;
-                $cars = $cars->sum('amount') + $cars->sum('technical_assistance') * 5000;
+                $cars = $resultDetails[0]['total'];
+                $carsAnt = $resultDetailsAnt[0]['total'];
                 return response()->json(['cars' => $cars, 'carsDetail' => $resultDetails, 'carsDetailAnt' => $resultDetailsAnt, 'carsAnt' => $carsAnt], 200);
             }
             //return response()->json($branches->sum(), 200, [], JSON_NUMERIC_CHECK);
@@ -1086,6 +1130,9 @@ class CarController extends Controller
                     $orderServ = Order::where('car_id', $car->id)
                         ->where('is_product', 0)
                         ->get();
+                        $orderPrduct = Order::where('car_id', $car->id)
+                        ->where('is_product', 1)
+                        ->get();
 
                     $client = $car->clientProfessional->client;
                     $retention = $retention ? ($orderServ->sum('percent_win') * $retention) / 100 : 0;
@@ -1099,6 +1146,7 @@ class CarController extends Controller
                         'data' => $car->reservation->data,
                         'attendedClient' => 1,
                         'services' => $orderServ->count(),
+                        'products' => $orderPrduct->sum('cant'),
                         'totalServices' => intval($amountServ - $retention),
                         'clientAleator' => $car->select_professional,
                         'amountGenerate' => intval($car->amount),

@@ -115,6 +115,7 @@ class CashierSaleController extends Controller
                 $sales[] = [
                     'id' => $cashierSale['id'],
                     'price' => intval($cashierSale['price']),
+                    'sale_price' => intval($product['sale_price']),
                     'pay' => $cashierSale['pay'],
                     'cant' => $cashierSale['cant'],
                     'name' => $product['name'],

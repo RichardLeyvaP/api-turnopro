@@ -70,7 +70,7 @@ class AssistantController extends Controller
                     'client_id' => intval($client->id),
                     'professional_id' => intval($data['professional_id']),
                     'attended' => intval($tail->attended), 
-                    'updated_at' => $tail->updated_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
                     'clock' => intval($tail->clock), 
                     'timeClock' => intval($tail->timeClock), 
                     'detached' => intval($tail->detached), 
