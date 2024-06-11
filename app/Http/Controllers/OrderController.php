@@ -368,8 +368,8 @@ class OrderController extends Controller
                     'id' => $orderData->id,
                     'profesional_id' => $orderData->car->clientProfessional->professional->id,
                     'reservation_id' => $orderData->car->reservation->id,
-                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
-                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name,
+                    'nameClient' => $orderData->car->clientProfessional->client->name,
                     'hora' => $orderData->updated_at->Format('g:i A'),                    
                     'nameProduct' => $orderData->productStore->product->name,
                     'nameService' => null,
@@ -383,8 +383,8 @@ class OrderController extends Controller
                     'id' => $orderData->id,
                     'profesional_id' => $orderData->car->clientProfessional->professional->id,
                     'reservation_id' => $orderData->car->reservation->id,
-                    'nameProfesional' => $orderData->car->clientProfessional->professional->name.' '.$orderData->car->clientProfessional->professional->surname.' '.$orderData->car->clientProfessional->client->second_surname,
-                    'nameClient' => $orderData->car->clientProfessional->client->name.' '.$orderData->car->clientProfessional->client->surname.' '.$orderData->car->clientProfessional->client->second_surname,
+                    'nameProfesional' => $orderData->car->clientProfessional->professional->name,
+                    'nameClient' => $orderData->car->clientProfessional->client->name,
                     'hora' => $orderData->updated_at->Format('g:i A'),
                     'nameProduct' => null,
                     'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
@@ -418,11 +418,11 @@ class OrderController extends Controller
                     $trace = [
                         'branch' => $branch->name,
                         'cashier' => $request->nameProfessional,
-                        'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                        'client' => $car->clientProfessional->client->name,
                         'amount' => $order->price,
                         'operation' => 'Deniega solicitud de eliminar orden de Producto del carro: '.$car->id,
                         'details' => $order->productStore->product->name,
-                        'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                        'description' => $car->clientProfessional->professional->name,
                     ];
                     $this->traceService->store($trace);
                     Log::info('$trace Pproduct');
@@ -432,11 +432,11 @@ class OrderController extends Controller
                     $trace = [
                         'branch' => $branch->name,
                         'cashier' => $request->nameProfessional,
-                        'client' => $car->clientProfessional->client->name.' '.$car->clientProfessional->client->surname.' '.$car->clientProfessional->client->second_surname,
+                        'client' => $car->clientProfessional->client->name,
                         'amount' => $order->price,
                         'operation' => 'Deniega solicitud de eliminar orden de Servicio del carro: '.$car->id,
                         'details' => $order->branchServiceProfessional->branchService->service->name,
-                        'description' => $car->clientProfessional->professional->name.' '.$car->clientProfessional->professional->surname.' '.$car->clientProfessional->professional->second_surname,
+                        'description' => $car->clientProfessional->professional->name,
                     ];
                     $this->traceService->store($trace);
                     Log::info('$trace Service');

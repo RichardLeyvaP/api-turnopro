@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\CashierSale;
 use App\Models\Finance;
+use App\Models\Notification;
 use App\Models\ProductStore;
 use App\Models\Professional;
 use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CashierSaleController extends Controller
 {
@@ -83,7 +85,7 @@ class CashierSaleController extends Controller
                     'amount' => $sale_price * $validatedData['cant'],
                     'operation' => 'Venta de Productos',
                     'details' => 'Vende producto: '.$product->name,
-                    'description' => 'Cantidad vendida'. $validatedData['cant'],
+                    'description' => 'Cantidad vendida '. $validatedData['cant'],
                 ];
                 $this->traceService->store($trace);
                 
@@ -119,7 +121,7 @@ class CashierSaleController extends Controller
                     'pay' => $cashierSale['pay'],
                     'cant' => $cashierSale['cant'],
                     'name' => $product['name'],
-                    'image_product' => $product['image_product']
+                    'image_product' => $product['image_product'],
                 ];
             }
     
@@ -129,12 +131,72 @@ class CashierSaleController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Request $request)
+    public function cashiersale_denegar(Request $request)
     {
-        //
+        Log::info("Actualizar Venta de productos en la caja");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
+            ]);
+            $cashierSale = CashierSale::find($data['id']);
+            $branch = Branch::where('id', $cashierSale->branch_id)->first();              
+            $notification = new Notification();
+            $notification->professional_id = $data['professional_id'];
+            $notification->tittle = 'Denegada';
+            $notification->description = 'Solicitud de eliminación de producto '.$cashierSale->productStore->product->name.' denegada';
+            $notification->type = 'Caja';
+            $branch->notifications()->save($notification);
+            //}
+        //}
+            $cashierSale->pay = 0;
+            $cashierSale->save();
+            return response()->json(['msg' => 'Estado de la venta modificado correctamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la venta'], 500);
+        }
+    }
+
+    public function destroy_solicitud(Request $request)
+    {
+        Log::info("Eliminar");
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'professional_id' => 'nullable'
+            ]);
+            $cashierSale = CashierSale::find($data['id']);
+            $branch = Branch::where('id', $request->branch_id)->first();
+            $product = $cashierSale->productStore->product;
+            $professional = $cashierSale->professional;
+            $trace = [
+                'branch' => $branch->name,
+                'cashier' => $request->nameProfessional,
+                'client' => '',
+                'amount' => $cashierSale->price,
+                'operation' => 'Hace solicitud de eliminar venta de producto'. $product->name.' en la caja',
+                'details' => 'Cantidad del producto '.$cashierSale->cant,
+                'description' => '',
+            ];
+            $this->traceService->store($trace);
+            $cashierSale->pay = 3;
+            $cashierSale->save();
+           
+            $notification = new Notification();
+            $notification->professional_id = $data['professional_id'];
+            $notification->tittle = 'Solicitud';
+            $notification->description = 'Solicitud de eliminación de venta de producto en la caja: ' . $cashierSale->id;
+            $notification->type = 'Administrador';
+            $branch->notifications()->save($notification);
+            //}
+            //}
+            //$car->delete();
+            return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => 'Error al eliminar el carro'], 500);
+        }
     }
     
 
@@ -179,12 +241,30 @@ class CashierSaleController extends Controller
     public function destroy(Request $request)
     {
         try {
-            $validatedData = $request->validate([
-                'id' => 'required|numeric'
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
             ]);
-            $cashierSale = CashierSale::findOrFail($validatedData['id']);
+            $cashierSale = CashierSale::find($data['id']);
+            $branch = Branch::where('id', $cashierSale->branch_id)->first();     
+            
+            $productstore = ProductStore::find($cashierSale->product_store_id);
+            //$product = $productstore->product;
+            $cant = $cashierSale->cant;
+            $productstore->product_quantity = $cant;
+            $productstore->product_exit = $productstore->product_exit + $cant;
+            $productstore->save();
+
+            $notification = new Notification();
+            $notification->professional_id = $data['professional_id'];
+            $notification->tittle = 'Aceptada';
+            $notification->description = 'Solicitud de eliminación de producto '.$cashierSale->productStore->product->name.' aceptada';
+            $notification->type = 'Caja';
+            $branch->notifications()->save($notification);
+            //}
+        //}
             $cashierSale->delete();
-            return response()->json(null, 204);
+                    
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al eliminar la venta de caja.'], 500);
         }

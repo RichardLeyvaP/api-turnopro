@@ -763,15 +763,34 @@ class CarController extends Controller
                         'id' => $order['id'],
                         'car_id' => $order['car_id'],
                         'price' => $order['price'],
-                        'professionalName' => $professional['name'] . ' ' . $professional['surname'],
+                        'professionalName' => $professional['name'],
                         'image_url' => $professional['image_url'],
-                        'clientName' => $client['name'] . ' ' . $client['surname'],
+                        'clientName' => $client['name'],
                         'client_image' => $client['client_image'],
                         'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
                         'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
                         'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service'],
                         'nameBranch' => $branch->name
                     ];
+                }
+                $cashierData = [];
+                $cashierSales = CashierSale::where('pay', 3)->get();
+                if($cashierSales){
+                    foreach($cashierSales as $cashierSale){
+                        $professional = $cashierSale['professional'];
+                        $product = $cashierSale['productStore']['product'];
+                        $branch = $cashierSale['branch'];
+                        $cashierData[] = [
+                            'id' => $cashierSale['id'],
+                            'professionalName' => $professional['name'],
+                            'image_url' => $professional['image_url'],
+                            'productName' => $product['name'],
+                            'price' => intval($product['sale_price']),
+                            'cant' => $product['name'],
+                            'image_product' => $product['image_product'],
+                            'nameBranch' => $branch['name'],
+                        ];
+                    }
                 }
             } else {
                 $branch = Branch::where('id', $data['branch_id'])->first();
@@ -824,8 +843,27 @@ class CarController extends Controller
                         'nameBranch' => $branch->name
                     ];
                 }
+                $cashierData = [];
+                $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->where('pay', 3)->get();
+                if($cashierSales){
+                    foreach($cashierSales as $cashierSale){
+                        $professional = $cashierSale['professional'];
+                        $product = $cashierSale['productStore']['product'];
+                        $branch = $cashierSale['branch'];
+                        $cashierData[] = [
+                            'id' => $cashierSale['id'],
+                            'professionalName' => $professional['name'],
+                            'image_url' => $professional['image_url'],
+                            'productName' => $product['name'],
+                            'price' => intval($product['sale_price']),
+                            'cant' => $product['name'],
+                            'image_product' => $product['image_product'],
+                            'nameBranch' => $branch['name'],
+                        ];
+                    }
+                }
             }
-            return response()->json(['cars' => $cars, 'orders' => $orderData], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['cars' => $cars, 'orders' => $orderData, 'cashier' => $cashierData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
@@ -1794,11 +1832,11 @@ class CarController extends Controller
             $trace = [
                 'branch' => $branch->name,
                 'cashier' => $request->nameProfessional,
-                'client' => $client->name . ' ' . $client->surname . ' ' . $client->second_surname,
+                'client' => $client->name ,
                 'amount' => $car->amount,
                 'operation' => 'Hace solicitud de eliminar carro: ' . $car->id,
                 'details' => '',
-                'description' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                'description' => $professional->name,
             ];
             $this->traceService->store($trace);
             $car->active = 3;

@@ -627,8 +627,10 @@ Route::put('/restday', [RestdayController::class, 'update']);
 Route::get('/cashiersale', [CashierSaleController::class, 'index']);
 Route::get('/cashiersale-show', [CashierSaleController::class, 'show']);
 Route::post('/cashiersale', [CashierSaleController::class, 'store']);
+Route::post('/cashiersale-denegar', [CashierSaleController::class, 'cashiersale_denegar']);//denegar solicitud de eiliminación
 Route::put('/cashiersale', [CashierSaleController::class, 'update']);
 Route::post('/cashiersale-destroy', [CashierSaleController::class, 'destroy']);
+Route::post('/cashiersale-destroy-solicitud', [CashierSaleController::class, 'destroy_solicitud']);
 
 Route::get('/retention', [RetentionController::class, 'index']);
 Route::post('/retention', [RetentionController::class, 'store']);
