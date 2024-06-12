@@ -356,7 +356,8 @@ class ProfessionalController extends Controller
                             DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->first();
                             
                             if ($professional && $professional->reservations->isNotEmpty()) {
-                                $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation) {
+                                return "ewrwerwer";
+                                $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation) use ($start_time){
                                     $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                                     $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
             
@@ -393,15 +394,16 @@ class ProfessionalController extends Controller
                                     return $intervalos;
                                 })->flatten()->values()->all();
                                  $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
-                                if ($currentDateTime->lessThan($firstReservationStartTime)) {
+                                 $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                                if ($horaActualMas2Horas->lessThan($firstReservationStartTime)) {
                                     $startTime = Carbon::parse($start_time);
-                                    while ($startTime <= $currentDateTime) {
+                                    while ($startTime <= $horaActualMas2Horas) {
                                         $reservations[] = $startTime->format('H:i');
                                         $startTime->addMinutes(15);
                                     }
                                 } else {
                                     $startTime = Carbon::parse($start_time);
-                                    while ($startTime <= $currentDateTime) {
+                                    while ($startTime <= $horaActualMas2Horas) {
                                         $reservations[] = $startTime->format('H:i');
                                         $startTime->addMinutes(15);
                                     }
@@ -412,6 +414,7 @@ class ProfessionalController extends Controller
                             }
                             else{
                                 $startTime = Carbon::parse($start_time);
+                                $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
                                 $closingTime = Carbon::parse($closing_time);
                                 while ($startTime <= $closingTime) {
                                     $reservations[] = $startTime->format('H:i');

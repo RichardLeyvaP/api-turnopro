@@ -538,11 +538,26 @@ class TailController extends Controller
             }else {
                 foreach ($tails as $tail) {
                     $car = $tail->reservation->car;
-                    $services = Order::where('car_id', $car->id)->where('is_product', 0)->get();
-                    $services_id = $services->pluck('branch_service_professional_id');
-                    $service_professional_id = BranchServiceProfessional::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->pluck('id');
+                    $services_id = [];
+                    $service_professional_id = [];
+                    $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+                    foreach ($servicesOrders as $servicesOrder) {
+                        $services_id[] = $servicesOrder->branchServiceProfessional->branchService->service->id;
+                    }
+                    //$services_id = $servicesOrders->branchService->service->pluck('id');
+                    $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                    })->where('professional_id', $data['professional_id'])->get();
+                    foreach ($service_professionals as $service_professional) {
+                        $service_professional_id[] = $service_professional->branchService->service->id;
+                    }
                      // Verificar si todos los services_id están en service_professional_ids
-                    $diff = $services_id->diff($service_professional_id);
+                    // Convertir los arrays en colecciones
+                    $services_id_collection = collect($services_id);
+                    $service_professional_id_collection = collect($service_professional_id);
+
+                    // Calcular la diferencia
+                    $diff = $services_id_collection->diff($service_professional_id_collection);
                     if ($diff->isEmpty()) {
                         // Todos los services_id están en service_professional_ids
                         $client = $car->clientProfessional->client;
@@ -561,7 +576,30 @@ class TailController extends Controller
                         $car->client_professional_id = $client_professional_id;
                         $car->save();
                         $tail->aleatorie = 2;
-                        $tail->save();                
+                        $tail->save(); 
+                        foreach ($servicesOrders as $service) {
+                            foreach ($service_professionals as $service_professional) {
+                                $serv = $service->branchServiceProfessional->branchService->service;
+                                if ($service->branchServiceProfessional->branchService->service->id == $service_professional->branchService->service->id) {
+                                    $percent = $service_professional->percent ? $service_professional->percent : 1;
+                                    $order = new Order();
+                                    $order->car_id = $service->car_id;
+                                    $order->product_store_id = null;
+                                    $order->branch_service_professional_id = $service_professional->id;
+                                    $order->data = $service->data;
+                                    $order->is_product = false;
+                                    //logica de porciento de ganancia
+                                    $order->percent_win = $serv->price_service * $percent/100;
+                                    $order->price = $serv->price_service;
+                                    $order->request_delete = false;
+                                    $order->save();
+                                    $service->delete();
+                                    /*$service->branch_service_professional_id = $service_professional->id;
+                                    $service->save();*/
+                                }
+                            }
+                            
+                        }           
                     return response()->json(1, 200);
                     }
                 }
