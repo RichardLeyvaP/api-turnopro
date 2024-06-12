@@ -1115,7 +1115,7 @@ class BranchService
                 ];
             });
             $result[$i]['name'] = $branch->name;
-            $result[$i]['productsAmount'] = round($cars->sum('productsAmount'), 2);
+            $result[$i]['productsAmount'] = round($cars->sum('productsAmount') + $productSales, 2);
             $result[$i]['servicesAmount'] = round($cars->sum('servicesAmount'), 2);
             $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales, 2);
             $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
@@ -1204,7 +1204,7 @@ class BranchService
                 ];
             });
             $result[$i]['name'] = $branch->name;
-            $result[$i]['productsAmount'] = round($cars->sum('productsAmount'), 2);
+            $result[$i]['productsAmount'] = round($cars->sum('productsAmount') + $productSales, 2);
             $result[$i]['servicesAmount'] = round($cars->sum('servicesAmount'), 2);
             $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales, 2);
             $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
