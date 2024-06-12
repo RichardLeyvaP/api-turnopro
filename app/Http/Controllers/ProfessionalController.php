@@ -356,7 +356,6 @@ class ProfessionalController extends Controller
                             DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->first();
                             
                             if ($professional && $professional->reservations->isNotEmpty()) {
-                                return "ewrwerwer";
                                 $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation) use ($start_time){
                                     $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                                     $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
