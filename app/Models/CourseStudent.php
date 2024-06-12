@@ -18,4 +18,6 @@ class CourseStudent extends Model
     {
     return $this->belongsTo(Course::class);
     }
+
+    protected $table = "course_student";
 }

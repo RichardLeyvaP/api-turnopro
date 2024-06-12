@@ -184,9 +184,9 @@ class TailController extends Controller
             
             Log::info( "Mostarr la cola del dia de una branch");
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required'
             ]);
-            
+            $data['branch_id'] = intval($data['branch_id']);
             return response()->json(['tail' => $this->tailService->cola_branch_data2($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);

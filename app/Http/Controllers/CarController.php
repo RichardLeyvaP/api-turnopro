@@ -11,6 +11,7 @@ use App\Models\CashierSale;
 use App\Models\ClientProfessional;
 use App\Models\Comment;
 use App\Models\CourseProfessional;
+use App\Models\CourseStudent;
 use App\Models\Finance;
 use App\Models\Notification;
 use App\Models\Order;
@@ -19,6 +20,7 @@ use App\Models\ProductStore;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
 use App\Models\Payment;
+use App\Models\ProductSale;
 use App\Models\Reservation;
 use App\Models\Retention;
 use App\Models\Service;
@@ -450,30 +452,9 @@ class CarController extends Controller
             $final_mes_anterior = Carbon::now()->subMonth()->endOfMonth();
             if ($data['branch_id'] != 0) {
                 Log::info("branch");
-                /*$branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch){
-                    $startOfMonth = now()->startOfMonth()->toDateString();
-                    $endOfMonth = now()->endOfMonth()->toDateString();
-                    $amount = $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
-                        $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                    })->sum('amount') + $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
-                        $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                    })->sum('tip') + $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
-                        $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                    })->sum('technical_assistance') * 5000;
-                    return $amount;
-                });*/
                 
                 $finances = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
-                /*if(!$finances->isEmpty()){
 
-                foreach($finances as $finance){
-                    if($finance->operation == 'Gasto'){
-                        $gasto = $gasto + $finance->amount;
-                    }else{
-                        $ingreso = $ingreso + $finance->amount;
-                    }
-                }
-                }*/
                 $ingreso = $finances->where('operation', 'Ingreso')->sum('amount');
                 $gasto = $finances->where('operation', 'Gasto')->sum('amount');
                 $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
@@ -501,18 +482,10 @@ class CarController extends Controller
                     'tip' => round($carsDetail->sum('tip'), 2),
                     'total' => round($carsDetail->sum('total') + $cashierSaleAmount, 2),
                     'utilidad' => round($ingreso-$gasto, 2),
+                    'type' => false
                 ];
                 $financesA = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
-                /*if(!$financesA->isEmpty()){
-
-                foreach($financesA as $finance){
-                    if($finance->operation == 'Gasto'){
-                        $gastoA = $gastoA + $finance->amount;
-                    }else{
-                        $ingresoA = $ingresoA + $finance->amount;
-                    }
-                }
-                }*/
+    
                 $ingresoA = $financesA->where('operation', 'Ingreso')->sum('amount');
                 $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');
                 $carsAnt = Car::whereHas('reservation', function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
@@ -540,6 +513,7 @@ class CarController extends Controller
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
                     'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA, 2),
                     'utilidad' => round($ingresoA-$gastoA, 2),
+                    'type' => false
                 ];
                 $cars = $resultDetails[0]['total'];
                 $carsAnt = $resultDetailsAnt[0]['total'];
@@ -547,37 +521,22 @@ class CarController extends Controller
                 return response()->json(['cars' => $cars, 'carsDetail' => $resultDetails, 'carsDetailAnt' => $resultDetailsAnt, 'carsAnt' => $carsAnt], 200);
             } else {
                 Log::info("businesss");
-                /*$business = Business::find($data['business_id']);
-             $branches = $business->branches->map(function ($branch){
-                $startOfMonth = now()->startOfMonth()->toDateString();
-                $endOfMonth = now()->endOfMonth()->toDateString();
-                $amount = $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
-                    $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                })->sum('amount') + $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
-                    $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                })->sum('tip') + $branch->cars()->where('pay', 1)->whereHas('reservations', function ($query)  use ($startOfMonth, $endOfMonth){
-                    $query->whereBetween('data', [$startOfMonth, $endOfMonth]);
-                })->sum('technical_assistance') * 5000;
-                return $amount;
-            });*/
+    
             $financesA = Finance::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
-                /*if(!$financesA->isEmpty()){
 
-                foreach($financesA as $finance){
-                    if($finance->operation == 'Gasto'){
-                        $gastoA = $gastoA + $finance->amount;
-                    }else{
-                        $ingresoA = $ingresoA + $finance->amount;
-                    }
-                }
-                }*/
                 $ingresoA = $financesA->where('operation', 'Ingreso')->sum('amount');
                 $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');
                 $carsAnt = Car::whereHas('reservations', function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
                     $query->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
                 $cashierSaleA = CashierSale::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->where('pay', 1);
+                $productSaleA = ProductSale::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 $cashierSaleAmountA = $cashierSaleA->sum('price');
+                $productSaleAmountA = $productSaleA->sum('price');
+                $couseStudentA = CourseStudent::whereHas('course', function ($query) use ($inicio_mes_anterior){
+                    $query->whereDate('startDate', '>=', $inicio_mes_anterior);
+                })->where('payment_status', 1);
+                $amountCourseA = $couseStudentA->sum('total_payment');
                 $carsDetailAnt = $carsAnt->get()->map(function ($car)  use ($gastoA, $ingresoA){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
@@ -591,25 +550,18 @@ class CarController extends Controller
                     ];
                 });
                 $resultDetailsAnt[] = [
-                    'productsAmount' => round(($carsDetailAnt->sum('productsAmount') + $cashierSaleAmountA), 2),
+                    'productsAmount' => round(($carsDetailAnt->sum('productsAmount') + $cashierSaleAmountA + $productSaleAmountA), 2),
                     'servicesAmount' => round($carsDetailAnt->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetailAnt->sum('earnings'), 2),
+                    'academia' => round($amountCourseA, 2),
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
-                    'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA, 2),
-                    'utilidad' => round($ingresoA-$gastoA, 2)
+                    'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA + $productSaleAmountA + $amountCourseA, 2),
+                    'utilidad' => round($ingresoA-$gastoA, 2),
+                    'type' => true
                 ];
                 $finances = Finance::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
-                /*if(!$finances->isEmpty()){
 
-                foreach($finances as $finance){
-                    if($finance->operation == 'Gasto'){
-                        $gasto = $gasto + $finance->amount;
-                    }else{
-                        $ingreso = $ingreso + $finance->amount;
-                    }
-                }
-                }*/
                 $ingreso = $finances->where('operation', 'Ingreso')->sum('amount');
                 $gasto = $finances->where('operation', 'Gasto')->sum('amount');
                 $cars = Car::whereHas('reservations', function ($query) use ($startOfMonth, $endOfMonth) {
@@ -618,6 +570,12 @@ class CarController extends Controller
                 
                 $cashierSale = CashierSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
                 $cashierSaleAmount = $cashierSale->sum('price');
+                $productSale = ProductSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
+                $productSaleAmount = $productSale->sum('price');
+                $couseStudent = CourseStudent::whereHas('course', function ($query) use ($startOfMonth){
+                    $query->whereDate('startDate', '>=', $startOfMonth);
+                })->where('payment_status', 1);
+                $amountCourse = $couseStudent->sum('total_payment');
                 $carsDetail = $cars->get()->map(function ($car)  use ($gasto, $ingreso){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
@@ -631,13 +589,15 @@ class CarController extends Controller
                     ];
                 });
                 $resultDetails[] = [
-                    'productsAmount' => round(($carsDetail->sum('productsAmount') + $cashierSaleAmount), 2),
+                    'productsAmount' => round(($carsDetail->sum('productsAmount') + $cashierSaleAmount + $productSaleAmount), 2),
                     'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetail->sum('earnings'), 2),
+                    'academia' => round($amountCourse, 2),
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
-                    'total' => round($carsDetail->sum('total') + $cashierSaleAmount, 2),
-                    'utilidad' => round($ingreso-$gasto, 2)
+                    'total' => round($carsDetail->sum('total') + $cashierSaleAmount + $productSaleAmount + $amountCourse, 2),
+                    'utilidad' => round($ingreso-$gasto, 2),
+                    'type' => true
                 ];
                 $cars = $resultDetails[0]['total'];
                 $carsAnt = $resultDetailsAnt[0]['total'];
@@ -1410,7 +1370,7 @@ class CarController extends Controller
                         'reservation_id' => $car->reservation->id,
                         'nameProfesional' => $profesionalName,
                         'nameClient' => $clientName,
-                        'hora' => $hora->format('g:i A'),
+                        'hora' => $hora->format('h:i A'),
                         'nameProduct' => $orderData->productStore->product->name,
                         'nameService' => null,
                         'duration_service' => null,
