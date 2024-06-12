@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Box;
 use App\Models\BoxClose;
 use App\Models\Branch;
+use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\CashierSale;
 use App\Models\Client;
@@ -528,31 +529,43 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
-            $tail = Tail::whereHas('reservation', function ($query) use ($data){
+            $tails = Tail::whereHas('reservation', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
-            })->where('aleatorie', 1)->first();
-            if ($tail === null ) {
+            })->where('aleatorie', 1)->get();
+
+            if ($tails->isEmpty()) {
                 return response()->json(0, 200);
             }else {
-                $car = $tail->reservation->car;
-                $client = $car->clientProfessional->client;
-                $professional = Professional::find($data['professional_id']);
-                $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
-                if(!$client_professional){
-                    Log::info("no existe");
-                    $professional->clients()->attach($client->id);
-                    $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
-                    Log::info($client_professional_id);
+                foreach ($tails as $tail) {
+                    $car = $tail->reservation->car;
+                    $services = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+                    $services_id = $services->pluck('branch_service_professional_id');
+                    $service_professional_id = BranchServiceProfessional::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->pluck('id');
+                     // Verificar si todos los services_id están en service_professional_ids
+                    $diff = $services_id->diff($service_professional_id);
+                    if ($diff->isEmpty()) {
+                        // Todos los services_id están en service_professional_ids
+                        $client = $car->clientProfessional->client;
+                        $professional = Professional::find($data['professional_id']);
+                        $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+                        if(!$client_professional){
+                            Log::info("no existe");
+                            $professional->clients()->attach($client->id);
+                            $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+                            Log::info($client_professional_id);
+                        }
+                        else{
+                            $client_professional_id = $client_professional->pivot->id;
+                            Log::info($client_professional_id);
+                        }
+                        $car->client_professional_id = $client_professional_id;
+                        $car->save();
+                        $tail->aleatorie = 2;
+                        $tail->save();                
+                    return response()->json(1, 200);
+                    }
                 }
-                else{
-                    $client_professional_id = $client_professional->pivot->id;
-                    Log::info($client_professional_id);
-                }
-                $car->client_professional_id = $client_professional_id;
-                $car->save();
-                $tail->aleatorie = 2;
-                $tail->save();                
-            return response()->json(1, 200);
+                return response()->json(0, 200);
             }
             
             } catch (\Throwable $th) {  
