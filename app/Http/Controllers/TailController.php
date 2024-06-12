@@ -531,7 +531,7 @@ class TailController extends Controller
             $tail = Tail::whereHas('reservation', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
             })->where('aleatorie', 1)->first();
-            if ($tail==null) {
+            if ($tail === null ) {
                 return response()->json(0, 200);
             }else {
                 $car = $tail->reservation->car;

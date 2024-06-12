@@ -152,7 +152,7 @@ class ProfessionalWorkPlaceController extends Controller
             return $entrada = [
                 'workplace_id' => $workplace->workplace_id,
                 'workplace_name' => $workplace->workplace->name,
-                'time' => Carbon::createFromFormat('Y-m-d H:i:s', $record->start_time)->format('H:i:s')
+                'time' => Carbon::createFromFormat('Y-m-d H:i', $record->start_time)->format('H:i')
             ];
             //return $workplace->workplace_id;
             //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
