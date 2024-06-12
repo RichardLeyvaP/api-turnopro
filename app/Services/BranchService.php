@@ -1073,26 +1073,27 @@ class BranchService
                         ->whereIn('car_id', $carIds)
                         ->where('is_product', 1);
                 },
-                'cashiersales' => function ($query) use ($branch_id) {
-                    $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_price')
+                'cashiersales' => function ($query) use ($branch_id, $startDate, $endDate) {
+                    $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
                         ->groupBy('product_id')
                         ->where('cashiersales.branch_id', $branch_id)
-                        ->whereDate('data', Carbon::now());
+                        ->whereDate('data', '>=', $startDate)
+                        ->whereDate('data', '<=', $endDate);
                 }
             ])->get()->filter(function ($product) {
                 return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
             })->map(function ($product) {
                 $totalOrders = $product->orders->sum('total_cant');
-                $totalSales = $product->cashiersales->sum('total_sales');
+                $totalSales = $product->cashiersales->sum('total_sales'); // Cambio aquí
                 $utilidadOrders = $product->orders->sum('utilidadOrder');
-                $UtilidadSales = $product->cashiersales->sum('utilidadCash');
+                $utilidadSales = $product->cashiersales->sum('utilidadCash');
                 $totalPriceOrders = $product->orders->sum('total_price');
-                $totalPriceSales = $product->cashiersales->sum('total_price');
+                $totalPriceSales = $product->cashiersales->sum('total_pricesales');
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'total_quantity' => $totalOrders + $totalSales,
-                    'utilidad' => $utilidadOrders + $UtilidadSales,
+                    'utilidad' => $utilidadOrders + $utilidadSales,
                     'price' => $totalPriceOrders + $totalPriceSales,
                     'sales' => $totalPriceSales
                 ];
@@ -1114,9 +1115,9 @@ class BranchService
                 ];
             });
             $result[$i]['name'] = $branch->name;
-            $result[$i]['productsAmount'] = round($cars->sum('productsAmount') + $productSales, 2);
+            $result[$i]['productsAmount'] = round($cars->sum('productsAmount'), 2);
             $result[$i]['servicesAmount'] = round($cars->sum('servicesAmount'), 2);
-            $result[$i]['earnings'] = round($cars->sum('earnings'), 2);
+            $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales, 2);
             $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
             $result[$i]['tip'] = round($cars->sum('tip'), 2);
             $result[$i++]['total'] = round($cars->sum('total') + $productSales, 2);
@@ -1124,7 +1125,7 @@ class BranchService
             $total_products += round($cars->sum('productsAmount') + $productSales, 2);
             $total_services += round($cars->sum('servicesAmount'), 2);
             $total_branch += round($cars->sum('earnings') + $productSales, 2);
-            $total_company += round($cars->sum('total'), 2);
+            $total_company += round($cars->sum('total') + $productSales, 2);
             $technical_assistance += round($cars->sum('technical_assistance'), 2);
         } //foreach
         $result[$i]['name'] = 'Total';
@@ -1155,7 +1156,7 @@ class BranchService
                 $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
             })->where('pay', 1)->get();
             $carIds = $cars->pluck('id');
-            $products = Product::with([
+            $productsCashier = Product::with([
                 'orders' => function ($query) use ($carIds) {
                     $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
                         ->groupBy('product_id')
@@ -1163,7 +1164,7 @@ class BranchService
                         ->where('is_product', 1);
                 },
                 'cashiersales' => function ($query) use ($branch_id) {
-                    $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_price')
+                    $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
                         ->groupBy('product_id')
                         ->where('cashiersales.branch_id', $branch_id)
                         ->whereDate('data', Carbon::now());
@@ -1172,21 +1173,22 @@ class BranchService
                 return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
             })->map(function ($product) {
                 $totalOrders = $product->orders->sum('total_cant');
-                $totalSales = $product->cashiersales->sum('total_sales');
+                $totalSales = $product->cashiersales->sum('total_sales'); // Cambio aquí
                 $utilidadOrders = $product->orders->sum('utilidadOrder');
-                $UtilidadSales = $product->cashiersales->sum('utilidadCash');
+                $utilidadSales = $product->cashiersales->sum('utilidadCash');
                 $totalPriceOrders = $product->orders->sum('total_price');
-                $totalPriceSales = $product->cashiersales->sum('total_price');
+                $totalPriceSales = $product->cashiersales->sum('total_pricesales');
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'total_quantity' => $totalOrders + $totalSales,
-                    'utilidad' => $utilidadOrders + $UtilidadSales,
+                    'utilidad' => $utilidadOrders + $utilidadSales,
                     'price' => $totalPriceOrders + $totalPriceSales,
                     'sales' => $totalPriceSales
                 ];
             })->sortByDesc('total_quantity')->values();
-            $totalPriceProducts = $products->sum('price');
+            $totalPriceProducts = $productsCashier->sum('price');            
+            $productSales = $productsCashier->sum('sales');
             $cars = Car::whereHas('reservation', function ($query) use ($branch) {
                 $query->where('branch_id', $branch->id)->whereDate('data', Carbon::now()->toDateString());
             })->where('pay', 1)->get()->map(function ($car) {
@@ -1204,15 +1206,15 @@ class BranchService
             $result[$i]['name'] = $branch->name;
             $result[$i]['productsAmount'] = round($cars->sum('productsAmount'), 2);
             $result[$i]['servicesAmount'] = round($cars->sum('servicesAmount'), 2);
-            $result[$i]['earnings'] = round($cars->sum('earnings'), 2);
+            $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales, 2);
             $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
             $result[$i]['tip'] = round($cars->sum('tip'), 2);
-            $result[$i++]['total'] = round($cars->sum('total'), 2);
+            $result[$i++]['total'] = round($cars->sum('total') + $productSales, 2);
             $total_tip += round($cars->sum('tip'), 2);
-            $total_products += round($cars->sum('productsAmount') + $totalPriceProducts, 2);
+            $total_products += round($cars->sum('productsAmount') + $productSales, 2);
             $total_services += round($cars->sum('servicesAmount'), 2);
-            $total_branch += round($cars->sum('earnings') + $totalPriceProducts, 2);
-            $total_company += round($cars->sum('total'), 2);
+            $total_branch += round($cars->sum('earnings') + $productSales, 2);
+            $total_company += round($cars->sum('total') + $productSales, 2);
             $technical_assistance += round($cars->sum('technical_assistance'), 2);
         } //foreach
         $result[$i]['name'] = 'Total';
