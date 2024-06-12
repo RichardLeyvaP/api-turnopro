@@ -482,7 +482,7 @@ class OrderController extends Controller
                 $reservation = Reservation::where('car_id', $order->car_id)->first();
                 Log::info($reservation);
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
-                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
+                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
                 $reservation->save();
             }
             $amountTemp = $car->amount - $order->price;
@@ -563,7 +563,7 @@ class OrderController extends Controller
                 $reservation = Reservation::where('car_id', $order->car_id)->first();
                 Log::info($reservation);
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
-                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
+                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
                 $reservation->save();
                 /*if(!$cajeros->isEmpty()){
                     foreach ($cajeros as $cajero) { */                   

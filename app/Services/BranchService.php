@@ -493,7 +493,8 @@ class BranchService
         $totalPriceProducts = $products->sum('price');
         $productSales = $products->sum('sales');
         $TotalRetention = Retention::where('branch_id', $branch_id)
-            ->whereDate('data', Carbon::now())
+            ->whereDate('data', '>=', $startDate)
+            ->whereDate('data', '<=', $endDate)
             ->sum('retention');
 
         $services =  Service::withCount(['orders' => function ($query) use ($carIds) {

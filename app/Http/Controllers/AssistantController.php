@@ -36,8 +36,8 @@ class AssistantController extends Controller
                     'description' => $query->description,
                     'state' => intval($query->state),
                     'type' => $query->type,
-                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i:s A'),
-                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i:s A')
+                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
                 ];
             })
             ->sortByDesc(function ($notification) {
@@ -60,8 +60,8 @@ class AssistantController extends Controller
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => intval($reservation->car_id),
-                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i:s'),
-                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i:s'),
+                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                     'total_time' => $reservation->total_time,
                     'client_name' => $client->name,
                     'telefone_client' => $client->phone ? strval($client->phone) : '',

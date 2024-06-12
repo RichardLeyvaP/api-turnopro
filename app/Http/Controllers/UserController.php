@@ -541,7 +541,7 @@ class UserController extends Controller
                     'workplace_id' => $professional_workplace['workplace_id'],
                     'places' => $professional_workplace['places']==0?[]:$professional_workplace['places'],
                     //'workplace_id' => $workplace_id,
-                    'hora' => Carbon::now()->format('H:i:s')
+                    'hora' => Carbon::now()->format('H:i')
                 ];
 
                 $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
@@ -587,7 +587,7 @@ class UserController extends Controller
                     'workplace_id' => 0,
                     'places' => [],
                     //'workplace_id' => $workplace_id,
-                    'hora' => Carbon::now()->format('H:i:s')
+                    'hora' => Carbon::now()->format('H:i')
                 ];
                 $qrCode = QrCode::format('svg')->size(100)->generate(json_encode($datos));
                 $qrCodeBase64 = base64_encode($qrCode);
