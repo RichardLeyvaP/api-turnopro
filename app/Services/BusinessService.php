@@ -3,9 +3,11 @@
 namespace App\Services;
 use App\Models\Business;
 use App\Models\Car;
+use App\Models\CourseStudent;
 use App\Models\Order;
 use Carbon\Carbon;
 use App\Models\Product;
+use App\Models\ProductSale;
 use App\Models\Professional;
 use App\Models\Service;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +21,7 @@ class BusinessService
            $i = 0;
            $total_busine = 0;
            $total_branch = 0;
+           $total_academia = 0;
            $total_tip = 0;
            $technical_assistance = 0;
            foreach ($business as $busine) {
@@ -58,6 +61,12 @@ class BusinessService
             })->sortByDesc('total_quantity')->values();
             $totalPriceProducts = $productsCashier->sum('price');            
             $productSales = $productsCashier->sum('sales');
+            $couseStudent = CourseStudent::whereHas('course', function ($query) use ($month, $year){
+                $query->whereMonth('startDate', $month)->whereYear('startDate', $year);
+            })->where('payment_status', 1);
+            $amountCourse = $couseStudent->sum('total_payment');
+            $productAcad = ProductSale::whereMonth('data', $month)->whereYear('data', $year)->get();
+            $productAcadAmount = $productAcad->sum('price');
             $cars = Car::/*whereHas('reservation.branch', function ($query) use ($busine){
                     $query->where('business_id', $busine->id);
             })->*/whereHas('reservation', function ($query) use ($month, $year){
@@ -73,16 +82,19 @@ class BusinessService
                 $result[$i]['name'] = $busine->name;
                 $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales,2);
                 $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
+                $result[$i]['academia'] = round($amountCourse + $productAcadAmount, 2);
                 $result[$i]['tip'] = round($cars->sum('tip'), 2);
-                $result[$i++]['total'] = round($cars->sum('total') + $productSales, 2);
+                $result[$i++]['total'] = round($cars->sum('total') + $productSales + $amountCourse + $productAcadAmount, 2);
                 $total_tip += round($cars->sum('tip'),2);
                 $total_branch += round($cars->sum('earnings') + $productSales,2);
-                $total_busine += round($cars->sum('total') + $productSales, 2);
+                $total_academia += round($amountCourse + $productAcadAmount,2);
+                $total_busine += round($cars->sum('total') + $productSales + $amountCourse + $productAcadAmount, 2);
                 $technical_assistance += round($cars->sum('technical_assistance'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
             $result[$i]['tip'] = $total_tip;
             $result[$i]['earnings'] = $total_branch;
+            $result[$i]['academia'] = $total_academia;
             $result[$i]['technical_assistance'] = $technical_assistance;
             $result[$i++]['total'] = $total_busine;
           return $result;
@@ -95,6 +107,7 @@ class BusinessService
            $i = 0;
            $total_busine = 0;
            $total_branch = 0;
+           $total_academia = 0;
            $total_tip = 0;
            $technical_assistance = 0;
            foreach ($business as $busine) {
@@ -136,6 +149,14 @@ class BusinessService
             })->sortByDesc('total_quantity')->values();
             $totalPriceProducts = $productsCashier->sum('price');            
             $productSales = $productsCashier->sum('sales');
+            //courses
+            $couseStudent = CourseStudent::whereHas('course', function ($query) use ($startDate){
+                $query->whereDate('startDate', '>=', $startDate);
+            })->where('payment_status', 1);
+            $amountCourse = $couseStudent->sum('total_payment');
+            $productAcad = ProductSale::whereDate('data', '>=', $startDate)
+            ->whereDate('data', '<=', $endDate)->get();
+            $productAcadAmount = $productAcad->sum('price');
             $cars = Car::/*whereHas('reservation.branch', function ($query) use ($busine){
                     $query->where('business_id', $busine->id);
             })->*/whereHas('reservation', function ($query) use ($startDate ,$endDate){
@@ -151,16 +172,19 @@ class BusinessService
                 $result[$i]['name'] = $busine->name;
                 $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales,2);
                 $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
+                $result[$i]['academia'] = round($amountCourse + $productAcadAmount, 2);
                 $result[$i]['tip'] = round($cars->sum('tip'), 2);
-                $result[$i++]['total'] = round($cars->sum('total') + $productSales, 2);
+                $result[$i++]['total'] = round($cars->sum('total') + $productSales + $amountCourse + $productAcadAmount, 2);
                 $total_tip += round($cars->sum('tip'),2);
                 $total_branch += round($cars->sum('earnings') + $productSales,2);
-                $total_busine += round($cars->sum('total') + $productSales, 2);
+                $total_academia += round($amountCourse + $productAcadAmount,2);
+                $total_busine += round($cars->sum('total') + $productSales + $amountCourse + $productAcadAmount, 2);
                 $technical_assistance += round($cars->sum('technical_assistance'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
             $result[$i]['tip'] = $total_tip;
             $result[$i]['earnings'] = $total_branch;
+            $result[$i]['academia'] = $total_academia;
             $result[$i]['technical_assistance'] = $technical_assistance;
             $result[$i++]['total'] = $total_busine;
           return $result;
@@ -174,6 +198,7 @@ class BusinessService
            $total_busine = 0;
            $total_tip = 0;
            $total_branch = 0;
+           $total_academia = 0;
            $technical_assistance = 0;
            $data= Carbon::now()->toDateString();
            foreach ($business as $busine) {
@@ -213,6 +238,12 @@ class BusinessService
             })->sortByDesc('total_quantity')->values();
             $totalPriceProducts = $productsCashier->sum('price');            
             $productSales = $productsCashier->sum('sales');
+            $couseStudent = CourseStudent::whereHas('course', function ($query){
+                $query->whereDate('startDate', Carbon::now());
+            })->where('payment_status', 1);
+            $amountCourse = $couseStudent->sum('total_payment');
+            $productAcad = ProductSale::whereDate('data', Carbon::now())->get();
+            $productAcadAmount = $productAcad->sum('price');
             $cars = Car::/*whereHas('reservation.branch', function ($query) use ($busine){
                     $query->where('branch_id', $busine->id);
             })->*/whereHas('reservation', function ($query) use ($data){
@@ -228,16 +259,19 @@ class BusinessService
                 $result[$i]['name'] = $busine->name;
                 $result[$i]['earnings'] = round($cars->sum('earnings') + $productSales,2);
                 $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
+                $result[$i]['academia'] = round($amountCourse + $productAcadAmount, 2);
                 $result[$i]['tip'] = round($cars->sum('tip'), 2);
-                $result[$i++]['total'] = round($cars->sum('total') + $productSales, 2);
+                $result[$i++]['total'] = round($cars->sum('total') + $productSales + $amountCourse + $productAcadAmount, 2);
                 $total_tip += round($cars->sum('tip'),2);
                 $total_branch += round($cars->sum('earnings') + $productSales,2);
-                $total_busine += round($cars->sum('total') + $productSales, 2);
+                $total_academia += round($amountCourse + $productAcadAmount,2);
+                $total_busine += round($cars->sum('total') + $productSales + $amountCourse + $productAcadAmount, 2);
                 $technical_assistance += round($cars->sum('technical_assistance'), 2);
             }//foreach
             $result[$i]['name'] = 'Total';
             $result[$i]['tip'] = $total_tip;
             $result[$i]['earnings'] = $total_branch;
+            $result[$i]['academia'] = $total_academia;
             $result[$i]['technical_assistance'] = $technical_assistance;
             $result[$i++]['total'] = $total_busine;
           return $result;

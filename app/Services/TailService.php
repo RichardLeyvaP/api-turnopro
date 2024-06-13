@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Client;
 use App\Models\ClientProfessional;
@@ -476,6 +477,10 @@ class TailService {
                     $car = Car::find($reservation->car_id);
                     
         Log::info($car);
+        $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+        $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation){
+            $query->where('branch_id', $reservation->branch_id);
+        })->where('professional_id', $data['professional_id'])->get();
         //$relation = Client::find($data['client_id'])->professionals()->where('professional_id', $data['professional_id'])->first();
         //Log::info($relation);
         //$client_professional_id = $relation->pivot->id;
@@ -502,6 +507,30 @@ class TailService {
         }
         $car->client_professional_id = $client_professional_id;
         $car->save();
+
+        foreach ($servicesOrders as $service) {
+            foreach ($service_professionals as $service_professional) {
+                $serv = $service->branchServiceProfessional->branchService->service;
+                if ($service->branchServiceProfessional->branchService->service->id == $service_professional->branchService->service->id) {
+                    $percent = $service_professional->percent ? $service_professional->percent : 1;
+                    $order = new Order();
+                    $order->car_id = $service->car_id;
+                    $order->product_store_id = null;
+                    $order->branch_service_professional_id = $service_professional->id;
+                    $order->data = $service->data;
+                    $order->is_product = false;
+                    //logica de porciento de ganancia
+                    $order->percent_win = $serv->price_service * $percent/100;
+                    $order->price = $serv->price_service;
+                    $order->request_delete = false;
+                    $order->save();
+                    $service->delete();
+                    /*$service->branch_service_professional_id = $service_professional->id;
+                    $service->save();*/
+                }
+            }
+            
+        } 
         
     }
 }
