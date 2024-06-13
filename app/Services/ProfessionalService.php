@@ -915,14 +915,14 @@ class ProfessionalService
             'Cantidad de Servicios' => $services,
             'Servicios Regulares' => $ServiceRegular->count(),
             'Servicios Especiales' => $ServiceEspecial->count(),
-            'Monto Servicios Especial' => intval($ServiceRegular->sum('percent_win')),
+            'Monto Servicios Especial' => number_format(round($ServiceRegular->sum('percent_win'), 2), 2),
             'Productos Vendidos' => $products,
-            'Propina' => intval($cars->sum('tip')),
-            'Propina 80%' => intval($winTips),
-            'Monto Generado' => intval($amountGenral), //suma productos y servicios
-            'Retención' => $retentionPorcent ? intval($winProfessional * $retentionPorcent/100) : 0, //monto generado percent_win % calculando la retención
-            'Ganancia Barbero' => intval($winProfessional), //monto generado percent_win 
-            'Monto Líquido' => $retentionPorcent ? intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips) : intval($winProfessional+$winTips), //ganancia barbero - retencion + propinas 80%
+            'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+            'Propina 80%' => number_format(round($winTips, 2), 2),
+            'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+            'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent/100, 2), 2) : 0, //monto generado percent_win % calculando la retención
+            'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
+            'Monto Líquido' => $retentionPorcent ?number_format(round($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips, 2), 2) : number_format(round($winProfessional+$winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
         ];
         }
         if($data['charge'] == 'Tecnico'){
@@ -936,7 +936,7 @@ class ProfessionalService
                 $amountGenral = $cars->sum('technical_assistance') * 5000;
                 return $result = [
                     'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                    'Monto Generado' => intval($amountGenral)
+                    'Monto Generado' => number_format(round($amountGenral, 2), 2)
                 ];
         }
         else{
@@ -980,22 +980,21 @@ class ProfessionalService
         $winProfessional = $orderServ->sum('percent_win');
         $retentionPorcent = $professional->retention ? $professional->retention : 0;
         $winTips = intval($cars->sum('tip') * 0.80);
-        return $result = [            
+        return $result = [
             'Clientes Atendidos' => $totalClients,
             'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
             'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
             'Cantidad de Servicios' => $services,
             'Servicios Regulares' => $ServiceRegular->count(),
             'Servicios Especiales' => $ServiceEspecial->count(),
-            'Monto Servicios Especial' => intval($ServiceRegular->sum('percent_win')),
+            'Monto Servicios Especial' => number_format(round($ServiceRegular->sum('percent_win'), 2), 2),
             'Productos Vendidos' => $products,
-            'Propina' => intval($cars->sum('tip')),
-            'Propina 80%' => intval($winTips),
-            'Monto Generado' => intval($amountGenral), //suma productos y servicios
-            'Retención' => $retentionPorcent ? intval($winProfessional * $retentionPorcent/100) : 0, //monto generado percent_win % calculando la retención
-            'Ganancia Barbero' => intval($winProfessional), //monto generado percent_win 
-            'Monto Líquido' => $retentionPorcent ? intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips) : intval($winProfessional+$winTips), //ganancia barbero - retencion + propinas 80%
-            
+            'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+            'Propina 80%' => number_format(round($winTips, 2), 2),
+            'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+            'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent/100, 2), 2) : 0, //monto generado percent_win % calculando la retención
+            'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
+            'Monto Líquido' => $retentionPorcent ?number_format(round($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips, 2), 2) : number_format(round($winProfessional+$winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
         ];
         }
         if($data['charge'] == 'Tecnico'){
@@ -1009,7 +1008,7 @@ class ProfessionalService
                 $amountGenral = $cars->sum('technical_assistance') * 5000;
                 return $result = [
                     'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                    'Monto Generado' => intval($amountGenral)
+                    'Monto Generado' => number_format(round($amountGenral, 2), 2)
                 ];
         }
         else{
@@ -1060,15 +1059,15 @@ class ProfessionalService
             'Cantidad de Servicios' => $services,
             'Servicios Regulares' => $ServiceRegular->count(),
             'Servicios Especiales' => $ServiceEspecial->count(),
-            'Monto Servicios Especial' => intval($ServiceRegular->sum('percent_win')),
+            'Monto Servicios Especial' => number_format(round($ServiceRegular->sum('percent_win'), 2), 2),
             'Productos Vendidos' => $products,
-            'Propina' => intval($cars->sum('tip')),
-            'Propina 80%' => intval($winTips),
-            'Monto Generado' => intval($amountGenral), //suma productos y servicios
-            'Retención' => $retentionPorcent ? intval($winProfessional * $retentionPorcent/100) : 0, //monto generado percent_win % calculando la retención
-            'Ganancia Barbero' => intval($winProfessional), //monto generado percent_win 
-            'Monto Líquido' => $retentionPorcent ? intval($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips) : intval($winProfessional+$winTips), //ganancia barbero - retencion + propinas 80%
-            ];
+            'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+            'Propina 80%' => number_format(round($winTips, 2), 2),
+            'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+            'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent/100, 2), 2) : 0, //monto generado percent_win % calculando la retención
+            'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
+            'Monto Líquido' => $retentionPorcent ?number_format(round($winProfessional-($winProfessional*$retentionPorcent/100)+$winTips, 2), 2) : number_format(round($winProfessional+$winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
+        ];
         
         }
         if($data['charge'] == 'Tecnico'){
@@ -1082,7 +1081,7 @@ class ProfessionalService
                 $amountGenral = $cars->sum('technical_assistance') * 5000;
                 return $result = [
                     'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                    'Monto Generado' => intval($amountGenral)
+                    'Monto Generado' => number_format(round($amountGenral, 2), 2)
                 ];
         }
         else{

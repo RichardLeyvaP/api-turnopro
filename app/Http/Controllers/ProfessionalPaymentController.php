@@ -283,9 +283,12 @@ class ProfessionalPaymentController extends Controller
                                           $retention = Professional::where('id', $request->professional_id)->value('retention');
                                           $paymentIds = $payments->pluck('id');
                                           
+                                          Log::info('Resultado de $payments');
+                                           Log::info($payments);
+                                          
                 if($request->charge == 'Tecnico'){
                    $pendienteMount = 0;
-                    $pagadoMount = $payments->sum('amount') ? intval($payments->sum('amount')) : intval(0);
+                    $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : intval(0);
                     $clientAttended = intval(Car::where('tecnico_id', $professionalId)->where('pay', 1)->sum('technical_assistance'));
                     $servCant = 0;
                     $amountGenerate = 0;
@@ -370,9 +373,9 @@ class ProfessionalPaymentController extends Controller
                     $servAmount = 0;
                     $productAmount = 0;
                 }
-                
+                 $payments_redondeado = round($pagadoMount, 0);
 
-            return response()->json(['payments' => $payments, 'pendiente' => intval($pendienteMount), 'pagado' => intval($pagadoMount), 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => intval($amountGenerate), 'propina80' => intval($propina80), 'metaCant' => $metaCant, 'metaAmount' => intval($metaAmount), 'productBonoCant' => $productBonoCant, 'productAmount' => $productAmount, 'servBonoCant' => $servBonoCant, 'servAmount' => $servAmount, 'retention' => intval($retentionpay), 'winnerRetention' => intval($winnerRetention), 'winnerAmount' => intval($winnerAmount), 'productCant' => $productCant], 200);
+            return response()->json(['payments' => $payments, 'pendiente' => number_format(round($pendienteMount, 2), 2), 'pagado' => number_format(round($payments_redondeado, 2), 2), 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => number_format(round($amountGenerate, 2), 2), 'propina80' => number_format(round($propina80, 2), 2), 'metaCant' => $metaCant, 'metaAmount' => number_format(round($metaAmount, 2), 2), 'productBonoCant' => $productBonoCant, 'productAmount' => number_format(round($productAmount, 2), 2), 'servBonoCant' => $servBonoCant, 'servAmount' => number_format(round($servAmount, 2), 2), 'retention' => number_format(round($retentionpay, 2), 2), 'winnerRetention' => number_format(round($winnerRetention, 2), 2), 'winnerAmount' => number_format(round($winnerAmount, 2), 2), 'productCant' => number_format(round($productCant, 2), 2)], 200);
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {

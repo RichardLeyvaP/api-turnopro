@@ -1007,22 +1007,22 @@ class CarController extends Controller
                         'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana
                         'attendedClient' => $cars->sum('attendedClient'),
                         'services' => $cars->sum('services'),
-                        'totalGeneral' => intval($cars->sum('totalGeneral')),
-                        'totalServices' => $cars->sum('totalServices'),
-                        'totalProducts' => $cars->sum('totalProducts'),
-                        'tips' => intval($cars->sum('tips')),
-                        'tips80' => intval($cars->sum('tipspercent')),
+                        'totalGeneral' =>number_format(round($cars->sum('totalGeneral'), 0), 2),
+                        'totalServices' =>number_format(round($cars->sum('totalServices'), 0), 2)  ,
+                        'totalProducts' => number_format(round($cars->sum('totalProducts'), 0), 2)  , 
+                        'tips' =>number_format(round($cars->sum('tips'), 0), 2), 
+                        'tips80' => number_format(round($cars->sum('tipspercent'), 0), 2), 
                         'clientAleator' => $cars->sum('clientAleator'),
-                        'amountGenerate' => intval($cars->sum('amountGenerate')),
-                        'totalRetention' => intval($retentionP->sum('retention')),
+                        'amountGenerate' =>number_format(round($cars->sum('amountGenerate'), 0), 2),  
+                        'totalRetention' => number_format(round($retentionP->sum('retention'), 0), 2),  
                         'metacant' => $meta->count() ? $meta->count() : 0,
-                        'metaamount' => $meta->sum('amount') ? $meta->sum('amount') : 0,
-                        'winPay' => intval($cars->sum('winPay'))
+                        'metaamount' => $meta->sum('amount') ? number_format(round($meta->sum('amount'), 0), 2) : '0.00',
+                        'winPay' => number_format(round($cars->sum('winPay'), 0), 2) 
                     ];
                 })->sortByDesc('data')->values();
 
             //Log::info($cars->pluck('id'));
-            return response()->json(['car' => $cars], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
@@ -1051,7 +1051,7 @@ class CarController extends Controller
                     'data' => $reservation->data,
                     'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($reservation->data)->locale('es_ES')->isoFormat('dddd'))),
                     'attendedClient' =>intval($car->technical_assistance),
-                    'amountGenerate' =>intval($car->technical_assistance * 5000)
+                    'amountGenerate' =>number_format(round($car->technical_assistance * 5000, 2), 2)
                 ];
             });
 
@@ -1247,6 +1247,11 @@ class CarController extends Controller
                     $tipspercent = $tips*0.80;
                 $totalRetention = $retention ? $amountGenerate * $retention / 100 : 0;
                 Log::info($ServiceEspecial);
+                
+                 Log::info('aqui imprimiendo - $amountGenerate - $totalRetention + $tipspercent)');
+                 Log::info($amountGenerate);
+                 Log::info($totalRetention );
+                 Log::info( $tipspercent);
                 return [
                     'id' => $car->id,
                     'clientName' => $client->name . " " . $client->surname,
@@ -1254,26 +1259,26 @@ class CarController extends Controller
                     'date' => $reservation->data . ' ' . $reservation->start_time,
                     'time' => $reservation->total_time,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
-                    'tips' =>  (int)$tips,
-                    'tips80' =>  $tipspercent,
+                    'tips' =>  number_format(round($tips, 2), 2),
+                    'tips80' =>  number_format(round($tipspercent, 2), 2),
                     'Services' => $orderServ->count(),
-                    'totalServices' => $orderServ->sum('price'),
+                    'totalServices' => number_format(round($orderServ->sum('price'), 2), 2),
                     'Products' => $orderProd->sum('cant'),
                     'totalProducts' => $orderProd->sum('price'),
                     'choice' => $car->select_professional ? 'Seleccionado' : 'aleatorio',
                     'serviceSpecial' => $ServiceEspecial->count(),
-                    'SpecialAmount' => $ServiceEspecial->sum('percent_win'),
+                    'SpecialAmount' => number_format(round($ServiceEspecial->sum('percent_win'), 2), 2),
                     'serviceRegular' => $ServiceRegular->count(),
                     'pay' => $car->professional_payment_id == null ? 0 : 1,
-                    'totalRetention' => intval($totalRetention),
+                    'totalRetention' =>number_format(round($totalRetention, 2), 2),
                     'totalGeneral' => $car->amount,
                     'amountGenerate' => $orderServ->sum('percent_win'),
                     'metaCant' => $meta->count(),
                     'metaAmount' => $meta->sum('amount'),
-                    'winPay' => intval($amountGenerate - $totalRetention + $tipspercent),
+                    'winPay' => number_format(round($amountGenerate - $totalRetention + $tipspercent, 2), 2),
                 ];
             });
-            return response()->json(['car' => $cars], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
@@ -1303,7 +1308,7 @@ class CarController extends Controller
                         'clientName' => $client->name . " " . $client->surname,
                         'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
                         'date' => $car->reservation->data . ' ' . $car->reservation->start_time,
-                        'amountTotal' => $car->technical_assistance * 5000,
+                        'amountTotal' => number_format(round($car->technical_assistance * 5000, 2), 2),
                     ];
                 });
             /*//$retention = Professional::where('id', $data['professional_id'])->first()->retention/100;

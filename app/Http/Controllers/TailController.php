@@ -202,7 +202,7 @@ class TailController extends Controller
             ]);
 
             $reservations = Tail::whereHas('reservation', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
+                $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
             })->whereIn('attended', [0, 1, 3])->get()->map(function ($tail) {
                     $reservation = $tail->reservation;
                     $professional = $reservation->car->clientProfessional->professional;
