@@ -86,7 +86,7 @@ class ProfessionalPaymentController extends Controller
                             $finance->file = '';
                             $finance->save();
 
-                            $finance = new Finance();
+                            /*$finance = new Finance();
                             $finance->control = $control++;
                             $finance->operation = 'Ingreso';
                             $finance->amount = $courseProfessional->course->price-$data['amount'];
@@ -96,7 +96,7 @@ class ProfessionalPaymentController extends Controller
                             $finance->revenue_id = 9;
                             $finance->data = Carbon::now();                
                             $finance->file = '';
-                            $finance->save();
+                            $finance->save();*/
             }else{
                 $professionalPayment = new ProfessionalPayment();
                 $professionalPayment->branch_id = $data['branch_id'];

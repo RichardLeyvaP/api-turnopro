@@ -291,6 +291,7 @@ class ReservationController extends Controller
                 'startDate' => 'required|date',
                 'endDate' => 'required|date'
             ]);
+            Log::info($request);
             $dates = [];
             $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
@@ -299,13 +300,13 @@ class ReservationController extends Controller
                 $client = $reservation['car']['clientProfessional']['client'];
                 $startTime = Carbon::parse($reservation['start_time']);
                 $dates[] = [
-                    'startDate' => Carbon::parse($reservation['data'] . ' ' . $reservation['start_time'])->toDateTimeString(),
-                    'endDate' => Carbon::parse($reservation['data'] . ' ' . $reservation['final_hour'])->toDateTimeString(),
+                    'startDate' => $reservation['data'] . 'T' . $reservation['start_time'],
+                    'endDate' => $reservation['data'] . 'T' . $reservation['final_hour'],
                     'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
                 ];
             }
             $sortedDates = collect($dates)->sortBy('startDate')->values()->all();
-            return response()->json(['reservaciones' => $sortedDates], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['reservaciones' => $sortedDates], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);

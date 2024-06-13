@@ -1156,6 +1156,7 @@ class CarController extends Controller
 
             $cursesProf = CourseProfessional::where('professional_id', $data['professional_id'])->where('pay', 0)->get()->map(function ($courseProf) {
                 $course = $courseProf->course;
+                $totalPayment = $course->students()->sum('course_student.total_payment');
                 return [
                     'id' => $courseProf->id,
                     'enrollment_id' => $course->enrollment_id,
@@ -1165,6 +1166,7 @@ class CarController extends Controller
                     'description' => $course->description,
                     'startDate' => $course->startDate,
                     'endDate' => $course->endDate,
+                    'totalPayment' => $totalPayment,
                 ];
             });
             /*$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
