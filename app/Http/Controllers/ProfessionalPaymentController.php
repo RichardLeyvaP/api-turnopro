@@ -574,8 +574,8 @@ class ProfessionalPaymentController extends Controller
         // Actualizar los valores de ganancias en el array
         foreach ($result as $row) {
             $monthName = Carbon::createFromDate($year, $row->month)->locale('es_ES')->monthName;
-            $monthlyEarnings[$monthName] = $row->earnings;
-            $totalEarnings += $row->earnings;
+            $monthlyEarnings[$monthName] = intval($row->earnings);
+            $totalEarnings += intval($row->earnings);
         }
         // Calcular el promedio por mes
         $averageEarnings = count($result) > 0 ? $totalEarnings / count($result) : 0;
