@@ -594,7 +594,7 @@ class ProfessionalPaymentController extends Controller
             })
              ->get();
 
-                    return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => $totalEarnings, 'averageEarnings' => $averageEarnings, 'metaCant' => $meta->count(), 'metaAmount' => $meta->sum('amount')], 200);
+                    return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => number_format(round($totalEarnings, 0), 2), 'averageEarnings' => number_format(round($averageEarnings, 0), 2), 'metaCant' => $meta->count(), 'metaAmount' => number_format(round($meta->sum('amount'), 0), 2)], 200);
                 } catch (\Throwable $th) {
                     Log::error($th);
                     return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
