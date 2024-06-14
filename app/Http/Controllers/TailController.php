@@ -234,7 +234,7 @@ class TailController extends Controller
                     ];
                 })->sortBy('start_time')->values();
 
-                $attendedReservations = $reservations->where('attended', 1)->values();
+                $attendedReservations = $reservations->where('attended', 1)->sortByDesc('start_time')->values();
                 $unattendedReservations = $reservations->where('attended', '!=', 1)->values();
             
             return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations ], 200, [], JSON_NUMERIC_CHECK);
