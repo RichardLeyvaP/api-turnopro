@@ -414,7 +414,7 @@ class ProfessionalController extends Controller
                             else{
                                 $startTime = Carbon::parse($start_time);
                                 $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
-                                $closingTime = Carbon::parse($closing_time);
+                                $closingTime = Carbon::parse($horaActualMas2Horas);
                                 while ($startTime <= $closingTime) {
                                     $reservations[] = $startTime->format('H:i');
                                     $startTime->addMinutes(15);
