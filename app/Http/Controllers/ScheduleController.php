@@ -40,7 +40,21 @@ class ScheduleController extends Controller
                     'closing_time' => $query->closing_time
                 ];
             });
-            return response()->json(['Schedules' => $schules], 200, [], JSON_NUMERIC_CHECK);
+            $branch = Branch::find($SchedSchedule_data['branch_id']);
+            $services = $branch->services->map(function ($service){
+                return [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,                    
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
+                    'ponderation' => $service->pivot->ponderation
+                ];
+            })->sortBy('name')->sortBy('ponderation')->values();
+            return response()->json(['Schedules' => $schules, 'services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar Horario"], 500);
         }

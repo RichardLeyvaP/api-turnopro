@@ -47,7 +47,9 @@ class BusinessController extends Controller
                     'location' => $branch->address, 
                     'location_link' => $branch->location,
                     'phone_link' => "https://wa.me/".$branch->phone,
-                    'image' => $branch->image_data
+                    'image' => $branch->image_data,
+                    'business_id' => $branch->business_id,
+                    'type' => 'Branch'
                 ];
             }
 
@@ -62,7 +64,9 @@ class BusinessController extends Controller
                     'location' => $enrollment->address, 
                     'location_link' => $enrollment->location,
                     'phone_link' => "https://wa.me/".$enrollment->phone,
-                    'image' => $enrollment->image_data
+                    'image' => $enrollment->image_data,
+                    'business_id' => $enrollment->id,
+                    'type' => 'Academia'
                 ];
             }
             return response()->json(['business' => $resultArray], 200);
