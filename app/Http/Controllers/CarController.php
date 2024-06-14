@@ -1051,7 +1051,7 @@ class CarController extends Controller
                     'data' => $reservation->data,
                     'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($reservation->data)->locale('es_ES')->isoFormat('dddd'))),
                     'attendedClient' =>intval($car->technical_assistance),
-                    'amountGenerate' =>number_format(round($car->technical_assistance * 5000, 2), 2)
+                    'amountGenerate' =>$car->technical_assistance * 5000
                 ];
             });
 
@@ -1062,44 +1062,12 @@ class CarController extends Controller
                     'data' => $cars[0]['data'],
                     'day_of_week' => $cars[0]['day_of_week'],
                     'attendedClient' => intval($cars->sum('attendedClient')),
-                    'amountGenerate' => intval($cars->sum('amountGenerate'))
+                    'amountGenerate' => number_format(round($cars->sum('amountGenerate'), 2), 2)
                 ];
             })->values();
 
             return response()->json(['car' => $groupedCars], 200);
-            /*//$retention = number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
-           $cars = Car::whereHas('reservation', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->where('pay', 1)->where('tecnico_id', $data['professional_id'])->get()->map(function($car) use ($data){
-                //$ordersServices = count($car->orders->where('is_product', 0));
-                return [
-                    'professional_id' => $data['professional_id'],
-                    'branch_id' => $car->reservation->branch_id,
-                    'data' => $car->reservation->data,
-                    'day_of_week' => ucfirst(mb_strtolower(Carbon::parse($car->reservation->data)->locale('es_ES')->isoFormat('dddd'))), // Obtener el día de la semana en español y en mayúscula
-                    'attendedClient' => $car->technical_assistance,
-                    //'technical_assistance' => $car->technical_assistance,
-                    //'services' => $ordersServices,
-                    //'totalServices' => $car->orders->sum('percent_win') + $car->tip * 0.80,
-                    //'totalServicesRetention' => $retention ? ($car->orders->sum('percent_win') + $car->tip * 0.80) * $retention : 0,
-                    //'clientAleator' => $car->select_professional,
-                    'amountGenerate' => $car->technical_assistance * 5000
-                ];
-           })->groupBy('data')->map(function ($cars) {
-            return [
-                'professional_id' => $cars[0]['professional_id'],
-                'branch_id' => $cars[0]['branch_id'],
-                'data' => $cars[0]['data'],
-                'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana
-                'attendedClient' => $cars->sum('attendedClient'),
-                //'services' => $cars->sum('services'),
-                //'totalServices' => $cars->sum('totalServices'),
-                //'totalServicesRetention' => $cars->sum('totalServicesRetention'),
-                //'clientAleator' => $cars[0]['clientAleator'],
-                'amountGenerate' => $cars->sum('amountGenerate')
-            ];
-        })->values();
-           return response()->json(['car' => $cars], 200);*/
+            
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
