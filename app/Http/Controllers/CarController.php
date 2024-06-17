@@ -407,7 +407,7 @@ class CarController extends Controller
                     ->map(function ($sale) {
                         return [
                             'date' => $sale->data,
-                            'earnings' => $sale->price + $sale->pay
+                            'earnings' => $sale->price
                         ];
                     });
             // Combinar los resultados de las reservas y las ventas en efectivo
