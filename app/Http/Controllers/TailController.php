@@ -198,9 +198,9 @@ class TailController extends Controller
         try { 
             
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required'
             ]);
-
+            $data['branch_id'] = intval($data['branch_id']);
             $reservations = Tail::whereHas('reservation', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
             })->whereIn('attended', [0, 1, 3])->get()->map(function ($tail) {
@@ -250,9 +250,9 @@ class TailController extends Controller
             
             Log::info( "Mostarr la cola de servicio capilar del dia de una branch");
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required'
             ]);
-            
+            $data['branch_id'] = intval($data['branch_id']);
             return response()->json(['tail' => $this->tailService->cola_branch_capilar($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
@@ -269,7 +269,6 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
             ]);
-            
             return response()->json(['tail' => $this->tailService->cola_branch_tecnico($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
                 } catch (\Throwable $th) {  
                     Log::error($th);
@@ -283,8 +282,9 @@ class TailController extends Controller
             
             Log::info( "Mostarr la cola del dia de una branch");
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required'
             ]);
+            $data['branch_id'] = intval($data['branch_id']);
             $this->tailService->cola_branch_delete($data['branch_id']);
             return response()->json(['tail' => "Tails eliminada correctamente"], 200);
                 } catch (\Throwable $th) {  
