@@ -318,7 +318,7 @@ class ProfessionalController extends Controller
         }
     }*/
 
-     public function professional_reservations_time(Request $request)
+    public function professional_reservations_time(Request $request)
     {
         try {
             $data = $request->validate([

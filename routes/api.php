@@ -96,6 +96,9 @@ Route::get('change_password', [UserController::class, 'change_password']);
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
+    Route::get('/finance-show', [FinanceController::class, 'show']);//optener las finanzas 
+    Route::get('/branch-cars', [CarController::class, 'branch_cars']);//devuelve los cars de una branch en la fecha actual
+    Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
 });
 Route::get('/time', function () {
     //return now(); // Devuelve la hora actual.
@@ -281,7 +284,7 @@ Route::post('/car-destroy', [CarController::class, 'destroy']);
 Route::post('/car-denegada', [CarController::class, 'destroy_denegada']);
 Route::post('/car-destroy-solicitud', [CarController::class, 'destroy_solicitud']);
 Route::get('/car_orders', [CarController::class, 'car_orders']);
-Route::get('/branch-cars', [CarController::class, 'branch_cars']);//devuelve los cars de una branch en la fecha actual
+//Route::get('/branch-cars', [CarController::class, 'branch_cars']);//devuelve los cars de una branch en la fecha actual
 Route::get('/branch-cars-delete', [CarController::class, 'branch_cars_delete']);//devuelve los cars de una branch en la fecha actual solicitados a eliminar
 Route::get('/car_order_delete_professional', [CarController::class, 'car_order_delete_professional']);//dado una branch y un professional devolver las ordenes solicitadas a eliminar en la fecha actual
 Route::get('/car_order_delete_branch', [CarController::class, 'car_order_delete_branch']);//dado una branch devolver las ordenes solicitadas a eliminar en la fecha actual
@@ -428,7 +431,7 @@ Route::get('/whatsapp-notification', [NotificationController::class, 'whatsapp_n
 Route::get('/notification-show', [NotificationController::class, 'show']);
 Route::get('/notification-truncate', [NotificationController::class, 'notification_truncate']);//vaciar la tabla de notificaciones
 Route::get('/notification-professional', [NotificationController::class, 'professional_show']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
-Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
+//Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
 Route::post('/notification', [NotificationController::class, 'store']);
 Route::post('/notification2', [NotificationController::class, 'store2']);
 Route::put('/notification', [NotificationController::class, 'update']);
@@ -549,7 +552,7 @@ Route::put('/revenue', [RevenueController::class, 'update']);
 Route::post('/revenue-destroy', [RevenueController::class, 'destroy']);
 
 Route::get('/finance', [FinanceController::class, 'index']);
-Route::get('/finance-show', [FinanceController::class, 'show']);
+//Route::get('/finance-show', [FinanceController::class, 'show']);
 Route::get('/finance-combined-data', [FinanceController::class, 'combinedData']);
 Route::post('/finance', [FinanceController::class, 'store']);
 Route::post('/finance-updated', [FinanceController::class, 'update']);
