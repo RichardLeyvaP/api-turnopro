@@ -981,7 +981,7 @@ class CarController extends Controller
                         'totalProducts' => $orderProd->sum('price'),
                         'clientAleator' => $aleatorio,
                         'amountGenerate' => $amountGenerate, //ganancia total del barbero ganancias servicios
-                        'retention' => $retent,
+                        'c' => $retent,
                         'winPay' => $amountGenerate - $retent + $tipspercent,
                         //'metaamount' => $meta->sum('amount')
 
@@ -1014,7 +1014,7 @@ class CarController extends Controller
                         'tips80' => number_format(round($cars->sum('tipspercent'), 0), 2), 
                         'clientAleator' => $cars->sum('clientAleator'),
                         'amountGenerate' => number_format(round($cars->sum('amountGenerate'), 0), 2),  
-                        'totalRetention' => number_format(round($retentionP->sum('retention'), 0), 2),  
+                        'totalRetention' => $retentionP->sum('retention') ? number_format(round($retentionP->sum('retention'), 0), 2) : number_format(round($cars->sum('retention'), 0), 2),  
                         'metacant' => $meta->count() ? $meta->count() : 0,
                         'metaamount' => $meta->sum('amount') ? number_format(round($meta->sum('amount'), 0), 2) : '0.00',
                         'winPay' => number_format(round($cars->sum('winPay'), 0), 2) 
