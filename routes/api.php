@@ -516,6 +516,16 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/product-mostSold-periodo', [ProductController::class, 'product_mostSold_periodo']);//optener los productos mas vendidos en un período dado
     Route::get('/product-stock', [ProductController::class, 'product_stock']);//optener los productos cuya existencia es menor a una definida
 
+    //ProductCategory
+    Route::get('/product-category', [ProductCategoryController::class, 'index']);
+    Route::get('/product-category-show', [ProductCategoryController::class, 'show']);
+    Route::post('/product-category', [ProductCategoryController::class, 'store']);
+    Route::put('/product-category', [ProductCategoryController::class, 'update']);
+    Route::post('/product-category-destroy', [ProductCategoryController::class, 'destroy']);
+    Route::get('/category_branch', [ProductCategoryController::class, 'category_branch']); //devolver las categorías de lso productos que existen en una branch
+    Route::get('/category-products-branch', [ProductCategoryController::class, 'category_products_branch']); //devolver las categorías con los productos que existen en una branch
+    
+
     //Service
     Route::get('/service-show', [ServiceController::class, 'show']);
     Route::post('/service', [ServiceController::class, 'store']);
