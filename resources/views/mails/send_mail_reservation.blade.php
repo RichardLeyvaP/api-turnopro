@@ -36,6 +36,10 @@ Puede llegar 10 minutos antes o despues de la hora indicada y debe anunciarse en
 </p>
 
 <p style="color: #555;">
+    Recuerda anunciar tu llegada en nuestra sucursal.
+</p>
+
+<p style="color: #555;">
     &#x1F917; Por favor, has click en el botón de abajo para confirmar tu reserva.
 </p>
 
