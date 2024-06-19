@@ -355,7 +355,8 @@ class UserController extends Controller
                         }
                         }
                     }
-                    //return $branch;
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    Auth::user();     
                     return response()->json([
                         'id' => $user->id,
                         'userName' => $user->name,
@@ -371,7 +372,7 @@ class UserController extends Controller
                         'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'useTechnical' => $branch ? $branch['useTechnical'] : 0,
-                        'token' => $user->createToken('auth_token')->plainTextToken,
+                        'token' => $token,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;
                         })->values()->all() : [],
