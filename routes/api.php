@@ -97,8 +97,14 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
     Route::get('/finance-show', [FinanceController::class, 'show']);//optener las finanzas 
-    Route::get('/branch-cars', [CarController::class, 'branch_cars']);//devuelve los cars de una branch en la fecha actual
     Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
+    Route::get('/tail_branch_attended_shiftboard', [TailController::class, 'tail_branch_attended']); //dado una id de la branch Mostrar los clientes que estan siendo atendidos (attended [1:por el barbero, 2:por el tecnico capilar])
+    //Caja
+    Route::get('/branch-cars', [CarController::class, 'branch_cars']);//devuelve los cars de una branch en la fecha actual
+    Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
+    Route::get('/services-professional-branch-web', [BranchServiceProfessionalController::class, 'services_professional_branch_web']);//devolver los servicios que realiza un professional en un abranch
+    
+
 });
 Route::get('/time', function () {
     //return now(); // Devuelve la hora actual.
@@ -233,7 +239,7 @@ Route::get('/productstore-show', [ProductStoreController::class, 'show']);
 Route::get('/show-stores-products', [ProductStoreController::class, 'showStoresProducts']); //devolver los products y los stores
 Route::get('/productstore-academy-show', [ProductStoreController::class, 'academy_show']);//devuelve los productos por almacenes de una academia
 Route::get('/products-academy-show', [ProductStoreController::class, 'products_academy_show']);//devuelve los productos por almacenes de una academia para autocomplete
-Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
+//Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
 Route::get('/productstore-show-academy-web', [ProductStoreController::class, 'product_show_academy_web']);//dada una branch devuelve los productos de los almacenes que hay en el
 Route::post('/productstore', [ProductStoreController::class, 'store']);
 Route::put('/productstore', [ProductStoreController::class, 'update']);
@@ -266,7 +272,7 @@ Route::get('/professional_services', [BranchServiceProfessionalController::class
 Route::get('/store_professional_service', [BranchServiceProfessionalController::class, 'store_professional_service']);
 Route::get('/branch-service-professionals', [BranchServiceProfessionalController::class, 'branch_service_professionals']);//devolver los professionales que realizan un servicio en una sucursal
 Route::get('/services-professional-branch', [BranchServiceProfessionalController::class, 'services_professional_branch']);//devolver los servicios que realiza un professional en un abranch
-Route::get('/services-professional-branch-web', [BranchServiceProfessionalController::class, 'services_professional_branch_web']);//devolver los servicios que realiza un professional en un abranch
+//Route::get('/services-professional-branch-web', [BranchServiceProfessionalController::class, 'services_professional_branch_web']);//devolver los servicios que realiza un professional en un abranch
 //Route::get('/services-professional-branch-free', [BranchServiceProfessionalController::class, 'services_professional_branch_free']);//devolver los servicios que no realiza un professional en un abranch
 Route::get('/professionals-branch-service', [BranchServiceProfessionalController::class, 'professionals_branch_service']);//devolver los professionales que no realizan un servicio en una sucursal
 

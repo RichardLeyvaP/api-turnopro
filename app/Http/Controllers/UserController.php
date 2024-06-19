@@ -417,17 +417,14 @@ class UserController extends Controller
             if (isset($user->id)) {
                 if (Hash::check($request->password, $user->password)) {
                     Log::info("Pass correct");
-                    //return $user->professional->id;
-                    //Log::info($user->professional->id);
                     $business = Business::where('professional_id', $user->professional->id)->first();
                     Log::info($business);
-                    //$branch = ;
+
                     if ($user->professional->branches->where('id', $request->branch_id)->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
                         if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
                         $branch = $user->professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
-                            //if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
-                                //if($request->branch_id === $branch->id){
+
                             return [
                                 'branch_id' => $branch->id,
                                 'nameBranch' => $branch->name,
@@ -435,29 +432,13 @@ class UserController extends Controller
                                 'business_id' => $branch->business->id,
                                 'nameBusiness' => $branch->business->name
                             ];
-                            //}
-                        //}
                         })->values()->first();}
-
-                        //reglas de convivencia
-                        /*Log::info($user->professional->branchRules);
-                        if($user->professional->charge->name == 'Barbero' || $user->professional->charge->name == 'Tecnico' || $user->professional->charge->name == 'Barbero y Encargado'){
-                            //return $user->professional->branchRules->where('branch_id', $request->branch_id);
-                        if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
-                            $branchRules = Branch::find($request->branch_id);
-                            $professional = Professional::find($user->professional->id);
-                            $professionalRules = $professional->branchRules()
-                            ->where('branch_id', $request->branch_id)
-                            ->get()->map->pivot->where('data', Carbon::now()->toDateString());
-                            Log::info($professionalRules);
-                            if (count($professionalRules) == 0) {
-                                $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
-                                Log::info($branchRulesId);
-                                $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
-                            }
-                        }
-                        }*/
                     }
+                    
+                
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    Auth::user();                  
+            
                     //return $branch;
                     return response()->json([
                         'id' => $user->id,
@@ -474,7 +455,7 @@ class UserController extends Controller
                         'branch_id' => $branch ? $branch['branch_id'] : 0,
                         'nameBranch' => $branch ? $branch['nameBranch'] : "",
                         'useTechnical' => $branch ? $branch['useTechnical'] : 0,
-                        'token' => $user->createToken('auth_token')->plainTextToken,
+                        'token' => $token,
                         'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
                             return $query->name . ', ' . $query->module;
                         })->values()->all() : [],
