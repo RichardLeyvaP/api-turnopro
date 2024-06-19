@@ -13,6 +13,7 @@ use App\Models\Vacation;
 use App\Models\Workplace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BranchProfessionalController extends Controller
@@ -32,6 +33,7 @@ class BranchProfessionalController extends Controller
     {
         Log::info("Asignar professionals a una sucursal");
         Log::info($request);
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -44,10 +46,11 @@ class BranchProfessionalController extends Controller
             $professional = Professional::find($data['professional_id']);
 
             $branch->professionals()->attach($professional->id, ['ponderation' => $data['ponderation'], 'limit' => $data['limit'], 'mountpay' => $data['mountpay']]);
-
+            DB::commit();
             return response()->json(['msg' => 'Professional asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
+            DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al asignar el professional a esta sucursal'], 500);
         }
     }
