@@ -63,6 +63,7 @@ class AssistantController extends Controller
                     'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                     'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                     'total_time' => $reservation->total_time,
+                    'confirmation' => $reservation->confirmation,
                     'client_name' => $client->name,
                     'telefone_client' => $client->phone ? strval($client->phone) : '',
                     'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
@@ -82,5 +83,5 @@ class AssistantController extends Controller
             } catch (\Throwable $th) {
                 return response()->json(['msg' => $th->getMessage()."Error al mostrar las notifocaciones"], 500);
             }
-            }
+    }
 }
