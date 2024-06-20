@@ -219,6 +219,7 @@ class TailService {
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
+                'confirmation' => $reservation->confirmation,
                 'client_name' => $client->name." ".$client->surname,
                 'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
                 'professional_name' => $professional->name." ".$professional->surname,

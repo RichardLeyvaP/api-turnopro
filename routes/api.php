@@ -612,6 +612,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::post('/comment', [CommentController::class, 'store']);
     Route::put('/comment', [CommentController::class, 'update']);
     Route::post('/comment-destroy', [CommentController::class, 'destroy']);
+    Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
 
     //Notification
     Route::get('/notification', [NotificationController::class, 'index']);
@@ -727,8 +728,6 @@ Route::get('/update-confirmation-client', [ReservationController::class, 'update
 Route::get('/reservation-notconfirm', [ReservationController::class, 'reserve_noconfirm']);//Reservas no confirmadas, eliminarlas, tarea programada
 
 Route::get('/schedule-show', [ScheduleController::class, 'show']);
-
-Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
 
 Route::get('/enrollment', [EnrollmentController::class, 'index']);
 
