@@ -173,12 +173,10 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/reservations-count-week', [ReservationController::class, 'reservations_count_week']);//Dado un business devolver las reservations por dias de la semana actual
     Route::get('/client-history', [ReservationController::class, 'client_history']);//Dado una branch y un cliente devolver el historico de este cliente en esta branch
     Route::get('/reservation', [ReservationController::class, 'index']);
-    Route::get('/reservation-send-mail', [ReservationController::class, 'reservation_send_mail']);//para enviar correos a las reservas de 1 dia en adelante comunicando que debn confirmar en 24hr
     Route::get('/reservation-show', [ReservationController::class, 'show']);
     Route::post('/reservation', [ReservationController::class, 'store']);
     Route::put('/reservation', [ReservationController::class, 'update']);
     Route::post('/reservation-destroy', [ReservationController::class, 'destroy']);
-    Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
     Route::get('/professional_reservations', [ReservationController::class, 'professional_reservations']);
     Route::get('/professional-reservations-periodo', [ReservationController::class, 'professional_reservations_periodo']);//dado un professional y una branch devolver las reservacioes
     Route::get('/branch-reservations-periodo', [ReservationController::class, 'branch_reservations_periodo']);//dado una branch devolver las reservacioes
@@ -327,7 +325,6 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::post('/closebox', [BoxCloseController::class, 'store']);
     Route::get('/closebox', [BoxCloseController::class, 'index']);
     Route::get('/closebox-show', [BoxCloseController::class, 'show']);
-    Route::get('/closebox-month', [BoxCloseController::class, 'box_close_month']);//para tarea progradad enviar el cierre de caja
     Route::put('/closebox', [BoxCloseController::class, 'update']);
     Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
 
@@ -551,7 +548,6 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/cola_branch_data2', [TailController::class, 'cola_branch_data2']); //dado un branch_id devolver la cola de esa branch que estan en attended 3 movil
     Route::get('/cola_branch_professional', [TailController::class, 'cola_branch_professional']); //dado un branch_id  y un professional_id devolver la cola de esa branch
     Route::get('/cola_branch_professional_new', [TailController::class, 'cola_branch_professional_new']); //dado un branch_id  y un professional_id devolver la cola de esa branch y los servicios por carros
-    Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar la cola
     Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate']); //vaciar la cola
     Route::get('/cola_branch_delete', [TailController::class, 'cola_branch_delete']); //vaciar la cola de una branch_id
     Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado
@@ -577,7 +573,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/branch_workplaces_select', [WorkplaceController::class, 'branch_workplaces_select']);//mostrar los pestos de trabajo disponibles para atender al tecnico
     Route::get('/update-state-prof-workplace', [WorkplaceController::class, 'update_state_prof']);//pasar el puesto de trabajo del professional a disponible
     Route::get('/update-state-tec-workplace', [WorkplaceController::class, 'update_state_tec']);//pasar el puesto de trabajo del tecnico a disponible
-    Route::get('/workplace-reset', [WorkplaceController::class, 'resetWorkplaces']);//pasar los puestos de trabajo a 0
+    
 
     //Schedule
     Route::get('/schedule', [ScheduleController::class, 'index']);
@@ -618,7 +614,6 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/notification', [NotificationController::class, 'index']);
     Route::get('/whatsapp-notification', [NotificationController::class, 'whatsapp_notification']);//dado un numero de telefono enviar una notificacion a whatsApp
     Route::get('/notification-show', [NotificationController::class, 'show']);
-    Route::get('/notification-truncate', [NotificationController::class, 'notification_truncate']);//vaciar la tabla de notificaciones
     Route::get('/notification-professional', [NotificationController::class, 'professional_show']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
     Route::post('/notification', [NotificationController::class, 'store']);
     Route::post('/notification2', [NotificationController::class, 'store2']);
@@ -704,6 +699,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/closebox-month', [BoxCloseController::class, 'box_close_month']);//para tarea progradad enviar el cierre de caja
+
+Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
+
+Route::get('/reservation-send-mail', [ReservationController::class, 'reservation_send_mail']);//para enviar correos a las reservas de 1 dia en adelante comunicando que debn confirmar en 24hr
+    
+Route::get('/notification-truncate', [NotificationController::class, 'notification_truncate']);//vaciar la tabla de notificaciones
+
+Route::get('/cola_truncate', [TailController::class, 'cola_truncate']); //vaciar la cola
+
+Route::get('/workplace-reset', [WorkplaceController::class, 'resetWorkplaces']);//pasar los puestos de trabajo a 0
 
 Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']); // dado un professional una branch y una fecha devuelve los horarios reservados de ese professional
     
