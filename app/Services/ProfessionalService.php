@@ -1129,7 +1129,13 @@ class ProfessionalService
                         ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
                         ->orWhereNull('start_time');
                 });
-        })->get();
+        })->with(['records' => function($query) {
+            $query->whereDate('start_time', Carbon::today())->orderBy('start_time');
+        }])
+        ->get()
+        ->sortBy(function($professional) {
+            return $professional->records->first()->start_time ?? now();
+        });
         $professionalFree = [];
         // Convertir el campo telefono a string
        // Iterar sobre los profesionales

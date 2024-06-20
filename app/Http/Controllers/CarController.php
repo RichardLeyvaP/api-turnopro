@@ -981,7 +981,7 @@ class CarController extends Controller
                         'totalProducts' => $orderProd->sum('price'),
                         'clientAleator' => $aleatorio,
                         'amountGenerate' => $amountGenerate, //ganancia total del barbero ganancias servicios
-                        'c' => $retent,
+                        'retention' => $retent,
                         'winPay' => $amountGenerate - $retent + $tipspercent,
                         //'metaamount' => $meta->sum('amount')
 
