@@ -456,54 +456,65 @@ class TailService {
         Log::info($reservation);
         $horaActual = Carbon::now();
             $tiempoReserva = $reservation->total_time;
-                        $reservations = $professional->reservations()
-                            ->where('branch_id', $data['branch_id'])
-                            ->whereIn('confirmation', [1, 4])
-                            ->whereDate('data', Carbon::now())
-                            ->orderBy('start_time')
-                            ->get();
+            $reservations = $professional->reservations()
+            ->where('branch_id', $data['branch_id'])
+            ->whereIn('confirmation', [1, 4])
+            ->whereDate('data', Carbon::now())
+            ->orderBy('start_time')
+            ->get();
+        if ($reservations->isEmpty()) {
+            Log::info('No tiene reservas reasigned coordinador');
+            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
-                        if ($reservations->isEmpty()) {
-                            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+            // Sumar el tiempo de la reserva a la hora actual
+            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
 
-                            // Sumar el tiempo de la reserva a la hora actual
-                            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
+            // Formatear la nueva hora en el formato deseado (H:i)
+            //$nuevaHoraFormateada = $nuevaHora->format('H:i');
+            //$nuevaHora = $horaActual->copy()->addMinutes($tiempoReserva);
 
-                            $reservation->start_time = $horaActual->format('H:i:s');
-                            $reservation->final_hour = $nuevaHora->format('H:i:s');
-                            $reservation->save();
-                        } else {
-                            $encontrado = false;
-                            $nuevaHoraInicio = $horaActual;
+            $reservation->start_time = $horaActual->format('H:i:s');
+            $reservation->final_hour = $nuevaHora->format('H:i:s');
+            $reservation->save();
+        } else {
+            Log::info('Tiene reservas reasigned coordinador');
+            $encontrado = false;
+            $nuevaHoraInicio = $horaActual;
+            
+            $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
+            // Recorrer las reservas existentes para encontrar un intervalo de tiempo libre
+            foreach ($reservations as $reservation1) {
+                Log::info('entra al ciclo de las reservas reasigned coordinador');
+                $start_time = Carbon::parse($reservation1->start_time);
+                $final_hour = Carbon::parse($reservation1->final_hour);
+                //return $reservation1;
+                $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+                $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
+                $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+                
+                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                    Log::info('Entra que es menor que la reserva reasigned coordinador');
+                   $encontrado = true;
+                   break;
+                }
 
-                            // Recorrer las reservas existentes para encontrar un intervalo de tiempo libre
-                            foreach ($reservations as $reservation1) {
-                                $start_time = Carbon::parse($reservation1->start_time);
-                                $final_hour = Carbon::parse($reservation1->final_hour);
+                $nuevaHoraInicio = $final_hour;
+            }
 
-                                if ($nuevaHoraInicio->diffInMinutes($start_time) >= $tiempoReserva) {
-                                    $encontrado = true;
-                                    break;
-                                }
+            if (!$encontrado) {
+                // Si no se encontró un intervalo libre, usar el final de la última reserva
+                $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour);
+            }
 
-                                $nuevaHoraInicio = $final_hour;
-                            }
+            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
-                            if (!$encontrado) {
-                                // Si no se encontró un intervalo libre, usar el final de la última reserva
-                                $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour);
-                            }
-
-                            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
-
-                            // Sumar el tiempo de la reserva a la hora actual
-                            $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
-
-                            // Guardar la nueva reserva
-                            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
-                            $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
-                            $reservation->save();
-                        }
+            // Sumar el tiempo de la reserva a la hora actual
+            $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
+            // Guardar la nueva reserva
+            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
+            $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
+            $reservation->save();
+        }
                     $car = Car::find($reservation->car_id);
                     
         Log::info($car);
@@ -558,5 +569,11 @@ class TailService {
             
         } 
         
+    }
+
+    private function convertirHoraAMinutos($hora)
+    {
+        list($horas, $minutos) = explode(':', $hora);
+        return ($horas * 60) + $minutos;
     }
 }

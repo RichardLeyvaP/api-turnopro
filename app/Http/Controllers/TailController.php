@@ -525,6 +525,7 @@ class TailController extends Controller
             })->where('aleatorie', 1)->first();
             $duration_service = 0;
             if (is_null($tails)) {
+                Log::info('No hay aleatorie');
                 return response()->json(0, 200);
             } else {
                 //foreach ($tails as $tail) {
@@ -553,7 +554,9 @@ class TailController extends Controller
 
                     // Calcular la diferencia
                     $diff = $services_id_collection->diff($service_professional_id_collection);
+                    Log::info($diff);
                     if ($diff->isEmpty()) {
+                        Log::info('Realiza todos los servicios');
                         // Todos los services_id están en service_professional_ids
                         $client = $car->clientProfessional->client;
                         $professional = Professional::find($data['professional_id']);
@@ -598,8 +601,9 @@ class TailController extends Controller
                             ->whereDate('data', Carbon::now())
                             ->orderBy('start_time')
                             ->get();
-
+                        Log::info('$reservations');
                         if ($reservations->isEmpty()) {
+                            Log::info('No tiene reservas');
                             list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
                             // Sumar el tiempo de la reserva a la hora actual
@@ -613,17 +617,25 @@ class TailController extends Controller
                             $reservation->final_hour = $nuevaHora->format('H:i:s');
                             $reservation->save();
                         } else {
+                            Log::info('Tiene reservas reasigned aleatorie');
                             $encontrado = false;
                             $nuevaHoraInicio = $horaActual;
-
+                            
+                            $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
                             // Recorrer las reservas existentes para encontrar un intervalo de tiempo libre
                             foreach ($reservations as $reservation1) {
+                                Log::info('entra al ciclo de las reservas reasigned aleatorie');
                                 $start_time = Carbon::parse($reservation1->start_time);
                                 $final_hour = Carbon::parse($reservation1->final_hour);
-
-                                if ($nuevaHoraInicio->diffInMinutes($start_time) >= $tiempoReserva) {
-                                    $encontrado = true;
-                                    break;
+                                //return $reservation1;
+                                $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+                                $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
+                                $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+                                
+                                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                                    Log::info('Entra que es menor que la reserva reasigned aleatorie');
+                                   $encontrado = true;
+                                   break;
                                 }
 
                                 $nuevaHoraInicio = $final_hour;
@@ -638,7 +650,6 @@ class TailController extends Controller
 
                             // Sumar el tiempo de la reserva a la hora actual
                             $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
-
                             // Guardar la nueva reserva
                             $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
                             $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
@@ -654,4 +665,10 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
+    private function convertirHoraAMinutos($hora)
+    {
+        list($horas, $minutos) = explode(':', $hora);
+        return ($horas * 60) + $minutos;
+    }
+
 }
