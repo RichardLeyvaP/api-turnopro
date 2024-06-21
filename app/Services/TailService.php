@@ -455,26 +455,55 @@ class TailService {
         $reservation = Reservation::find($data['reservation_id']);
         Log::info($reservation);
         $horaActual = Carbon::now();
-        /*$horaActual = Carbon::now()->format('H:i');
-        $timestamp = strtotime($reservation->total_time);
-        $tiempo_entero = date('Gis', $timestamp);
-        $horas = intval(substr($tiempo_entero, 0, 1));
-        $minutos = intval(substr($tiempo_entero, 2, 2));
-        return $time = $horas * 60 + $minutos;*/
-        // Obtener el tiempo total de la reserva en formato "00:40:00"
             $tiempoReserva = $reservation->total_time;
+                        $reservations = $professional->reservations()
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereIn('confirmation', [1, 4])
+                            ->whereDate('data', Carbon::now())
+                            ->orderBy('start_time')
+                            ->get();
 
-            // Parsear el tiempo de la reserva para obtener horas, minutos y segundos
-            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+                        if ($reservations->isEmpty()) {
+                            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
-            // Sumar el tiempo de la reserva a la hora actual
-            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
+                            // Sumar el tiempo de la reserva a la hora actual
+                            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
 
-            // Formatear la nueva hora en el formato deseado (H:i)
-            $nuevaHoraFormateada = $nuevaHora->format('H:i');
-                    $reservation->start_time = $horaActual;
-                    $reservation->final_hour = Carbon::parse($nuevaHoraFormateada)->toTimeString();
-                    $reservation->save();
+                            $reservation->start_time = $horaActual->format('H:i:s');
+                            $reservation->final_hour = $nuevaHora->format('H:i:s');
+                            $reservation->save();
+                        } else {
+                            $encontrado = false;
+                            $nuevaHoraInicio = $horaActual;
+
+                            // Recorrer las reservas existentes para encontrar un intervalo de tiempo libre
+                            foreach ($reservations as $reservation1) {
+                                $start_time = Carbon::parse($reservation1->start_time);
+                                $final_hour = Carbon::parse($reservation1->final_hour);
+
+                                if ($nuevaHoraInicio->diffInMinutes($start_time) >= $tiempoReserva) {
+                                    $encontrado = true;
+                                    break;
+                                }
+
+                                $nuevaHoraInicio = $final_hour;
+                            }
+
+                            if (!$encontrado) {
+                                // Si no se encontró un intervalo libre, usar el final de la última reserva
+                                $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour);
+                            }
+
+                            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+
+                            // Sumar el tiempo de la reserva a la hora actual
+                            $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
+
+                            // Guardar la nueva reserva
+                            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
+                            $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
+                            $reservation->save();
+                        }
                     $car = Car::find($reservation->car_id);
                     
         Log::info($car);
@@ -482,10 +511,6 @@ class TailService {
         $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation){
             $query->where('branch_id', $reservation->branch_id);
         })->where('professional_id', $data['professional_id'])->get();
-        //$relation = Client::find($data['client_id'])->professionals()->where('professional_id', $data['professional_id'])->first();
-        //Log::info($relation);
-        //$client_professional_id = $relation->pivot->id;
-        //$client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()/*->map->pivot->value('id')*/;
         $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
         
        
