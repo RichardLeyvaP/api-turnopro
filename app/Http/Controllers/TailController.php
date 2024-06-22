@@ -522,15 +522,13 @@ class TailController extends Controller
             ]);
             $tails = Tail::whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
-            })->where('aleatorie', 1)->first();
-            $duration_service = 0;
-            if (is_null($tails)) {
+            })->where('aleatorie', 1)->get();
+            if ($tails->isEmpty()) {
                 Log::info('No hay aleatorie');
                 return response()->json(0, 200);
             } else {
-                //foreach ($tails as $tail) {
-                    $duration_service = 0;
-                    $reservation = $tails->reservation;
+                foreach ($tails as $tail) {
+                    $reservation = $tail->reservation;
                     $tiempoReserva = $reservation->total_time;
                     $car = $reservation->car;
                     $services_id = [];
@@ -538,7 +536,6 @@ class TailController extends Controller
                     $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                     foreach ($servicesOrders as $servicesOrder) {
                         $services_id[] = $servicesOrder->branchServiceProfessional->branchService->service->id;
-                        $duration_service += $servicesOrder->branchServiceProfessional->branchService->service->duration_service;
                     }
                     //$services_id = $servicesOrders->branchService->service->pluck('id');
                     $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
@@ -560,40 +557,7 @@ class TailController extends Controller
                         // Todos los services_id están en service_professional_ids
                         $client = $car->clientProfessional->client;
                         $professional = Professional::find($data['professional_id']);
-                        $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
-                        if (!$client_professional) {
-                            Log::info("no existe");
-                            $professional->clients()->attach($client->id);
-                            $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
-                            Log::info($client_professional_id);
-                        } else {
-                            $client_professional_id = $client_professional->pivot->id;
-                            Log::info($client_professional_id);
-                        }
-                        $car->client_professional_id = $client_professional_id;
-                        $car->save();
-                        $tails->aleatorie = 2;
-                        $tails->save();
-                        foreach ($servicesOrders as $service) {
-                            foreach ($service_professionals as $service_professional) {
-                                $serv = $service->branchServiceProfessional->branchService->service;
-                                if ($service->branchServiceProfessional->branchService->service->id == $service_professional->branchService->service->id) {
-                                    $percent = $service_professional->percent ? $service_professional->percent : 1;
-                                    $order = new Order();
-                                    $order->car_id = $service->car_id;
-                                    $order->product_store_id = null;
-                                    $order->branch_service_professional_id = $service_professional->id;
-                                    $order->data = $service->data;
-                                    $order->is_product = false;
-                                    //logica de porciento de ganancia
-                                    $order->percent_win = $serv->price_service * $percent / 100;
-                                    $order->price = $serv->price_service;
-                                    $order->request_delete = false;
-                                    $order->save();
-                                    $service->delete();
-                                }
-                            }
-                        }
+                        //actualizar horario de la rserva
                         $horaActual = Carbon::now();
                         $reservations = $professional->reservations()
                             ->where('branch_id', $data['branch_id'])
@@ -606,14 +570,10 @@ class TailController extends Controller
                             Log::info('No tiene reservas');
                             list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
-                            // Sumar el tiempo de la reserva a la hora actual
-                            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
-
-                            // Formatear la nueva hora en el formato deseado (H:i)
-                            //$nuevaHoraFormateada = $nuevaHora->format('H:i');
-                            //$nuevaHora = $horaActual->copy()->addMinutes($tiempoReserva);
 
                             $reservation->start_time = $horaActual->format('H:i:s');
+                            // Sumar el tiempo de la reserva a la hora actual
+                            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
                             $reservation->final_hour = $nuevaHora->format('H:i:s');
                             $reservation->save();
                         } else {
@@ -648,16 +608,51 @@ class TailController extends Controller
 
                             list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
+                            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
                             // Sumar el tiempo de la reserva a la hora actual
                             $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
                             // Guardar la nueva reserva
-                            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
                             $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
                             $reservation->save();
                         }
+                        //end actualizar horario de la reserva
+                        $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+                        if (!$client_professional) {
+                            Log::info("no existe");
+                            $professional->clients()->attach($client->id);
+                            $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+                            Log::info($client_professional_id);
+                        } else {
+                            $client_professional_id = $client_professional->pivot->id;
+                            Log::info($client_professional_id);
+                        }
+                        $car->client_professional_id = $client_professional_id;
+                        $car->save();
+                        $tails->aleatorie = 2;
+                        $tails->save();
+                        foreach ($servicesOrders as $service) {
+                            foreach ($service_professionals as $service_professional) {
+                                $serv = $service->branchServiceProfessional->branchService->service;
+                                if ($service->branchServiceProfessional->branchService->service->id == $service_professional->branchService->service->id) {
+                                    $percent = $service_professional->percent ? $service_professional->percent : 1;
+                                    $order = new Order();
+                                    $order->car_id = $service->car_id;
+                                    $order->product_store_id = null;
+                                    $order->branch_service_professional_id = $service_professional->id;
+                                    $order->data = $service->data;
+                                    $order->is_product = false;
+                                    //logica de porciento de ganancia
+                                    $order->percent_win = $serv->price_service * $percent / 100;
+                                    $order->price = $serv->price_service;
+                                    $order->request_delete = false;
+                                    $order->save();
+                                    $service->delete();
+                                }
+                            }
+                        }
                         return response()->json(1, 200);
                     } //if diferencia
-                //} //foreach
+                } //foreach
                 return response()->json(0, 200);
             }
         } catch (\Throwable $th) {

@@ -457,7 +457,7 @@ class TailService {
         $horaActual = Carbon::now();
             $tiempoReserva = $reservation->total_time;
             $reservations = $professional->reservations()
-            ->where('branch_id', $data['branch_id'])
+            ->where('branch_id', $reservation->branch_id)
             ->whereIn('confirmation', [1, 4])
             ->whereDate('data', Carbon::now())
             ->orderBy('start_time')
@@ -466,14 +466,10 @@ class TailService {
             Log::info('No tiene reservas reasigned coordinador');
             list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
+            $reservation->start_time = $horaActual->format('H:i:s');
             // Sumar el tiempo de la reserva a la hora actual
             $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
 
-            // Formatear la nueva hora en el formato deseado (H:i)
-            //$nuevaHoraFormateada = $nuevaHora->format('H:i');
-            //$nuevaHora = $horaActual->copy()->addMinutes($tiempoReserva);
-
-            $reservation->start_time = $horaActual->format('H:i:s');
             $reservation->final_hour = $nuevaHora->format('H:i:s');
             $reservation->save();
         } else {
@@ -508,10 +504,10 @@ class TailService {
 
             list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
 
+            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
             // Sumar el tiempo de la reserva a la hora actual
             $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
             // Guardar la nueva reserva
-            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
             $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
             $reservation->save();
         }
