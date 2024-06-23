@@ -198,7 +198,7 @@ class TailController extends Controller
             $data['branch_id'] = intval($data['branch_id']);
             $reservations = Tail::whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
-            })->whereIn('attended', [0, 1, 3])->get()->map(function ($tail) {
+            })->whereIn('attended', [0, 1, 3, 11, 111, 4, 5, 33])->get()->map(function ($tail) {
                 $reservation = $tail->reservation;
                 $professional = $reservation->car->clientProfessional->professional;
                 $client = $reservation->car->clientProfessional->client;
@@ -511,7 +511,7 @@ class TailController extends Controller
         }
     }
 
-    public function reasigned_client_totem(Request $request)
+    /*public function reasigned_client_totem(Request $request)
     {
         try {
 
@@ -533,14 +533,20 @@ class TailController extends Controller
                     $car = $reservation->car;
                     $services_id = [];
                     $service_professional_id = [];
-                    $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+                    $servicesOrders = Order::where('car_id', $car->id)
+                    ->where('is_product', 0)
+                    ->with(['branchServiceProfessional.branchService.service'])
+                    ->get();
                     foreach ($servicesOrders as $servicesOrder) {
                         $services_id[] = $servicesOrder->branchServiceProfessional->branchService->service->id;
                     }
                     //$services_id = $servicesOrders->branchService->service->pluck('id');
                     $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
                         $query->where('branch_id', $data['branch_id']);
-                    })->where('professional_id', $data['professional_id'])->get();
+                    })
+                    ->where('professional_id', $data['professional_id'])
+                    ->with('branchService.service')
+                    ->get();
                     foreach ($service_professionals as $service_professional) {
                         $service_professional_id[] = $service_professional->branchService->service->id;
                     }
@@ -633,7 +639,7 @@ class TailController extends Controller
                         foreach ($servicesOrders as $service) {
                             foreach ($service_professionals as $service_professional) {
                                 $serv = $service->branchServiceProfessional->branchService->service;
-                                if ($service->branchServiceProfessional->branchService->service->id == $service_professional->branchService->service->id) {
+                                if ($serv->id == $service_professional->branchService->service->id) {
                                     $percent = $service_professional->percent ? $service_professional->percent : 1;
                                     $order = new Order();
                                     $order->car_id = $service->car_id;
@@ -659,7 +665,183 @@ class TailController extends Controller
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
+    }*/
+    public function reasigned_client_totem(Request $request)
+{
+    try {
+        Log::info("Reasignar Cliente a barbero");
+        $data = $request->validate([
+            'branch_id' => 'required|numeric',
+            'professional_id' => 'required|numeric'
+        ]);
+
+        $tails = Tail::whereHas('reservation', function ($query) use ($data) {
+            $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
+        })->where('aleatorie', 1)->get();
+
+        if ($tails->isEmpty()) {
+            Log::info('No hay aleatorie');
+            return response()->json(0, 200);
+        }
+
+        DB::beginTransaction();
+
+        foreach ($tails as $tail) {
+            $reservation = $tail->reservation;
+            $tiempoReserva = $reservation->total_time;
+            $car = $reservation->car;
+
+            $servicesOrders = Order::where('car_id', $car->id)
+                ->where('is_product', 0)
+                ->with(['branchServiceProfessional.branchService.service'])
+                ->get();
+
+            $services_id = $servicesOrders->pluck('branchServiceProfessional.branchService.service.id')->toArray();
+
+            $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                ->where('professional_id', $data['professional_id'])
+                ->with('branchService.service')
+                ->get();
+
+            $service_professional_id = $service_professionals->pluck('branchService.service.id')->toArray();
+
+            $services_id_collection = collect($services_id);
+            $service_professional_id_collection = collect($service_professional_id);
+            $diff = $services_id_collection->diff($service_professional_id_collection);
+
+            Log::info($diff);
+            if ($diff->isEmpty()) {
+                Log::info('Realiza todos los servicios');
+
+                $client = $car->clientProfessional->client;
+                $professional = Professional::find($data['professional_id']);
+
+                $this->updateReservationTimes($reservation, $professional, $data['branch_id'], $tiempoReserva);
+
+                $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+                if (!$client_professional) {
+                    Log::info("No existe relación cliente-profesional");
+                    $professional->clients()->attach($client->id);
+                    $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->pluck('id')->first();
+                } else {
+                    $client_professional_id = $client_professional->pivot->id;
+                }
+
+                $car->client_professional_id = $client_professional_id;
+                $car->save();
+
+                $tail->aleatorie = 2;
+                $tail->save();
+
+                $this->reassignServices($servicesOrders, $service_professionals);
+
+                DB::commit();
+                return response()->json(1, 200);
+            }
+        }
+        
+        DB::commit();
+        return response()->json(0, 200);
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error($th);
+        return response()->json(['msg' => $th->getMessage() . " Error interno del sistema"], 500);
     }
+}
+
+private function updateReservationTimes($reservation, $professional, $branch_id, $tiempoReserva)
+{
+    $horaActual = Carbon::now();
+    $reservations = $professional->reservations()
+        ->where('branch_id', $branch_id)
+        ->whereIn('confirmation', [1, 4])
+        ->whereDate('data', Carbon::now())
+        ->orderBy('start_time')
+        ->get();
+
+    Log::info('$reservations');
+    if ($reservations->isEmpty()) {
+        Log::info('No tiene reservas');
+        $this->setReservationTimes($reservation, $horaActual, $tiempoReserva);
+    } else {
+        Log::info('Tiene reservas reasigned aleatorie');
+        $nuevaHoraInicio = $this->findAvailableTimeSlot($reservations, $horaActual, $tiempoReserva);
+        $this->setReservationTimes($reservation, $nuevaHoraInicio, $tiempoReserva);
+    }
+}
+
+private function setReservationTimes($reservation, $start_time, $tiempoReserva)
+{
+    list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+    $reservation->start_time = $start_time->format('H:i:s');
+    $reservation->final_hour = $start_time->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva)->format('H:i:s');
+    $reservation->save();
+}
+
+private function findAvailableTimeSlot($reservations, $horaActual, $tiempoReserva)
+{
+    $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
+    $nuevaHoraInicio = $horaActual;
+
+    foreach ($reservations as $reservation1) {
+        $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+        $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
+        $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+
+        if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+            return $nuevaHoraInicio;
+        }
+
+        $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
+    }
+
+    return Carbon::parse($reservations->last()->final_hour);
+}
+
+private function reassignServices($servicesOrders, $service_professionals)
+{
+    // Construir un mapa de profesionales de servicio por ID de servicio
+    $serviceProfessionalMap = $service_professionals->keyBy(function($item) {
+        return $item->branchService->service->id;
+    });
+
+    // Añadir logging para depuración
+    Log::info('Mapa de profesionales de servicio:', $serviceProfessionalMap->toArray());
+
+    foreach ($servicesOrders as $service) {
+        $serv = $service->branchServiceProfessional->branchService->service;
+        Log::info('Revisando servicio:', ['id' => $serv->id, 'nombre' => $serv->name]);
+
+        // Buscar el profesional de servicio correspondiente en el mapa
+        $serviceProfessional = $serviceProfessionalMap->get($serv->id);
+        Log::info('Profesional de servicio encontrado:', $serviceProfessional ? $serviceProfessional->toArray() : 'No encontrado');
+
+        if ($serviceProfessional) {
+            $percent = $serviceProfessional->percent ?? 1;
+
+            $order = new Order();
+            $order->car_id = $service->car_id;
+            $order->product_store_id = null;
+            $order->branch_service_professional_id = $serviceProfessional->id;
+            $order->data = $service->data;
+            $order->is_product = false;
+            $order->percent_win = $serv->price_service * $percent / 100;
+            $order->price = $serv->price_service;
+            $order->request_delete = false;
+
+            // Añadir logging para la creación de la orden
+            Log::info('Creando nueva orden:', $order->toArray());
+
+            $order->save();
+
+            // Eliminar el servicio original después de reasignar
+            $service->delete();
+            Log::info('Servicio original eliminado:', ['id' => $service->id]);
+        }
+    }
+}
     private function convertirHoraAMinutos($hora)
     {
         list($horas, $minutos) = explode(':', $hora);

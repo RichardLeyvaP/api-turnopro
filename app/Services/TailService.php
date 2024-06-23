@@ -14,6 +14,7 @@ use App\Models\Tail;
 use App\Models\Comment;
 use App\Models\ProfessionalWorkPlace;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TailService {
@@ -447,7 +448,7 @@ class TailService {
             }
     }
 
-    public function reasigned_client($data){
+    /*public function reasigned_client($data){
         $client = Client::find($data['client_id']);
         Log::info($client);
         $professional = Professional::find($data['professional_id']);
@@ -558,14 +559,150 @@ class TailService {
                     $order->request_delete = false;
                     $order->save();
                     $service->delete();
-                    /*$service->branch_service_professional_id = $service_professional->id;
-                    $service->save();*/
                 }
             }
             
         } 
         
+    }*/
+
+    public function reasigned_client($data)
+{
+    try {
+        DB::beginTransaction();
+
+        Log::info("Reasignar Cliente");
+
+        $client = Client::findOrFail($data['client_id']);
+        Log::info($client);
+
+        $professional = Professional::findOrFail($data['professional_id']);
+        Log::info($professional);
+
+        $reservation = Reservation::findOrFail($data['reservation_id']);
+        Log::info($reservation);
+
+        $horaActual = Carbon::now();
+        $tiempoReserva = $reservation->total_time;
+
+        $reservations = $professional->reservations()
+            ->where('branch_id', $reservation->branch_id)
+            ->whereIn('confirmation', [1, 4])
+            ->whereDate('data', Carbon::now())
+            ->orderBy('start_time')
+            ->get();
+
+        if ($reservations->isEmpty()) {
+            Log::info('No tiene reservas reasigned coordinador');
+            $this->actualizarReserva($reservation, $horaActual, $tiempoReserva);
+        } else {
+            Log::info('Tiene reservas reasigned coordinador');
+            $nuevaHoraInicio = $this->encontrarIntervaloLibre($reservations, $horaActual, $tiempoReserva);
+            $this->actualizarReserva($reservation, $nuevaHoraInicio, $tiempoReserva);
+        }
+
+        $car = Car::findOrFail($reservation->car_id);
+        Log::info($car);
+
+        $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+
+        $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
+            $query->where('branch_id', $reservation->branch_id);
+        })->where('professional_id', $data['professional_id'])->get();
+
+        $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+
+        if (!$client_professional) {
+            Log::info("Cliente profesional no existe");
+            $professional->clients()->attach($client->id);
+            $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+        } else {
+            $client_professional_id = $client_professional->pivot->id;
+        }
+        Log::info($client_professional_id);
+
+        $tail = $reservation->tail;
+        if ($tail && $tail->aleatorie != 0) {
+            $tail->aleatorie = 1;
+            $tail->save();
+        }
+
+        $car->client_professional_id = $client_professional_id;
+        $car->save();
+
+        $this->reassignServices($servicesOrders, $service_professionals);
+
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error($e->getMessage());
+        return response()->json(['error' => 'Error interno del sistema'], 500);
     }
+}
+
+private function actualizarReserva($reservation, $horaInicio, $tiempoReserva)
+{
+    list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+    $nuevaHoraFinal = $horaInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
+
+    $reservation->start_time = $horaInicio->format('H:i:s');
+    $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
+    $reservation->save();
+}
+
+private function encontrarIntervaloLibre($reservations, $horaActual, $tiempoReserva)
+{
+    $encontrado = false;
+    $nuevaHoraInicio = $horaActual;
+    $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
+
+    foreach ($reservations as $reservation1) {
+        Log::info('Revisando reservas coordinador');
+        $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+        $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
+        $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+
+        if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+            $encontrado = true;
+            break;
+        }
+        $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
+    }
+
+    if (!$encontrado) {
+        $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour);
+    }
+
+    return $nuevaHoraInicio;
+}
+
+private function reassignServices($servicesOrders, $service_professionals)
+{
+    $serviceProfessionalMap = $service_professionals->keyBy(function($item) {
+        return $item->branchService->service->id;
+    });
+
+    foreach ($servicesOrders as $service) {
+        $serv = $service->branchServiceProfessional->branchService->service;
+        $serviceProfessional = $serviceProfessionalMap->get($serv->id);
+
+        if ($serviceProfessional) {
+            $percent = $serviceProfessional->percent ?? 1;
+            $order = new Order();
+            $order->car_id = $service->car_id;
+            $order->product_store_id = null;
+            $order->branch_service_professional_id = $serviceProfessional->id;
+            $order->data = $service->data;
+            $order->is_product = false;
+            $order->percent_win = $serv->price_service * $percent / 100;
+            $order->price = $serv->price_service;
+            $order->request_delete = false;
+            $order->save();
+            $service->delete();
+        }
+    }
+}
+
 
     private function convertirHoraAMinutos($hora)
     {
