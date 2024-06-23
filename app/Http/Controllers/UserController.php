@@ -338,7 +338,8 @@ class UserController extends Controller
                         })->values()->first();
 
                         Log::info($user->professional->branchRules);
-                        if($user->professional->charge->name == 'Barbero' || $user->professional->charge->name == 'Tecnico' || $user->professional->charge->name == 'Barbero y Encargado'){
+                        $charge = $user->professional->charge->name;
+                        if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                         if ($user->professional->branchRules->where('branch_id', $request->branch_id)) {
                             $branchRules = Branch::find($request->branch_id);
