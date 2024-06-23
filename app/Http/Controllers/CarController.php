@@ -1220,12 +1220,18 @@ class CarController extends Controller
                  Log::info($amountGenerate);
                  Log::info($totalRetention );
                  Log::info( $tipspercent);
+                 $formattedDuration = '';
+
+                    if ($reservation->started_at && $reservation->finished_at) {
+                        $durationInMinutes = $reservation->started_at->diffInMinutes($reservation->finished_at);
+                        $formattedDuration = $this->formatDuration($durationInMinutes);
+                    }
                 return [
                     'id' => $car->id,
                     'clientName' => $client->name . " " . $client->surname,
                     'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
                     'date' => $reservation->data . ' ' . $reservation->start_time,
-                    'time' => $reservation->total_time,
+                    'time' => $formattedDuration,
                     'servicesRealizated' => implode(', ', $serviceNames->toArray()),
                     'tips' =>  number_format(round($tips, 2), 2),
                     'tips80' =>  number_format(round($tipspercent, 2), 2),
@@ -1250,6 +1256,28 @@ class CarController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
+    }
+
+    function formatDuration($minutes)
+    {
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+
+        $result = '';
+
+        if ($hours > 0) {
+            $result .= $hours . ' hora' . ($hours > 1 ? 's' : '');
+        }
+
+        if ($hours > 0 && $remainingMinutes > 0) {
+            $result .= ' y ';
+        }
+
+        if ($remainingMinutes > 0) {
+            $result .= $remainingMinutes . ' minuto' . ($remainingMinutes > 1 ? 's' : '');
+        }
+
+        return $result;
     }
 
     public function tecnico_car_date(Request $request)

@@ -290,11 +290,15 @@ class TailService {
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         if ($attended == 1) {
             $tail->aleatorie = 0;
+            $reservation = Reservation::findOrFail($reservation_id);
+            $reservation->started_at = now();
+            $reservation->save();
         }
         $tail->attended = $attended;
         $tail->save();
         if($attended == 2){
-           $reservation = Reservation::find($reservation_id);
+           $reservation = Reservation::findOrFail($reservation_id);
+           $reservation->finished_at = now();
            $reservation->confirmation = 2;
            $reservation->save(); 
         }

@@ -25,4 +25,9 @@ class Reservation extends Model
     {
         return $this->hasOne(Tail::class);
      }
+
+     protected $casts = [
+        'started_at' => 'datetime',
+        'finished_at' => 'datetime',
+    ];
 }
