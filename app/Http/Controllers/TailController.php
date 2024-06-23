@@ -724,7 +724,8 @@ class TailController extends Controller
                 if (!$client_professional) {
                     Log::info("No existe relación cliente-profesional");
                     $professional->clients()->attach($client->id);
-                    $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->pluck('id')->first();
+                    $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+                    Log::info($client_professional_id);
                 } else {
                     $client_professional_id = $client_professional->pivot->id;
                 }
