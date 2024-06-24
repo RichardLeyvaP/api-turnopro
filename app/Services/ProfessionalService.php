@@ -1123,6 +1123,7 @@ class ProfessionalService
                 })
                 ->orWhereHas('tails', function ($subquery) use ($endTimeThreshold) {
                     $subquery->where('attended', '!=', 1)
+                        ->where('attended', '!=', 2)
                         ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
                         ->orWhereNull('start_time');
                 });
