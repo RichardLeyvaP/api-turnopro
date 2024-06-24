@@ -149,8 +149,17 @@ class BoxCloseController extends Controller
             $mergedEmails = $emails->merge($emailArray);
             Log::info('$mergedEmails correos a enviar cierre de caja');
             Log::info($mergedEmails);
+            foreach ($mergedEmails as $email) {
+                try {
+                    $this->sendEmailService->emailBoxClosure($email, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);
+                } catch (\Swift_TransportException $e) {
+                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                } catch (\Exception $e) {
+                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                }
+            }
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
-            $this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);
+            /*$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);*/
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'bonus' => $bonus], 200);
         } catch (TransportException $e) {
