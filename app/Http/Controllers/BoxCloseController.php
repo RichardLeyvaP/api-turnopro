@@ -202,7 +202,7 @@ class BoxCloseController extends Controller
                 SUM(totalCreditCard) as totalCreditCard,
                 SUM(totalTransfer) as totalTransfer,
                 SUM(totalOther) as totalOther,
-                SUM(totalcardGif) as totalCardGif
+                SUM(totalCardGif) as totalCardGif
             ')->first();
                 $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
                 if (!$finances->isEmpty()) {
@@ -276,7 +276,11 @@ class BoxCloseController extends Controller
                         $professionalsData[] = $professionalData;
                     }
                 }
-
+                
+                     Log::info("Generar PDF");
+                     $boxData = $añoAnterior . '-' . $mesAnterior;
+           $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensual', ['branchBusinessName' => $branch->business['name'], 'branchName' => $branch->name, 'boxData' => $boxData, 'totalTip' => $boxClose->totalTip, 'totalProduct' => $boxClose->totalProduct, 'totalService' => $boxClose->totalService, 'totalCash' => $boxClose->totalCash, 'totalCreditCard' => $boxClose->totalCreditCard, 'totalDebit' => $boxClose->totalDebit, 'totalTransfer' => $boxClose->totalTransfer, 'totalOther' => $boxClose->totalOther, 'totalMount' => $boxClose->totalMount, 'totalCardGif' => $boxClose->totalCardGif, 'ingreso' =>  round($ingreso, 2), 'gasto' => round($gasto, 2), 'utilidad' => round($ingreso - $gasto, 2), 'professionalBonus' => $professionalsData]);
+            $reporte = $pdf->output();
                 //Aqui hacer la logicac de enviar el correo
                 $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
                     $query->where('name', 'Administrador')
@@ -285,14 +289,50 @@ class BoxCloseController extends Controller
                     $query->where('branches.id', $branch->id);
                 })/*whereIn('charge_id', [3, 4, 5, 12])*/
                     ->pluck('email');
+                    $emailassociated = [];
+                    $emailArray = [];
+                    $mergedEmails = [];
                 $emailassociated = $branch->associates()->pluck('email');
                 $emailArray = $emailassociated->toArray();
                 $mergedEmails = $emails->merge($emailArray);
-                $this->sendEmailService->emailBoxClosureMonthly($mergedEmails, '', $branch->business['name'], $branch->name, $añoAnterior . '-' . $mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2), round($gasto, 2), round($ingreso - $gasto, 2), $professionalsData);
+                Log::info($mergedEmails);
+                foreach ($mergedEmails as $email) {
+                    try {
+                        $this->sendEmailService->emailBoxClosureMonthly(
+                            $email,
+                            $reporte,
+                            $branch->business['name'],
+                            $branch->name,
+                            $añoAnterior . '-' . $mesAnterior,
+                            0,
+                            0,
+                            0,
+                            $boxClose->totalTip,
+                            $boxClose->totalProduct,
+                            $boxClose->totalService,
+                            $boxClose->totalCash,
+                            $boxClose->totalCreditCard,
+                            $boxClose->totalDebit,
+                            $boxClose->totalTransfer,
+                            $boxClose->totalOther,
+                            $boxClose->totalMount,
+                            $boxClose->totalCardGif,
+                            round($ingreso, 2),
+                            round($gasto, 2),
+                            round($ingreso - $gasto, 2),
+                            $professionalsData
+                        );
+                    } catch (\Swift_TransportException $e) {
+                        Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                    } catch (\Exception $e) {
+                        Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    }
+                }
+                /*$this->sendEmailService->emailBoxClosureMonthly('yasmany891230@gmail.com', '', $branch->business['name'], $branch->name, $añoAnterior . '-' . $mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2), round($gasto, 2), round($ingreso - $gasto, 2), $professionalsData);*/
             }
             return response()->json(['msg' => 'Cierre de caja mensual efectuado correctamente'], 200);
         } catch (TransportException $e) {
-
+            Log::info($e);
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
             Log::error($th);
