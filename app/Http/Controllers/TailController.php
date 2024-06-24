@@ -229,7 +229,7 @@ class TailController extends Controller
                 ];
             })->sortBy('start_time')->values();
 
-            $attendedReservations = $reservations->where('attended', 1)->sortByDesc('start_time')->values();
+            $attendedReservations = $reservations->whereIn('attended', [1,11,111,4,5,33])->sortByDesc('start_time')->values();
             $unattendedReservations = $reservations->where('attended', '!=', 1)->values();
 
             return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations], 200, [], JSON_NUMERIC_CHECK);
@@ -783,22 +783,28 @@ private function setReservationTimes($reservation, $start_time, $tiempoReserva)
 
 private function findAvailableTimeSlot($reservations, $horaActual, $tiempoReserva)
 {
-    $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
+    $encontrado = false;
     $nuevaHoraInicio = $horaActual;
+    $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
 
     foreach ($reservations as $reservation1) {
+        Log::info('Revisando reservas Aleatorio');
         $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
         $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
         $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
 
         if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-            return $nuevaHoraInicio;
+            $encontrado = true;
+            break;
         }
-
         $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
     }
 
-    return Carbon::parse($reservations->last()->final_hour);
+    if (!$encontrado) {
+        $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour);
+    }
+
+    return $nuevaHoraInicio;
 }
 
 private function reassignServices($servicesOrders, $service_professionals)
