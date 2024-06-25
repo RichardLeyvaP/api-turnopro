@@ -139,7 +139,7 @@ class TailService {
                     $name = '';
                     $image = "professionals/default_profile.jpg";
                 }else{
-                    $name = $professional->name;
+                    $name = $professionaltem ? $professionaltem->professional->name : '';
                     $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
                 }
             return [
@@ -151,9 +151,9 @@ class TailService {
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
                 'client_id' => $client->id,
                 'idBarber' => $professionaltem ? $professionaltem->professional_id : 0,
-                'nameBarber' => $professionaltem ? $professionaltem->professional->name.' '.$professionaltem->professional->surname : '',
+                'nameBarber' => $name,
                 'professional_id' => $professional ? $professional->id : 0,
-                'professional_name' => $name,
+                'professional_name' => $professional->name,
                 'client_name' => $client->name." ".$client->surname, 
                 'charge' => $professional ? $professional->charge->name : ' ',
                 'attended' => $tail->attended,
