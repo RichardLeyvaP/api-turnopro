@@ -230,7 +230,7 @@ class ProfessionalService
         foreach ($professionals1 as $professional) {
             $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
             ->whereDate('data', $current_date)
-            ->WhereHas('tails', function ($subquery) {
+            ->WhereHas('tail', function ($subquery) {
                 $subquery->where('aleatorie', '!=', 1);
             })
             ->get()
