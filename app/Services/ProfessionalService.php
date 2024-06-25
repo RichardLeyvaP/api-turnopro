@@ -230,6 +230,9 @@ class ProfessionalService
         foreach ($professionals1 as $professional) {
             $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
             ->whereDate('data', $current_date)
+            ->WhereHas('tails', function ($subquery) {
+                $subquery->where('aleatorie', '!=', 1);
+            })
             ->get()
             ->sortBy('start_time')
             ->map(function ($query){
@@ -1159,13 +1162,10 @@ class ProfessionalService
             ->whereIn('confirmation', [1, 4])
             ->whereDate('data', Carbon::now())
             ->where('final_hour', '>=', $current_date->format('H:i'))
+            ->WhereHas('tails', function ($subquery) use ($endTimeThreshold) {
+                $subquery->where('aleatorie', '!=', 1);
+            })
             ->orderBy('start_time')
-            /*->WhereHas('tails', function ($subquery) use ($endTimeThreshold) {
-                $subquery->where('attended', '!=', 1)
-                    ->where('attended', '!=', 2)
-                    ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
-                    ->orWhereNull('start_time');
-            })*/
             ->get();
             if($reservations->isEmpty()){
                 $professionalFree[] = $professional;

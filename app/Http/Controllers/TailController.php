@@ -209,7 +209,14 @@ class TailController extends Controller
                 $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
                     $query->where('client_id', $client->id);
                 })->orderByDesc('updated_at')->first();
-
+                $tail = $reservation->tail;
+                if($tail->attended == 0 && $tail->aleatorie == 1){
+                    $name = '';
+                    $image = "professionals/default_profile.jpg";
+                }else{
+                    $name = $professional->name;
+                    $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
+                }
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => $reservation->car_id,
@@ -219,8 +226,8 @@ class TailController extends Controller
                     'total_time' => $reservation->total_time,
                     'client_name' => $client->name,
                     'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
-                    'professional_name' => $professional->name,
-                    'image_url' => $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg",
+                    'professional_name' => $name,
+                    'image_url' => $image,
                     'client_id' => $client->id,
                     'professional_id' => $professional->id,
                     'professional_state' => $professional->state,

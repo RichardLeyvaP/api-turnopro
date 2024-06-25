@@ -52,7 +52,7 @@ class AssistantController extends Controller
                 $query->where('branch_id', $branch_id)->whereNot('confirmation', [2, 3]);
             })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
                 $query->where('professional_id', $professional_id);
-            })->whereNot('attended', [2])->get();
+            })->whereNot('attended', [2])->where('aleatorie', '!=', 1)->get();
             $branchTails = $tails->map(function ($tail) use ($data){   
                 $reservation =  $tail->reservation;
                     $client = $reservation->car->clientProfessional->client;
@@ -67,7 +67,7 @@ class AssistantController extends Controller
                     'client_name' => $client->name,
                     'telefone_client' => $client->phone ? strval($client->phone) : '',
                     'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
-                    'professional_name' => $professional->name." ".$professional->surname,
+                    'professional_name' => $professional->name,
                     'client_id' => intval($client->id),
                     'professional_id' => intval($data['professional_id']),
                     'attended' => intval($tail->attended), 

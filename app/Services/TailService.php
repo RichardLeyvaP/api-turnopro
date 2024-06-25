@@ -127,6 +127,14 @@ class TailService {
                 $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
+                $tail = $reservation->tail;
+                if($tail->attended == 0 && $tail->aleatorie == 1){
+                    $name = '';
+                    $image = "professionals/default_profile.jpg";
+                }else{
+                    $name = $professional->name;
+                    $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
+                }
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
@@ -209,7 +217,7 @@ class TailService {
             $query->where('branch_id', $branch_id)->whereNot('confirmation', [2, 3]);
         })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
-        })->whereNot('attended', [2])->get();
+        })->whereNot('attended', [2])->where('aleatorie', '!=', 1)->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id){  
             $reservation = $tail->reservation;
             $professional = $reservation->car->clientProfessional->professional;
@@ -221,9 +229,9 @@ class TailService {
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'confirmation' => intval($reservation->confirmation),
-                'client_name' => $client->name." ".$client->surname,
+                'client_name' => $client->name,
                 'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
-                'professional_name' => $professional->name." ".$professional->surname,
+                'professional_name' => $professional->name,
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'attended' => $tail->attended, 
@@ -243,7 +251,7 @@ class TailService {
             $query->where('branch_id', $branch_id);
         })->whereHas('reservation.car.clientProfessional', function ($query) use($professional_id){
             $query->where('professional_id', $professional_id);
-        })->whereNot('attended', [2])->get();
+        })->whereNot('attended', [2])->where('aleatorie', '!=', 1)->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id){  
             $reservation = $tail->reservation;
             $professional = $reservation->car->clientProfessional->professional;
@@ -267,9 +275,9 @@ class TailService {
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
-                'client_name' => $client->name." ".$client->surname,
+                'client_name' => $client->name,
                 'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
-                'professional_name' => $professional->name." ".$professional->surname,
+                'professional_name' => $professional->name,
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'attended' => $tail->attended, 
