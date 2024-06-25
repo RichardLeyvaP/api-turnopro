@@ -679,7 +679,7 @@ class TailController extends Controller
 
         $tails = Tail::whereHas('reservation', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
-        })->where('aleatorie', 1)->get();
+        })->whereIn('aleatorie', [1, 3])->get();
 
         if ($tails->isEmpty()) {
             Log::info('No hay aleatorie');
@@ -856,5 +856,37 @@ private function reassignServices($servicesOrders, $service_professionals)
         list($horas, $minutos) = explode(':', $hora);
         return ($horas * 60) + $minutos;
     }
+
+    public function updated_aleatorie(Request $request)
+    {
+        try {
+
+            Log::info("Modificar estado del aleatorie");
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
+                'aleatorie' => 'required|numeric'
+            ]);
+            
+            $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
+
+            if($tail == null){
+                return response()->json(['msg' => "Cola no encontrada"], 200);
+            }else{
+                if($tail->aleatorie != 0){
+                    $tail->aleatorie = $data['aleatorie'];
+                    $tail->save();
+                    return response()->json(['msg' => "Cola modificada correctamente"], 200);
+                }
+                else{                    
+                return response()->json(['msg' => "Cliente no aleatorio"], 200);
+                }
+            }
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del servidor"], 500);
+        }
+    }
+
 
 }

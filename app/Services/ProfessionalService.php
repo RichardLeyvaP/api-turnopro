@@ -1158,7 +1158,7 @@ class ProfessionalService
             ->where('branch_id', $reservation->branch_id)
             ->whereIn('confirmation', [1, 4])
             ->whereDate('data', Carbon::now())
-            ->where('start_time', '>=', $current_date->format('H:i'))
+            ->where('final_hour', '>=', $current_date->format('H:i'))
             ->orderBy('start_time')
             /*->WhereHas('tails', function ($subquery) use ($endTimeThreshold) {
                 $subquery->where('attended', '!=', 1)

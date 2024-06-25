@@ -627,7 +627,7 @@ class TailService {
 
         $tail = $reservation->tail;
         if ($tail && $tail->aleatorie != 0) {
-            $tail->aleatorie = 3;
+            $tail->aleatorie = 2;
             $tail->save();
         }
 
