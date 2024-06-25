@@ -42,6 +42,13 @@ class TailService {
                 $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
+                if($tail->attended == 0 && $tail->aleatorie == 1){
+                    $name = '';
+                    $image = "professionals/default_profile.jpg";
+                }else{
+                    $name = $professional->name;
+                    $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
+                }
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
@@ -51,7 +58,7 @@ class TailService {
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name." ".$client->surname,
                 'client_image' => $comment ? $comment->client_look : "comments/default_profile.jpg",
-                'professional_name' => $professional->name." ".$professional->surname,
+                'professional_name' => $name,
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'professional_state' => $professional->state,
@@ -146,7 +153,7 @@ class TailService {
                 'idBarber' => $professionaltem ? $professionaltem->professional_id : 0,
                 'nameBarber' => $professionaltem ? $professionaltem->professional->name.' '.$professionaltem->professional->surname : '',
                 'professional_id' => $professional ? $professional->id : 0,
-                'professional_name' => $professional ? $professional->name." ".$professional->surname : ' ',
+                'professional_name' => $name,
                 'client_name' => $client->name." ".$client->surname, 
                 'charge' => $professional ? $professional->charge->name : ' ',
                 'attended' => $tail->attended,
