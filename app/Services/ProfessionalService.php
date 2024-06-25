@@ -1105,7 +1105,7 @@ class ProfessionalService
         $reservation = Reservation::find($reservation_id);
         $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
         $branchService = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
-        $time = 20;
+        $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
         //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
         $currentTime = Carbon::now();
         $endTimeThreshold = $currentTime->copy()->addMinutes(20);
@@ -1148,15 +1148,44 @@ class ProfessionalService
             ->whereHas('workplace', function ($query) use ($branch_id){
                 $query->where('busy', 1)->where('branch_id', $branch_id);
             })->first();
-
+            $current_date = Carbon::now();
+            $nuevaHoraInicio = Carbon::now();
         // Si el profesional no está ocupado en su lugar de trabajo, agrégalo a la lista de profesionales libres
         if($workplaceProfessional){  
             $professional->position = $workplaceProfessional->workplace->name;
             $professional->charge_id = $professional->charge->name;
-            $professionalFree[] = $professional;
+            $reservations = $professional->reservations()
+            ->where('branch_id', $reservation->branch_id)
+            ->whereIn('confirmation', [1, 4])
+            ->whereDate('data', Carbon::now())
+            ->where('start_time', '>=', $current_date->format('H:i'))
+            ->orderBy('start_time')
+            /*->WhereHas('tails', function ($subquery) use ($endTimeThreshold) {
+                $subquery->where('attended', '!=', 1)
+                    ->where('attended', '!=', 2)
+                    ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
+                    ->orWhereNull('start_time');
+            })*/
+            ->get();
+            if($reservations->isEmpty()){
+                $professionalFree[] = $professional;
+            }
+            else{
+                foreach($reservations as $reservation1){
+                    $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+                    $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+                    if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {                        
+                        $professionalFree[] = $professional;
+                        break;
+                    }else{
+                        break;
+                    }
+                }
+            }
         }
         }
 
         return $professionalFree;
     }
+    
 }
