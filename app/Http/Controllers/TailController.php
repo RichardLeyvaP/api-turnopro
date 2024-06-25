@@ -24,6 +24,7 @@ use App\Models\Reservation;
 use App\Models\Retention;
 use App\Models\Trace;
 use App\Models\User;
+use App\Models\Workplace;
 use App\Services\TailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -411,6 +412,7 @@ class TailController extends Controller
             Comment::truncate(); //Clientes
             Client::query()->delete(); //Clientes
             ProfessionalWorkPlace::truncate(); //Professionals puestos de trabajo
+            Workplace::query()->update(['busy' => 0, 'select' => 0]);
             Record::truncate(); //Hora de entrada y salida de los professionales
             User::whereDoesntHave('professional')->delete(); //borrar los usuarios que no professionales
 
@@ -677,7 +679,7 @@ class TailController extends Controller
 
         $tails = Tail::whereHas('reservation', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
-        })->whereIn('aleatorie', [1, 2])->get();
+        })->where('aleatorie', 1)->get();
 
         if ($tails->isEmpty()) {
             Log::info('No hay aleatorie');

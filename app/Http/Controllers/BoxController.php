@@ -69,7 +69,7 @@ class BoxController extends Controller
 
             $branch = Branch::find($data['branch_id']);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
-               
+            $trace = [];
             Log::info($box); 
             if (!$box) {              
                 $box = new Box();
@@ -111,8 +111,6 @@ class BoxController extends Controller
                 Log::info('$trace actualiza');
                 Log::info($trace);
             }
-            Log::info('$trace');
-            Log::info($trace);
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

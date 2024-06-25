@@ -47,10 +47,11 @@ class BranchServiceController extends Controller
     public function show_service_idProfessional(Request $request)//todo modificar aqui
     {
         try {             
-            Log::info( "Entra a buscar los servicio q brinda una sucursal o la sucursales donde se brinda determinado servicio");
+            Log::info( "Entra a buscar los servicio q brinda una sucursal");
             $data = $request->validate([
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'required'
             ]);
+            $data['branch_id'] = intval($data['branch_id']);
             $services = Service::whereHas('branchServices', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->with('branchServices.branchServiceProfessional:id')->get();
