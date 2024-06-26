@@ -341,7 +341,7 @@ class ProfessionalController extends Controller
                         $query->where('branch_id', $data['branch_id']);
                     })
                     ->with(['reservations' => function ($query) use ($data) {
-                        $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1, 4])->where('tail', function ($subquery) {
+                        $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1, 4])->whereHas('tail', function ($subquery) {
                             $subquery->where('aleatorie', '!=', 1);
                         });
                     }])->where('state', 1)->whereHas('records', function ($query) {
@@ -370,7 +370,7 @@ class ProfessionalController extends Controller
                     return response()->json(['reservations' => $reservations], 200);
                 } else {
                     if ($professional->reservations->isNotEmpty()) {
-                        $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->where('tail', function ($subquery) {
+                        $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->whereHas('tail', function ($subquery) {
                             $subquery->where('aleatorie', '!=', 1);
                         })->map(function ($reservation) use ($start_time) {
                             $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
