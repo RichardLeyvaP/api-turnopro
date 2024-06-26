@@ -185,16 +185,24 @@ class BranchProfessionalController extends Controller
             })->sortBy('ponderation')->values();
 
             foreach ($professionals1 as $professional1) {
+                $vacation = [];
+                $diasSemana = [];
                 // Obtener vacaciones del profesional
                 $vacation = Vacation::where('professional_id', $professional1['id'])
                                     ->whereDate('endDate', '>=', Carbon::now())
                                     ->get();
+
+                                    Log::info('Professional'.$professional1['id']);
+                                    Log::info('Vacaciones');
+                                    Log::info($vacation);
                 
                 if ($vacation->isEmpty()) {
                     // Si no hay vacaciones, inicializar el array de vacaciones como nulo
+                    Log::info('No hay vacaciones');
                     $professional1['vacations'] = [];
                 } else {
-                    // Si hay vacaciones, mapearlas al formato deseado
+                    // Si hay vacaciones, mapearlas al formato deseado                    
+                    Log::info('Hayay vacaciones');
                     $professional1['vacations'] = $vacation->map(function ($query) {
                         return [
                             'startDate' => $query->startDate,
@@ -208,11 +216,19 @@ class BranchProfessionalController extends Controller
                                        ->where('state', 1)
                                        ->pluck('day')
                                        ->toArray();
-            
+
+           
                 // Si hay días libres, convertirlos y agregarlos al array de vacaciones del profesional
                 if (!empty($diasSemana)) {
+                    Log::info('Professional'.$professional1['id']);
+                                       Log::info('días libres array');
+                                       Log::info($diasSemana );
                     $fechasDiasLibres = $this->obtenerFechasDiasSemana($diasSemana);
+                    Log::info('fechas Dias Libres antes del for');
+                    Log::info($fechasDiasLibres);
                     if (!empty($fechasDiasLibres)) {
+                        /*Log::info('fechas Dias Libres');
+                        Log::info($fechasDiasLibres );*/
                         foreach ($fechasDiasLibres as $fecha) {
                             $professional1['vacations'][] = [
                                 'startDate' => $fecha,
@@ -226,37 +242,7 @@ class BranchProfessionalController extends Controller
                 $professionals[] = $professional1;
             }
             
-            //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
-            /*$professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
-
-             /*  $query->where('branch_id', $data['branch_id']);
-            })->whereHas('branchServices', function ($query) use ($services) {
-                $query->whereIn('service_id', $services);
-            }, '=', count($services))->whereHas('charge', function ($query) {
-                $query->where('id', 1);*/
-            /*})->get();*/
-            /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->where('charge_id', 1)->get();*/
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
-
-            /*Log::info("Dado una branch devuelve los professionales que trabajan en ella");
-            $data = $request->validate([
-                'branch_id' => 'required|numeric'
-            ]);
-            $services = $request->input('services');
-            //$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
-            $professionals = Professional::whereHas('branches', function ($query) use ($data, $services) {
-                $query->where('branch_id', $data['branch_id']);
-            })->whereHas('branchServices', function ($query) use ($services) {
-                $query->whereIn('service_id', $services);
-            }, '=', count($services))->whereHas('charge', function ($query) {
-                $query->where('id', 1);
-            })->get();
-            /*$professionals = Professional::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->where('charge_id', 1)->get();*/
-            //return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); */
 
         } catch (\Throwable $th) {
             Log::error($th);
@@ -278,16 +264,26 @@ class BranchProfessionalController extends Controller
 
         // Obtener el día actual en inglés
         $diaActualIngles = Carbon::now()->isoFormat('dddd');
+        Log::info('Dia actual en ingles');
+        Log::info($diaActualIngles);
+         // Obtener el día actual en español
+         /*$diaActualEspañol = ucfirst(Carbon::now()->translatedFormat('l'));
+    Log::info('Día actual en español: ' . $diaActualEspañol);
+         // Inicializar el array de fechas
+    $fechas = [];
 
-        // Si el día actual en inglés está en el array de días de la semana, agregar su fecha correspondiente
-        if (in_array($diaActualIngles, array_values($diasSemanaIngles))) {
-            $fechas[] = Carbon::now()->format('Y-m-d');
-        }
+    // Si el día actual está en el array de días de la semana, agregar su fecha correspondiente
+    if (in_array($diaActualEspañol, $diasSemana)) {
+        Log::info('El día actual está en los días seleccionados');
+        $fechas[] = Carbon::now()->format('Y-m-d');
+    }*/
         // Obtener las fechas para cada día de la semana en el array
         foreach ($diasSemana as $dia) {
             // Restablecer la fecha actual para cada iteración del bucle
             $fechaActual = Carbon::now();
             $diaIngles = $diasSemanaIngles[$dia];
+            Log::info('$diaIngles seleccionados');
+            Log::info($diaIngles);
             $fecha = $this->siguienteFechaDiaSemana($fechaActual, $diaIngles);
             if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
                 $fecha->addWeek();

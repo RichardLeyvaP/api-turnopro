@@ -230,7 +230,7 @@ class ProfessionalService
         foreach ($professionals1 as $professional) {
             $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
             ->whereDate('data', $current_date)
-            ->WhereHas('tail', function ($subquery) {
+            ->whereHas('tail', function ($subquery) {
                 $subquery->where('aleatorie', '!=', 1);
             })
             ->get()
@@ -1162,7 +1162,7 @@ class ProfessionalService
             ->whereIn('confirmation', [1, 4])
             ->whereDate('data', Carbon::now())
             ->where('final_hour', '>=', $current_date->format('H:i'))
-            ->WhereHas('tails', function ($subquery) use ($endTimeThreshold) {
+            ->whereHas('tail', function ($subquery) use ($endTimeThreshold) {
                 $subquery->where('aleatorie', '!=', 1);
             })
             ->orderBy('start_time')

@@ -731,7 +731,7 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
-            $reservations = Reservation::where('branch_id', $data['branch_id'])->WhereHas('car.clientProfessional', function ($query) use ($data) {
+            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
