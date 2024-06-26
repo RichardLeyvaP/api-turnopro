@@ -18,6 +18,7 @@ class AssociatedController extends Controller
         try {
             return response()->json(['associates' => Associated::all()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -77,6 +78,7 @@ class AssociatedController extends Controller
             $associatesNotInBranch = Associated::whereNotIn('id', $associatedIds)->get();
             return response()->json(['associates' => $associatesNotInBranch], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
         }
     }
@@ -137,6 +139,7 @@ class AssociatedController extends Controller
 
             return response()->json(['msg' => 'Asociado eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error intern del sistema'], 500);
         }
     }

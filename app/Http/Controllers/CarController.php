@@ -937,6 +937,7 @@ class CarController extends Controller
                 });*/
             return response()->json(['productscar' => $products, 'servicescar' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1024,6 +1025,7 @@ class CarController extends Controller
             //Log::info($cars->pluck('id'));
             return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -1069,6 +1071,7 @@ class CarController extends Controller
             return response()->json(['car' => $groupedCars], 200);
             
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1163,6 +1166,7 @@ class CarController extends Controller
            });*/
             return response()->json(['cars' => $cars, 'courses' => $cursesProf], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1254,6 +1258,7 @@ class CarController extends Controller
             });
             return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1336,6 +1341,7 @@ class CarController extends Controller
            });*/
             return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1402,6 +1408,7 @@ class CarController extends Controller
 
             return response()->json(['carOrderDelete' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
     }
@@ -1449,6 +1456,7 @@ class CarController extends Controller
 
             return response()->json(['carOrderDelete' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
     }
@@ -1464,6 +1472,7 @@ class CarController extends Controller
             //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['car' => $car], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }
@@ -1480,6 +1489,7 @@ class CarController extends Controller
             $car->save();
             return $car->id;
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
     }
@@ -1494,6 +1504,7 @@ class CarController extends Controller
             //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['car' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }

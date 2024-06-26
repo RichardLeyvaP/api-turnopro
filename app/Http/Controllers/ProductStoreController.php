@@ -348,6 +348,7 @@ class ProductStoreController extends Controller
 
         return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
     } catch (\Throwable $th) {
+        Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar la categoría de producto"], 500);
     }
 }
@@ -564,6 +565,7 @@ class ProductStoreController extends Controller
             // $this->actualizarProductExit($productexist->id, $storeexist->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mover el producto a este almacén'], 500);
         }
     }
@@ -614,6 +616,7 @@ class ProductStoreController extends Controller
         }
             return response()->json(['movimientos' => $movement], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mover el producto a este almacén'], 500);
         }
     }

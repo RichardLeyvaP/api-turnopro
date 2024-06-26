@@ -74,6 +74,7 @@ class RestdayController extends Controller
             }
             return response()->json(['Schedules' => $completeSchedule], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar Horario"], 500);
         }
     }

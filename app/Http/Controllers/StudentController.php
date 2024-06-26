@@ -122,6 +122,7 @@ class StudentController extends Controller
             });*/
             return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar el estudiante"], 500);
         }
     }
@@ -223,6 +224,7 @@ class StudentController extends Controller
             } 
         return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray, 'habilitado' => $contadorEnabledCero ? 'No Habilitado' : 'Habilitado',  'status' => $contadorEnabledCero ? 'Retrasado' : 'Ok',  'payMount' => $sumaAmountPay], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -321,6 +323,7 @@ class StudentController extends Controller
 
             return response()->json(['msg' => 'Estudiante eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el estudiante'], 500);
         }
     }

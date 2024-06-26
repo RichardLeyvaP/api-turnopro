@@ -116,6 +116,7 @@ class ProductController extends Controller
             'cantProduct' => $productcompany->orders_count
           ], 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
+        Log::error($th);
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
     }
@@ -205,6 +206,7 @@ class ProductController extends Controller
         
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
+        Log::error($th);
            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
        }
     }
@@ -273,6 +275,7 @@ class ProductController extends Controller
         
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
+        Log::error($th);
            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
        }
     }
@@ -312,6 +315,7 @@ class ProductController extends Controller
         
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
+        Log::error($th);
            return response()->json(['msg' => $th->getMessage()."La branch no obtuvo ganancias en este dia"], 500);
        }
     }
@@ -324,6 +328,7 @@ class ProductController extends Controller
             ]);
             return response()->json(['product' => Product::find($product_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el producto"], 500);
         }
     }
@@ -338,6 +343,7 @@ class ProductController extends Controller
                 $query->where('branch_id', $data['branch_id']);})->orderBy('orders_count', 'desc')->take(10)->get();
             return response()->json(['products' => $products], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el producto"], 500);
         }
     }
@@ -404,6 +410,7 @@ class ProductController extends Controller
 
             return response()->json(['msg' => 'producto eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el producto'], 500);
         }
     }

@@ -104,6 +104,7 @@ class CommentController extends Controller
             ]);
             return response()->json(['branch' => Comment::with('clientProfessional.client', 'clientProfessional.professional')->find($data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el comment"], 500);
         }
     }

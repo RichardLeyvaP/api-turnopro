@@ -24,6 +24,7 @@ class TraceController extends Controller
             $traces = Trace::where('branch', $branch->name)->whereDate('data', $data['day'])->get();
             return response()->json(['traces' => $traces], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -42,6 +43,7 @@ class TraceController extends Controller
             $traces = Trace::where('branch', $branch->name)->whereYear('data', $data['year'])->whereMonth('data', $data['month'])->get();
             return response()->json(['traces' => $traces], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -60,6 +62,7 @@ class TraceController extends Controller
             $traces = Trace::where('branch', $branch->name)->whereDate('data', '>=',$data['startDate'])->whereDate('data', '<=',$data['endDate'])->orderByDesc('data')->get();
             return response()->json(['traces' => $traces], 200,  [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }

@@ -18,6 +18,7 @@ class BranchRuleProfessionalController extends Controller
             $professionalrules = BranchRuleProfessional::with('branchRule.rule', 'professional')->get();
             return response()->json(['branchRuleProfesional' => $professionalrules], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las rules por trabajador"], 500);
         }
     }
@@ -158,6 +159,7 @@ class BranchRuleProfessionalController extends Controller
 
             return response()->json(['msg' => 'Estado del cumplimiento de la rule eliminado correctamente de este trabajador'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el estado del cumplimiento de la rule de este trabajador'], 500);
         }
     }

@@ -167,8 +167,6 @@ class PaymentController extends Controller
                 'description' => $car->clientProfessional->professional->name,
             ];
             $this->traceService->store($trace);
-            Log::info('$trace');
-            Log::info($trace);
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);

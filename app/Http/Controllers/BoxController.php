@@ -48,6 +48,7 @@ class BoxController extends Controller
             Log::info($box);
             return response()->json(['box' => $box], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }

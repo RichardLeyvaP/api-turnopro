@@ -102,6 +102,7 @@ class ProductSaleController extends Controller
             
              return response()->json(['msg' =>'Producto asigando correctamente',], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -180,6 +181,7 @@ class ProductSaleController extends Controller
             
              return response()->json(['msg' =>'Producto desasigando correctamente',], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }

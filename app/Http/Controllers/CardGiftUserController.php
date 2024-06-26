@@ -97,7 +97,7 @@ class CardGiftUserController extends Controller
             
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente'], 200);
         } catch (TransportException $e) {
-    
+            Log::error($e);
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente.Error al enviar el correo electrónico '], 200);
   }
           catch (\Throwable $th) {
@@ -189,6 +189,7 @@ class CardGiftUserController extends Controller
 
             return response()->json(['msg' => 'Tarjeta desasignada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error del sistema'], 500);
         }
     }

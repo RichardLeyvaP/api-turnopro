@@ -92,6 +92,7 @@ class ServiceController extends Controller
             //$service = Service::find($data['id']);
             return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }
     }
@@ -185,6 +186,7 @@ class ServiceController extends Controller
 
             return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el servicio'], 500);
         }
     }

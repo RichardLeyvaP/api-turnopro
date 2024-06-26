@@ -726,7 +726,7 @@ class ReservationController extends Controller
                         Log::info('No tiene reservas');
                         $cola = $reservation->tail()->create(['aleatorie' => 2]);
                     }
-                    else{
+                    if ($reservations2->isNotEmpty()){
                         Log::info('Tiene reservas');
                         $nuevaHoraInicio = $current_date;
                         $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
@@ -752,6 +752,7 @@ class ReservationController extends Controller
             }
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
         }
     }
@@ -776,6 +777,7 @@ class ReservationController extends Controller
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las reservaciones en esa fecha'], 500);
         }
     }
@@ -798,6 +800,7 @@ class ReservationController extends Controller
 
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la reservacion'], 500);
         }
     }
@@ -837,6 +840,7 @@ class ReservationController extends Controller
             $history = $this->reservationService->client_history($data);
             return response()->json(['clientHistory' => $history], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar la history'], 500);
         }
     }

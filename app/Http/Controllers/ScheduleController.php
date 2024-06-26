@@ -19,6 +19,7 @@ class ScheduleController extends Controller
             Log::info("mostrar Schedules");
             return response()->json(['Schedules' => Schedule::with(['branch'])->selectRaw("branch_id,id, day, DATE_FORMAT(start_time, '%h:%i:%p') as start_time, DATE_FORMAT(closing_time, '%h:%i:%p') as closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')")->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los Locales de Trabajo"], 500);
         }
     }
@@ -56,6 +57,7 @@ class ScheduleController extends Controller
             })->sortBy('name')->sortBy('ponderation')->values();
             return response()->json(['Schedules' => $schules, 'services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar Horario"], 500);
         }
     }
@@ -78,6 +80,7 @@ class ScheduleController extends Controller
             });
             return response()->json(['Schedules' => $schules], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar Horario"], 500);
         }
     }
@@ -130,6 +133,7 @@ class ScheduleController extends Controller
             }
             return response()->json(['Schedules' => $completeSchedule], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar Horario"], 500);
         }
     }
@@ -232,6 +236,7 @@ class ScheduleController extends Controller
 
             return response()->json(['msg' => 'Horario eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar Horario'], 500);
         }
     }

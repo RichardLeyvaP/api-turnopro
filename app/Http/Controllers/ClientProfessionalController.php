@@ -96,6 +96,7 @@ class ClientProfessionalController extends Controller
             $professional->clients()->updateExistingPivot($client->id);
             return response()->json(['msg' => 'Cliente reasignado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el cliente a es empleado'], 500);
         }
     }
@@ -112,6 +113,7 @@ class ClientProfessionalController extends Controller
             $professional->clients()->destroy($client->id);
             return response()->json(['msg' => 'Cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el cliente a es empleado'], 500);
         }
     }

@@ -30,6 +30,7 @@ class CashierSaleController extends Controller
             $cashierSales = CashierSale::all();
             return response()->json($cashierSales, 200);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error al obtener las ventas de caja.'], 500);
         }
     }
@@ -95,6 +96,7 @@ class CashierSaleController extends Controller
             DB::commit();
             return response()->json($cashierSale, 201);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error al crear la venta de caja.'], 500);
         }
     }
@@ -127,6 +129,7 @@ class CashierSaleController extends Controller
     
             return response()->json(['sales' => $sales], 201);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => $e->getMessage().   'Error al crear la venta de caja.'], 500);
         }
     }
@@ -154,6 +157,7 @@ class CashierSaleController extends Controller
             $cashierSale->save();
             return response()->json(['msg' => 'Estado de la venta modificado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la venta'], 500);
         }
     }
@@ -231,6 +235,7 @@ class CashierSaleController extends Controller
     
             return response()->json($cashierSale, 200);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error al actualizar la venta de caja.'], 500);
         }
     }
@@ -266,6 +271,7 @@ class CashierSaleController extends Controller
             $cashierSale->delete();
                     
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error al eliminar la venta de caja.'], 500);
         }
     }

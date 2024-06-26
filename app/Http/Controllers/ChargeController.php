@@ -43,6 +43,7 @@ class ChargeController extends Controller
             ]);
             return response()->json(['client' => Charge::find($charge_data['id'])], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el cargo"], 500);
         }
     }
@@ -112,6 +113,7 @@ class ChargeController extends Controller
 
             return response()->json(['msg' => 'Cargo eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el Cargo'], 500);
         }
     }

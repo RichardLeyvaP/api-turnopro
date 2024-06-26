@@ -90,6 +90,7 @@ class CourseController extends Controller
                 $query->where('business_id', $data['business_id']);
             })->with('enrollment')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar los Cursos"], 500);
         }
     }
@@ -170,6 +171,7 @@ class CourseController extends Controller
 
             return response()->json(['msg' => 'Curso eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el Curso'], 500);
         }
     }

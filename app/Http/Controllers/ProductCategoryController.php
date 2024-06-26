@@ -31,6 +31,7 @@ class ProductCategoryController extends Controller
             ]);
             return response()->json(['productcategory' => ProductCategory::find( $product_category_data['id'])], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }
     }
@@ -59,6 +60,7 @@ class ProductCategoryController extends Controller
            }*/
            return response()->json(['category_products' => $Categories], 200);
        } catch (\Throwable $th) {
+        Log::error($th);
            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }
     }
@@ -163,6 +165,7 @@ class ProductCategoryController extends Controller
 
         return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels, 'product_select' => intval($products), 'service_select' => intval($services)], 200, [], JSON_NUMERIC_CHECK);
     } catch (\Throwable $th) {
+        Log::error($th);
         return response()->json(['msg' => $th->getMessage()." Error interno del sistema"], 500);
     }
 }
@@ -231,6 +234,7 @@ class ProductCategoryController extends Controller
 
             return response()->json(['msg' => 'Regla eliminada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la Regla'], 500);
         }
     }

@@ -29,6 +29,7 @@ class BranchController extends Controller
         try {
             return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
         }
     }
@@ -40,6 +41,7 @@ class BranchController extends Controller
             ]);
             return response()->json(['branch' => Branch::with('professional')->find($branch_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
     }
@@ -53,6 +55,7 @@ class BranchController extends Controller
             Log::info($branch_data['business_id']);
             return response()->json(['branches' => Branch::where('business_id', $branch_data['business_id'])->select('id', 'name', 'image_data', 'address')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
     }
@@ -73,6 +76,7 @@ class BranchController extends Controller
                 return response()->json($this->branchService->branch_winner_date($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage()], 500);
         }
     }
@@ -93,6 +97,7 @@ class BranchController extends Controller
                 return response()->json($this->branchService->branch_winner_date_icon($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage()], 500);
         }
     }
@@ -112,6 +117,7 @@ class BranchController extends Controller
                 return response()->json($this->branchService->company_winner_date($data), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "La branch no obtuvo ganancias en este dia"], 500);
         }
     }
@@ -131,6 +137,7 @@ class BranchController extends Controller
                 return response()->json($this->branchService->company_close_car_date($data), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "La branch no obtuvo ganancias en este dia"], 500);
         }
     }
@@ -151,6 +158,7 @@ class BranchController extends Controller
                 return response()->json($this->branchService->branch_professionals_winner_date($data['branch_id']), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "La branch no obtuvo ganancias en este dia"], 500);
         }
     }
@@ -165,6 +173,7 @@ class BranchController extends Controller
                 $query->where('professional_id', $data['professional_id']);
             })->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las branch"], 500);
         }
     }
@@ -266,6 +275,7 @@ class BranchController extends Controller
 
             return response()->json(['msg' => 'Sucursal eliminada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la sucursal'], 500);
         }
     }

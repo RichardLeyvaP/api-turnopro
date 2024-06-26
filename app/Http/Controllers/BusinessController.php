@@ -23,6 +23,7 @@ class BusinessController extends Controller
                 ->select('businesses.id', 'businesses.name', 'businesses.address', 'professionals.name as professional_name')
                 ->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los negocios"], 500);
         }
     }
@@ -71,6 +72,7 @@ class BusinessController extends Controller
             }
             return response()->json(['business' => $resultArray], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
     }
@@ -82,6 +84,7 @@ class BusinessController extends Controller
             ]);
             return response()->json(['business' => Business::with('professional')->find($business_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
     }
@@ -97,6 +100,7 @@ class BusinessController extends Controller
                 return response()->json($this->businessService->business_winner_date(), 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "La compañía no obtuvo ganancias en este dia"], 500);
         }
     }
@@ -141,6 +145,7 @@ class BusinessController extends Controller
 
             return response()->json(['msg' => 'Negocio actualizado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el negocio'], 500);
         }
     }
@@ -155,6 +160,7 @@ class BusinessController extends Controller
 
             return response()->json(['msg' => 'Negocio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el negocio'], 500);
         }
     }

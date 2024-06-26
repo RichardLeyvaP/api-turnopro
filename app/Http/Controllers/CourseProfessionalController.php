@@ -124,6 +124,7 @@ class CourseProfessionalController extends Controller
             $course->professionals()->detach($professional->id);
             return response()->json(['msg' => 'Afiliación eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

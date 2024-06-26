@@ -159,6 +159,7 @@ class CardGiftController extends Controller
 
             return response()->json(['msg' => 'Tarjeta de Regalo eliminada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la Tarjeta de Regalo'], 500);
         }
     }

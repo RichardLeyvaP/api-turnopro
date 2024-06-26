@@ -574,6 +574,7 @@ class FinanceController extends Controller
 
             return response()->json(['msg' => 'producto eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el producto'], 500);
         }
     }
@@ -941,6 +942,7 @@ class FinanceController extends Controller
 
                 //return $tableRevenueCollection->concat($tableExpenseCollection);
             } catch (\Throwable $th) {
+                Log::error($th);
                 return response()->json(['msg' => 'Error interno del sistema'], 500);
             }
     }
@@ -1121,6 +1123,7 @@ class FinanceController extends Controller
 
                 //return $tableRevenueCollection->concat($tableExpenseCollection);
             } catch (\Throwable $th) {
+                Log::error($th);
                 return response()->json(['msg' => 'Error interno del sistema'], 500);
             }
     }

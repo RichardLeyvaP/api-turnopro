@@ -117,10 +117,13 @@ class OperationTipController extends Controller
                             $finance->save();
             return response()->json($operationTip, 201);
         } catch (ValidationException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -176,10 +179,13 @@ class OperationTipController extends Controller
 
             return response()->json($combinedPayments, 200);
         } catch (ValidationException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -211,10 +217,13 @@ class OperationTipController extends Controller
            
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -266,10 +275,13 @@ class OperationTipController extends Controller
            
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -323,10 +335,13 @@ class OperationTipController extends Controller
            
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -380,6 +395,7 @@ class OperationTipController extends Controller
             }
             return response()->json(['cars' => $cars, 'sales' => $sales], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -430,6 +446,7 @@ class OperationTipController extends Controller
                });
             return response()->json(['cars' => $cars,'professionals' => $professionals], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -488,8 +505,10 @@ class OperationTipController extends Controller
             }
             return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);
         } catch (QueryException $e) {
+            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
+            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }

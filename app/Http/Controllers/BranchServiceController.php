@@ -141,6 +141,7 @@ class BranchServiceController extends Controller
             $branch->services()->updateExistingPivot($service->id, ['ponderation' => $data['ponderation']]);
             return response()->json(['msg' => 'Servicio actualizado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el servicio en esta sucursal'], 500);
         }
     }
@@ -157,6 +158,7 @@ class BranchServiceController extends Controller
             $branch->services()->detach($service->id);
             return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el servicio en esta sucursal'], 500);
         }
     }

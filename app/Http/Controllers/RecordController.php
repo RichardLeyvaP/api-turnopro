@@ -23,6 +23,7 @@ class RecordController extends Controller
         try {
             return response()->json(['records' => Record::with(['branch', 'professional'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el historial de records"], 500);
         }
     }
@@ -112,6 +113,7 @@ class RecordController extends Controller
             ]);
             return response()->json(['records' => Record::with('professional', 'branch')->where('branch_id', $branch_data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la sucursal"], 500);
         }
     }
@@ -134,6 +136,7 @@ class RecordController extends Controller
                 return 0;
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getmessage() . "Error interno del sistema"], 500);
         }
     }
@@ -176,6 +179,7 @@ class RecordController extends Controller
 
             return response()->json(['msg' => 'Record eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el record'], 500);
         }
     }
@@ -263,6 +267,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar el record'], 500);
         }
     }
@@ -344,6 +349,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
@@ -424,6 +430,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar el record'], 500);
         }
     }
@@ -506,6 +513,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
@@ -583,6 +591,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
@@ -659,6 +668,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
@@ -795,6 +805,7 @@ class RecordController extends Controller
 
             return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error'], 500);
         }
     }
@@ -926,6 +937,7 @@ class RecordController extends Controller
             return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
             //return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error'], 500);
         }
     }
@@ -1006,6 +1018,7 @@ class RecordController extends Controller
 
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error'], 500);
         }
     }

@@ -52,6 +52,7 @@ class ClientSurveyController extends Controller
         //$clientSurvey->save();
         return response()->json(['msg' => 'Insertado Correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }

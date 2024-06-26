@@ -90,6 +90,7 @@ class BranchStoreController extends Controller
             $branch->branchstores()->sync($store->id);
             return response()->json(['msg' => 'Almacén actualizado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el almacén en esta sucursal'], 500);
         }
         
@@ -107,6 +108,7 @@ class BranchStoreController extends Controller
             $branch->branchstores()->detach($store->id);
             return response()->json(['msg' => 'Almacén eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el almacén en esta sucursal'], 500);
         }
     }

@@ -26,6 +26,7 @@ class RuleController extends Controller
             ]);
             return response()->json(['rule' => Rule::find( $rule_data['id'])], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la regla"], 500);
         }
     }
@@ -97,6 +98,7 @@ class RuleController extends Controller
 
             return response()->json(['msg' => 'Regla eliminada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la Regla'], 500);
         }
     }

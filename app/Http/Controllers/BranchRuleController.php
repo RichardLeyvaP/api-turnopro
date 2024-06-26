@@ -112,6 +112,7 @@ class BranchRuleController extends Controller
             $branch->rules()->updateExistingPivot($rule->id);
             return response()->json(['msg' => 'rule reasignada correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar la rule de esa branch'], 500);
         }
     }
@@ -128,6 +129,7 @@ class BranchRuleController extends Controller
             $branch->rules()->detach($rule->id);
             return response()->json(['msg' => 'Rule eliminada correctamente de la branch'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la rule de esta branch'], 500);
         }
     }

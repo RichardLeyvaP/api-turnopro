@@ -21,6 +21,7 @@ class WorkplaceController extends Controller
             Log::info("mostrar locales");
             return response()->json(['workplaces' => Workplace::with(['branch'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los Locales de Trabajo"], 500);
         }
     }
@@ -35,6 +36,7 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::with(['branch'])->find($workplace_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
         }
     }
@@ -47,6 +49,7 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::where('branch_id', $data['branch_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -59,6 +62,7 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::where('branch_id', $workplace_data['branch_id'])->where('busy', 0)->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
         }
     }
@@ -71,6 +75,7 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::where('branch_id', $workplace_data['branch_id'])->where('select', 0)->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
         }
     }
@@ -185,6 +190,7 @@ class WorkplaceController extends Controller
 
             return response()->json(['msg' => 'Local de Trabajo eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el Local de Trabajo'], 500);
         }
     }

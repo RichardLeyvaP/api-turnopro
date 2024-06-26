@@ -359,6 +359,7 @@ class BranchServiceProfessionalController extends Controller
             //$service = Service::find($data['id']);
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }
     }
@@ -376,6 +377,7 @@ class BranchServiceProfessionalController extends Controller
             }
             return $branchServiceProfessional->id;
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el servicio a al professional'], 500);
         }
     }
@@ -432,6 +434,7 @@ class BranchServiceProfessionalController extends Controller
             $branchService->branchServiceProfessional()->detach($professional->id);
             return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }

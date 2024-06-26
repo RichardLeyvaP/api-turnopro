@@ -82,6 +82,7 @@ class UserController extends Controller
                 'user' => $user
             ], 201);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al registrarse'], 500);
         }
     }
@@ -163,6 +164,7 @@ class UserController extends Controller
                 'user' => $user
             ], 201);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al registrarse'], 500);
         }
     }
@@ -191,6 +193,7 @@ class UserController extends Controller
             //return response()->json(['msg' => "Password anterior incorrect0!!!"],400);
             //}
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al modificar la password'], 500);
         }
     }
@@ -486,6 +489,7 @@ class UserController extends Controller
                 "data" => auth()->user()
             ]);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
         }
     }
@@ -534,6 +538,7 @@ class UserController extends Controller
                 return response()->json(['msg' => 'Correo incorrecto o no es trabajador de esta sucursal'], 400);
             }
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al ver los datos del usuario'], 500);
         }
     }
@@ -591,6 +596,7 @@ class UserController extends Controller
                 "msg" => "Session cerrada correctamente"
             ], 200);
         } catch (\Throwable $th) {
+            Log::error($th);
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }
     }
