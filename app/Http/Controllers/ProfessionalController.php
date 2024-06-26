@@ -157,167 +157,6 @@ class ProfessionalController extends Controller
         }
     }
 
-    /*public function professional_reservations_time(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric',
-                'data' => 'required|date'
-            ]);
-            $nombreDia = ucfirst(strtolower(Carbon::parse($data['data'])->locale('es_ES')->dayName));
-            $horario = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->get();
-            $start_time = $horario->start_time;
-            $closing_time = $horario->closing_time;
-            //$startTime = strtotime($start_time);
-            $reservations = [];
-            /*$professional = Professional::where('id', $data['professional_id'])
-                ->whereHas('branches', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })
-                ->with(['reservations' => function ($query) use ($data) {
-                    $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1, 4]);
-                }])
-                ->first();*/
-    ///para saber si esta trabajando
-    /*$professional = Professional::where('id', $data['professional_id'])
-                ->whereHas('branches', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })
-                ->with(['reservations' => function ($query) use ($data) {
-                    $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1, 4]);
-                }])->where('state', 1)->whereHas('records', function ($query){
-                    $query->whereDate('start_time', Carbon::now());
-                })->select('professionals.id', 'professionals.name', 'professionals.surname', 'professionals.second_surname', 'professionals.email', 'professionals.phone', 'professionals.charge_id', 'professionals.state', 'professionals.image_url', 
-                DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->first();
-                ///end trabajando
-            $currentDateTime =  Carbon::now();
-            // Verificar si hay reservas para este profesional y día
-            if ($professional && $professional->reservations->isNotEmpty()) {
-                // Obtener las reservas y mapearlas para obtener los intervalos de tiempo
-                if (Carbon::parse($data['data'])->isToday()) {
-                    $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->map(function ($reservation) {
-                        $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
-                        $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-
-                        $intervalos = [$startFormatted];
-                        $startTime = Carbon::parse($startFormatted);
-                        //$finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '15' : ($finalMinutes <= 30 ? '30' : ($finalMinutes <= 45 ? '45' : '00')));
-                                                
-                        $finalTime = Carbon::parse($reservation->final_hour);
-                        $finalMinutes = $finalTime->minute;
-
-                        if ($finalMinutes <= 15) {
-                            $roundedMinutes = '15';
-                        } elseif ($finalMinutes <= 30) {
-                            $roundedMinutes = '30';
-                        } elseif ($finalMinutes <= 45) {
-                            $roundedMinutes = '45';
-                        } else {
-                            $finalTime->addHour();
-                            $roundedMinutes = '00';
-                        }
-
-                        $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
-                        $finalTime = Carbon::parse($finalFormatted);
-                        $horaActual = Carbon::now();
-                        $horaActualMas2Horas = $horaActual->copy()->addHours(2);
-
-                        // Si $finalTime es menor que la hora actual más 2 horas, asignar la hora actual más 2 horas a $finalTime
-                        if ($finalTime->lessThan($horaActualMas2Horas)) {
-                            $finalTime = $horaActualMas2Horas;
-                        }
-                        while ($startTime->addMinutes(15) <= $finalTime) {
-                            $intervalos[] = $startTime->format('H:i');
-                        }
-                        /*if ($finalTime->lessThan($horaActual)) {
-                            // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
-                            $finalTime = $horaActual;
-                        }
-                        // Agregar las horas intermedias de 15 en 15 minutos
-                        while ($startTime->addMinutes(15) <= $finalTime) {
-                            $intervalos[] = $startTime->format('H:i');
-                        }*/
-
-    /*return $intervalos;
-                    })->flatten()->values()->all();
-                } else {
-                    $reservations = $professional->reservations->map(function ($reservation) {
-                        $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
-                        $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-
-                        $intervalos = [$startFormatted];
-                        $startTime = Carbon::parse($startFormatted);
-                        //$finalFormatted = Carbon::parse($reservation->final_hour)->format('H:') . ($finalMinutes <= 15 ? '15' : ($finalMinutes <= 30 ? '30' : ($finalMinutes <= 45 ? '45' : '00')));
-                                                
-                        $finalTime = Carbon::parse($reservation->final_hour);
-                        $finalMinutes = $finalTime->minute;
-
-                        if ($finalMinutes <= 15) {
-                            $roundedMinutes = '15';
-                        } elseif ($finalMinutes <= 30) {
-                            $roundedMinutes = '30';
-                        } elseif ($finalMinutes <= 45) {
-                            $roundedMinutes = '45';
-                        } else {
-                            $finalTime->addHour();
-                            $roundedMinutes = '00';
-                        }
-
-                        $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
-                        $finalTime = Carbon::parse($finalFormatted);
-                        $horaActual = Carbon::now();
-                        if ($finalTime->lessThan($horaActual)) {
-                            // $finalTime es menor que la hora actual, asignar la hora actual a $finalTime
-                            $finalTime = $horaActual;
-                        }
-                        // Agregar las horas intermedias de 15 en 15 minutos
-                        while ($startTime->addMinutes(15) <= $finalTime) {
-                            $intervalos[] = $startTime->format('H:i');
-                        }
-
-                        return $intervalos;
-                    })->flatten()->values()->all();
-                }
-
-                if (Carbon::parse($data['data'])->isToday()) {
-                    // Verificar si la hora actual es menor que el primer start_time de las reservas del día
-                    $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
-                    if ($currentDateTime->lessThan($firstReservationStartTime)) {
-                        $startTime = Carbon::parse($start_time);
-                        while ($startTime <= $currentDateTime) {
-                            $reservations[] = $startTime->format('H:i');
-                            $startTime->addMinutes(15);
-                        }
-                    } else {
-                        $startTime = Carbon::parse($start_time);
-                        while ($startTime <= $currentDateTime) {
-                            $reservations[] = $startTime->format('H:i');
-                            $startTime->addMinutes(15);
-                        }
-                    }
-                }
-            } else {
-                if (Carbon::parse($data['data'])->isToday()) {
-                    // Verificar si la hora actual es menor que el primer start_time de las reservas del día
-                    //$firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
-                    //if ($currentDateTime->lessThan($firstReservationStartTime)) {
-                    $startTime = Carbon::parse($start_time);
-                    while ($startTime <= $currentDateTime) {
-                        $reservations[] = $startTime->format('H:i');
-                        $startTime->addMinutes(15);
-                    }
-                    //}
-                }
-                //$reservations = [];
-            }
-            sort($reservations);
-            return response()->json(['reservations' => $reservations], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los profesionales"], 500);
-        }
-    }*/
-
     public function professional_reservations_time(Request $request)
     {
         try {
@@ -341,9 +180,12 @@ class ProfessionalController extends Controller
                         $query->where('branch_id', $data['branch_id']);
                     })
                     ->with(['reservations' => function ($query) use ($data) {
-                        $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1, 4])->whereHas('tail', function ($subquery) {
-                            $subquery->where('aleatorie', '!=', 1);
-                        });
+                        $query->whereDate('data', $data['data'])
+                              ->orderBy('start_time')
+                              ->whereIn('confirmation', [1, 4])
+                              ->whereHas('tail', function ($subquery) {
+                                  $subquery->where('aleatorie', '!=', 1);
+                              });
                     }])->where('state', 1)->whereHas('records', function ($query) {
                         $query->whereDate('start_time', Carbon::now());
                     })->select(
@@ -370,9 +212,7 @@ class ProfessionalController extends Controller
                     return response()->json(['reservations' => $reservations], 200);
                 } else {
                     if ($professional->reservations->isNotEmpty()) {
-                        $reservations = $professional->reservations->whereIn('confirmation', [1, 4])->whereHas('tail', function ($subquery) {
-                            $subquery->where('aleatorie', '!=', 1);
-                        })->map(function ($reservation) use ($start_time) {
+                        $reservations = $professional->reservations->map(function ($reservation) use ($start_time) {
                             $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                             $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
 
