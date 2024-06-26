@@ -708,9 +708,43 @@ class ReservationController extends Controller
             $reservations = Reservation::whereDate('data', Carbon::today())
                 ->whereDoesntHave('tail')
                 ->orderBy('start_time')->get();
+                $current_date = Carbon::now();
             foreach ($reservations as $reservation) {
                 if ($reservation->car->select_professional == 0) {
-                    $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                    $professional_id = $reservation->car->clientProfessional->professional_id;
+                    $professional = Professional::find($professional_id);
+                    $branch_id = $reservation->branch_id;
+                    $reservations2 = $professional->reservations()
+                    ->where('branch_id', $branch_id)
+                    ->whereIn('confirmation', [1, 4])
+                    ->whereDate('data', Carbon::now())
+                    ->whereHas('tail')
+                    ->where('final_hour', '>=', $current_date->format('H:i'))
+                    ->orderBy('start_time')
+                    ->get();
+                    if ($reservations2->isEmpty()) {
+                        Log::info('No tiene reservas');
+                        $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                    }
+                    else{
+                        Log::info('Tiene reservas');
+                        $nuevaHoraInicio = $current_date;
+                        $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
+                        foreach ($reservations2 as $reservation2) {
+                            Log::info('Revisando reservas Aleatorio');
+                            $start_timeMin = $this->convertirHoraAMinutos($reservation2->start_time);
+                            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+                    
+                            if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                                $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                                break;
+                            }
+                            else {                            
+                                $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                                break;
+                            }
+                        }
+                    }
                 }else {
                     $cola = $reservation->tail()->create();
                 }
@@ -718,8 +752,14 @@ class ReservationController extends Controller
             }
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['msg' => 'Error al crear la cola'], 500);
+            return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
         }
+    }
+
+    private function convertirHoraAMinutos($hora)
+    {
+        list($horas, $minutos) = explode(':', $hora);
+        return ($horas * 60) + $minutos;
     }
 
     public function professional_reservationDate(Request $request)
