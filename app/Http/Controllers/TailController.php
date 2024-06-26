@@ -687,7 +687,7 @@ class TailController extends Controller
 
         $tails = Tail::whereHas('reservation', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
-        })->whereIn('aleatorie', [1, 3])->get();
+        })->where('aleatorie', 1)->get();
 
         if ($tails->isEmpty()) {
             Log::info('No hay aleatorie');

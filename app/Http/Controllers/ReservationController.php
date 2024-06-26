@@ -722,6 +722,8 @@ class ReservationController extends Controller
                     ->where('final_hour', '>=', $current_date->format('H:i'))
                     ->orderBy('start_time')
                     ->get();
+                    Log::info('$reservations2 reservaciones del barbero a reasignar');
+                    Log::info($reservations2);
                     if ($reservations2->isEmpty()) {
                         Log::info('No tiene reservas');
                         $cola = $reservation->tail()->create(['aleatorie' => 2]);
@@ -736,10 +738,12 @@ class ReservationController extends Controller
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
                     
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                                Log::info('Cabe en la hora actual');
                                 $cola = $reservation->tail()->create(['aleatorie' => 2]);
                                 break;
                             }
-                            else {                            
+                            else {         
+                                Log::info('No cupo en la hora actual');                   
                                 $cola = $reservation->tail()->create(['aleatorie' => 1]);
                                 break;
                             }
