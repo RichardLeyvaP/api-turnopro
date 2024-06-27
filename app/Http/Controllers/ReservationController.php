@@ -709,10 +709,15 @@ class ReservationController extends Controller
                 ->whereDoesntHave('tail')
                 ->orderBy('start_time')->get();
                 $current_date = Carbon::now();
+                $ct = 0;
             foreach ($reservations as $reservation) {
+                log::info('Revisando este metodo - foreach:'.$ct);
                 if ($reservation->car->select_professional == 0) {
+                    log::info('Revisando este metodo - select_professional == 0:'.$ct);
                     $professional_id = $reservation->car->clientProfessional->professional_id;
+                    log::info('Revisando este metodo - $professional_id :'.$professional_id);
                     $professional = Professional::find($professional_id);
+                    log::info('Revisando este metodo - $professional :'.$professional);
                     $branch_id = $reservation->branch_id;
                     $reservations2 = $professional->reservations()
                     ->where('branch_id', $branch_id)
@@ -722,45 +727,55 @@ class ReservationController extends Controller
                     ->where('final_hour', '>=', $current_date->format('H:i'))
                     ->orderBy('start_time')
                     ->get();
-                    Log::info('$reservations2 reservaciones del barbero a reasignar');
+                    
+                     log::info('Revisando este metodo - $reservations2 :'.$ct);
+                     log::info( $reservations2 );
                     Log::info($reservations2);
                     if ($reservations2->isEmpty()) {
+                         log::info('Revisando este metodo - if ($reservations2->isEmpty()) :'.$ct);
                         Log::info('No tiene reservas');
                         $cola = $reservation->tail()->create(['aleatorie' => 2]);
                     }
                     if ($reservations2->isNotEmpty()){
+                        log::info('Revisando este metodo -  if ($reservations2->isNotEmpty()){ :'.$ct);
                         Log::info('Tiene reservas');
                         $nuevaHoraInicio = $current_date;
                         $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
+                         log::info('Revisando este metodo -  Entrando al foreach-2:');
                         foreach ($reservations2 as $reservation2) {
+                            
+                             log::info('Revisando este metodo -  if ($reservations2->isNotEmpty()){ :'.$ct);
                             Log::info('Revisando reservas Aleatorio');
                             $start_timeMin = $this->convertirHoraAMinutos($reservation2->start_time);
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
                     
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                                Log::info('Cabe en la hora actual');
+                                log::info('Revisando este metodo -  Entrando al foreach-2:entre al if');
                                 $cola = $reservation->tail()->create(['aleatorie' => 2]);
                                 break;
                             }
-                            else {         
-                                Log::info('No cupo en la hora actual');                   
+                            else {    
+                                  log::info('Revisando este metodo -  Entrando al foreach-2:estoy en el else');
                                 $cola = $reservation->tail()->create(['aleatorie' => 1]);
                                 break;
                             }
                         }
                     }
                 }else {
+                    log::info('Revisando este metodo -  Estoy en el else creando la cola');
                     $cola = $reservation->tail()->create();
                 }
-                
+                $ct++;
             }
+          
+          
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
         }
     }
-
+    
     private function convertirHoraAMinutos($hora)
     {
         list($horas, $minutos) = explode(':', $hora);
