@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BranchProfessional;
 use App\Models\BranchRule;
 use App\Models\BranchRuleProfessional;
 use App\Models\Professional;
@@ -59,6 +60,16 @@ class BranchRuleProfessionalController extends Controller
            $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule){
                 $query->whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id);
             })->exists();
+            if ($data['type'] == 'Tiempo' && $data['estado'] == 0) {
+                $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                ->where('professional_id', $data['professional_id'])
+                                                ->firstOrFail();
+                // Asignar el siguiente número de llegada
+        $branchProfessional->living = 1;
+
+        // Guardar los cambios
+        $branchProfessional->save();
+            }
             if ($existencia) {
                 $professional->branchrules()->updateExistingPivot($branchrule->id,['estado'=>$data['estado']]);     
             return response()->json(['msg' => 'Estado actualizado correctamente de una rule del professional'], 200);
@@ -67,6 +78,33 @@ class BranchRuleProfessionalController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error al asignar el estado de la rule a este professional'], 500);
+        }
+    }
+
+    public function storeByType_time(Request $request)
+    {
+        Log::info("Asignar cumplimiento de rule a un professional");
+        try {
+            $data = $request->validate([
+                'type' => 'required|string',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'estado' => 'required|int'
+            ]); 
+            if ($data['type'] == 'Tiempo' && $data['estado'] == 0) {
+                $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                ->where('professional_id', $data['professional_id'])
+                                                ->firstOrFail();
+                // Asignar el siguiente número de llegada
+        $branchProfessional->living = 1;
+
+        // Guardar los cambios
+        $branchProfessional->save();
+            }
+            return response()->json(['msg' => 'Estado actualizado'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
 

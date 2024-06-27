@@ -629,7 +629,8 @@ class CarController extends Controller
                 $professional = $car->clientProfessional->professional;
                 $products = $car->orders->where('is_product', 1)->sum('price');
                 $services = $car->orders->where('is_product', 0)->sum('price');
-                if ($car->reservation->tail == null) {
+                $tail = $car->reservation->tail;
+                if ($tail == null) {
                     $state = 0;
                 } else {
                     $attended = $car->reservation->tail->attended;
@@ -641,7 +642,14 @@ class CarController extends Controller
                         $state = 2; // Atendiendose 
                     }
                 }
-
+                if ($tail->aleatorie == 1) {
+                    $name = '';
+                    $image_url = 'professionals/default_profile.jpg';
+                }
+                else{
+                    $name = $professional->name;
+                    $image_url = $professional->image_url;
+                }
                 return [
                     'id' => $car->id,
                     'client_professional_id' => $car->client_professional_id,
@@ -653,10 +661,10 @@ class CarController extends Controller
                     'service' => $services,
                     'technical_assistance' => $car->technical_assistance * 5000,
                     'clientName' => $client->name . ' ' . $client->surname,
-                    'professionalName' => $professional->name . ' ' . $professional->surname,
+                    'professionalName' => $name,
                     'client_image' => $client->client_image,
                     'professional_id' => $professional->id,
-                    'image_url' => $professional->image_url,
+                    'image_url' => $image_url,
                     'payment' => $car->payment,
                     'state' => (int)$state
 

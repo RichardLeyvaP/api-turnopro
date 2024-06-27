@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\Send_mail;
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\Business;
 use App\Models\Client;
 use App\Models\Professional;
@@ -136,6 +137,9 @@ class ReservationController extends Controller
             ]);
             if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
+                // Actualiza el campo 'living' a NULL para el branch_id dado
+                BranchProfessional::where('branch_id', $data['branch_id'])
+                ->update(['living' => NULL]);
             } else {
                 $data['select_professional'] = 1;
             }

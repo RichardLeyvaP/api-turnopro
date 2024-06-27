@@ -203,14 +203,41 @@ class ProfessionalService
             return $availableProfessionals = [];
         }
         else{
-        $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+            $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+                $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
+            }, '=', count($services))
+            ->whereHas('charge', function ($query) {
+                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            })
+            ->where('state', 1)
+            ->join('branch_professional', function($join) use ($branch_id) {
+                $join->on('professionals.id', '=', 'branch_professional.professional_id')
+                     ->where('branch_professional.branch_id', '=', $branch_id)
+                     ->where('branch_professional.arrival', '!=', NULL);
+            })
+            ->select(
+                'professionals.id', 
+                'professionals.name', 
+                'professionals.surname', 
+                'professionals.second_surname', 
+                'professionals.email', 
+                'professionals.phone', 
+                'professionals.charge_id', 
+                'professionals.state', 
+                'professionals.image_url',
+                'branch_professional.arrival', 
+                'branch_professional.living'
+            ) ->orderByRaw('branch_professional.living ASC')
+            ->orderBy('branch_professional.arrival', 'asc')
+            ->get();
+        /*$professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->where('state', 1)->whereHas('records', function ($query){
             $query->whereDate('start_time', Carbon::now());
         })->select('professionals.id', 'professionals.name', 'professionals.surname', 'professionals.second_surname', 'professionals.email', 'professionals.phone', 'professionals.charge_id', 'professionals.state', 'professionals.image_url', 
-        DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->get();
+        DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time'))->orderBy('start_time', 'asc')->get();*/
         /*$professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
