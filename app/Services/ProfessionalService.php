@@ -253,7 +253,7 @@ class ProfessionalService
                 $professionals[] = $professional1;
             } 
         }
-
+        $current_time = now()->format('H:i:s');
         foreach ($professionals1 as $professional) {
             $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
             ->whereDate('data', $current_date)
@@ -262,7 +262,18 @@ class ProfessionalService
             })
             ->get()
             ->sortBy('start_time')
-            ->map(function ($query){
+            ->map(function ($query) use ($current_time){
+                $attended_values = [1, 11, 111, 4, 5, 33];
+                // Comprobación de start_time y attended
+                if ($query->start_time > $current_time && in_array($query->tail->attended, $attended_values)) {
+                    $start_time = $current_time;
+                    $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->duration) - strtotime('TODAY'));
+
+                    return [
+                        'start_time' => $start_time,
+                        'final_hour' => $final_hour
+                    ];
+                }
                 return [
                     'start_time' => $query->start_time,
                     'final_hour' => $query->final_hour
