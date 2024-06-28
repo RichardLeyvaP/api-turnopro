@@ -262,13 +262,20 @@ class ProfessionalService
             })
             ->get()
             ->sortBy('start_time')
-            ->map(function ($query) use ($current_time){
+            ->map(function ($query) use ($current_time, $professional){
                 $attended_values = [1, 11, 111, 4, 5, 33];
                 // Comprobación de start_time y attended
+                Log::info('Resevaciones');
+                    Log::info($query);
                 if ($query->start_time > $current_time && in_array($query->tail->attended, $attended_values)) {
+                    Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
+                    Log::info('Pprofessional id'.$professional->id);
+                    Log::info('Tiempoo inicio de la reserva'.$query->start_time);
+                    Log::info('Tiempoo total de la reserva'.$query->total_time);
                     $start_time = $current_time;
-                    $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->duration) - strtotime('TODAY'));
-
+                    $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->total_time) - strtotime('TODAY'));
+                    Log::info('Tiempoo inicio de la reserva actualizado'.$start_time);
+                    Log::info('Tiempoo final de la reserva'.$final_hour);
                     return [
                         'start_time' => $start_time,
                         'final_hour' => $final_hour
