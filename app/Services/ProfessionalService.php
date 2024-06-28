@@ -1170,7 +1170,7 @@ class ProfessionalService
                     $subquery->whereIn('attended', [0, 2, 3]);
                 })
                 ->orWhereHas('tails', function ($subquery) use ($endTimeThreshold) {
-                    $subquery->where('attended', '!=', 1)
+                    $subquery/*->where('attended', '!=', 1)*/
                         ->where('attended', '!=', 2)
                         ->where('start_time', '>', $endTimeThreshold->format('H:i:s'))
                         ->orWhereNull('start_time');
@@ -1217,7 +1217,16 @@ class ProfessionalService
             }
             else{
                 foreach($reservations as $reservation1){
+                    $attended_values = [1, 11, 111, 4, 5, 33];
+                // Comprobación de start_time y attended
+                Log::info('Resevaciones');
+                    Log::info($reservation1);
+                if ($reservation1->start_time > $current_date->format('H:i:s') && in_array($reservation1->tail->attended, $attended_values)) {
+                    $start_timeMin = $this->convertirHoraAMinutos($current_date->format('H:i'));
+                }
+                else{
                     $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+                }
                     $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
                     if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {                        
                         $professionalFree[] = $professional;
