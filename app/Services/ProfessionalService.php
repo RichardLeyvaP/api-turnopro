@@ -1068,15 +1068,14 @@ class ProfessionalService
         $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
         //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
         $currentTime = Carbon::now();
-        $endTimeThreshold = $currentTime->copy()->addMinutes(20);
 
-        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $branchService) {
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id)->where('arrival', '!=', NULL);;
         })->whereHas('branchServiceProfessionals', function ($query) use ($branchService) {
             $query->whereIn('branch_service_id', $branchService);
         }, '=', count($branchService))->whereHas('charge', function ($query) {
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->join('branch_professional', function ($join) use ($branch_id) {
+        })->where('state', 1)->join('branch_professional', function ($join) use ($branch_id) {
             $join->on('professionals.id', '=', 'branch_professional.professional_id')
                 ->where('branch_professional.branch_id', '=', $branch_id)
                 ->where('branch_professional.arrival', '!=', NULL);
@@ -1157,8 +1156,10 @@ class ProfessionalService
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
         
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                                Log::info('Cabe antes de la primera reserva que possee en la cola');
+                                Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
                                 $professionalFree[] = $professional;
+                                break;
+                            }else{
                                 break;
                             }
                         }
