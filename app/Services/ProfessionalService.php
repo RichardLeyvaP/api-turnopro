@@ -1321,7 +1321,7 @@ class ProfessionalService
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
         
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                                Log::info('Cabe antes de la primera rreserva que possee en la cola');
+                                Log::info('Cabe antes de la primera reserva que possee en la cola');
                                 $professionalFree[] = $professional;
                                 break;
                             }
