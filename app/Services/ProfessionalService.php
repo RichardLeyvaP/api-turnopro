@@ -261,7 +261,8 @@ class ProfessionalService
                         // Comprobación de start_time y attended
                         Log::info('Resevaciones');
                         Log::info($query);
-                        if ($query->start_time > $current_time && in_array($query->tail->attended, $attended_values)) {
+                        if (($query->start_time > $current_time && in_array($query->tail->attended, $attended_values)) || 
+                        ($query->start_time > $current_time && $query->confirmation == 4)) {
                             Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
                             Log::info('Pprofessional id' . $professional->id);
                             Log::info('Tiempoo inicio de la reserva' . $query->start_time);
