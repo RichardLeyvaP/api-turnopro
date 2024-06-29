@@ -1151,11 +1151,10 @@ class ProfessionalService
                             // Comprobación de start_time y attended
                             Log::info('Reservaciones');
                             Log::info($reservation1);
-        
                             $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
         
-                            if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                            if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
                                 Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
                                 $professionalFree[] = $professional;
                                 break;
