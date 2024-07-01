@@ -119,7 +119,7 @@ class PaymentController extends Controller
                             $finance->control = $control++;
                             $finance->operation = 'Ingreso';
                             $finance->amount = $car->technical_assistance * 5000;
-                            $finance->comment = 'Ingreso prestación de servicio de técnico a cliente ' . $client;
+                            $finance->comment = 'Ingreso prestación de servicio del técnico a cliente ' . $client;
                             $finance->branch_id = $request->branch_id;
                             $finance->type = 'Sucursal';
                             $finance->revenue_id = 8;
