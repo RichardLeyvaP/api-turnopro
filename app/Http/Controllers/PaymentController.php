@@ -114,6 +114,19 @@ class PaymentController extends Controller
             $winProducts = Order::where('car_id', $data['car_id'])->where('is_product', 1)->sum('percent_win');
             $services = Order::where('car_id', $data['car_id'])->where('is_product', 0)->get();
             $winServices = $services->sum('price');
+            if($car->technical_assistance){
+                $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $car->technical_assistance * 5000;
+                            $finance->comment = 'Ingreso prestación de servicio de técnico a cliente ' . $client;
+                            $finance->branch_id = $request->branch_id;
+                            $finance->type = 'Sucursal';
+                            $finance->revenue_id = 8;
+                            $finance->data = Carbon::now();
+                            $finance->file = '';
+                            $finance->save();
+            }
             if($winProducts){
                 $finance = new Finance();
                             $finance->control = $control++;
