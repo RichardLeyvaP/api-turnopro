@@ -728,7 +728,7 @@ class ReservationController extends Controller
                     ->whereIn('confirmation', [1, 4])
                     ->whereDate('data', Carbon::now())
                     ->whereHas('tail')
-                    ->where('final_hour', '>=', $current_date->format('H:i'))
+                    //->where('final_hour', '>=', $current_date->format('H:i'))
                     ->orderBy('start_time')
                     ->get();
                     
