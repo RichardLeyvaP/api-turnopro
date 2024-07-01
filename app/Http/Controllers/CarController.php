@@ -1016,17 +1016,17 @@ class CarController extends Controller
                         'day_of_week' => $cars[0]['day_of_week'], // Mantener el día de la semana
                         'attendedClient' => $cars->sum('attendedClient'),
                         'services' => $cars->sum('services'),
-                        'totalGeneral' => number_format(round($cars->sum('totalGeneral'), 0), 2),
-                        'totalServices' => number_format(round($cars->sum('totalServices'), 0), 2)  ,
-                        'totalProducts' => number_format(round($cars->sum('totalProducts'), 0), 2)  , 
+                        'totalGeneral' => number_format(round($cars->sum('totalGeneral'), 2), 2),
+                        'totalServices' => number_format(round($cars->sum('totalServices'), 2), 2)  ,
+                        'totalProducts' => number_format(round($cars->sum('totalProducts'), 2), 2)  , 
                         'tips' => number_format(round($cars->sum('tips'), 0), 2), 
-                        'tips80' => number_format(round($cars->sum('tipspercent'), 0), 2), 
+                        'tips80' => number_format(round($cars->sum('tipspercent'), 2), 2), 
                         'clientAleator' => $cars->sum('clientAleator'),
-                        'amountGenerate' => number_format(round($cars->sum('amountGenerate'), 0), 2),  
-                        'totalRetention' => $retentionP->sum('retention') ? number_format(round($retentionP->sum('retention'), 0), 2) : number_format(round($cars->sum('retention'), 0), 2),  
+                        'amountGenerate' => number_format(round($cars->sum('amountGenerate'), 2), 2),  
+                        'totalRetention' => $retentionP->sum('retention') ? number_format(round($retentionP->sum('retention'), 2), 2) : number_format(round($cars->sum('retention'), 2), 2),  
                         'metacant' => $meta->count() ? $meta->count() : 0,
-                        'metaamount' => $meta->sum('amount') ? number_format(round($meta->sum('amount'), 0), 2) : '0.00',
-                        'winPay' => number_format(round($cars->sum('winPay'), 0), 2) 
+                        'metaamount' => $meta->sum('amount') ? number_format(round($meta->sum('amount'), 2), 2) : '0.00',
+                        'winPay' => number_format(round($cars->sum('winPay'), 2), 2) 
                     ];
                 })->sortByDesc('data')->values();
 
