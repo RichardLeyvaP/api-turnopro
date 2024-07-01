@@ -113,7 +113,7 @@ class PaymentController extends Controller
             $client = $car->clientProfessional->client->name;
             $winProducts = Order::where('car_id', $data['car_id'])->where('is_product', 1)->sum('percent_win');
             $services = Order::where('car_id', $data['car_id'])->where('is_product', 0)->get();
-            $winServices = $services->sum('price') - $services->sum('percent_win');
+            $winServices = $services->sum('price');
             if($winProducts){
                 $finance = new Finance();
                             $finance->control = $control++;
