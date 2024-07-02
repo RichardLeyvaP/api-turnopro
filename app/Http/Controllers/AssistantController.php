@@ -92,47 +92,50 @@ class AssistantController extends Controller
     {
         //ver si hay aleatorios antes de algun cliente seleccionado
         $professional = Professional::find($professional_id);
+        $currentDateTime = Carbon::now()->format('H:i:s');
         $reservations = $professional->reservations()
             ->where('branch_id', $branch_id)
             ->whereIn('confirmation', [1, 4])
-            ->whereDate('data', Carbon::now())
-            ->whereHas('tail', function ($subquery) {
-                $subquery->where('aleatorie', '!=', 1)->whereIn('attended', [1, 11, 111, 4, 5, 33]);
+            ->whereDate('data', $currentDateTime)
+            ->where(function ($query) use ($currentDateTime) {
+                $query->whereHas('tail', function ($subquery) {
+                    $subquery->where('aleatorie', '!=', 1)
+                            ->whereIn('attended', [1, 11, 111, 4, 5, 33]);
+                })
+                ->orWhere(function ($query) use ($currentDateTime) {
+                    $query->where('start_time', '<', $currentDateTime)
+                          ->whereHas('tail', function ($subquery) {
+                              $subquery->whereNotIn('attended', [1, 11, 111, 4, 5, 33]);
+                          });
+                });
             })
-            ->orderBy('start_time')
             ->get();
         if ($reservations->isEmpty()) {
-            $reservationsTails = $professional->reservations()
+            $reservationsTail = $professional->reservations()
                 ->where('branch_id', $branch_id)
                 ->whereIn('confirmation', [1, 4])
                 ->whereDate('data', Carbon::now())
                 ->whereHas('tail', function ($subquery) {
                     $subquery->where('aleatorie', '!=', 1);
                 })
-                ->orderBy('start_time')
-                ->get();
-            $current_date = Carbon::now()->format('H:i:s');
-            foreach ($reservationsTails as $reservationsTail) {
-                if ($reservationsTail->start_time > $current_date && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
-                    $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $reservationsTail) {
-                        $query->where('branch_id', $branch_id)->where('start_time', '<', $reservationsTail->start_time)->orderBy('start_time');
-                    })->where('aleatorie', 1)->get();
-                    if ($tails->isNotEmpty()) {
-                        $processed = $this->verific_services($tails, $branch_id, $professional_id);
-                        if ($processed) {
-                            // Si se procesó una 'tail', romper el ciclo
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
+                ->orderByRaw('confirmation = 4 DESC') // Ordenar por confirmation, 4 primero
+                ->orderByDesc('from_home') // Ordenar por from_home, 1 primero
+                ->orderBy('start_time') // Luego ordenar por start_time
+                ->first();
+            //$current_date = Carbon::now()->format('H:i:s');
+            if ($reservationsTail && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
+                $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $reservationsTail) {
+                    $query->where('branch_id', $branch_id)->where('start_time', '<', $reservationsTail->start_time)->orderBy('start_time');
+                })->where('aleatorie', 1)->get();
+                if ($tails->isNotEmpty()) {
+                    $this->verific_services($tails, $branch_id, $professional);
                 }
-            } //foreach reservas
+            }
         }
         //end ver si hay aleatorios antes de algun cliente seleccionado
     }
 
-    private function verific_services($tails, $branch_id, $professional_id)
+    private function verific_services($tails, $branch_id, $professional)
     {
         foreach ($tails as $tail) {
             $reservation = $tail->reservation;
@@ -146,10 +149,10 @@ class AssistantController extends Controller
 
             $services_id = $servicesOrders->pluck('branchServiceProfessional.branchService.service.id')->toArray();
 
-            $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($branch_id, $professional_id) {
+            $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($branch_id, $professional) {
                 $query->where('branch_id', $branch_id);
             })
-                ->where('professional_id', $professional_id)
+                ->where('professional_id', $professional->id)
                 ->with('branchService.service')
                 ->get();
             $service_professional_id = $service_professionals->pluck('branchService.service.id')->toArray();
@@ -161,7 +164,7 @@ class AssistantController extends Controller
                 Log::info('Realiza todos los servicios');
 
                 $client = $car->clientProfessional->client;
-                $professional = Professional::find($professional_id);
+                //$professional = Professional::find($professional_id);
 
                 $nuevaHoraInicio = Carbon::now();
                 list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
