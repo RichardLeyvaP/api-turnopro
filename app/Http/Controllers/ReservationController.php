@@ -650,71 +650,29 @@ class ReservationController extends Controller
 
             ]);
             $reservacion = Reservation::find($data['reservation_id']);
-            $professional = $reservacion->car->clientProfessional->professional;
-            $branch_id = $reservacion->branch_id;
-            $horaInicioReservacion = Carbon::createFromFormat('H:i:s', $reservacion->start_time);
+            //$professional = $reservacion->car->clientProfessional->professional;
+            //$branch_id = $reservacion->branch_id;
+            //return $horaInicioReservacion = Carbon::createFromFormat('H:i:s', $reservacion->start_time);
+            $horaInicioReservacion = $reservacion->start_time;
 
-            // Obtiene la hora actual
+            
             $horaActual = Carbon::now();
-            // Suma 20 minutos a la hora actual
-            $horaActualMas20Minutos = $horaActual->copy()->addMinutes(20);
-            /*// Sumamos 10 minutos al start_time
-            $horaInicioMas10Minutos = $horaInicioReservacion->addMinutes(20);*/
-            // Comprueba si la hora actual más 20 minutos es menor que la hora de inicio de la reservación
-            if ($horaActualMas20Minutos->lt($horaInicioReservacion)) {
-                // Comprueba si la hora de inicio de la reservación es solo 20 minutos pasada la hora actual
-                $diferencia = $horaInicioReservacion->diffInMinutes($horaActual);
-                if ($diferencia <= 20) {
-                    // Si las condiciones se cumplen, actualiza la confirmación de la reservación
-                    $reservacion->confirmation = 4;
-                    $reservacion->save();
+             // Convertir las cadenas de tiempo a objetos Carbon
+            $currentTime = Carbon::createFromFormat('H:i:s', $horaActual->format('H:i:s'));
+            $startTime = Carbon::createFromFormat('H:i:s', $reservacion->start_time);
 
-                    return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
-                }
+            // Calcular la diferencia en minutos
+            $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
+
+            // Verificar si la diferencia es exactamente 20 minutos
+            if ($diferenciaEnMinutos <= 20){
+                $reservacion->confirmation = 4;
+                $reservacion->save();
+
+                return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
             }else {
                 return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
             }
-            // Obtenemos la hora actual
-            /*$horaActual = Carbon::now();
-
-            if ($horaInicioMas10Minutos->gt($horaActual)) {
-                if ($reservacion) {
-                    $reservacion->confirmation = 4;
-                    $reservacion->save();
-                }
-                return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
-            } else {
-                $professionals = Professional::where('id', $professional->id)->where(function ($query) {
-                    $query->orWhereDoesntHave('tails')
-                        ->orWhereHas('tails', function ($subquery) {
-                            $subquery->whereIn('attended', [0, 2, 3]);
-                        })
-                        ->orWhereHas('tails', function ($subquery) {
-                            $subquery->where('attended', '!=', 1)
-                                ->orWhereNull('start_time');
-                        });
-                })->get();
-                if ($professionals->isNotEmpty()) {
-                    if ($reservacion) {
-                        $reservacion->confirmation = 4;
-                        $reservacion->save();
-                    }
-                    return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
-                }
-                else{
-                return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
-                }
-            }*/
-            /*if ($reservacion) {
-                $reservacion->confirmation = 4;
-                $reservacion->save();
-                return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
-            } else {
-                return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
-                //return redirect('http://localhost:3000/reserv/denied');
-            }*/
-
-            //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);

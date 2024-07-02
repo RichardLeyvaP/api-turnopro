@@ -48,7 +48,7 @@ class AssistantController extends Controller
             //cola
             $branch_id = $branch->id;
             $professional_id = $professional->id;
-            $this->verific_aleatorie($branch_id, $professional_id);
+            $this->verific_aleatorie($branch_id, $professional);
             Log::info('Dada una sucursal y un professional devuelve la cola del día');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereNot('confirmation', [2, 3]);
@@ -88,21 +88,22 @@ class AssistantController extends Controller
         }
     }
 
-    private function verific_aleatorie($branch_id, $professional_id)
+    private function verific_aleatorie($branch_id, $professional)
     {
         //ver si hay aleatorios antes de algun cliente seleccionado
-        $professional = Professional::find($professional_id);
+        //$professional = Professional::find($professional);
         $currentDateTime = Carbon::now()->format('H:i:s');
+        $currentDate = Carbon::now();
         $reservations = $professional->reservations()
             ->where('branch_id', $branch_id)
             ->whereIn('confirmation', [1, 4])
-            ->whereDate('data', $currentDateTime)
+            ->whereDate('data', $currentDate)
             ->where(function ($query) use ($currentDateTime) {
-                $query->whereHas('tail', function ($subquery) {
+                $query->whereHas('tail', function ($subquery) {//Está atendiendo cliente
                     $subquery->where('aleatorie', '!=', 1)
                             ->whereIn('attended', [1, 11, 111, 4, 5, 33]);
                 })
-                ->orWhere(function ($query) use ($currentDateTime) {
+                ->orWhere(function ($query) use ($currentDateTime) {//No se esta atendiendo pero tiene una reserva menor que la hora actual
                     $query->where('start_time', '<', $currentDateTime)
                           ->whereHas('tail', function ($subquery) {
                               $subquery->whereNotIn('attended', [1, 11, 111, 4, 5, 33]);
@@ -110,7 +111,7 @@ class AssistantController extends Controller
                 });
             })
             ->get();
-        if ($reservations->isEmpty()) {
+        if ($reservations->isEmpty()) {//esta libre
             $reservationsTail = $professional->reservations()
                 ->where('branch_id', $branch_id)
                 ->whereIn('confirmation', [1, 4])
@@ -194,7 +195,7 @@ class AssistantController extends Controller
 
         }//for aleatorie
          // Retorna false indicando que no se ha procesado ninguna 'tail'
-    return false;
+        return false;
     }
 
     private function reassignServices($servicesOrders, $service_professionals)
