@@ -21,7 +21,7 @@ class AssistantController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric',
             ]);
-
+            $notifications = [];
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
             $notifications = $branch->notifications()
@@ -118,9 +118,12 @@ class AssistantController extends Controller
                         $query->where('branch_id', $branch_id)->where('start_time', '<', $reservationsTail->start_time)->orderBy('start_time');
                     })->where('aleatorie', 1)->get();
                     if ($tails->isNotEmpty()) {
-                        $this->verific_services($tails, $branch_id, $professional_id);
-                        break;
-                    }else {
+                        $processed = $this->verific_services($tails, $branch_id, $professional_id);
+                        if ($processed) {
+                            // Si se procesó una 'tail', romper el ciclo
+                            break;
+                        }
+                    } else {
                         break;
                     }
                 }
@@ -182,10 +185,13 @@ class AssistantController extends Controller
                 $tail->aleatorie = 2;
                 $tail->save();
                 $this->reassignServices($servicesOrders, $service_professionals);
-                break;
+                // Retorna true indicando que se ha procesado una 'tail'
+            return true;
             } //if diferencia de si realiza los servicios
 
         }//for aleatorie
+         // Retorna false indicando que no se ha procesado ninguna 'tail'
+    return false;
     }
 
     private function reassignServices($servicesOrders, $service_professionals)

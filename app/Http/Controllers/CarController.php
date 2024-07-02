@@ -642,14 +642,14 @@ class CarController extends Controller
                         $state = 2; // Atendiendose 
                     }
                 }
-                if ($tail->aleatorie == 1) {
+                /*if ($tail->aleatorie == 1) {
                     $name = '';
                     $image_url = 'professionals/default_profile.jpg';
                 }
-                else{
+                else{*/
                     $name = $professional->name;
                     $image_url = $professional->image_url;
-                }
+                //}
                 return [
                     'id' => $car->id,
                     'client_professional_id' => $car->client_professional_id,
