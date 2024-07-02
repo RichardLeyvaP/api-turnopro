@@ -121,14 +121,8 @@ class ReservationService
         } else {
             $confirmation = 0;
         }
-        $reservation = new Reservation();
-        if ($data['select_professional'] == 0 && $data['from_home'] == 0) {
-            Log::info('Es aleatorio');
-            $start_time = Carbon::now()->format('H:i:s');
-        }else{
-            Log::info('No es aleatorie');
-            $start_time = Carbon::parse($data['start_time'])->toTimeString();  
-        }
+        $reservation = new Reservation();    
+        $start_time = Carbon::parse($data['start_time'])->toTimeString();
         $reservation->start_time = Carbon::parse($start_time)->toTimeString();
         $reservation->final_hour = Carbon::parse($start_time)->addMinutes($total_time)->toTimeString();
         $reservation->total_time = sprintf('%02d:%02d:%02d', floor($total_time / 60), $total_time % 60, 0);

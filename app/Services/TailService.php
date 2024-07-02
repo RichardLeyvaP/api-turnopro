@@ -42,13 +42,13 @@ class TailService {
                 $comment = Comment::whereHas('clientProfessional', function ($query) use ($client){
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
-                if($tail->attended == 0 && $tail->aleatorie == 1){
+                /*if($tail->attended == 0 && $tail->aleatorie == 1){
                     $name = '';
                     $image = "professionals/default_profile.jpg";
-                }else{
+                }else{*/
                     $name = $professional->name;
                     $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
-                }
+                //}
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
@@ -135,13 +135,13 @@ class TailService {
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
                 $tail = $reservation->tail;
-                if($tail->attended == 0 && $tail->aleatorie == 1){
+                /*if($tail->attended == 0 && $tail->aleatorie == 1){
                     $name = '';
                     $image = "professionals/default_profile.jpg";
-                }else{
+                }else{*/
                     $name = $professionaltem ? $professionaltem->professional->name : '';
                     $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
-                }
+                //}
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,

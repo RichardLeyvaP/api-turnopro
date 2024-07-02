@@ -654,11 +654,28 @@ class ReservationController extends Controller
             $branch_id = $reservacion->branch_id;
             $horaInicioReservacion = Carbon::createFromFormat('H:i:s', $reservacion->start_time);
 
-            // Sumamos 10 minutos al start_time
-            $horaInicioMas10Minutos = $horaInicioReservacion->addMinutes(10);
-
-            // Obtenemos la hora actual
+            // Obtiene la hora actual
             $horaActual = Carbon::now();
+            // Suma 20 minutos a la hora actual
+            $horaActualMas20Minutos = $horaActual->copy()->addMinutes(20);
+            /*// Sumamos 10 minutos al start_time
+            $horaInicioMas10Minutos = $horaInicioReservacion->addMinutes(20);*/
+            // Comprueba si la hora actual más 20 minutos es menor que la hora de inicio de la reservación
+            if ($horaActualMas20Minutos->lt($horaInicioReservacion)) {
+                // Comprueba si la hora de inicio de la reservación es solo 20 minutos pasada la hora actual
+                $diferencia = $horaInicioReservacion->diffInMinutes($horaActual);
+                if ($diferencia <= 20) {
+                    // Si las condiciones se cumplen, actualiza la confirmación de la reservación
+                    $reservacion->confirmation = 4;
+                    $reservacion->save();
+
+                    return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
+                }
+            }else {
+                return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
+            }
+            // Obtenemos la hora actual
+            /*$horaActual = Carbon::now();
 
             if ($horaInicioMas10Minutos->gt($horaActual)) {
                 if ($reservacion) {
@@ -687,7 +704,7 @@ class ReservationController extends Controller
                 else{
                 return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
                 }
-            }
+            }*/
             /*if ($reservacion) {
                 $reservacion->confirmation = 4;
                 $reservacion->save();
