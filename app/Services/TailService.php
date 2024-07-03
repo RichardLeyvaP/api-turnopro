@@ -266,7 +266,11 @@ class TailService
             $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
         })->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
             $query->where('professional_id', $professional_id);
-        })->whereNot('attended', [2])->where('aleatorie', '!=', 1)->get();
+        })->whereNot('attended', [2])
+        ->where('aleatorie', '!=', 1)
+        ->orderByRaw('FIELD(reservation.confirmation, 4, 1)')
+        ->orderBy('reservation.from_home', 'desc')
+        ->orderBy('reservation.start_time', 'asc')->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id) {
             $reservation = $tail->reservation;
             $professional = $reservation->car->clientProfessional->professional;
@@ -304,7 +308,7 @@ class TailService
                 'services' => $services
 
             ];
-        })->sortBy('start_time')->values();
+        })->values();
         return $branchTails;
     }
 

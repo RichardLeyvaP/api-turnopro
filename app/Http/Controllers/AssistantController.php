@@ -54,7 +54,11 @@ class AssistantController extends Controller
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
             })->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
                 $query->where('professional_id', $professional_id);
-            })->whereNot('attended', [2])->where('aleatorie', '!=', 1)->get();
+            })->whereNot('attended', [2])
+            ->where('aleatorie', '!=', 1)
+            ->orderByRaw('FIELD(reservation.confirmation, 4, 1)')
+            ->orderBy('reservation.from_home', 'desc')
+            ->orderBy('reservation.start_time', 'asc')->get();
             $branchTails = $tails->map(function ($tail) use ($data) {
                 $reservation =  $tail->reservation;
                 $client = $reservation->car->clientProfessional->client;
@@ -80,7 +84,7 @@ class AssistantController extends Controller
                     'total_services' => intval(Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count())
 
                 ];
-            })->sortBy('start_time')->values();
+            })->values();
             return response()->json(['notifications' => $notifications, 'tail' => $branchTails], 200);
         } catch (\Throwable $th) {
             Log::error($th);
