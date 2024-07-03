@@ -318,7 +318,7 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostarr la cola del dia de una branch");
+            Log::info("Mostrar la cola del dia de un professional en una branch");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'

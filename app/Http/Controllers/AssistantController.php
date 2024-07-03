@@ -51,7 +51,7 @@ class AssistantController extends Controller
             $this->verific_aleatorie($branch_id, $professional);
             Log::info('Dada una sucursal y un professional devuelve la cola del día');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-                $query->where('branch_id', $branch_id)->whereNot('confirmation', [2, 3]);
+                $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
             })->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
                 $query->where('professional_id', $professional_id);
             })->whereNot('attended', [2])->where('aleatorie', '!=', 1)->get();
@@ -106,11 +106,14 @@ class AssistantController extends Controller
                 ->orWhere(function ($query) use ($currentDateTime) {//No se esta atendiendo pero tiene una reserva menor que la hora actual
                     $query->where('start_time', '<', $currentDateTime)
                           ->whereHas('tail', function ($subquery) {
-                              $subquery->whereNotIn('attended', [1, 11, 111, 4, 5, 33]);
+                            $subquery->where('aleatorie', '!=', 1)
+                              ->whereNotIn('attended', [1, 11, 111, 4, 5, 33, 2]);
                           });
                 });
             })
             ->get();
+            Log::info('$reservations de que esta ocupado');
+            Log::info($reservations);
         if ($reservations->isEmpty()) {//esta libre
             $reservationsTail = $professional->reservations()
                 ->where('branch_id', $branch_id)
@@ -123,6 +126,8 @@ class AssistantController extends Controller
                 ->orderByDesc('from_home') // Ordenar por from_home, 1 primero
                 ->orderBy('start_time') // Luego ordenar por start_time
                 ->first();
+                Log::info('$reservationsTail orden de las reservaciones');
+                Log::info($reservationsTail);
             //$current_date = Carbon::now()->format('H:i:s');
             if ($reservationsTail && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
                 $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $reservationsTail) {
