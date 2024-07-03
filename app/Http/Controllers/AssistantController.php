@@ -56,9 +56,11 @@ class AssistantController extends Controller
                 $query->where('professional_id', $professional_id);
             })->whereNot('attended', [2])
             ->where('aleatorie', '!=', 1)
-            ->orderByRaw('reservation.confirmation = 4 DESC')
-            ->orderBy('reservation.from_home', 'desc')
-            ->orderBy('reservation.start_time', 'asc')->get();
+            ->with(['reservation' => function($query) {
+                $query->orderByRaw('confirmation = 4 DESC')
+                      ->orderBy('from_home', 'desc')
+                      ->orderBy('start_time', 'asc');
+            }])->get();
             $branchTails = $tails->map(function ($tail) use ($data) {
                 $reservation =  $tail->reservation;
                 $client = $reservation->car->clientProfessional->client;
