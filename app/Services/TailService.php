@@ -231,7 +231,7 @@ class TailService
             $query->where('professional_id', $professional_id);
         })->whereNot('attended', [2])
         ->where('aleatorie', '!=', 1)
-        ->orderByRaw('FIELD(reservation.confirmation, 4, 1)')
+        ->orderByRaw('reservation.confirmation = 4 DESC')
         ->orderBy('reservation.from_home', 'desc')
         ->orderBy('reservation.start_time', 'asc')
         ->get();
@@ -273,7 +273,7 @@ class TailService
             $query->where('professional_id', $professional_id);
         })->whereNot('attended', [2])
         ->where('aleatorie', '!=', 1)
-        ->orderByRaw('FIELD(reservation.confirmation, 4, 1)')
+        ->orderByRaw('reservation.confirmation = 4 DESC')
         ->orderBy('reservation.from_home', 'desc')
         ->orderBy('reservation.start_time', 'asc')->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id) {
