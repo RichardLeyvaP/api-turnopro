@@ -736,14 +736,14 @@ class TailService
                 $query->whereHas('tail', function ($subquery) {//Está atendiendo cliente
                     $subquery->where('aleatorie', '!=', 1)
                             ->whereIn('attended', [1, 11, 111, 4, 5, 33]);
-                })
+                })/*
                 ->orWhere(function ($query) use ($currentDateTime) {//No se esta atendiendo pero tiene una reserva menor que la hora actual
                     $query->where('start_time', '<', $currentDateTime)
                           ->whereHas('tail', function ($subquery) {
                             $subquery->where('aleatorie', '!=', 1)
                               ->whereNotIn('attended', [1, 11, 111, 4, 5, 33, 2]);
                           });
-                });
+                })*/;
             })
             ->get();
             Log::info('$reservations de que esta ocupado');
@@ -765,7 +765,7 @@ class TailService
             //$current_date = Carbon::now()->format('H:i:s');
             if ($reservationsTail && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
                 $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $reservationsTail) {
-                    $query->where('branch_id', $branch_id)->where('start_time', '<', $reservationsTail->start_time)->orderBy('start_time');
+                    $query->where('branch_id', $branch_id)->where('created_at', '<', $reservationsTail->created_at)->orderBy('created_at');
                 })->where('aleatorie', 1)->get();
                 if ($tails->isNotEmpty()) {
                     $this->verific_services($tails, $branch_id, $professional);
