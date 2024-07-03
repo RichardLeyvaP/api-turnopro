@@ -138,8 +138,17 @@ class AssistantController extends Controller
                 ->first();
                 Log::info('$reservationsTail orden de las reservaciones');
                 Log::info($reservationsTail);
+
+                if($reservationsTail == NULL){//sino tiene a nadie en cola llama a los aleatorios para tomar al primero que llego
+                    $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+                        $query->where('branch_id', $branch_id)->orderBy('created_at');
+                    })->where('aleatorie', 1)->get();
+                    if ($tails->isNotEmpty()) {
+                        $this->verific_services($tails, $branch_id, $professional);
+                    }
+                }
             //$current_date = Carbon::now()->format('H:i:s');
-            if ($reservationsTail && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
+            elseif($reservationsTail && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
                 $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $reservationsTail) {
                     $query->where('branch_id', $branch_id)->where('created_at', '<', $reservationsTail->created_at)->orderBy('created_at');
                 })->where('aleatorie', 1)->get();
