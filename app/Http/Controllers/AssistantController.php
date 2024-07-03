@@ -52,15 +52,19 @@ class AssistantController extends Controller
             Log::info('Dada una sucursal y un professional devuelve la cola del día');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
-            })->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
+            })
+            ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
                 $query->where('professional_id', $professional_id);
-            })->whereNot('attended', [2])
+            })
+            ->whereNot('attended', [2])
             ->where('aleatorie', '!=', 1)
-            ->with(['reservation' => function($query) {
-                $query->orderByRaw('confirmation = 4 DESC')
-                      ->orderBy('from_home', 'desc')
-                      ->orderBy('start_time', 'asc');
-            }])->get();
+            ->join('reservations', 'tails.reservation_id', '=', 'reservations.id')
+            ->orderByRaw('reservations.confirmation = 4 DESC')
+            ->orderBy('reservations.from_home', 'desc')
+            ->orderBy('reservations.start_time', 'asc')
+            ->select('tails.*')  // Selecciona sólo las columnas del modelo Tail
+            ->with('reservation') // Carga la relación reservation
+            ->get();
             $branchTails = $tails->map(function ($tail) use ($data) {
                 $reservation =  $tail->reservation;
                 $client = $reservation->car->clientProfessional->client;

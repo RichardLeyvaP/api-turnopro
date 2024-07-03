@@ -225,18 +225,21 @@ class TailService
     {
         $professional = Professional::find($professional_id);
         $this->verific_aleatorie($branch_id, $professional);
-        $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
-        })->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
-            $query->where('professional_id', $professional_id);
-        })->whereNot('attended', [2])
-        ->where('aleatorie', '!=', 1)
-        ->with(['reservation' => function($query) {
-            $query->orderByRaw('confirmation = 4 DESC')
-                  ->orderBy('from_home', 'desc')
-                  ->orderBy('start_time', 'asc');
-        }])
-        ->get();
+      $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
+            })
+            ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
+                $query->where('professional_id', $professional_id);
+            })
+            ->whereNot('attended', [2])
+            ->where('aleatorie', '!=', 1)
+            ->join('reservations', 'tails.reservation_id', '=', 'reservations.id')
+            ->orderByRaw('reservations.confirmation = 4 DESC')
+            ->orderBy('reservations.from_home', 'desc')
+            ->orderBy('reservations.start_time', 'asc')
+            ->select('tails.*')  // Selecciona sólo las columnas del modelo Tail
+            ->with('reservation') // Carga la relación reservation
+            ->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id) {
             $reservation = $tail->reservation;
             $professional = $reservation->car->clientProfessional->professional;
@@ -271,15 +274,19 @@ class TailService
         $this->verific_aleatorie($branch_id, $professional);
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
-        })->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
+        })
+        ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
             $query->where('professional_id', $professional_id);
-        })->whereNot('attended', [2])
+        })
+        ->whereNot('attended', [2])
         ->where('aleatorie', '!=', 1)
-        ->with(['reservation' => function($query) {
-            $query->orderByRaw('confirmation = 4 DESC')
-                  ->orderBy('from_home', 'desc')
-                  ->orderBy('start_time', 'asc');
-        }])->get();
+        ->join('reservations', 'tails.reservation_id', '=', 'reservations.id')
+        ->orderByRaw('reservations.confirmation = 4 DESC')
+        ->orderBy('reservations.from_home', 'desc')
+        ->orderBy('reservations.start_time', 'asc')
+        ->select('tails.*')  // Selecciona sólo las columnas del modelo Tail
+        ->with('reservation') // Carga la relación reservation
+        ->get();
         $branchTails = $tails->map(function ($tail) use ($branch_id) {
             $reservation = $tail->reservation;
             $professional = $reservation->car->clientProfessional->professional;
