@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -50,7 +51,7 @@ class ScheduleController extends Controller
                     'type_service' => $service->type_service,
                     'profit_percentaje' => $service->profit_percentaje,                    
                     'duration_service' => $service->duration_service,
-                    'image_service' => $service->image_service,
+                    'image_service' => $service->image_service . '?$' . Carbon::now(),
                     'service_comment' => $service->service_comment,
                     'ponderation' => $service->pivot->ponderation
                 ];

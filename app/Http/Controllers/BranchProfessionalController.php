@@ -150,7 +150,7 @@ class BranchProfessionalController extends Controller
                     'name' => $professional->name,
                     'surname' => $professional->surname,
                     'second_surname' => $professional->second_surname,
-                    'image_url' => $professional->image_url,
+                    'image_url' => $professional->image_url . '?$' . Carbon::now(),
                     'ponderation' => $ponderation
                 ];
             })->sortBy('ponderation')->values();

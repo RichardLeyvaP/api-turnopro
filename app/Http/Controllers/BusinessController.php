@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Business;
 use App\Services\BusinessService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class BusinessController extends Controller
@@ -48,7 +49,7 @@ class BusinessController extends Controller
                     'location' => $branch->address, 
                     'location_link' => $branch->location,
                     'phone_link' => "https://wa.me/".$branch->phone,
-                    'image' => $branch->image_data,
+                    'image' => $branch->image_data . '?$' . Carbon::now(),
                     'business_id' => $branch->business_id,
                     'type' => 'Branch'
                 ];

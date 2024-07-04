@@ -152,14 +152,14 @@ class StudentController extends Controller
                 'second_surname' => $student['second_surname'],
                 'email' => $student['email'],
                 'phone' => $student['phone'],
-                'student_image' => $student['student_image']
+                'student_image' => $student['student_image'] . '?$' . Carbon::now()
             ];
             foreach ($coursesData as $course) {
                 // Extraer datos del curso
                 $courseData = [
                     'id' => $course['id'],
                     'name' => $course['name'],
-                    'course_image' => $course['course_image'],
+                    'course_image' => $course['course_image'] . '?$' . Carbon::now(),
                     'price' => $course['price'],
                     'reservation_price' => $course['reservation_price'],
                     'startDate' => $course['startDate'],
@@ -219,7 +219,7 @@ class StudentController extends Controller
                     'cant' => $productSale->cant,
                     'course' => $course->name,
                     'name' => $product->name,
-                    'image_product' => $product->image_product
+                    'image_product' => $product->image_product . '?$' . Carbon::now()
                 ];
             } 
         return response()->json(['student' => $studentData , 'courses' => $coursesArray, 'pagos' => $pagosArray, 'products' => $productsArray, 'habilitado' => $contadorEnabledCero ? 'No Habilitado' : 'Habilitado',  'status' => $contadorEnabledCero ? 'Retrasado' : 'Ok',  'payMount' => $sumaAmountPay], 200);

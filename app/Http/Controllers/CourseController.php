@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -17,8 +18,26 @@ class CourseController extends Controller
         try { 
             
             Log::info( "entra a cliente");
-
-            return response()->json(['courses' => Course::with('enrollment')->get()], 200, [], JSON_NUMERIC_CHECK);
+            $courses = Course::with('enrollment')->get()->map(function ($query){
+                return [
+                    "id" => $query->id,
+                    "enrollment_id" => $query->enrollment_id,
+                    "name" => $query->name,
+                    "description" => $query->description,
+                    "price" => $query->price,
+                    "startDate" => $query->startDate,
+                    "endDate" => $query->endDate,
+                    "course_image" => $query->course_image . '?$' . Carbon::now(),
+                    "total_enrollment" => $query->total_enrollment,
+                    "available_slots" => $query->available_slots,
+                    "reservation_price" => $query->reservation_price,
+                    "duration" => $query->duration,
+                    "practical_percentage" => $query->practical_percentage,
+                    "theoretical_percentage" => $query->theoretical_percentage,
+                    "enrollment" => $query->enrollment
+                ];
+            });
+            return response()->json(['courses' => $courses], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
 
