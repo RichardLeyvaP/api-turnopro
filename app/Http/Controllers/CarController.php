@@ -471,7 +471,7 @@ class CarController extends Controller
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
                     ];
                 });
                 $resultDetails[] = [
@@ -502,7 +502,7 @@ class CarController extends Controller
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
                     ];
                 });
                 $resultDetailsAnt[] = [
