@@ -111,7 +111,7 @@ class PaymentController extends Controller
                 $control = 1;
             }
             $client = $car->clientProfessional->client->name;
-            $winProducts = Order::where('car_id', $data['car_id'])->where('is_product', 1)->sum('percent_win');
+            $winProducts = Order::where('car_id', $data['car_id'])->where('is_product', 1)->sum('price');
             $services = Order::where('car_id', $data['car_id'])->where('is_product', 0)->get();
             $winServices = $services->sum('price');
             if($car->technical_assistance){
@@ -145,8 +145,22 @@ class PaymentController extends Controller
                 $finance = new Finance();
                 $finance->control = $control++;
                 $finance->operation = 'Ingreso';
-                $finance->amount = $winServices + $data['tip'];
+                $finance->amount = $winServices;
                 $finance->comment = 'Ingreso por pago de servicios de cliente ' . $client;
+                $finance->branch_id = $request->branch_id;
+                $finance->type = 'Sucursal';
+                $finance->revenue_id = 8;
+                $finance->data = Carbon::now();
+                $finance->file = '';
+                $finance->save();
+            }
+            if($data['tip']){
+                //Servicios
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $winServices;
+                $finance->comment = 'Ingreso por pago de propina de cliente ' . $client;
                 $finance->branch_id = $request->branch_id;
                 $finance->type = 'Sucursal';
                 $finance->revenue_id = 8;
@@ -232,7 +246,7 @@ class PaymentController extends Controller
 
             CashierSale::whereIn('id', $ids)->update(['pay' => 1]);
             $cashierSales = CashierSale::whereIn('id', $ids)->get();
-            $win = $cashierSales->sum('percent_wint');
+            $win = $cashierSales->sum('price');
             if($data['cash']){
                 $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
                 if (!$box) {                
