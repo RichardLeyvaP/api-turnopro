@@ -54,7 +54,7 @@ class TailService
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
-                'from_home' => $reservation->from_home,
+                'from_home' => intval($reservation->from_home),
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
@@ -66,6 +66,7 @@ class TailService
                 'professional_state' => $professional->state,
                 'attended' => $tail->attended,
                 'puesto' => $workplace ? $workplace->name : null,
+                'select_professional' => intval($reservation->car->select_professional)
             ];
         })->sortByDesc('professional_state')->sortBy('start_time')->values();
 
@@ -146,6 +147,7 @@ class TailService
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
+                'from_home' => intval($reservation->from_home),
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
@@ -158,7 +160,8 @@ class TailService
                 'client_name' => $client->name . " " . $client->surname,
                 'charge' => $professional ? $professional->charge->name : ' ',
                 'attended' => $tail->attended,
-                'time' => Carbon::parse($tail->updated_at)->format('H:i')
+                'time' => Carbon::parse($tail->updated_at)->format('H:i'),
+                'select_professional' => intval($reservation->car->select_professional)
             ];
         })->sortBy('time')->values();
 
@@ -193,7 +196,7 @@ class TailService
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
-                'from_home' => $reservation->from_home,
+                'from_home' => intval($reservation->from_home),
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
@@ -206,7 +209,8 @@ class TailService
                 'professional_state' => $professional->state,
                 'attended' => $tail->attended,
                 'puesto' => $workplace ? $workplace->name : null,
-                'code' => $reservation->code
+                'code' => $reservation->code,
+                'select_professional' => intval($reservation->car->select_professional)
             ];
         })->sortBy('start_time')->values();
         //});
@@ -247,6 +251,7 @@ class TailService
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
+                'from_home' => intval($reservation->from_home),
                 'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
@@ -261,7 +266,8 @@ class TailService
                 'clock' => $tail->clock,
                 'timeClock' => $tail->timeClock,
                 'detached' => $tail->detached,
-                'total_services' => Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count()
+                'total_services' => Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count(),
+                'select_professional' => intval($reservation->car->select_professional)
 
             ];
         })->values();
@@ -311,6 +317,7 @@ class TailService
                 'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                 'total_time' => $reservation->total_time,
                 'client_name' => $client->name,
+                'from_home' => intval($reservation->from_home),
                 'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
                 'professional_name' => $professional->name,
                 'client_id' => $client->id,
@@ -321,7 +328,8 @@ class TailService
                 'timeClock' => $tail->timeClock,
                 'detached' => $tail->detached,
                 'total_services' => $services->count(),
-                'services' => $services
+                'services' => $services,
+                'select_professional' => intval($reservation->car->select_professional)
 
             ];
         })->values();

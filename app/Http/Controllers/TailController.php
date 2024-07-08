@@ -221,7 +221,7 @@ class TailController extends Controller
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => $reservation->car_id,
-                    'from_home' => $reservation->from_home,
+                    'from_home' => intval($reservation->from_home),
                     'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
                     'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
                     'total_time' => $reservation->total_time,
@@ -234,7 +234,8 @@ class TailController extends Controller
                     'professional_state' => $professional->state,
                     'attended' => $tail->attended,
                     'puesto' => $workplace ? $workplace->name : null,
-                    'code' => $reservation->code
+                    'code' => $reservation->code,
+                    'select_professional' => intval($reservation->car->select_professional)
                 ];
             })->sortBy('start_time')->values();
 
