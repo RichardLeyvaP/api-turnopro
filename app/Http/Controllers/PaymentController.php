@@ -159,7 +159,7 @@ class PaymentController extends Controller
                 $finance = new Finance();
                 $finance->control = $control++;
                 $finance->operation = 'Ingreso';
-                $finance->amount = $winServices;
+                $finance->amount = $data['tip'];
                 $finance->comment = 'Ingreso por pago de propina de cliente ' . $client;
                 $finance->branch_id = $request->branch_id;
                 $finance->type = 'Sucursal';

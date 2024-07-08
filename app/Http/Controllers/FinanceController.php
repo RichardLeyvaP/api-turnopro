@@ -223,6 +223,10 @@ class FinanceController extends Controller
                                 $typeDetail = 'Gasto Producto';
                                 $comment = 'GP '.$query->comment;
                             }
+                            if($query->expense->name == 'Pago a profesionales'){
+                                $typeDetail = 'Gasto Servicio';
+                                $comment = 'GS '.$query->comment;
+                            }
                         }
                         return [
                             'id' => $query->id,
@@ -339,6 +343,10 @@ class FinanceController extends Controller
                                 $typeDetail = 'Gasto Producto';
                                 $comment = 'GP '.$query->comment;
                             }
+                            if($query->expense->name == 'Pago a profesionales'){
+                                $typeDetail = 'Gasto Servicio';
+                                $comment = 'GS '.$query->comment;
+                            }
                         }
                         return [
                             'id' => $query->id,
@@ -407,6 +415,10 @@ class FinanceController extends Controller
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
                                 $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Pago a profesionales'){
+                                $typeDetail = 'Gasto Servicio';
+                                $comment = 'GS '.$query->comment;
                             }
                         }
                         return [
