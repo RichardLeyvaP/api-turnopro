@@ -141,10 +141,6 @@ class FinanceController extends Controller
                             $typeDetail = 'Gasto Propina';
                             $comment = 'GS '.$query->comment;
                         }
-                        if(str_contains($query->comment, 'Gasto por pago a ')){
-                            $typeDetail = 'Gasto Pago a profesionales';
-                            $comment = 'GS '.$query->comment;
-                        }
                         if($query->expense){
                             if($query->expense->name == 'Compra de productos'){
                                 $typeDetail = 'Gasto Producto';
@@ -226,6 +222,10 @@ class FinanceController extends Controller
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
                                 $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Pago a profesionales'){
+                                $typeDetail = 'Gasto Servicio';
+                                $comment = 'GS '.$query->comment;
                             }
                         }
                         return [
@@ -343,6 +343,10 @@ class FinanceController extends Controller
                                 $typeDetail = 'Gasto Producto';
                                 $comment = 'GP '.$query->comment;
                             }
+                            if($query->expense->name == 'Pago a profesionales'){
+                                $typeDetail = 'Gasto Servicio';
+                                $comment = 'GS '.$query->comment;
+                            }
                         }
                         return [
                             'id' => $query->id,
@@ -411,6 +415,10 @@ class FinanceController extends Controller
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
                                 $comment = 'GP '.$query->comment;
+                            }
+                            if($query->expense->name == 'Pago a profesionales'){
+                                $typeDetail = 'Gasto Servicio';
+                                $comment = 'GS '.$query->comment;
                             }
                         }
                         return [
