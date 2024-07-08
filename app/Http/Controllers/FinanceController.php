@@ -141,6 +141,10 @@ class FinanceController extends Controller
                             $typeDetail = 'Gasto Propina';
                             $comment = 'GS '.$query->comment;
                         }
+                        if(str_contains($query->comment, 'Gasto por pago a ')){
+                            $typeDetail = 'Gasto Pago a profesionales';
+                            $comment = 'GS '.$query->comment;
+                        }
                         if($query->expense){
                             if($query->expense->name == 'Compra de productos'){
                                 $typeDetail = 'Gasto Producto';
