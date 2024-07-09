@@ -1272,6 +1272,40 @@ class CarController extends Controller
     }
 
     function formatDuration($minutes)
+{
+    $hours = floor($minutes / 60);
+    $remainingMinutes = floor($minutes % 60);
+    $seconds = round(($minutes - floor($minutes)) * 60);
+
+    $result = '';
+
+    if ($hours > 0) {
+        $result .= $hours . ' hora' . ($hours > 1 ? 's' : '');
+    }
+
+    if ($hours > 0 && ($remainingMinutes > 0 || $seconds > 0)) {
+        $result .= ' y ';
+    }
+
+    if ($remainingMinutes > 0) {
+        $result .= $remainingMinutes . ' minuto' . ($remainingMinutes > 1 ? 's' : '');
+    }
+
+    if ($remainingMinutes > 0 && $seconds > 0) {
+        $result .= ' y ';
+    }
+
+    if ($seconds > 0) {
+        $result .= $seconds . ' segundo' . ($seconds > 1 ? 's' : '');
+    }
+
+    if ($result === '') {
+        $result = '0 segundos';
+    }
+
+    return $result;
+}
+    /*function formatDuration($minutes)
     {
         $hours = floor($minutes / 60);
         $remainingMinutes = $minutes % 60;
@@ -1291,7 +1325,7 @@ class CarController extends Controller
         }
 
         return $result;
-    }
+    }*/
 
     public function tecnico_car_date(Request $request)
     {
