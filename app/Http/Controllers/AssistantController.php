@@ -87,7 +87,9 @@ class AssistantController extends Controller
                     'clock' => intval($tail->clock),
                     'timeClock' => intval($tail->timeClock),
                     'detached' => intval($tail->detached),
-                    'total_services' => intval(Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count())
+                    'total_services' => intval(Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count()),
+                    'from_home' => intval($reservation->from_home),
+                    'select_professional' => intval($reservation->car->select_professional)
 
                 ];
             })->values();
