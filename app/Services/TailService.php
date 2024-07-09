@@ -341,8 +341,11 @@ class TailService
         $tecnicoId = 0;
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         if ($attended == 1) {
+            $current_date = Carbon::now()->format('H:i:s');
             $tail->aleatorie = 0;
             $reservation = Reservation::findOrFail($reservation_id);
+            $reservation->start_time = $current_date;            
+            $reservation->final_hour = date('H:i:s', strtotime($current_date) + strtotime($reservation->total_time));            
             $reservation->started_at = now();
             $reservation->save();
         }
@@ -395,6 +398,7 @@ class TailService
             }
         }
     }
+    
 
     public function type_of_service($branch_id, $professional_id)
     {
