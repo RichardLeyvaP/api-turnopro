@@ -344,8 +344,20 @@ class TailService
             $current_date = Carbon::now()->format('H:i:s');
             $tail->aleatorie = 0;
             $reservation = Reservation::findOrFail($reservation_id);
-            $reservation->start_time = $current_date;            
-            $reservation->final_hour = date('H:i:s', strtotime($current_date) + strtotime($reservation->total_time));            
+            $reservation->start_time = $current_date;  
+            $total_time = $reservation->total_time; // Ejemplo: '00:10:00'
+
+            // Convertimos $current_date y $total_time a instancias de Carbon
+            $current_time = Carbon::createFromFormat('H:i:s', $current_date);
+            $total_time_carbon = Carbon::createFromFormat('H:i:s', $total_time);
+
+            // Sumamos el tiempo total a la hora actual
+            $reservation->final_hour = $current_time->addHours($total_time_carbon->hour)
+                                                ->addMinutes($total_time_carbon->minute)
+                                                ->addSeconds($total_time_carbon->second)
+                                                ->format('H:i:s');
+          
+            //$reservation->final_hour = date('H:i:s', strtotime($current_date) + strtotime($reservation->total_time));            
             $reservation->started_at = now();
             $reservation->save();
         }
