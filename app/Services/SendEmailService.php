@@ -192,7 +192,7 @@ class SendEmailService {
     
 
     //este configurarlo para el envio de cierre de caja si hiciera falta
-    public function emailGitCard($client_email,$client_name, $code, $value_card,$expiration_date)
+    public function emailGitCard($client_email,$client_name, $code, $value_card,$expiration_date, $image_cardgift)
     {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'targeta_regalo';
@@ -205,6 +205,7 @@ class SendEmailService {
               $mail->code = $code;
               $mail->value_card = $value_card;
               $mail->expiration_date = $expiration_date;
+              $mail->image_cardgift = $image_cardgift;
               $this->sendEmail($client_email,$mail,'Asignación de Targeta de Regalo');
 
     }

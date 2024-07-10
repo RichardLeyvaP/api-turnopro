@@ -62,6 +62,7 @@ class Send_mail extends Mailable
      public $expiration_date;
      public $code;
      public $value_card;
+     public $image_cardgift;
 
 
     /**
@@ -135,6 +136,7 @@ class Send_mail extends Mailable
                 'expiration_date' => $this->expiration_date,
                 'code' => $this->code,
                 'value_card' => $this->value_card,
+                'image_cardgift' => $this->image_cardgift
 
 
             ]

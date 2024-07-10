@@ -12,6 +12,9 @@
     Te informamos que se te ha asignado una tarjeta de regalo. A continuación, te proporcionamos los detalles:
 </p>
 
+    <img src="{{$image_cardgift}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">
+
+
 <ul>
     <li><strong>Fecha de Expiración:</strong> {{$expiration_date}} </li>
     <li><strong>Código de la Tarjeta:</strong> {{$code}} </li>

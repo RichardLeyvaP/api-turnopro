@@ -190,7 +190,8 @@ class SendEmailJob implements ShouldQueue
                 $this->data['client_name'],
                 $this->data['code'],
                 $this->data['value_card'],
-                $this->data['expiration_date']
+                $this->data['expiration_date'],
+                $this->data['image_cardgift']
             );
         }
     

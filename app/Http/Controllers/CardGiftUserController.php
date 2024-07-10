@@ -11,6 +11,7 @@ use App\Services\SendEmailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Mailer\Exception\TransportException;
@@ -79,10 +80,10 @@ class CardGiftUserController extends Controller
             $code = $codigo;
             $value_card = $cardGift->value;
             $expiration_date = $data['expiration_date'];
-
+            $image_cardgift = 'http://localhost:8000/api/images/'.$cardGift->image_cardgift;
 
             ///Aqui enviar codido por correo $user->email
-            $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
+            $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
             //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
             /*$data = [
                 'send_gift_card' => true, // Indica que es un correo de envío de tarjeta de regalo
@@ -107,7 +108,6 @@ class CardGiftUserController extends Controller
               return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
 }
-
     /**
      * Display the specified resource.
      */
