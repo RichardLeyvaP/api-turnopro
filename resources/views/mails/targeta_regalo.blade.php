@@ -12,7 +12,7 @@
     Te informamos que se te ha asignado una tarjeta de regalo. A continuación, te proporcionamos los detalles:
 </p>
 
-    <img src="{{$image_cardgift}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">
+    <img src="{{$image_cardgift}}" alt="Descripción de la imagen" style="height: 150px; width: 280px;">
 
 
 <ul>
