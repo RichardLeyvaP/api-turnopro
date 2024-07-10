@@ -470,7 +470,9 @@ class TailService
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'professional_state' => $professional->state,
-                'attended' => $tail->attended
+                'attended' => $tail->attended,
+                'from_home' => intval($reservation->from_home),
+                'select_professional' => intval($reservation->car->select_professional)
             ];
         })->values();
 
@@ -507,7 +509,9 @@ class TailService
                     'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
                     'professional_id' => $professional->id,
                     'professional_state' => $professional->state,
-                    'attended' => $tail->attended
+                    'attended' => $tail->attended,
+                    'from_home' => intval($reservation->from_home),
+                    'select_professional' => intval($reservation->car->select_professional)
                 ];
             })->values();
 
