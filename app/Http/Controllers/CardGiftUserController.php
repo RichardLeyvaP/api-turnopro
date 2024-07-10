@@ -80,7 +80,7 @@ class CardGiftUserController extends Controller
             $code = $codigo;
             $value_card = $cardGift->value;
             $expiration_date = $data['expiration_date'];
-            $image_cardgift = 'http://localhost:8000/api/images/'.$cardGift->image_cardgift;
+            $image_cardgift = 'https://api2.simplifies.cl/api/images/'.$cardGift->image_cardgift;
 
             ///Aqui enviar codido por correo $user->email
             $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
