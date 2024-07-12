@@ -83,7 +83,7 @@ class CommentController extends Controller
 
             if ($request->hasFile('client_look')) {
                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
-               $client = Client::find($reservation->car->clientProfessional->client->id);
+               $client = Client::find($reservation->car->clientProfessional->client_id);
                $client->client_image = $filename;
                 $client->save();
             }          
@@ -135,7 +135,7 @@ class CommentController extends Controller
                         File::delete($destination);
                     }              
                         $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
-                        $client = Client::find($comment->clientProfessional->client->id);
+                        $client = Client::find($comment->clientProfessional->client_id);
                         $client->client_image = $filename;
                         $client->save();
                     }

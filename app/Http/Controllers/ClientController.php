@@ -320,7 +320,7 @@ class ClientController extends Controller
             $client->save();
             Log::info($client);
           //  $filename = "image/default.png";
-            $filename = "clients/default.jpg";
+            $filename = "clients/default_profile.jpg";
             if ($request->hasFile('client_image')) {
                 $filename = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
@@ -353,7 +353,7 @@ class ClientController extends Controller
             Log::info($request['client_image']);
             $client = Client::find($clients_data['id']);
             if ($request->hasFile('client_image'))
-            if ($client->client_image != 'clients/default.jpg') {
+            if ($client->client_image != 'clients/default_profile.jpg') {
                 $destination = public_path("storage\\" . $client->client_image);
                 if (File::exists($destination)) {
                     File::delete($destination);
@@ -384,7 +384,7 @@ class ClientController extends Controller
                 'id' => 'required|numeric'
             ]);
             $client = Client::find($clients_data['id']);
-            if ($client->client_image != "comments/default.jpg") {
+            if ($client->client_image != "clients/default_profile.jpg") {
                 $destination = public_path("storage\\" . $client->client_image);
                 if (File::exists($destination)) {
                     File::delete($destination);

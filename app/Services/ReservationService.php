@@ -146,11 +146,11 @@ class ReservationService
         $cantMaxService = 0;        
         $client = Client::find($data['client_id']);
         $result = [
-            'clientName' => $client->name . " " . $client->surname,
+            'clientName' => $client->name,
             'professionalName' => "Ninguno",
             'branchName' => '',
             'image_data' => '',
-            'imageLook' => 'comments/default_profile.jpg',
+            'imageLook' => 'clients/default_profile.jpg',
             'image_url' => '',
             'cantVisit' => 0,
             'endLook' => '',
@@ -219,12 +219,12 @@ class ReservationService
             $professional = $reservation->car->clientProfessional->professional;
 
             $result = [
-                'clientName' => $client->name . " " . $client->surname,
-                'professionalName' => $professional->name . ' ' . $professional->surname,
+                'clientName' => $client->name,
+                'professionalName' => $professional->name,
                 'branchName' => $branch->name,
                 'image_data' => $branch->image_data ? $branch->image_data : 'branches/default.jpg',
                 'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
-                'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
+                'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
                 'cantVisit' => $reservation2->count(),
                 'endLook' => $comment ? $comment->look : null,
                 'lastDate' => $reservation->data,
