@@ -1633,9 +1633,9 @@ class CarController extends Controller
             })->orderByDesc('data')->limit(12)->get();
             if ($reservations->isEmpty()) {
                 $result[] = [
-                    'clientName' => $client->name . " " . $client->surname,
+                    'clientName' => $client->name,
                     'professionalName' => "Ninguno",
-                    'imageLook' => 'comments/default_profile.jpg',
+                    'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
                     'image_url' => '',
                     'cantVisit' => 0,
                     'endLook' => 'No hay comentarios',
@@ -1665,10 +1665,10 @@ class CarController extends Controller
                 $reservation = $reservations->first();
                 $professional = $reservation->car->clientProfessional->professional;
                 $result[] = [
-                    'clientName' => $client->name . " " . $client->surname,
-                    'professionalName' => $professional->name . ' ' . $professional->surname,
+                    'clientName' => $client->name,
+                    'professionalName' => $professional->name,
                     'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
-                    'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
+                    'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
                     'cantVisit' => $reservations->count(),
                     'endLook' => $comment ? $comment->look : null,
                     'frecuencia' => $frecuencia,
