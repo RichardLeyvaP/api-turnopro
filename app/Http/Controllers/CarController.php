@@ -1626,9 +1626,9 @@ class CarController extends Controller
             $result = [];
             $fiel = null;
             $frecuencia = null;
-            $reservations = Reservation::whereHas('car', function ($query) use ($client) {
-                $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($client) {
-                    $query->where('client_id', $client->id);
+            $reservations = Reservation::whereHas('car', function ($query) use ($data) {
+                $query->whereHas('clientProfessional', function ($query) use ($data){
+                    $query->where('client_id', $data['client_id']);
                 });
             })->orderByDesc('data')->limit(12)->get();
             if ($reservations->isEmpty()) {
