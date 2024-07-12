@@ -150,7 +150,7 @@ class ReservationService
             'professionalName' => "Ninguno",
             'branchName' => '',
             'image_data' => '',
-            'imageLook' => 'clients/default_profile.jpg',
+            'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
             'image_url' => '',
             'cantVisit' => 0,
             'endLook' => '',
