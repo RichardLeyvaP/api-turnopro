@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Business;
 use App\Models\CardGift;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,7 +19,20 @@ class CardGiftController extends Controller
     public function index()
     {
         try {
-            return response()->json(['cardGifts' => CardGift::with(['business'])->get()], 200, [], JSON_NUMERIC_CHECK);
+            $now = Carbon::now();
+            $cardGift = CardGift::with(['business'])->get()->map(function ($query) use ($now){
+                return [
+                    'id' => $query->id,
+                    'name' => $query->name,
+                    'value' => $query->value,
+                    'business_id' => $query->business_id,
+                    'image_cardgift' => $query->image_cardgift.'?$'.$now,
+                    'business' => $query->business
+                ];
+            });
+            return response()->json(['cardGifts' => $cardGift, 'business' => Business::join('professionals', 'businesses.professional_id', '=', 'professionals.id')
+                ->select('businesses.id', 'businesses.name', 'businesses.address', 'professionals.name as professional_name')
+                ->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::info($th);
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
@@ -73,14 +87,15 @@ class CardGiftController extends Controller
             $data = $request->validate([
                 'business_id' => 'required|numeric'
             ]);
-            $cardGifts = CardGift::Where('business_id', $data['business_id'])->with(['business'])->get()->map(function ($query){
+            $now = Carbon::now();
+            $cardGifts = CardGift::Where('business_id', $data['business_id'])->with(['business'])->get()->map(function ($query) use($now){
                 return [
                     'id' => $query->id,
-                    'name' => $query->state,
+                    'name' => $query->name,
                     'value' => $query->value,
                     'businesName' => $query->business->name,
                     'business_id' => $query->business_id,
-                    'image_cardgift' => $query->image_cardgift
+                    'image_cardgift' => $query->image_cardgift.'?$'.$now
                 ];
             });
             Log::info($cardGifts);

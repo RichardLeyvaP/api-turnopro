@@ -100,42 +100,93 @@ class CardGiftUserController extends Controller
         } catch (TransportException $e) {
             Log::error($e);
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente.Error al enviar el correo electrónico '], 200);
-  }
+        }
           catch (\Throwable $th) {
               Log::error($th);
             
               DB::rollback();
               return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
-}
+    }
     /**
      * Display the specified resource.
      */
     public function show(Request $request)
     {
         try {             
-            Log::info("Dado una cargo devuelve los permisos");
+            Log::info("Dado una cardGift devuelve los clientes que tienen asignado");
             $request->validate([
                 'card_gift_id' => 'required|numeric'
             ]);
+            $now = Carbon::now();
          // Retrieve all CardGift instances with the specified business_id
-             $cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])->where('card_gift_id', $request->card_gift_id)->get()->map(function ($query){
+             $cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])->where('card_gift_id', $request->card_gift_id)->get()->map(function ($query) use($now){
+                $cardGift = $query->cardGift;
+                $client = $query->user->client;
+                $professional = $query->user->professional;
                 return [
                     'id' => $query->id,
                     'code' => $query->code,
                     'issue_date' => $query->issue_date,
                     'exist' => $query->exist,
                     'expiration_date' =>$query->expiration_date,
-                    'value' => $query->cardGift->value,
-                    'name' => $query->cardGift->name,
+                    'value' => $cardGift->value,
+                    'name' => $cardGift->name,
                     'state' => $query->state,
-                    'image_cardgift' => $query->cardGift->image_cardgift,
-                    'userName' => $query->user->client ? $query->user->client->name.' '.$query->user->client->surname.' '. $query->user->client->second_surname : $query->user->professional->name.' '.$query->user->professional->surname.' '.$query->user->professional->second_surname,
-                    'image_url' => $query->user->client ? $query->user->client->client_image : $query->user->professional->image_url
+                    'image_cardgift' => $cardGift->image_cardgift.'?$'.$now,
+                    'userName' => $client ? $client->name : $professional->name,
+                    'image_url' => $client ? $client->client_image.'?$'.$now : $professional->image_url.'?$'.$now
                 ];
              });
              
                 return response()->json(['cardgiftUser' => $cardGifts],200, [], JSON_NUMERIC_CHECK); 
+          
+            } catch (\Throwable $th) {  
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
+        }
+    }
+
+    public function client_show(Request $request)
+    {
+        try {             
+            Log::info("Dado una cliente devuelve las tarjetas que tienen asignado");
+            $request->validate([
+                'user_id' => 'required|numeric',
+                'business_id' => 'required|numeric'
+            ]);
+            $now = Carbon::now();
+         // Retrieve all CardGift instances with the specified business_id
+             $cardGiftsUser = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])->where('user_id', $request->user_id)->get()->map(function ($query) use($now){
+                $cardGift = $query->cardGift;
+                $client = $query->user->client;
+                $professional = $query->user->professional;
+                return [
+                    'id' => $query->id,
+                    'code' => $query->code,
+                    'issue_date' => $query->issue_date,
+                    'exist' => $query->exist,
+                    'expiration_date' =>$query->expiration_date,
+                    'value' => $cardGift->value,
+                    'name' => $cardGift->name,
+                    'state' => $query->state,
+                    'image_cardgift' => $cardGift->image_cardgift.'?$'.$now,
+                    'userName' => $client ? $client->name : $professional->name,
+                    'image_url' => $client ? $client->client_image.'?$'.$now : $professional->image_url.'?$'.$now
+                ];
+             });
+             $cardGifts = CardGift::Where('business_id', $request->business_id)->with(['business'])->get()->map(function ($query) use($now){
+                return [
+                    'id' => intval($query->id),
+                    'name' => $query->name,
+                    'value' => $query->value,
+                    'businesName' => $query->business->name,
+                    'business_id' => $query->business_id,
+                    'image_cardgift' => $query->image_cardgift.'?$'.$now
+                ];
+            });
+             
+                return response()->json(['cardgiftUser' => $cardGiftsUser, 'cardGifts' => $cardGifts],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
             Log::error($th);

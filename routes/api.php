@@ -277,7 +277,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::post('/card-gift-user-destroy', [CardGiftUserController::class, 'destroy']);
     Route::post('/card-gift-user', [CardGiftUserController::class, 'store']);
     Route::get('/card-gift-user', [CardGiftUserController::class, 'index']);
-    Route::get('/card-gift-user-show', [CardGiftUserController::class, 'show']);
+    Route::get('/card-gift-user-cardgift', [CardGiftUserController::class, 'client_show']);
     Route::post('/card-gift-user-update', [CardGiftUserController::class, 'update']);
 
     //CardGift
