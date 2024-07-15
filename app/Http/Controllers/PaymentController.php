@@ -66,7 +66,8 @@ class PaymentController extends Controller
                 'other' => 'nullable|numeric',
                 'tip' => 'nullable|numeric',
                 'cardGift' => 'nullable|numeric',
-                'code' => 'nullable'
+                'code' => 'nullable',
+                'tipByCash' => 'nullable'
             ]);
             Log::info($data);
             $control = 0;
