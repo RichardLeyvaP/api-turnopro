@@ -623,7 +623,7 @@ class CarController extends Controller
             Log::info("Esta es la sucursal");
             Log::info($branch);
             $cars = Car::whereHas('reservation', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->whereIn('confirmation',[2,4]);
             })->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->get()->map(function ($car) use ($data) {
                 $client = $car->clientProfessional->client;
                 $professional = $car->clientProfessional->professional;
@@ -660,7 +660,8 @@ class CarController extends Controller
                     'product' => $products,
                     'service' => $services,
                     'technical_assistance' => $car->technical_assistance * 5000,
-                    'clientName' => $client->name . ' ' . $client->surname,
+                    'clientName' => $client->name,
+                    'phone' => $client->phone,
                     'professionalName' => $name,
                     'client_image' => $client->client_image,
                     'professional_id' => $professional->id,
