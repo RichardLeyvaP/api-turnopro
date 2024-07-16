@@ -29,7 +29,7 @@ class TailService
         Log::info('Cola de una branch');
         //Log::info($tails1);
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
+            $query->where('branch_id', $branch_id)->where('confirmation', 4);
         })->whereIn('attended', [0, 3, 33])->get()->map(function ($tail) {
             Log::info($tail);
             $reservation = $tail->reservation;
