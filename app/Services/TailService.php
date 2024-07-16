@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Client;
@@ -344,6 +345,17 @@ class TailService
             $current_date = Carbon::now()->format('H:i:s');
             $tail->aleatorie = 0;
             $reservation = Reservation::findOrFail($reservation_id);
+            $car = $reservation->car;
+            if ($car->select_professional == 0) {
+                $branchProfessional = BranchProfessional::where('professional_id', $car->clientProfessional->professional_id)
+                                                ->where('branch_id', $reservation->branch_id)
+                                                ->first();
+                                                
+                    if ($branchProfessional) {
+                        $branchProfessional->numberRandom += 1;
+                        $branchProfessional->save();
+                    }
+            }
             $reservation->start_time = $current_date;  
             $total_time = $reservation->total_time; // Ejemplo: '00:10:00'
 

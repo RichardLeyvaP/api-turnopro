@@ -393,7 +393,7 @@ class TailController extends Controller
 
             Log::info("Mandar a eliminar la cola");
             Tail::truncate();
-            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL]);
+            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
             return response()->json(['msg' => "Cola eliminada correctamente"], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -424,7 +424,7 @@ class TailController extends Controller
             Client::query()->delete(); //Clientes
             ProfessionalWorkPlace::truncate(); //Professionals puestos de trabajo
             Workplace::query()->update(['busy' => 0, 'select' => 0]);
-            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL]);
+            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
             Record::truncate(); //Hora de entrada y salida de los professionales
             User::whereDoesntHave('professional')->delete(); //borrar los usuarios que no professionales
 

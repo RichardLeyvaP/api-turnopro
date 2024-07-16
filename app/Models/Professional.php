@@ -39,7 +39,7 @@ class Professional extends Model
     }
 
     public function branches(){
-        return $this->belongsToMany(Branch::class)->withPivot('ponderation', 'limit', 'mountpay','id', 'arrival', 'living')->withTimestamps();
+        return $this->belongsToMany(Branch::class)->withPivot('ponderation', 'limit', 'mountpay','id', 'arrival', 'living', 'numberRandom')->withTimestamps();
     }
 
     public function branchRules(){

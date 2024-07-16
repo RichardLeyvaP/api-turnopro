@@ -216,8 +216,10 @@ class ProfessionalService
                     'professionals.state',
                     'professionals.image_url',
                     'branch_professional.arrival',
-                    'branch_professional.living'
-                )->orderByRaw('branch_professional.living ASC')
+                    'branch_professional.living',
+                    'branch_professional.numberRandom'
+                )->orderBy('branch_professional.numberRandom', 'asc')
+                ->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
             foreach ($professionals1 as $professional1) {
@@ -1218,8 +1220,10 @@ class ProfessionalService
             'professionals.state',
             'professionals.image_url',
             'branch_professional.arrival',
-            'branch_professional.living'
-        )->orderByRaw('branch_professional.living ASC')
+            'branch_professional.living',
+            'branch_professional.numberRandom'
+            )->orderBy('branch_professional.numberRandom', 'asc')
+            ->orderBy('branch_professional.living', 'asc')
             ->orderBy('branch_professional.arrival', 'asc')
             ->get();
         $professionalFree = [];

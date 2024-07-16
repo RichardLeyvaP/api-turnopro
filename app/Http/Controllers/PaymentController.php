@@ -68,7 +68,7 @@ class PaymentController extends Controller
                 'cardGift' => 'nullable|numeric',
                 'code' => 'nullable',
                 'tipByCash' => 'nullable'
-            ]);
+            ]);            
             Log::info($data);
             $control = 0;
             $car = Car::find($data['car_id']);            
@@ -93,6 +93,11 @@ class PaymentController extends Controller
                 }
                 $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
                 $cardGiftUser->save();
+            }
+            if ($data['tipByCash'] == false) {
+                $data['debit'] +=  $data['tip'];
+            }else{
+                $data['cash'] +=  $data['tip'];  
             }
             //Log::info($cardGiftUser);
             $payment->car_id = $car->id;
@@ -218,7 +223,6 @@ class PaymentController extends Controller
                 'cardGift' => 'nullable|numeric',
                 'code' => 'nullable'
             ]);     
-            
             $ids = $request->input('ids');
            $branch = Branch::where('id', $request->branch_id)->first();
 
