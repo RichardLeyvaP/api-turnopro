@@ -307,19 +307,31 @@ class ProfessionalService
                     Log::info('Esta en colacion'.$professional->colacion_time);
                     $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                 if (Carbon::parse($professional->start_time) < $colacion_time){
-                    $reserv = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
+                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
                     ->whereDate('data', $current_date)
                     ->where('start_time', '>', $colacion_time->format('H:i'))
                     ->orderBy('start_time')
                     /*->whereHas('tail', function ($subquery) {
                         $subquery->where('aleatorie', '!=', 1);
                     })*/
-                    ->first(); 
-                    if($reserv != Null && Carbon::parse($reserv->start_time) >= $colacion_time->addMinutes($totalTiempo)){
+                    ->get();
+                    $colacion_time1 = $colacion_time;
+                    if($reservs->isNotEmpty()){
+                        foreach($reservs as $reserv){
+                            if(Carbon::parse($reserv->start_time) >= $colacion_time1->addMinutes($totalTiempo)){
+                                break;
+                            }else{
+                                $colacion_time1 = Carbon::parse($reserv->final_hour);
+                                $colacion_time = Carbon::parse($reserv->final_hour);
+                            }
+                        }
+                    }
+                    /*if($reserv != Null && Carbon::parse($reserv->start_time) >= $colacion_time->addMinutes($totalTiempo)){
                         $professional->start_time = Carbon::parse($professional->colacion_time)->addMinutes(60)->format('H:i');
                     } else {                        
                         $professional->start_time = Carbon::parse($reserv->final_hour)->format('H:i');
-                    }
+                    }*/
+                    $professional->start_time = $colacion_time->format('h:i');
                 }
                 }
                 
