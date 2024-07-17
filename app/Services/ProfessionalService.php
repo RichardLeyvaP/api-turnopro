@@ -303,10 +303,23 @@ class ProfessionalService
         foreach ($returnedProfessionals as $professional) {
             if ($professional->state == 2) {
                 if ($professional->colacion_time != NUll) {
+                    //return 'Esta en colacion'.$professional->colacion_time;
                     Log::info('Esta en colacion'.$professional->colacion_time);
-                if (Carbon::parse($professional->start_time) < Carbon::parse($professional->colacion_time)->addMinutes(60)){
-                    Log::info('Es menor la hora de la ultima reserva que la hora de entrada de colacion');
-                    $professional->start_time = Carbon::parse($professional->colacion_time)->addMinutes(60)->format('H:i');
+                    $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
+                if (Carbon::parse($professional->start_time) < $colacion_time){
+                    $reserv = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
+                    ->whereDate('data', $current_date)
+                    ->where('start_time', '>', $colacion_time->format('H:i'))
+                    ->orderBy('start_time')
+                    /*->whereHas('tail', function ($subquery) {
+                        $subquery->where('aleatorie', '!=', 1);
+                    })*/
+                    ->first(); 
+                    if($reserv != Null && Carbon::parse($reserv->start_time) >= $colacion_time->addMinutes($totalTiempo)){
+                        $professional->start_time = Carbon::parse($professional->colacion_time)->addMinutes(60)->format('H:i');
+                    } else {                        
+                        $professional->start_time = Carbon::parse($reserv->final_hour)->format('H:i');
+                    }
                 }
                 }
                 
