@@ -131,8 +131,8 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'email_client' => 'required',
                 'phone_client' => 'required',
-                'name_client' => 'required' //,
-                //'surname_client' => 'required',
+                'name_client' => 'required',
+                'client_id' => 'nullable',
                 //'second_surname' => 'required',
             ]);
             if ($request->has('select_professional')) {
@@ -157,22 +157,31 @@ class ReservationController extends Controller
             if ($user) {
                 Log::info("Encontro el ususario");
                 Log::info($user);
+                Log::info($request->client_id);
                 // Buscar el cliente
-                $client = Client::where('email', $data['email_client'])->first();
-                if ($client) {
+                if ($data['client_id'] != 0){                    
+                    $id_client = $data['client_id'];
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+                }else{
+                    $client = Client::where('email', $data['email_client'])->first();
+                if ($client && $client->name == $data['name_client']) {
                     Log::info("Buscar el cliente");
                     $id_client = $client->id;
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
                 } else {
                     Log::info("Si no existe registrarlo");
-
+                    $userNew = User::create([
+                        'name' => $data['name_client'],
+                        'email' => $data['email_client'],
+                        'password' => Hash::make($data['email_client'].''.$data['name_client'])
+                    ]);
                     $client = new Client();
                     $client->name = $data['name_client'];
                     //$client->surname = $data['surname_client'];
                     //$client->second_surname = $data['second_surname'];
                     $client->email = $data['email_client'];
                     $client->phone = $data['phone_client'];
-                    $client->user_id = $user->id;
+                    $client->user_id = $userNew->id;
                     $client->client_image = 'clients/default_profile.jpg';
                     $client->save();
                     $id_client = $client->id;
@@ -180,6 +189,7 @@ class ReservationController extends Controller
                     Log::info("Id que tiene");
                     Log::info($id_client);
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
+                }
                 }
             } else {
                 Log::info("Crear Usuario");

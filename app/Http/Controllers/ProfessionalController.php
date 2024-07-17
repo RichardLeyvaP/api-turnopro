@@ -180,7 +180,7 @@ class ProfessionalController extends Controller
 
             $currentDateTime =  Carbon::now();
             if (Carbon::parse($data['data'])->isToday()) {
-                $professional = Professional::where('id', $data['professional_id'])
+                $professional = Professional::where('professionals.id', $data['professional_id'])
                     ->whereHas('branches', function ($query) use ($data) {
                         $query->where('branch_id', $data['branch_id']);
                     })
@@ -191,9 +191,12 @@ class ProfessionalController extends Controller
                               ->whereHas('tail', function ($subquery) {
                                   $subquery->where('aleatorie', '!=', 1);
                               });
-                    }])->where('state', 1)->whereHas('records', function ($query) {
-                        $query->whereDate('start_time', Carbon::now());
-                    })->select(
+                    }])->where('state', 1) ->join('branch_professional', function ($join) use ($data) {
+                        $join->on('professionals.id', '=', 'branch_professional.professional_id')
+                            ->where('branch_professional.branch_id', '=', $data['branch_id'])
+                            ->where('branch_professional.arrival', '!=', NULL);
+                    })
+                    ->select(
                         'professionals.id',
                         'professionals.name',
                         'professionals.surname',
@@ -203,8 +206,10 @@ class ProfessionalController extends Controller
                         'professionals.charge_id',
                         'professionals.state',
                         'professionals.image_url',
-                        DB::raw('(SELECT MAX(start_time) FROM records WHERE records.professional_id = professionals.id AND DATE(records.start_time) = CURDATE()) AS start_time')
-                    )->orderBy('start_time', 'asc')->first();
+                        'branch_professional.arrival',
+                        'branch_professional.living',
+                        'branch_professional.numberRandom'
+                    )->first();
                 if ($professional == null) {
                     $startTime = Carbon::parse($start_time);
                     //$horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
@@ -217,8 +222,9 @@ class ProfessionalController extends Controller
                     return response()->json(['reservations' => $reservations], 200);
                 } else {
                     if ($professional->reservations->isNotEmpty()) {
-                        $reservations = $professional->reservations->whereHas('tail', function ($subquery) {
-                            $subquery->where('aleatorie', '!=', 1);
+                        $reservations = $professional->reservations->filter(function ($reservation) {
+                            // Filtrar las relaciones 'tails' para que 'aleatorio' sea distinto de 1
+                            return $reservation->tail && $reservation->tail->aleatorio != 1;
                         })->map(function ($reservation) use ($start_time) {
                             $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                             $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
@@ -230,11 +236,31 @@ class ProfessionalController extends Controller
                             $finalMinutes = $finalTime->minute;
 
                             if ($finalMinutes <= 15) {
+                                if ($finalMinutes <= 5) {
+                                    $roundedMinutes = '5';
+                                }elseif ($finalMinutes <= 10) {
+                                    $roundedMinutes = '30';
+                                }else{
                                 $roundedMinutes = '15';
+                                }
                             } elseif ($finalMinutes <= 30) {
+                                if ($finalMinutes <= 20) {
+                                    $roundedMinutes = '20';
+                                }elseif ($finalMinutes <= 25) {
+                                    $roundedMinutes = '25';
+                                }
+                                else {
                                 $roundedMinutes = '30';
+                                }
                             } elseif ($finalMinutes <= 45) {
+                                if ($finalMinutes < 5) {
+                                    $roundedMinutes = '5';
+                                }elseif ($finalMinutes <= 10) {
+                                    $roundedMinutes = '30';
+                                }
+                                else {
                                 $roundedMinutes = '45';
+                                }
                             } else {
                                 $finalTime->addHour();
                                 $roundedMinutes = '00';
@@ -306,11 +332,31 @@ class ProfessionalController extends Controller
                         $finalMinutes = $finalTime->minute;
 
                         if ($finalMinutes <= 15) {
+                            if ($finalMinutes <= 5) {
+                                $roundedMinutes = '5';
+                            }elseif ($finalMinutes <= 10) {
+                                $roundedMinutes = '30';
+                            }else{
                             $roundedMinutes = '15';
+                            }
                         } elseif ($finalMinutes <= 30) {
+                            if ($finalMinutes <= 20) {
+                                $roundedMinutes = '20';
+                            }elseif ($finalMinutes <= 25) {
+                                $roundedMinutes = '25';
+                            }
+                            else {
                             $roundedMinutes = '30';
+                            }
                         } elseif ($finalMinutes <= 45) {
+                            if ($finalMinutes < 5) {
+                                $roundedMinutes = '5';
+                            }elseif ($finalMinutes <= 10) {
+                                $roundedMinutes = '30';
+                            }
+                            else {
                             $roundedMinutes = '45';
+                            }
                         } else {
                             $finalTime->addHour();
                             $roundedMinutes = '00';

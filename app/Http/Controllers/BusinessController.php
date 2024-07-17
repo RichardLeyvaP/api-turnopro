@@ -49,7 +49,7 @@ class BusinessController extends Controller
                     'location' => $branch->address, 
                     'location_link' => $branch->location,
                     'phone_link' => "https://wa.me/".$branch->phone,
-                    'image' => $branch->image_data . '?$' . Carbon::now(),
+                    'image' => $branch->image_data,
                     'business_id' => $branch->business_id,
                     'type' => 'Branch'
                 ];
