@@ -199,7 +199,7 @@ class ProfessionalService
                 ->whereHas('charge', function ($query) {
                     $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
                 })
-                ->where('state', 1)
+                ->whereIn('state', [1, 2])
                 ->join('branch_professional', function ($join) use ($branch_id) {
                     $join->on('professionals.id', '=', 'branch_professional.professional_id')
                         ->where('branch_professional.branch_id', '=', $branch_id)
@@ -214,6 +214,7 @@ class ProfessionalService
                     'professionals.phone',
                     'professionals.charge_id',
                     'professionals.state',
+                    'professionals.start_time as colacion_time',
                     'professionals.image_url',
                     'branch_professional.arrival',
                     'branch_professional.living',
@@ -299,9 +300,29 @@ class ProfessionalService
                 $returnedProfessionals[] = $professional;
             }
         }
+        foreach ($returnedProfessionals as $professional) {
+            if ($professional->state == 2) {
+                if ($professional->colacion_time != NUll) {
+                    Log::info('Esta en colacion'.$professional->colacion_time);
+                if (Carbon::parse($professional->start_time) < Carbon::parse($professional->colacion_time)->addMinutes(60)){
+                    Log::info('Es menor la hora de la ultima reserva que la hora de entrada de colacion');
+                    $professional->start_time = Carbon::parse($professional->colacion_time)->addMinutes(60)->format('H:i');
+                }
+                }
+                
+            }
+        }
 
+        unset($professional); // Romper la referencia
+
+        // Ordenar por 'state' y luego por 'start_time'
         usort($returnedProfessionals, function ($a, $b) {
-            return strtotime($a['start_time']) - strtotime($b['start_time']);
+            // Primero comparar por 'state'
+            if ($a->state != $b->state) {
+                return $a->state - $b->state;
+            }
+            // Si 'state' es igual, comparar por 'start_time'
+            return strtotime($a->start_time) - strtotime($b->start_time);
         });
 
         return $returnedProfessionals;

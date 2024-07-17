@@ -368,7 +368,8 @@ class BranchProfessionalController extends Controller
                 $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
-                $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
+                if ($ProfessionalWorkPlace != null) {
+                    $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
                 if ($data['type'] == 'Barbero') {
                     $workplace->busy = 0;
                     $workplace->save();
@@ -378,6 +379,7 @@ class BranchProfessionalController extends Controller
                     $workplace->save();
                     $places = json_decode($ProfessionalWorkPlace->places, true);
                     Workplace::whereIn('id', $places)->update(['select' => 0]);
+                }
                 }
             }
 

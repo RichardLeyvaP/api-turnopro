@@ -216,7 +216,7 @@ class ProfessionalController extends Controller
                     $closingTime = Carbon::parse($closing_time);
                     while ($startTime <= $closingTime) {
                         $reservations[] = $startTime->format('H:i');
-                        $startTime->addMinutes(15);
+                        $startTime->addMinutes(10);
                     }
                     sort($reservations);
                     return response()->json(['reservations' => $reservations], 200);
@@ -239,31 +239,31 @@ class ProfessionalController extends Controller
                                 if ($finalMinutes <= 5) {
                                     $roundedMinutes = '5';
                                 }elseif ($finalMinutes <= 10) {
-                                    $roundedMinutes = '30';
+                                    $roundedMinutes = '10';
                                 }else{
                                 $roundedMinutes = '15';
                                 }
                             } elseif ($finalMinutes <= 30) {
                                 if ($finalMinutes <= 20) {
-                                    $roundedMinutes = '20';
+                                    $roundedMinutes = '15';
                                 }elseif ($finalMinutes <= 25) {
-                                    $roundedMinutes = '25';
+                                    $roundedMinutes = '20';
                                 }
                                 else {
-                                $roundedMinutes = '30';
+                                $roundedMinutes = '25';
                                 }
                             } elseif ($finalMinutes <= 45) {
-                                if ($finalMinutes < 5) {
-                                    $roundedMinutes = '5';
-                                }elseif ($finalMinutes <= 10) {
+                                if ($finalMinutes <= 35) {
                                     $roundedMinutes = '30';
+                                }elseif ($finalMinutes <= 40) {
+                                    $roundedMinutes = '35';
                                 }
                                 else {
-                                $roundedMinutes = '45';
+                                $roundedMinutes = '40';
                                 }
                             } else {
                                 $finalTime->addHour();
-                                $roundedMinutes = '00';
+                                $roundedMinutes = '55';
                             }
 
                             $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
@@ -275,7 +275,7 @@ class ProfessionalController extends Controller
                             if ($finalTime->lessThan($horaActualMas2Horas)) {
                                 $finalTime = $horaActualMas2Horas;
                             }
-                            while ($startTime->addMinutes(15) <= $finalTime) {
+                            while ($startTime->addMinutes(10) <= $finalTime) {
                                 $intervalos[] = $startTime->format('H:i');
                             }
 
@@ -287,13 +287,13 @@ class ProfessionalController extends Controller
                             $startTime = Carbon::parse($start_time);
                             while ($startTime <= $horaActualMas2Horas) {
                                 $reservations[] = $startTime->format('H:i');
-                                $startTime->addMinutes(15);
+                                $startTime->addMinutes(10);
                             }
                         } else {
                             $startTime = Carbon::parse($start_time);
                             while ($startTime <= $horaActualMas2Horas) {
                                 $reservations[] = $startTime->format('H:i');
-                                $startTime->addMinutes(15);
+                                $startTime->addMinutes(10);
                             }
                         }
 
@@ -305,7 +305,7 @@ class ProfessionalController extends Controller
                         $closingTime = Carbon::parse($horaActualMas2Horas);
                         while ($startTime <= $closingTime) {
                             $reservations[] = $startTime->format('H:i');
-                            $startTime->addMinutes(15);
+                            $startTime->addMinutes(10);
                         }
                         sort($reservations);
                         return response()->json(['reservations' => $reservations], 200);
@@ -335,32 +335,33 @@ class ProfessionalController extends Controller
                             if ($finalMinutes <= 5) {
                                 $roundedMinutes = '5';
                             }elseif ($finalMinutes <= 10) {
-                                $roundedMinutes = '30';
+                                $roundedMinutes = '10';
                             }else{
                             $roundedMinutes = '15';
                             }
                         } elseif ($finalMinutes <= 30) {
                             if ($finalMinutes <= 20) {
-                                $roundedMinutes = '20';
+                                $roundedMinutes = '15';
                             }elseif ($finalMinutes <= 25) {
-                                $roundedMinutes = '25';
+                                $roundedMinutes = '20';
                             }
                             else {
-                            $roundedMinutes = '30';
+                            $roundedMinutes = '25';
                             }
                         } elseif ($finalMinutes <= 45) {
-                            if ($finalMinutes < 5) {
-                                $roundedMinutes = '5';
-                            }elseif ($finalMinutes <= 10) {
+                            if ($finalMinutes <= 35) {
                                 $roundedMinutes = '30';
+                            }elseif ($finalMinutes <= 40) {
+                                $roundedMinutes = '35';
                             }
                             else {
-                            $roundedMinutes = '45';
+                            $roundedMinutes = '40';
                             }
                         } else {
                             $finalTime->addHour();
-                            $roundedMinutes = '00';
+                            $roundedMinutes = '55';
                         }
+
 
                         $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                         $finalTime = Carbon::parse($finalFormatted);
@@ -369,7 +370,7 @@ class ProfessionalController extends Controller
                             $finalTime = $horaActual;
                         }*/
                         // Agregar las horas intermedias de 15 en 15 minutos
-                        while ($startTime->addMinutes(15) <= $finalTime) {
+                        while ($startTime->addMinutes(10) <= $finalTime) {
                             $intervalos[] = $startTime->format('H:i');
                         }
 
