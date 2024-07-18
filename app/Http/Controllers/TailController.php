@@ -691,7 +691,9 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
 
-            $tails = Tail::where('detached','>', 0)->get()->map( function ($query){
+            $tails = Tail::whereHas('reservation.car.clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })->where('detached','>', 0)->get()->map( function ($query){
                 return [
                     'clock' => $query->clock,
                     'timeClock' => $query->timeClock,
