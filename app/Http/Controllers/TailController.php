@@ -234,11 +234,120 @@ class TailController extends Controller
                     })
                     ->values();
             }
+            $tails = [];
+            $tails1 = [];
+                $professionaltem = [];
+                $professionalbar = [];
+            $tailsData = Tail::whereHas('reservation', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
+            })->whereIn('attended', [0, 3, 33])->get();
+
+            foreach ($tailsData as $tail) {
+                $reservation = $tail->reservation;
+                $professional = $reservation->car->clientProfessional->professional;
+                $client = $reservation->car->clientProfessional->client;
+                $workplace = $professional->workplaces()
+                    ->whereDate('data', $reservation->data)
+                    ->first();
+                //cola branch data
+                    if (in_array($tail->attended, [0, 3, 33])) {
+                        $tails[] = [
+                            'reservation_id' => $reservation->id,
+                            'car_id' => $reservation->car_id,
+                            'from_home' => intval($reservation->from_home),
+                            'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                            'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
+                            'total_time' => $reservation->total_time,
+                            'client_name' => $client->name,
+                            'client_image' => $client->client_image,
+                            'professional_name' => $professional->name,
+                            'client_id' => $client->id,
+                            'professional_id' => $professional->id,
+                            'professional_state' => $professional->state,
+                            'attended' => $tail->attended,
+                            'puesto' => $workplace ? $workplace->name : null,
+                            'select_professional' => intval($reservation->car->select_professional)
+                        ];
+                    }
+
+                    if (in_array($tail->attended, [3, 33])) {
+                        $professionalbar = [];
+                        $professionaltem = [];
+                        if ($tail->attended == 33) {
+                            $car = Car::whereHas('reservation', function ($query) use ($reservation) {
+                                $query->where('id', $reservation->id);
+                            })->first();
+                            Log::info('$car->id');
+                            Log::info($car->id);
+                            $professionaltem = ClientProfessional::whereHas('cars', function ($query) use ($car) {
+                                $query->where('id', $car->id);
+                            })->first();
+                            Log::info('$professional->id');
+                            Log::info($professionaltem);
+                            $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem->professional_id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) {
+                                $query->where('busy', 1)->where('select', 1);
+                            })->first();
+                            if ($workplaceId) {
+                                Log::info('$workplace->id');
+                                Log::info($workplaceId);
+                                $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query) {
+                                    $query->where('name', 'Tecnico');
+                                })->orderByDesc('data')
+                                    //->whereJsonContains('places', (int)$workplaceId->workplace_id)
+                                    ->get();
+                                if ($workplacetecnicos) {
+                                    foreach ($workplacetecnicos as $workplacetecnico) {
+                                        $places = json_decode($workplacetecnico->places, true);
+                                        if (in_array($workplaceId->workplace_id, $places)) {
+                                            $tecnicoId = $workplacetecnico;
+                                            $professionalbar = $workplacetecnico->professional;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            $professionalbar = $reservation->car->clientProfessional->professional;
+                        }
+                        $tails1[] = [
+                            'reservation_id' => $reservation->id,
+                            'car_id' => $reservation->car_id,
+                            'from_home' => intval($reservation->from_home),
+                            'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                            'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
+                            'total_time' => $reservation->total_time,
+                            'client_image' => $client->client_image,
+                            'client_id' => $client->id,
+                            'idBarber' => $professionaltem ? $professionaltem->professional_id : 0,
+                            'nameBarber' => $professionaltem,
+                            'professional_id' => $professionalbar ? $professionalbar->id : 0,
+                            'professional_name' => $professionalbar->name,
+                            'client_name' => $client->name,
+                            'charge' => $professionalbar ? $professionalbar->charge->name : ' ',
+                            'attended' => $tail->attended,
+                            'time' => Carbon::parse($tail->updated_at)->format('H:i'),
+                            'select_professional' => intval($reservation->car->select_professional)
+                        ];
+                    }
+            }//foreach()
+
+            // Ordenar $tails por professional_state descendente y luego por start_time ascendente
+            usort($tails, function ($a, $b) {
+                if ($a['professional_state'] != $b['professional_state']) {
+                    return $b['professional_state'] <=> $a['professional_state'];
+                }
+                return $a['start_time'] <=> $b['start_time'];
+            });
+
+            // Ordenar $tails1 por time ascendente
+            usort($tails1, function ($a, $b) {
+                return $a['time'] <=> $b['time'];
+            });
 
             //cola branch data
-            $tails = Tail::whereHas('reservation', function ($query) use ($data) {
+           /* $tails = Tail::whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
-            })->whereIn('attended', [0, 3, 33])->get()->map(function ($tail) {
+                })->whereIn('attended', [0, 3, 33])->get()->map(function ($tail) {
                 Log::info($tail);
                 $reservation = $tail->reservation;
                 Log::info('reservacion');
@@ -253,10 +362,6 @@ class TailController extends Controller
                 $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
-                /*if($tail->attended == 0 && $tail->aleatorie == 1){
-                        $name = '';
-                        $image = "professionals/default_profile.jpg";
-                    }else{*/
                 $name = $professional->name;
                 $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
                 //}
@@ -281,7 +386,7 @@ class TailController extends Controller
 
             $tails1 = Tail::whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereIn('attended', [3, 33])->get()->map(function ($tail) {
+                })->whereIn('attended', [3, 33])->get()->map(function ($tail) {
                 $professional = [];
                 $professionaltem = [];
                 Log::info($tail);
@@ -351,15 +456,15 @@ class TailController extends Controller
                     'time' => Carbon::parse($tail->updated_at)->format('H:i'),
                     'select_professional' => intval($reservation->car->select_professional)
                 ];
-            })->sortBy('time')->values();
+            })->sortBy('time')->values();*/
             $professionals3 = [];
             $professionals4 = [];
             $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->whereIn('state', [3, 4])->get();
-            foreach ($professionals as $professional) {
+                })->whereIn('state', [3, 4])->get();
+                foreach ($professionals as $professional) {
                 if ($professional->state == 3) {
-                    $professionals3 = [
+                    $professionals3[] = [
                             'professional_name' => $query->name,
                             'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                             'professional_id' => $query->id,
@@ -368,7 +473,7 @@ class TailController extends Controller
                             'charge' => $query->charge->name
                         ];
                 }else{
-                    $professionals4 = [
+                    $professionals4[] = [
                         'professional_name' => $query->name,
                         'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
                         'professional_id' => $query->id,
