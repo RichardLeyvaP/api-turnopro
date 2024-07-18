@@ -682,6 +682,29 @@ class TailController extends Controller
         }
     }
 
+    public function show_clocks(Request $request)
+    {
+        try {
+
+            Log::info("Dado un profesional devolver estado de los relojes");
+            $data = $request->validate([
+                'professional_id' => 'required|numeric'
+            ]);
+
+            $tails = Tail::where('detached','>', 0)->get()->map( function ($query){
+                return [
+                    'clock' => $query->clock,
+                    'timeClock' => $query->timeClock,
+                    'detached' => $query->detached
+                ];
+            })->sortBy('clock')->values();
+            return response()->json(['tails' => $tails], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "interno del sistema"], 500);
+        }
+    }
+
     public function tail_attended(Request $request)
     {
         try {

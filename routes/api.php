@@ -561,6 +561,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/reasigned_client', [TailController::class, 'reasigned_client']); //dado una dado una reservatio, un cliente y un professional, reasignar este cliente al professional)
     Route::get('/reasigned-client-totem', [TailController::class, 'reasigned_client_totem']); //dado una dado una reservatio, un cliente y un professional, reasignar este cliente al professional)
     Route::get('/updated-aleatorie', [TailController::class, 'updated_aleatorie']); //dado una dado una reserva modificar el estado aleatorie en la tail
+    Route::get('/show-clocks', [TailController::class, 'show_clocks']); //dado una dado una profesionals devolver estado de los reloges
     
     //Workplace
     Route::get('/workplace', [WorkplaceController::class, 'index']);

@@ -15,6 +15,7 @@ use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\Business;
 use App\Models\Client;
+use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\User;
 use App\Services\ReservationService;
@@ -151,6 +152,7 @@ class ReservationController extends Controller
             $servs = $request->input('services');
             $id_client = 0;
             $code = '';
+            $reservation = [];
             //1-Verificar que el usuario no este registrado
             $user = User::where('email', $data['email_client'])->first();
             // Verificar si se encontró un usuario
@@ -233,6 +235,38 @@ class ReservationController extends Controller
                 Log::info("5.las fechas son iguales");
                 $this->reservation_tail();
                 Log::info("5.actualice la cola");
+            }
+            //crear la notificacion
+            if ($data['from_home'] == 0 && $data['select_professional'] == 1) {
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->branch_id = $data['branch_id'];
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();
+            }
+            if ($data['from_home'] == 0 && $data['select_professional'] == 0){
+                // Convierte start_time a un objeto Carbon para la fecha de hoy
+             $startDateTime = Carbon::createFromFormat('H:i', $data['start_time']);
+
+             // Obtén la hora actual
+             $now = Carbon::now();
+ 
+             // Calcula la diferencia en minutos entre la hora actual y el start_time
+             $diffInMinutes = $startDateTime->diffInMinutes($now, false);
+ 
+             // Si la diferencia es menor o igual a 3 minutos y positiva (o cero), ejecuta alguna acción
+             if ($diffInMinutes >= 0 && $diffInMinutes <= 3) {
+                 // Realiza alguna acción
+                 $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Nuevo cliente en cola';
+                    $notification->description = 'Tienes un nuevo cliente en cola';
+                    $notification->type = 'Barbero';
+                    $notification->save();
+             }
             }
             if ($data['from_home'] == 1) {
                 $code = $reservation->code;
@@ -678,6 +712,15 @@ class ReservationController extends Controller
             if ($diferenciaEnMinutos <= 20){
                 $reservacion->confirmation = 4;
                 $reservacion->save();
+                $branch_id = $reservacion->branch_id;
+                $professional_id = $reservacion->car->clientProfessional->professional_id;
+                $notification = new Notification();
+                $notification->professional_id = $professional_id;
+                $notification->branch_id = $branch_id;
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();
 
                 return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
             }else {
