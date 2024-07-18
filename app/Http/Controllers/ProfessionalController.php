@@ -235,7 +235,7 @@ class ProfessionalController extends Controller
                             $finalTime = Carbon::parse($reservation->final_hour);
                             $finalMinutes = $finalTime->minute;
 
-                            if ($finalMinutes <= 15) {
+                            /*if ($finalMinutes <= 15) {
                                 if ($finalMinutes <= 5) {
                                     $roundedMinutes = '5';
                                 }elseif ($finalMinutes <= 10) {
@@ -264,7 +264,29 @@ class ProfessionalController extends Controller
                             } else {
                                 $finalTime->addHour();
                                 $roundedMinutes = '55';
+                            }*/
+                            if ($finalMinutes <= 10){
+                            $roundedMinutes = '05';
                             }
+                         elseif ($finalMinutes <= 20) {
+                            
+                            $roundedMinutes = '15';
+                            }
+                         elseif ($finalMinutes <= 30) {
+                            $roundedMinutes = '25';
+                        }elseif ($finalMinutes <= 40) {
+                            $roundedMinutes = '35';
+                        } 
+                        elseif ($finalMinutes <= 50) {
+                            $roundedMinutes = '45';
+                        } 
+                        elseif ($finalMinutes <= 59) {
+                            $roundedMinutes = '55';
+                        }
+                        else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '00';
+                        }
 
                             $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                             $finalTime = Carbon::parse($finalFormatted);
@@ -331,7 +353,7 @@ class ProfessionalController extends Controller
                         $finalTime = Carbon::parse($reservation->final_hour);
                         $finalMinutes = $finalTime->minute;
 
-                        if ($finalMinutes <= 15) {
+                        /*if ($finalMinutes <= 15) {
                             if ($finalMinutes <= 5) {
                                 $roundedMinutes = '5';
                             }elseif ($finalMinutes <= 10) {
@@ -360,6 +382,29 @@ class ProfessionalController extends Controller
                         } else {
                             $finalTime->addHour();
                             $roundedMinutes = '55';
+                        }*/
+
+                        if ($finalMinutes <= 10){
+                            $roundedMinutes = '05';
+                            }
+                         elseif ($finalMinutes <= 20) {
+                            
+                            $roundedMinutes = '15';
+                            }
+                         elseif ($finalMinutes <= 30) {
+                            $roundedMinutes = '25';
+                        }elseif ($finalMinutes <= 40) {
+                            $roundedMinutes = '35';
+                        } 
+                        elseif ($finalMinutes <= 50) {
+                            $roundedMinutes = '45';
+                        } 
+                        elseif ($finalMinutes <= 59) {
+                            $roundedMinutes = '55';
+                        }
+                        else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '00';
                         }
 
 
