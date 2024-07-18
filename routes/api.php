@@ -688,6 +688,9 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     //Retention
     Route::get('/retention', [RetentionController::class, 'index']);
     Route::post('/retention', [RetentionController::class, 'store']);
+
+    //ruta unificada de coordinador y encargado
+    Route::put('/notification-tail-colation', [TailController::class, 'notification_tail_colation']);
 });
 Route::get('/time', function () {
     //return now(); // Devuelve la hora actual.
