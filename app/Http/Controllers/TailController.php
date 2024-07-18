@@ -695,9 +695,9 @@ class TailController extends Controller
                 $query->where('professional_id', $data['professional_id']);
             })->where('detached','>', 0)->get()->map( function ($query){
                 return [
-                    'clock' => $query->clock,
+                    'clock' => intval($query->clock),
                     'timeClock' => $query->timeClock,
-                    'detached' => $query->detached
+                    'detached' => intval($query->detached)
                 ];
             })->sortBy('clock')->values();
             return response()->json(['tails' => $tails], 200);
