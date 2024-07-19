@@ -696,7 +696,7 @@ class TailController extends Controller
             })->where('detached','>', 0)->get()->map( function ($query){
                 return [
                     'clock' => intval($query->clock),
-                    'timeClock' => $query->timeClock,
+                    'timeClock' => intval($query->timeClock),
                     'detached' => intval($query->detached)
                 ];
             })->sortBy('clock')->values();
