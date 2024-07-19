@@ -27,6 +27,7 @@ use App\Models\Retention;
 use App\Models\Trace;
 use App\Models\User;
 use App\Models\Workplace;
+use App\Services\ProfessionalService;
 use App\Services\TailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -36,10 +37,12 @@ use Illuminate\Support\Facades\DB;
 class TailController extends Controller
 {
     private TailService $tailService;
+    private ProfessionalService $professionalService;
 
-    public function __construct(TailService $tailService)
+    public function __construct(TailService $tailService, ProfessionalService $professionalService)
     {
         $this->tailService = $tailService;
+        $this->professionalService = $professionalService;
     }
 
     public function index()
@@ -1035,6 +1038,25 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }*/
+    public function reasigned_second_plain(Request $request){
+        Log::info("Reasignar Cliente a barbero en segundo plano");
+        $data = $request->validate([
+            'professional_id' => 'required|numeric',
+            'branch_id' => 'required|numeric'
+        ]);
+        //Saber si esta disponible distinto [0, 1, 3]
+            $reservation = Reservation::where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereHas('reservation.car.clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })->whereHas('tail', function ($query) use ($data) {
+                $query->where('attended', 0);
+            })->orderBy('start_time')->first();
+            if ($reservation != null) {
+                $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
+            }else{
+                return response()->json(0, 200);
+            }
+        
+    }
     public function reasigned_client_totem(Request $request)
 {
     try {

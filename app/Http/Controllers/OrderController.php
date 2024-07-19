@@ -295,6 +295,7 @@ class OrderController extends Controller
     {
         Log::info("Actualizar orden");
         Log::info($request);
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -332,8 +333,10 @@ class OrderController extends Controller
                 $notification->type = 'Barbero';
                 $notification->save();
              }
+             DB::commit();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
@@ -488,6 +491,7 @@ class OrderController extends Controller
     {
         Log::info("Eliminar orden");
         Log::info($request);
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'id' => 'required|numeric'
@@ -553,9 +557,10 @@ class OrderController extends Controller
             else {
                 $car->delete();
             }
-            
+            DB::commit();
             return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::info("Eliminar orden:$th");
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
