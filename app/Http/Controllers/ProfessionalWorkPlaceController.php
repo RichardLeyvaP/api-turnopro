@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
 use App\Models\Record;
@@ -43,6 +44,30 @@ class ProfessionalWorkPlaceController extends Controller
             $places = $data['places'];
             //return json_decode($places);
             $professional = Professional::find($data['professional_id']);
+            if ($professional->state == 2) {
+                $professional->end_time = Carbon::now();
+
+                //actualizar lugar de llegada
+                // Obtener el número máximo de llegada para la sucursal dada
+                $maxArrival = BranchProfessional::where('branch_id', $data['branch_id'])->max('arrival');
+
+                // Si no hay valores, inicializar a 0
+                if (is_null($maxArrival)) {
+                    $maxArrival = 0;
+                }
+
+                // Encontrar el registro específico y actualizar el campo arrival
+                $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                        ->where('professional_id', $data['professional_id'])
+                                                        ->firstOrFail();
+
+                // Asignar el siguiente número de llegada
+                $branchProfessional->arrival = $maxArrival + 1;
+
+                // Guardar los cambios
+                $branchProfessional->save();
+
+            }
             $professional->state = 1;
             $professional->save();
             $workplace = Workplace::find($data['workplace_id']);
