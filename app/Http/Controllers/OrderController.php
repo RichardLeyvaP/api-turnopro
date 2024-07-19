@@ -465,25 +465,27 @@ class OrderController extends Controller
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
-            $reservation = $car->reservation;;
+            $reservation = $car->reservation;
+            $client = $car->clientProfessional->client;
             //$branch = Branch::where('id', $car->reservation->branch_id)->first();
             Log::info($order);
             Log::info($car);
             if ($order->is_product == 1) {                
             Log::info("Es producto");
                 $productstore = ProductStore::find($order->product_store_id);
+                $product = $productstore->product;
                 $cant = $order->cant;
                 $productstore->product_quantity = $cant;
                 $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
 
-                /*$notification = new Notification();
+                $notification = new Notification();
                 $notification->professional_id = $car->clientProfessional->professional_id;
-                $notification->branch_id = $reservation;
-                $notification->tittle = 'Nuevo cliente en cola';
-                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->branch_id = $reservation->branch_id;
+                $notification->tittle = 'Aceptada Eliminacion de Producto';
+                $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
                 $notification->type = 'Barbero';
-                $notification->save();*/
+                $notification->save();
 
             }
             if ($order->is_product == 0) {
@@ -503,13 +505,14 @@ class OrderController extends Controller
                 $tail->timeClock = $timeClock <=0 ? 0 : $timeClock;
                 $tail->save();
 
-                /*$notification = new Notification();
+                $notification = new Notification();
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
-                $notification->tittle = 'Nuevo cliente en cola';
-                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->tittle = 'Aceptada Eliminacion de Servicio';
+                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$service->duration_service.' '.'min'.$reservation->id;
                 $notification->type = 'Barbero';
-                $notification->save();*/
+                $notification->state = 3;
+                $notification->save();
             }
             $amountTemp = $car->amount - $order->price;
             $car->amount = $amountTemp;
