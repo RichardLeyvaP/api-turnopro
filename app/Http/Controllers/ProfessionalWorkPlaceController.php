@@ -39,7 +39,8 @@ class ProfessionalWorkPlaceController extends Controller
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'workplace_id' => 'required|numeric',
-                'places' => 'nullable'
+                'places' => 'nullable',
+                'branch_id' => 'required'
             ]);            
             $places = $data['places'];
             //return json_decode($places);
