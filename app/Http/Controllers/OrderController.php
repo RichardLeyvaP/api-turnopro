@@ -482,7 +482,7 @@ class OrderController extends Controller
                 $notification = new Notification();
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
-                $notification->tittle = 'Aceptada Eliminacion de Producto';
+                $notification->tittle = 'Aceptada Eliminación de Producto';
                 $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
                 $notification->type = 'Barbero';
                 $notification->save();
@@ -508,7 +508,7 @@ class OrderController extends Controller
                 $notification = new Notification();
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
-                $notification->tittle = 'Aceptada Eliminacion de Servicio';
+                $notification->tittle = 'Aceptada Eliminación de Servicio';
                 $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$service->duration_service.' '.'min'.$reservation->id;
                 $notification->type = 'Barbero';
                 $notification->state = 3;
