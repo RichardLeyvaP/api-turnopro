@@ -91,7 +91,7 @@ class OrderService {
              $order->price = $service->price_service;   
              $order->request_delete = false;
              $order->save();
-             $reservation = Reservation::where('car_id', $car_id)->first();
+             $reservation = $car->reservation;
              $tiempoGuardado = Carbon::createFromFormat('H:i:s', $reservation->total_time);
 
             $tiempoGuardado->addMinutes($duration);
@@ -102,6 +102,12 @@ class OrderService {
             $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($duration)->toTimeString();
             $reservation->total_time = $tiempoGuardado;
             $reservation->save();
+
+            //aumentar tiempo al reloj
+            $tail = $reservation->tail;
+            $timeClock = $tail->timeClock + $service->duration_service;
+            $tail->timeClock = $timeClock;
+            $tail->save();
 
         return $order;
 }
