@@ -1106,7 +1106,13 @@ class TailController extends Controller
                 $tail->save();
 
                 $this->reassignServices($servicesOrders, $service_professionals);
-
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->branch_id = $data['branch_id'];
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();
                 DB::commit();
                 return response()->json(1, 200);
             }

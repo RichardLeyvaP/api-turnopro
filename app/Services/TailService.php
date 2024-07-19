@@ -13,6 +13,7 @@ use App\Models\Professional;
 use App\Models\Reservation;
 use App\Models\Tail;
 use App\Models\Comment;
+use App\Models\Notification;
 use App\Models\ProfessionalWorkPlace;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -717,7 +718,13 @@ class TailService
             $car->save();
 
             $this->reassignServices($servicesOrders, $service_professionals);
-
+                $notification = new Notification();
+                $notification->professional_id = $professional->id;
+                $notification->branch_id = $reservation->branch_id;
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
