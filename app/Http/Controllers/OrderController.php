@@ -465,6 +465,7 @@ class OrderController extends Controller
             ]);
             $order = Order::find($data['id']);
             $car = Car::find($order->car_id);
+            $reservation = $car->reservation;;
             //$branch = Branch::where('id', $car->reservation->branch_id)->first();
             Log::info($order);
             Log::info($car);
@@ -476,6 +477,14 @@ class OrderController extends Controller
                 $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
 
+                /*$notification = new Notification();
+                $notification->professional_id = $car->clientProfessional->professional_id;
+                $notification->branch_id = $reservation;
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();*/
+
             }
             if ($order->is_product == 0) {
                 Log::info("servicio");
@@ -483,11 +492,24 @@ class OrderController extends Controller
                 Log::info($branchServiceprofessional);
                 $service = $branchServiceprofessional->branchService->service;
                 Log::info("card:".$car);
-                $reservation = Reservation::where('car_id', $order->car_id)->first();
+                //$reservation = Reservation::where('car_id', $order->car_id)->first();
                 Log::info($reservation);
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
                 $reservation->save();
+                //reducir tiempo al reloj
+                $tail = $reservation->tail;
+                $timeClock = $tail->timeClock - $service->duration_service;
+                $tail->timeClock = $timeClock <=0 ? 0 : $timeClock;
+                $tail->save();
+
+                /*$notification = new Notification();
+                $notification->professional_id = $car->clientProfessional->professional_id;
+                $notification->branch_id = $reservation->branch_id;
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();*/
             }
             $amountTemp = $car->amount - $order->price;
             $car->amount = $amountTemp;
