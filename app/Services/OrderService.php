@@ -105,7 +105,7 @@ class OrderService {
 
             //aumentar tiempo al reloj
             $tail = $reservation->tail;
-            $timeClock = $tail->timeClock + $service->duration_service;
+            $timeClock = $tail->timeClock + $duration;
             $tail->timeClock = $timeClock;
             $tail->save();
 
