@@ -537,16 +537,16 @@ class OrderController extends Controller
                 //reducir tiempo al reloj
                 $tail = $reservation->tail;
                 $timeClock = $tail->timeClock - $service->duration_service;
-                $tail->timeClock = $timeClock <=0 ? 0 : $timeClock;
+                $tempTime = $timeClock <=0 ? 0 : $timeClock;
+                $tail->timeClock = $tempTime;
                 $tail->save();
-
                 $notification = new Notification();
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
-                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$timeClock <=0 ? 0 : $timeClock.' '.'min'.'.'.$reservation->id;
+                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$tempTime.' '.'min'.'.'.$reservation->id;
                 $notification->type = 'Barbero';
-                $notification->state = 0;
+                $notification->state = 3;
                 $notification->save();
             }
             $amountTemp = $car->amount - $order->price;
