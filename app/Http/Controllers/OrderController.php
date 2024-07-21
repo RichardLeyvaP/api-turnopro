@@ -304,7 +304,8 @@ class OrderController extends Controller
             $order = Order::find($data['id']);
             $order->request_delete = $data['request_delete'];
             $order->save();
-            $car = Car::find($order->car_id);
+            if ($data['request_delete'] == 0) {
+                $car = Car::find($order->car_id);
             $reservation = $car->reservation;
             $client = $car->clientProfessional->client;
              if ($order->is_product == 1) {
@@ -315,7 +316,7 @@ class OrderController extends Controller
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Solicitud de Eliminación Rechazada';
-                $notification->description = 'Atención El producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminadcón';
+                $notification->description = 'Atención El producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminación';
                 $notification->type = 'Barbero';
                 $notification->save();
              }else {
@@ -329,10 +330,11 @@ class OrderController extends Controller
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Solicitud de Eliminación Rechazada';
-                $notification->description = 'Atención.. El ervicio'.' '.$service->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminadcón';
+                $notification->description = 'Atención.. El ervicio'.' '.$service->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminación';
                 $notification->type = 'Barbero';
                 $notification->save();
              }
+            }
              DB::commit();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
@@ -362,7 +364,7 @@ class OrderController extends Controller
             $notification = new Notification();
             $notification->professional_id = $data['professional_id'];
             $notification->tittle = 'Denegada';
-            $notification->description = 'Solicitud de eliminación de orden de'.$type.' del carro: '.$order->car_id.' denegada';
+            $notification->description = 'Solicitud de eliminación de orden de '.$type.' del carro: '.$order->car_id.' denegada';
             $notification->type = 'Caja';
             $branch->notifications()->save($notification);
             //}
@@ -542,7 +544,7 @@ class OrderController extends Controller
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
-                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$service->duration_service.' '.'min'.$reservation->id;
+                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$service->duration_service.' '.'min'.' '.$reservation->id;
                 $notification->type = 'Barbero';
                 $notification->state = 0;
                 $notification->save();

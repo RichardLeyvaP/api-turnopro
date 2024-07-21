@@ -560,6 +560,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/tail_branch_attended', [TailController::class, 'tail_branch_attended']); //dado una id de la branch Mostrar los clientes que estan siendo atendidos (attended [1:por el barbero, 2:por el tecnico capilar])
     Route::get('/reasigned_client', [TailController::class, 'reasigned_client']); //dado una dado una reservatio, un cliente y un professional, reasignar este cliente al professional)
     Route::get('/reasigned-client-totem', [TailController::class, 'reasigned_client_totem']); //dado una dado una reservatio, un cliente y un professional, reasignar este cliente al professional)
+    Route::get('/reasigned-secound-plain', [TailController::class, 'reasigned_secound_plain']); //dado un professional reasignar el cliente que tenga en espera)
     Route::get('/updated-aleatorie', [TailController::class, 'updated_aleatorie']); //dado una dado una reserva modificar el estado aleatorie en la tail
     Route::get('/show-clocks', [TailController::class, 'show_clocks']); //dado una dado una profesionals devolver estado de los reloges
     
