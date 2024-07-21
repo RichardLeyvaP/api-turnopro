@@ -1078,7 +1078,7 @@ class TailController extends Controller
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
 
-                    if($diferenciaEnMinutos >= 1){
+                    if($diferenciaEnMinutos >= 3){
                         $dataReasigned = [
                             'reservation_id' => $reservation->id,
                             'professional_id' => $firstProfessional->id,
