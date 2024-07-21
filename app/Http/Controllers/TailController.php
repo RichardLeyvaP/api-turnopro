@@ -1046,7 +1046,7 @@ class TailController extends Controller
             'branch_id' => 'required|numeric'
         ]);
         //Saber si esta disponible distinto [0, 2, 3]
-        $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('reservation.car.clientProfessional', function ($query) use ($data) {
+        $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
             $query->where('professional_id', $data['professional_id']);
         })->whereHas('tail', function ($query) use ($data) {
             $query->whereNotIn('attended', [0, 2, 3]);
@@ -1055,7 +1055,7 @@ class TailController extends Controller
             return response()->json(0, 200);
         }
         DB::beginTransaction();
-            $reservation = Reservation::where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereHas('reservation.car.clientProfessional', function ($query) use ($data) {
+            $reservation = Reservation::where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
             })->whereHas('tail', function ($query) use ($data) {
                 $query->whereIn('attended', [0, 3]);
@@ -1070,15 +1070,15 @@ class TailController extends Controller
                     $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
                 if (!empty($professional)) {
                     $firstProfessional = $professional[0];
-                    $horaActual = Carbon::now();
+                    $horaActual = now();
                     // Convertir las cadenas de tiempo a objetos Carbon
-                    $currentTime = Carbon::createFromFormat('H:i:s', $horaActual->format('H:i:s'));
-                    $startTime = Carbon::createFromFormat('H:i:s', $reservation->timeClock);
+                    $currentTime = Carbon::parse($horaActual);
+                    $startTime = $reservation->timeClock;
 
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
 
-                    if($diferenciaEnMinutos >= 3){
+                    if($diferenciaEnMinutos >= 1){
                         $dataReasigned = [
                             'reservation_id' => $reservation->id,
                             'professional_id' => $firstProfessional->id,
