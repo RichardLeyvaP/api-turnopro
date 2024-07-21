@@ -6,6 +6,7 @@ use App\Models\Box;
 use App\Models\BoxClose;
 use App\Models\Branch;
 use App\Models\BranchProfessional;
+use App\Models\BranchRule;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\CashierSale;
@@ -875,7 +876,11 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $this->tailService->reasigned_client($data);
-
+            $reservation = Reservation::where()->first();
+            if ($reservation != null) {
+                $reservation->timeClock = now();
+                $reservation->save();
+            }
             return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -1067,9 +1072,6 @@ class TailController extends Controller
                     DB::commit();
                     return response()->json(0, 200);
                 }else {//si ya ha comenzado a contar el reloj de los tres minutos
-                    $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
-                if (!empty($professional)) {
-                    $firstProfessional = $professional[0];
                     $horaActual = now();
                     // Convertir las cadenas de tiempo a objetos Carbon
                     $currentTime = Carbon::parse($horaActual);
@@ -1077,8 +1079,19 @@ class TailController extends Controller
 
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
-
                     if($diferenciaEnMinutos >= 3){
+                        $professional = Professional::find($data['professional_id']);
+                        //consulta para despues asignar la no convivencia
+                        $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
+                            $query->where('type', 'Tiempo');
+                        })->where('branch_id', $data['branch_id'])->first();
+                    $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule){
+                            $query->whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id);
+                        })->exists();                        
+                        $professionalConv = Professional::find($data['professional_id']);
+                    $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
+                    if (!empty($professional)) {
+                        $firstProfessional = $professional[0];
                         $dataReasigned = [
                             'reservation_id' => $reservation->id,
                             'professional_id' => $firstProfessional->id,
@@ -1088,14 +1101,23 @@ class TailController extends Controller
                         $this->tailService->reasigned_client($dataReasigned);
                         $reservation->timeClock = now();
                     $reservation->save();
+                    if ($existencia) {
+                        $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
+                    }
                     DB::commit();
                     return response()->json(1, 200);
                     }
-                }else {//si no hay barbero disponible
-                    DB::commit();
-                    return response()->json(0, 200);
-                }
-                }
+                    else {//si no hay barbero disponible
+                            $reservation->timeClock = now();
+                            $reservation->save();
+                            if ($existencia) {
+                                $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
+                            }
+                        DB::commit();
+                        return response()->json(0, 200);
+                    }
+                    }
+                }//else de si ya comenzo a contar el reloj
                 
             }else{//si no tiene reservacion
                 DB::commit();
@@ -1186,6 +1208,9 @@ class TailController extends Controller
                     $notification->description = 'Tienes un nuevo cliente en cola';
                     $notification->type = 'Barbero';
                     $notification->save();
+                    $reservation = Reservation::where()->first();
+                    $reservation->timeClock = now();
+                    $reservation->save();
                     DB::commit();
                     return response()->json(1, 200);
                 }
