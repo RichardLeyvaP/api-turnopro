@@ -544,7 +544,7 @@ class OrderController extends Controller
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
-                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$service->duration_service.' '.'min'.' '.$reservation->id;
+                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado con tiempo de duración'.' '.$timeClock <=0 ? 0 : $timeClock.' '.'min'.'.'.$reservation->id;
                 $notification->type = 'Barbero';
                 $notification->state = 0;
                 $notification->save();
