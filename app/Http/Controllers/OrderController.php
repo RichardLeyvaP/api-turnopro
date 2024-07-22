@@ -536,7 +536,7 @@ class OrderController extends Controller
                 $reservation->save();
                 //reducir tiempo al reloj
                 $tail = $reservation->tail;
-                $timeClock = $tail->timeClock - $service->duration_service;
+                $timeClock = $tail->timeClock - $service->duration_service*60;
                 $timeClock1 = $timeClock <=0 ? 0 : $timeClock;
                 $tail->timeClock = $timeClock1;
                 $tail->save();

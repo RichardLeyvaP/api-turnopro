@@ -10,6 +10,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Knuckles\Scribe\Attributes\BodyParam;
+use Knuckles\Scribe\Attributes\Endpoint;
+use Knuckles\Scribe\Attributes\Group;
+use Knuckles\Scribe\Attributes\Response;
 
 class CourseStudentController extends Controller
 {
@@ -52,6 +56,16 @@ class CourseStudentController extends Controller
         }
     }
 
+    #[Group('Landing', 'Endpoints de la landing')]
+    #[Endpoint('store_landing', 'Matricular estudiante al curso')]
+    #[BodyParam('course_id', 'numeric', required: true, example: '5')]
+    #[BodyParam('name', 'string', required: true, example: 'Pepe Rosales Mora')]
+    #[BodyParam('phone', 'string', required: true, example: '+56912345678')]
+    #[BodyParam('email', 'email', required: true, example: 'ejemplo@gmail.com')]
+    #[BodyParam('course_image', 'file', required: false)]
+    #[BodyParam('fie', 'file', required: false)]
+    #[Response(['msg' => 'Estudiante matriculado correctamente al curso'], 200)]
+    #[Response(['msg' => 'Error al matricular el estudiante al curso'], 500)]
     public function store_landing(Request $request)
     {
         Log::info("Matricular estudiante al curso");
@@ -60,11 +74,11 @@ class CourseStudentController extends Controller
             $data = $request->validate([
                 'course_id' => 'required|numeric',
                 'name' => 'required|max:50',
-                'surname' => 'required|max:50',
-                'second_surname' => 'required|max:50',
+                //'surname' => 'required|max:50',
+                //'second_surname' => 'required|max:50',
                 'phone' => 'required|max:50',
                 'email' => 'required|max:50',
-                'course_image' => 'nullable',
+                'client_image' => 'nullable',
                 'file' => 'nullable',
             ]);
             
@@ -83,7 +97,7 @@ class CourseStudentController extends Controller
             $student->save();
            
             $filename = ""; 
-            if ($request->hasFile('course_image')) {
+            if ($request->hasFile('client_image')) {
                 Log::info("tiene una imagen");
                $filename = $request->file('course_image')->storeAs('students',$student->id.'.'.$request->file('course_image')->extension(),'public');
             }

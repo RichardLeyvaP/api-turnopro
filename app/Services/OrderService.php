@@ -105,12 +105,12 @@ class OrderService {
 
             //aumentar tiempo al reloj
             $tail = $reservation->tail;
-            $timeClock = $tail->timeClock + $duration;
+            $timeClock = $tail->timeClock + $duration*60;
             $tail->timeClock = $timeClock;
             $tail->save();
 
         return $order;
-}
+    }
 
 
     public function sales_periodo_product($data){

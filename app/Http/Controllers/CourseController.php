@@ -7,12 +7,43 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Knuckles\Scribe\Attributes\Endpoint;
+use Knuckles\Scribe\Attributes\Response;
 
 class CourseController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    #[Endpoint('index', 'Mostrar los cursos')]
+    #[Response(['course' => [
+        "id" => 6,
+        "enrollment_id" => 4,
+        "name" => "Nuevo Prueba",
+        "description" => "kslfksf",
+        "price" => 12000,
+        "startDate" => "2024-05-21",
+        "endDate" => "2024-05-31",
+        "course_image" => "courses/6.jpg?$2024-07-22 13:23:01",
+        "total_enrollment" => 10,
+        "available_slots" => 8,
+        "reservation_price" => 12000,
+        "duration" => 10,
+        "practical_percentage" => 10,
+        "theoretical_percentage" => 90,
+        "enrollment" => [
+            "id" => 4,
+            "business_id" => 1,
+            "name" => "Academia Hernandez",
+            "description" => "Cursos de barberia Básicos y avanzados",
+            "created_at" => "2024-03-25T09:30:12.000000Z",
+            "updated_at" => "2024-05-17T00:03:52.000000Z",
+            "location" => "dwqdqwdwqqwqd",
+            "image_data" => "enrollments/4.jpg",
+            "address" => "qwwqwqdqwd",
+            "phone" => 56949879923
+        ]]], 200)]
+    #[Response(['msg' => 'Error al mostrar los cursos'], 500)]
     public function index()
     {
         try { 

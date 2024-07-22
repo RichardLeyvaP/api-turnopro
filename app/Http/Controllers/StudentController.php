@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
-
+use Knuckles\Scribe\Attributes\BodyParam;
+use Knuckles\Scribe\Attributes\Endpoint;
 
 class StudentController extends Controller
 {
@@ -127,6 +128,8 @@ class StudentController extends Controller
         }
     }
 
+    #[Endpoint('student_code', 'Muestra los datos de un estudiante dado un codigo')]
+    #[BodyParam('code', required: true)]
     public function student_code(Request $request)
     {
         try {

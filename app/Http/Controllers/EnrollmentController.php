@@ -6,12 +6,14 @@ use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Knuckles\Scribe\Attributes\Endpoint;
 
 class EnrollmentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    #[Endpoint('index', 'Obtiene todas las Academias')]
     public function index()
     {
         try {
