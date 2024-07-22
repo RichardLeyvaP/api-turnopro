@@ -1082,7 +1082,7 @@ class TailController extends Controller
                     $currentTime = Carbon::parse($horaActual);
                     $startTime = $reservation->timeClock;
                     //restar 20 segundos a hora actual
-                    $currentTime->subSeconds(20);
+                    $currentTime->subSeconds(30);
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
                     if($diferenciaEnMinutos >= 3){
