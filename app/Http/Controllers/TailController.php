@@ -7,6 +7,7 @@ use App\Models\BoxClose;
 use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\BranchRule;
+use App\Models\BranchRuleProfessional;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\CashierSale;
@@ -878,7 +879,7 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $this->tailService->reasigned_client($data);
-            $reservation = Reservation::where()->first();
+            $reservation = Reservation::where(' id', $data['reservation_id'])->first();
             if ($reservation != null) {
                 $reservation->timeClock = now();
                 $reservation->save();
@@ -1080,7 +1081,8 @@ class TailController extends Controller
                     // Convertir las cadenas de tiempo a objetos Carbon
                     $currentTime = Carbon::parse($horaActual);
                     $startTime = $reservation->timeClock;
-
+                    //restar 20 segundos a hora actual
+                    $currentTime->subSeconds(20);
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
                     if($diferenciaEnMinutos >= 3){
@@ -1088,9 +1090,7 @@ class TailController extends Controller
                         $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
                             $query->where('type', 'Tiempo');
                         })->where('branch_id', $data['branch_id'])->first();
-                    $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule){
-                            $query->whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id);
-                        })->first();                        
+                    $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();                        
                         $professionalConv = Professional::find($data['professional_id']);
                     $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
                     if (!empty($professional)) {
@@ -1104,7 +1104,7 @@ class TailController extends Controller
                         $this->tailService->reasigned_client($dataReasigned);
                         $reservation->timeClock = now();
                     $reservation->save();
-                    if ($existencia != null && $existencia->state != 0) {
+                    if ($existencia != null && $existencia->estado != 0) {
                         $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
                         $notification = new Notification();
                         $notification->professional_id = $data['professional_id'];
@@ -1120,7 +1120,7 @@ class TailController extends Controller
                     else {//si no hay barbero disponible
                             $reservation->timeClock = now();
                             $reservation->save();
-                            if ($existencia != null && $existencia->state != 0) {
+                            if ($existencia != null && $existencia->estado != 0) {
                                 $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
                                 $notification = new Notification();
                                 $notification->professional_id = $data['professional_id'];
