@@ -1106,6 +1106,13 @@ class TailController extends Controller
                     $reservation->save();
                     if ($existencia != null && $existencia->state != 0) {
                         $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
+                        $notification = new Notification();
+                        $notification->professional_id = $data['professional_id'];
+                        $notification->branch_id = $reservation->branch_id;
+                        $notification->tittle = 'Incumplimiento de convivencia';
+                        $notification->description = 'Tu tirmpo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
+                        $notification->type = 'Barbero';
+                        $notification->save();
                     }
                     DB::commit();
                     return response()->json(1, 200);
@@ -1115,6 +1122,13 @@ class TailController extends Controller
                             $reservation->save();
                             if ($existencia != null && $existencia->state != 0) {
                                 $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
+                                $notification = new Notification();
+                                $notification->professional_id = $data['professional_id'];
+                                $notification->branch_id = $reservation->branch_id;
+                                $notification->tittle = 'Incumplimiento de convivencia';
+                                $notification->description = 'Tu tirmpo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
+                                $notification->type = 'Barbero';
+                                $notification->save();
                             }
                         DB::commit();
                         return response()->json(0, 200);
