@@ -392,6 +392,7 @@ class BranchProfessionalController extends Controller
                     $notification->branch_id = $data['branch_id'];
                     $notification->tittle = 'Aceptada su solicitud de Colacion';
                     $notification->description = 'Aceptada su solicitud de Colación, de ('.Carbon::now()->format('H:i').' a '.Carbon::now()->addMinutes(60)->format('H:i').')';
+                    $notification->state = 3;                    
                     $notification->save();
                 }else {
                     $notification = new Notification();
@@ -399,8 +400,8 @@ class BranchProfessionalController extends Controller
                     $notification->branch_id = $data['branch_id'];
                     $notification->tittle = 'Aceptada su solicitud de Salida';
                     $notification->description = 'Aceptada su solicitud de Salida,'.Carbon::now()->format('H:i');
+                    $notification->state = 3;
                     $notification->save();
-
                     $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
                     $record->end_time = Carbon::now();
                     $record->save();
