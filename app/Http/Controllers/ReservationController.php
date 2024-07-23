@@ -841,6 +841,10 @@ class ReservationController extends Controller
                 'cause' => 'required|string|max:255'
             ]);
             $reservacion = Reservation::find($data['id']);
+            $branch_id = $reservacion->branch_id;            
+            $clientProfessional = $reservacion->car->clientProfessional;
+            $professional_id = $clientProfessional->professional_id;
+            $client = $clientProfessional->client;
             $reservacion->cause = $request->cause;
             $reservacion->save();
             $tail = Tail::where('reservation_id', $reservacion->id);
@@ -848,7 +852,14 @@ class ReservationController extends Controller
                 $tail->delete();
             }
             $reservacion->delete();
-
+            $notification = new Notification();
+                    $notification->professional_id = $professional_id;
+                    $notification->branch_id = $branch_id;
+                    $notification->tittle = 'Aceptada Eliminación de Cliente';
+                    $notification->description = 'El cliente'.' '.$client->name.' '.'fue eliminado de su cola';
+                    $notification->state = 3;
+                    $notification->type = 'Barbero';                     
+                    $notification->save();
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

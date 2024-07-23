@@ -338,6 +338,8 @@ class BranchProfessionalController extends Controller
                 'type' => 'required|string',
                 'state' => 'required|numeric'
             ]);
+            $tittle = '';
+            $description = '';
             DB::beginTransaction();
             $professional = Professional::find($data['professional_id']);
             if ($professional->state == 2) {
@@ -367,13 +369,35 @@ class BranchProfessionalController extends Controller
             $professional->state = $data['state'];
             $professional->start_time = Carbon::now();
             $professional->save();
+            if ($data['state'] == 1) {
+                if ($professional->state == 4) {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Rechazada su solicitud de Salida';
+                    $notification->description = 'Su solicitud de Salida fue rechazada';
+                    $notification->state = 3;   
+                    $notification->type = $data['type'];                  
+                    $notification->save();
+                }
+                if ($professional->state == 3) {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Rechazada su solicitud de Colación';
+                    $notification->description = 'Su solicitud de Colación fue rechazada';
+                    $notification->state = 3;                    
+                    $notification->type = $data['type'];                    
+                    $notification->save();
+                }
+            }
             if ($data['state'] == 2 || $data['state'] == 0) {
                 $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
                 if ($ProfessionalWorkPlace != null) {
                     $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
-                if ($data['type'] == 'Barbero') {
+                if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
                     $workplace->busy = 0;
                     $workplace->save();
                 }
@@ -390,9 +414,10 @@ class BranchProfessionalController extends Controller
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->branch_id = $data['branch_id'];
-                    $notification->tittle = 'Aceptada su solicitud de Colacion';
+                    $notification->tittle = 'Aceptada su solicitud de Colación';
                     $notification->description = 'Aceptada su solicitud de Colación, de ('.Carbon::now()->format('H:i').' a '.Carbon::now()->addMinutes(60)->format('H:i').')';
-                    $notification->state = 3;                    
+                    $notification->state = 3;
+                    $notification->type = $data['type'];                     
                     $notification->save();
                 }else {
                     $notification = new Notification();
@@ -401,12 +426,77 @@ class BranchProfessionalController extends Controller
                     $notification->tittle = 'Aceptada su solicitud de Salida';
                     $notification->description = 'Aceptada su solicitud de Salida,'.Carbon::now()->format('H:i');
                     $notification->state = 3;
+                    $notification->type = $data['type'];
                     $notification->save();
                     $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
                     $record->end_time = Carbon::now();
                     $record->save();
                 }
                 
+            }
+            if ($data['state'] == 4 || $data['state'] == 3){
+                $branch = Branch::find($data['branch_id']);
+                //if ($data['type'] == 'Ambos') {
+                /*$professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
+                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Barbero y Encargado');
+                })->get();*/
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $data['branch_id'])
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+
+                // Extrae los IDs de los profesionales para cada cargo
+                $encargados = $groupedProfessionals->get('Encargado')->pluck('professional_id');
+                $coordinadors = $groupedProfessionals->get('Coordinador')->pluck('professional_id');
+                $barberoEncargados = $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id');
+                $charge = $professional->charge->name;
+                $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;
+                if ($data['state'] == 4) {
+                    $tittle = 'Solicitud de Salida';
+                    $description = 'EL'.' '.$charge.' '.$professional->name.' '.'esta pidiendo solicitud de salida';
+                }else {
+                    $tittle = 'Solicitud de Colación';
+                    $description = 'EL'.' '.$charge.' '.$professional->name.' '.'esta pidiendo solicitud de colación';
+                }
+                if (!$encargados->isEmpty()) {
+                    foreach ($encargados as $encargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $encargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$coordinadors->isEmpty()) {
+                    foreach ($coordinadors as $coordinador) {
+                        $notification = new Notification();
+                        $notification->professional_id = $coordinador;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Coordinador';
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$barberoEncargados->isEmpty()) {
+                    foreach ($barberoEncargados as $barberoEncargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $barberoEncargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                //}
             }
             DB::commit();
             return response()->json(['msg' => 'Estado modificado correctamente'], 200);

@@ -395,14 +395,7 @@ class TailService
             Log::info($professional);
             $workplaceId = ProfessionalWorkPlace::where('professional_id', $professional)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) {
                 $query->where('busy', 1)->where('select', 1);
-            })->first();/*->workplace_id;
-            Log::info('$workplace->id');
-            Log::info($workplaceId);
-            $tecnicoId = ProfessionalWorkplace::where('data', Carbon::today())
-        ->whereJsonContains('places', $workplaceId)
-        ->value('professional_id');
-            Log::info('$tecnicoId->id');
-            Log::info($tecnicoId);*/
+            })->first();
             $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query) {
                 $query->where('name', 'Tecnico');
             })->orderByDesc('data')
@@ -421,6 +414,65 @@ class TailService
                 $car->tecnico_id = $tecnicoId;
                 $car->save();
             }
+        }
+        if ($attended == 3) {
+            $reservation = Reservation::findOrFail($reservation_id);
+            $car = $reservation->car;
+            $clientProfessional = $car->clientProfessional;
+            $professional = $clientProfessional->professional;
+            $client = $clientProfessional->client;
+            $branch = Branch::find($reservation->branch_id);
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $branch->id)
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+
+                // Extrae los IDs de los profesionales para cada cargo
+                $encargados = $groupedProfessionals->get('Encargado')->pluck('professional_id');
+                $coordinadors = $groupedProfessionals->get('Coordinador')->pluck('professional_id');
+                $barberoEncargados = $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id');
+                $charge = $professional->charge->name;
+                $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;               
+                    $tittle = 'Solicitud de rechazo';
+                    $description = 'EL profesional'.' '.$professional->name.' '.'está rechazando a'.' '.$client->name;
+                if (!$encargados->isEmpty()) {
+                    foreach ($encargados as $encargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $encargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$coordinadors->isEmpty()) {
+                    foreach ($coordinadors as $coordinador) {
+                        $notification = new Notification();
+                        $notification->professional_id = $coordinador;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Coordinador';
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$barberoEncargados->isEmpty()) {
+                    foreach ($barberoEncargados as $barberoEncargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $barberoEncargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $branch->notifications()->save($notification);
+                    }
+                }
         }
     }
     

@@ -33,7 +33,7 @@ endpoints:
           content-type: 'text/html; charset=UTF-8'
           cache-control: 'no-cache, private'
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '46'
+          x-ratelimit-remaining: '59'
           vary: Origin
         description: null
         custom: []
@@ -78,7 +78,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '45'
+          x-ratelimit-remaining: '58'
           vary: Origin
         description: null
         custom: []
@@ -244,7 +244,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '44'
+          x-ratelimit-remaining: '57'
           vary: Origin
         description: null
         custom: []
@@ -281,12 +281,12 @@ endpoints:
     responses:
       -
         status: 200
-        content: '{"users":[{"id":1,"name":"Yasmany","email":"yasmany891230@gmail.com","created_at":"2023-10-12T21:25:37.000000Z","updated_at":"2024-03-18T21:21:32.000000Z"},{"id":190,"name":"barbero1","email":"barbero@klint.cl","created_at":"2024-05-17T20:01:17.000000Z","updated_at":"2024-06-13T02:01:26.000000Z"},{"id":194,"name":"encargado1","email":"encargado@klint.cl","created_at":"2024-05-17T20:46:16.000000Z","updated_at":"2024-06-11T19:05:13.000000Z"},{"id":195,"name":"tottem","email":"coordinador@klint.cl","created_at":"2024-05-17T21:03:45.000000Z","updated_at":"2024-06-04T13:46:40.000000Z"},{"id":197,"name":"cajero","email":"cajeroprueba@ssda.cu","created_at":"2024-05-18T07:54:28.000000Z","updated_at":"2024-06-05T16:03:58.000000Z"},{"id":198,"name":"admin","email":"admin@gadmi.co","created_at":"2024-05-18T13:52:29.000000Z","updated_at":"2024-07-05T19:09:59.000000Z"},{"id":216,"name":"tecnico","email":"tecnico@klint.cl","created_at":"2024-05-20T18:24:08.000000Z","updated_at":"2024-06-10T19:01:21.000000Z"},{"id":217,"name":"andrea","email":"andrea@barber.com","created_at":"2024-05-20T19:47:44.000000Z","updated_at":"2024-06-25T23:55:22.000000Z"},{"id":220,"name":"pizarra","email":"carne@ejemplo.com","created_at":"2024-05-20T21:04:38.000000Z","updated_at":"2024-06-21T20:54:26.000000Z"},{"id":240,"name":"andrea2","email":"abarber@ejemplo.com","created_at":"2024-05-22T14:46:04.000000Z","updated_at":"2024-05-22T14:46:04.000000Z"},{"id":242,"name":"yoli2","email":"yoli2@barber.com","created_at":"2024-05-22T14:54:35.000000Z","updated_at":"2024-06-05T16:48:41.000000Z"},{"id":249,"name":"nueva1","email":"prueba1@ehemplp.com","created_at":"2024-05-26T12:07:04.000000Z","updated_at":"2024-05-26T12:07:04.000000Z"},{"id":250,"name":"nuevo1","email":"nuevo@klint.cl","created_at":"2024-05-27T15:22:01.000000Z","updated_at":"2024-06-05T12:06:29.000000Z"},{"id":252,"name":"fifo","email":"fifo@gmail.com","created_at":"2024-05-27T20:53:07.000000Z","updated_at":"2024-05-27T20:53:07.000000Z"},{"id":255,"name":"daniela","email":"daneila@ejemplo.com","created_at":"2024-05-28T14:18:25.000000Z","updated_at":"2024-05-28T14:18:25.000000Z"},{"id":266,"name":"coordinador1","email":"Coordinador1@klint.cl","created_at":"2024-05-29T19:50:40.000000Z","updated_at":"2024-06-10T19:02:15.000000Z"},{"id":271,"name":"barbero2","email":"barbero2@klint.cl","created_at":"2024-06-05T12:53:30.000000Z","updated_at":"2024-06-05T12:53:30.000000Z"},{"id":290,"name":"adminSP","email":"adminsp@dfjfdf.df","created_at":"2024-06-06T17:21:39.000000Z","updated_at":"2024-06-06T17:21:39.000000Z"},{"id":347,"name":"viviana","email":"viviana@ejemplo.com","created_at":"2024-06-18T20:23:26.000000Z","updated_at":"2024-06-24T23:04:41.000000Z"},{"id":401,"name":"Vasquez","email":"luisruz1235@gmail.com","created_at":"2024-06-24T23:06:58.000000Z","updated_at":"2024-06-26T00:22:45.000000Z"},{"id":403,"name":"hernandez","email":"Gregory@ejemplo2.com","created_at":"2024-06-24T23:17:42.000000Z","updated_at":"2024-06-24T23:21:12.000000Z"},{"id":404,"name":"marin","email":"Richard@ejemplo2.com","created_at":"2024-06-24T23:18:24.000000Z","updated_at":"2024-06-24T23:21:20.000000Z"},{"id":405,"name":"esteban","email":"Gregorio@ejemplo2.com","created_at":"2024-06-24T23:19:49.000000Z","updated_at":"2024-06-24T23:21:32.000000Z"},{"id":406,"name":"Benitez","email":"Ricardo@ejemplo2.com","created_at":"2024-06-24T23:20:49.000000Z","updated_at":"2024-06-24T23:20:49.000000Z"},{"id":407,"name":"Garcia","email":"anfreny@ejemplo.com","created_at":"2024-06-24T23:23:15.000000Z","updated_at":"2024-06-24T23:23:15.000000Z"},{"id":408,"name":"Petit","email":"andres@ejemplo2.com","created_at":"2024-06-24T23:25:07.000000Z","updated_at":"2024-06-24T23:25:07.000000Z"},{"id":409,"name":"Pbosquemar","email":"pizarra@bosquemar.com","created_at":"2024-06-24T23:33:39.000000Z","updated_at":"2024-06-24T23:33:39.000000Z"},{"id":410,"name":"guerrero","email":"viviana@cordinadora.com","created_at":"2024-06-24T23:42:12.000000Z","updated_at":"2024-06-24T23:42:12.000000Z"},{"id":411,"name":"tbosquemar","email":"totem@bosquemar.com","created_at":"2024-06-24T23:44:00.000000Z","updated_at":"2024-06-26T13:21:03.000000Z"},{"id":436,"name":"mariolys","email":"mariolys@cajera.com","created_at":"2024-06-25T23:55:56.000000Z","updated_at":"2024-06-25T23:55:56.000000Z"},{"id":437,"name":"romero","email":"mariolys@coordinadora.com","created_at":"2024-06-25T23:56:36.000000Z","updated_at":"2024-06-25T23:56:36.000000Z"},{"id":594,"name":"barbero3","email":"barbero3@klint.cl","created_at":"2024-07-01T14:38:47.000000Z","updated_at":"2024-07-01T14:38:47.000000Z"},{"id":595,"name":"encargado2","email":"encargado2@klint.cl","created_at":"2024-07-01T14:39:59.000000Z","updated_at":"2024-07-01T14:39:59.000000Z"},{"id":604,"name":"tecnico2","email":"tecnico2@klint.cl","created_at":"2024-07-01T15:33:30.000000Z","updated_at":"2024-07-01T15:33:30.000000Z"},{"id":766,"name":"prueba giftcard","email":"giftcard@sadsad.cu","created_at":"2024-07-15T10:33:33.000000Z","updated_at":"2024-07-15T10:33:33.000000Z"},{"id":767,"name":"christan","email":"christan@ejemplo.com","created_at":"2024-07-15T14:32:03.000000Z","updated_at":"2024-07-15T14:32:03.000000Z"},{"id":768,"name":"olivar","email":"olivar@ejemplo.com","created_at":"2024-07-15T14:39:28.000000Z","updated_at":"2024-07-15T14:39:28.000000Z"},{"id":769,"name":"Sergio matias carcamo sanchez","email":"Sergicrck13@gmail.com","created_at":"2024-07-15T15:05:27.000000Z","updated_at":"2024-07-15T15:05:27.000000Z"},{"id":770,"name":"Felipe","email":"Marzelo47@gmail.com","created_at":"2024-07-15T15:10:11.000000Z","updated_at":"2024-07-15T15:10:11.000000Z"},{"id":771,"name":"Franco pinda","email":"Francopida@gnail.com","created_at":"2024-07-15T15:14:33.000000Z","updated_at":"2024-07-15T15:14:33.000000Z"},{"id":772,"name":"Felipe Ramirez","email":"Tpsherbandez@gmail.com","created_at":"2024-07-15T15:21:12.000000Z","updated_at":"2024-07-15T15:21:12.000000Z"},{"id":773,"name":"Vicente Salazar","email":"Paola203860@gmail.com","created_at":"2024-07-15T15:29:56.000000Z","updated_at":"2024-07-15T15:29:56.000000Z"},{"id":774,"name":"Crist\u00f3bal contreras","email":"Cristobalcontrerasmancilla@gmail.com","created_at":"2024-07-15T15:34:16.000000Z","updated_at":"2024-07-15T15:34:16.000000Z"},{"id":775,"name":"Cliente Jos\u00e9 luis","email":"Prueba1@gmail.com","created_at":"2024-07-15T15:35:39.000000Z","updated_at":"2024-07-15T15:35:39.000000Z"},{"id":776,"name":"Felipe Sebasti\u00e1n barria","email":"barria.ojeda@gmail.com","created_at":"2024-07-15T15:37:36.000000Z","updated_at":"2024-07-15T15:37:36.000000Z"},{"id":777,"name":"Crist\u00f3bal Gallardo","email":"Carlos.gallardo@live.cl","created_at":"2024-07-15T15:55:09.000000Z","updated_at":"2024-07-15T15:55:09.000000Z"},{"id":778,"name":"Mariano gael igor cid","email":"Ignasia.cidojeda@gmail.com","created_at":"2024-07-15T15:58:33.000000Z","updated_at":"2024-07-15T15:58:33.000000Z"},{"id":779,"name":"Felipe Octavio Carrasco ruiz","email":"pipecarrasco14@gmail.com","created_at":"2024-07-15T16:03:19.000000Z","updated_at":"2024-07-15T16:03:19.000000Z"},{"id":780,"name":"Vicente Nicol\u00e1s eugenio","email":"vicente.eugeniodh@gmail.com","created_at":"2024-07-15T16:08:18.000000Z","updated_at":"2024-07-15T16:08:18.000000Z"},{"id":781,"name":"Juan soto","email":"juanrubensoto@icloud.com","created_at":"2024-07-15T16:09:25.000000Z","updated_at":"2024-07-15T16:09:25.000000Z"},{"id":782,"name":"Luis Alberto linares","email":"albertoguarecuco24@gmail.com","created_at":"2024-07-15T16:17:08.000000Z","updated_at":"2024-07-15T16:17:08.000000Z"},{"id":783,"name":"Juan zoto","email":"Zoto2@gmail.com","created_at":"2024-07-15T16:18:20.000000Z","updated_at":"2024-07-15T16:18:20.000000Z"},{"id":784,"name":"Yonathan Ag\u00fcero paredes","email":"Y.agueroparedes@gmail.com","created_at":"2024-07-15T16:31:28.000000Z","updated_at":"2024-07-15T16:31:28.000000Z"},{"id":785,"name":"Tomas aguirre","email":"mcabellou@gmail.com","created_at":"2024-07-15T16:54:15.000000Z","updated_at":"2024-07-15T16:54:15.000000Z"},{"id":786,"name":"Matias aguirre","email":"matias.aguiavi@gmail.com","created_at":"2024-07-15T16:57:03.000000Z","updated_at":"2024-07-15T16:57:03.000000Z"},{"id":787,"name":"Diego miranda","email":"violallanllan@gmail.com","created_at":"2024-07-15T17:06:29.000000Z","updated_at":"2024-07-15T17:06:29.000000Z"},{"id":788,"name":"Benjamin miranda","email":"Viol","created_at":"2024-07-15T17:07:08.000000Z","updated_at":"2024-07-15T17:07:08.000000Z"},{"id":789,"name":"Sim\u00f3n Emilio Maldonado torres","email":"Alejandratorrescarcamo@gmail.com","created_at":"2024-07-15T17:11:19.000000Z","updated_at":"2024-07-15T17:11:19.000000Z"},{"id":790,"name":"Jos\u00e9 enrriques","email":"Jos\u00e9.enrriques@gmail.com","created_at":"2024-07-15T17:37:19.000000Z","updated_at":"2024-07-15T17:37:19.000000Z"},{"id":791,"name":"Simon","email":"Prueba1@gmail.com1","created_at":"2024-07-15T17:58:35.000000Z","updated_at":"2024-07-15T17:58:35.000000Z"},{"id":792,"name":"Juan pablo","email":"Prueba1@gmail.com12","created_at":"2024-07-15T17:59:28.000000Z","updated_at":"2024-07-15T17:59:28.000000Z"},{"id":793,"name":"Luciano Salazar","email":"G43g046@gmail.com","created_at":"2024-07-15T18:20:38.000000Z","updated_at":"2024-07-15T18:20:38.000000Z"},{"id":794,"name":"pruebaKlint1","email":"fdgfdg@dfdf.fg","created_at":"2024-07-16T02:04:15.000000Z","updated_at":"2024-07-16T02:04:15.000000Z"},{"id":795,"name":"segundoKlint","email":"rfeg@erfdd.df5","created_at":"2024-07-16T02:48:25.000000Z","updated_at":"2024-07-16T02:48:25.000000Z"},{"id":796,"name":"otroKlint4","email":"dfgdfg@dfdf.fg","created_at":"2024-07-16T03:01:04.000000Z","updated_at":"2024-07-16T03:01:04.000000Z"},{"id":797,"name":"probandoKlint5","email":"fghfg@sdfd.hj","created_at":"2024-07-16T03:03:07.000000Z","updated_at":"2024-07-16T03:03:07.000000Z"},{"id":798,"name":"diaaHoy","email":"fgdg@sdsd.sd","created_at":"2024-07-16T04:03:16.000000Z","updated_at":"2024-07-16T04:03:16.000000Z"},{"id":799,"name":"martes1","email":"dfgf@sdsd.sd","created_at":"2024-07-16T15:52:15.000000Z","updated_at":"2024-07-16T15:52:15.000000Z"},{"id":800,"name":"martes2","email":"sdfsd@sdd.sd","created_at":"2024-07-16T15:58:12.000000Z","updated_at":"2024-07-16T15:58:12.000000Z"},{"id":801,"name":"martes3","email":"fdgdfg@erere.er","created_at":"2024-07-16T16:05:52.000000Z","updated_at":"2024-07-16T16:05:52.000000Z"},{"id":802,"name":"martes5","email":"dfgfdg@sdd.sd","created_at":"2024-07-16T16:10:53.000000Z","updated_at":"2024-07-16T16:10:53.000000Z"},{"id":803,"name":"martes5","email":"dfgdf@sdds.sd","created_at":"2024-07-16T16:29:45.000000Z","updated_at":"2024-07-16T16:29:45.000000Z"},{"id":804,"name":"Martes6","email":"dfgdfgfd@sdsdsd.sd","created_at":"2024-07-16T16:31:12.000000Z","updated_at":"2024-07-16T16:31:12.000000Z"},{"id":805,"name":"martes7","email":"fdgfg@vvcv.cv","created_at":"2024-07-16T16:32:57.000000Z","updated_at":"2024-07-16T16:32:57.000000Z"},{"id":806,"name":"masdsd","email":"dsfdf@sdsd.sd","created_at":"2024-07-16T16:34:49.000000Z","updated_at":"2024-07-16T16:34:49.000000Z"},{"id":807,"name":"otroMartes8","email":"fghfghh@erer.er","created_at":"2024-07-16T16:51:50.000000Z","updated_at":"2024-07-16T16:51:50.000000Z"},{"id":808,"name":"mier1","email":"asd@wewe.we","created_at":"2024-07-17T16:08:08.000000Z","updated_at":"2024-07-17T16:08:08.000000Z"},{"id":809,"name":"tito2","email":"sadsd@sdsd.sd","created_at":"2024-07-17T16:16:02.000000Z","updated_at":"2024-07-17T16:16:02.000000Z"},{"id":810,"name":"meiercolesOTRO","email":"sfdf@sdsd.sd","created_at":"2024-07-17T20:04:03.000000Z","updated_at":"2024-07-17T20:04:03.000000Z"},{"id":811,"name":"Yasma1","email":"dfsf@sdfdf.df","created_at":"2024-07-18T01:26:03.000000Z","updated_at":"2024-07-18T01:26:03.000000Z"},{"id":812,"name":"camilo2","email":"fdgdf@sdsd.fg","created_at":"2024-07-18T01:30:16.000000Z","updated_at":"2024-07-18T01:30:16.000000Z"},{"id":813,"name":"coco1","email":"fgdgdf@sdsdsd.sd5","created_at":"2024-07-18T01:37:20.000000Z","updated_at":"2024-07-18T01:37:20.000000Z"},{"id":814,"name":"titititit","email":"fdgdfgdf@ssdsd.sd","created_at":"2024-07-18T01:39:35.000000Z","updated_at":"2024-07-18T01:39:35.000000Z"},{"id":815,"name":"Mario","email":"retreter@sdsds.dsd","created_at":"2024-07-18T01:41:32.000000Z","updated_at":"2024-07-18T01:41:32.000000Z"},{"id":816,"name":"joseito","email":"fghfgh@sdsd.sd","created_at":"2024-07-18T02:01:25.000000Z","updated_at":"2024-07-18T02:01:25.000000Z"},{"id":817,"name":"fffff","email":"ffdfff@ssdsd.sd","created_at":"2024-07-18T02:57:34.000000Z","updated_at":"2024-07-18T02:57:34.000000Z"},{"id":818,"name":"kkkkk","email":"fddfgfd@sdsd.sd","created_at":"2024-07-18T02:58:44.000000Z","updated_at":"2024-07-18T02:58:44.000000Z"},{"id":819,"name":"jose","email":"sfdf@ssds.ds","created_at":"2024-07-18T15:03:09.000000Z","updated_at":"2024-07-18T15:03:09.000000Z"},{"id":820,"name":"ccccc","email":"edfdsfd@wsdsds.dsd4","created_at":"2024-07-18T15:06:26.000000Z","updated_at":"2024-07-18T15:06:26.000000Z"},{"id":821,"name":"mario","email":"dfdf@sdsd.sd","created_at":"2024-07-18T15:07:11.000000Z","updated_at":"2024-07-18T15:07:11.000000Z"},{"id":822,"name":"mmmmmm","email":"dfgfd@ssd.sd","created_at":"2024-07-18T15:09:04.000000Z","updated_at":"2024-07-18T15:09:04.000000Z"},{"id":823,"name":"sdsdsd","email":"sdsd@asas.as","created_at":"2024-07-18T16:39:06.000000Z","updated_at":"2024-07-18T16:39:06.000000Z"},{"id":824,"name":"titiititit","email":"dsfsdfsdfd@sdsd.sd","created_at":"2024-07-18T16:53:28.000000Z","updated_at":"2024-07-18T16:53:28.000000Z"},{"id":825,"name":"moarisdkids","email":"sdfsdfsd@sdsd.sd","created_at":"2024-07-18T16:57:28.000000Z","updated_at":"2024-07-18T16:57:28.000000Z"},{"id":826,"name":"fdgdfgfd","email":"sdsd@sds.ds","created_at":"2024-07-18T17:01:00.000000Z","updated_at":"2024-07-18T17:01:00.000000Z"},{"id":827,"name":"cosodsd","email":"dfsdf@dsd.sd","created_at":"2024-07-18T17:08:38.000000Z","updated_at":"2024-07-18T17:08:38.000000Z"},{"id":828,"name":"fdsfsdfds","email":"fdsfsdf@sdsd.sd","created_at":"2024-07-18T17:10:25.000000Z","updated_at":"2024-07-18T17:10:25.000000Z"},{"id":829,"name":"Jorgitoooo","email":"dfddfdfd@ssd.sd","created_at":"2024-07-18T17:11:29.000000Z","updated_at":"2024-07-18T17:11:29.000000Z"},{"id":830,"name":"Aleatorio1","email":"aaaaaa@aaa.aa","created_at":"2024-07-18T19:38:18.000000Z","updated_at":"2024-07-18T19:38:18.000000Z"},{"id":831,"name":"Seleccionado mismo correo","email":"aaaaaa@aaa.aa","created_at":"2024-07-18T19:39:08.000000Z","updated_at":"2024-07-18T19:39:08.000000Z"},{"id":832,"name":"fffff","email":"sdssd","created_at":"2024-07-18T21:46:40.000000Z","updated_at":"2024-07-18T21:46:40.000000Z"},{"id":833,"name":"ttttt","email":"fjghfgjhfgjhfg@hhg.jk","created_at":"2024-07-18T21:49:50.000000Z","updated_at":"2024-07-18T21:49:50.000000Z"},{"id":834,"name":"kjkljhkjh","email":"kjhgkjhgjg@fgfgf.jh","created_at":"2024-07-18T21:51:52.000000Z","updated_at":"2024-07-18T21:51:52.000000Z"},{"id":835,"name":"ghgjgjjhgjhgjh","email":"ghfghfghf@ghgh.gf","created_at":"2024-07-18T21:53:22.000000Z","updated_at":"2024-07-18T21:53:22.000000Z"},{"id":836,"name":"sdsdsd","email":"sdsdd@sdsd.sd3","created_at":"2024-07-19T04:09:20.000000Z","updated_at":"2024-07-19T04:09:20.000000Z"},{"id":837,"name":"otro1","email":"dsfsd@sasd.sd","created_at":"2024-07-19T13:07:51.000000Z","updated_at":"2024-07-19T13:07:51.000000Z"},{"id":838,"name":"dfdf","email":"dfdfs@ssd.sd","created_at":"2024-07-19T13:12:23.000000Z","updated_at":"2024-07-19T13:12:23.000000Z"},{"id":839,"name":"fghfghf","email":"fdsdf@sdsd.sd","created_at":"2024-07-19T13:33:19.000000Z","updated_at":"2024-07-19T13:33:19.000000Z"},{"id":840,"name":"gfhfdhfgh","email":"gfhfhfg@sdfdfd.df","created_at":"2024-07-19T13:36:05.000000Z","updated_at":"2024-07-19T13:36:05.000000Z"},{"id":841,"name":"ghhfghfhfg","email":"hhfhg@wewew.we","created_at":"2024-07-19T13:42:54.000000Z","updated_at":"2024-07-19T13:42:54.000000Z"},{"id":842,"name":"reserv1","email":"dsfdsf@sddsd.sd","created_at":"2024-07-20T14:03:02.000000Z","updated_at":"2024-07-20T14:03:02.000000Z"},{"id":843,"name":"reserv2","email":"sdfsdfsf@sdsd.sd","created_at":"2024-07-20T14:07:25.000000Z","updated_at":"2024-07-20T14:07:25.000000Z"},{"id":844,"name":"reserva3","email":"dsdfdf@ssds.sd","created_at":"2024-07-20T14:10:32.000000Z","updated_at":"2024-07-20T14:10:32.000000Z"},{"id":845,"name":"hdjdjddf","email":"hggfg@adasa.cu","created_at":"2024-07-20T14:21:19.000000Z","updated_at":"2024-07-20T14:21:19.000000Z"},{"id":846,"name":"tt","email":"dsfd@sdsd.fg","created_at":"2024-07-21T01:48:06.000000Z","updated_at":"2024-07-21T01:48:06.000000Z"},{"id":847,"name":"domingo1","email":"sdfsdf@sdsd.dfd","created_at":"2024-07-21T16:15:42.000000Z","updated_at":"2024-07-21T16:15:42.000000Z"},{"id":848,"name":"tito2","email":"dsf@sadsd.sd","created_at":"2024-07-21T16:29:13.000000Z","updated_at":"2024-07-21T16:29:13.000000Z"},{"id":849,"name":"pedro","email":"dsfsdf@ssds.ds","created_at":"2024-07-21T18:54:58.000000Z","updated_at":"2024-07-21T18:54:58.000000Z"},{"id":850,"name":"Jose","email":"dfgfd@sdsd.ddf","created_at":"2024-07-21T19:01:45.000000Z","updated_at":"2024-07-21T19:01:45.000000Z"},{"id":851,"name":"pipo","email":"sdfsd@ssd.dd","created_at":"2024-07-21T19:06:59.000000Z","updated_at":"2024-07-21T19:06:59.000000Z"},{"id":852,"name":"pablo","email":"dfgdg@dfdf.df","created_at":"2024-07-21T19:50:23.000000Z","updated_at":"2024-07-21T19:50:23.000000Z"},{"id":853,"name":"mmm","email":"jgjhg@fgh.jk","created_at":"2024-07-21T21:01:24.000000Z","updated_at":"2024-07-21T21:01:24.000000Z"},{"id":854,"name":"coco","email":"gdfgd@sdsd.sd","created_at":"2024-07-21T21:19:42.000000Z","updated_at":"2024-07-21T21:19:42.000000Z"}]}'
+        content: '{"users":[{"id":1,"name":"Yasmany","email":"yasmany891230@gmail.com","created_at":"2023-10-12T21:25:37.000000Z","updated_at":"2024-03-18T21:21:32.000000Z"},{"id":190,"name":"barbero1","email":"barbero@klint.cl","created_at":"2024-05-17T20:01:17.000000Z","updated_at":"2024-06-13T02:01:26.000000Z"},{"id":194,"name":"encargado1","email":"encargado@klint.cl","created_at":"2024-05-17T20:46:16.000000Z","updated_at":"2024-06-11T19:05:13.000000Z"},{"id":195,"name":"tottem","email":"coordinador@klint.cl","created_at":"2024-05-17T21:03:45.000000Z","updated_at":"2024-06-04T13:46:40.000000Z"},{"id":197,"name":"cajero","email":"cajeroprueba@ssda.cu","created_at":"2024-05-18T07:54:28.000000Z","updated_at":"2024-06-05T16:03:58.000000Z"},{"id":198,"name":"admin","email":"admin@gadmi.co","created_at":"2024-05-18T13:52:29.000000Z","updated_at":"2024-07-05T19:09:59.000000Z"},{"id":216,"name":"tecnico","email":"tecnico@klint.cl","created_at":"2024-05-20T18:24:08.000000Z","updated_at":"2024-06-10T19:01:21.000000Z"},{"id":217,"name":"andrea","email":"andrea@barber.com","created_at":"2024-05-20T19:47:44.000000Z","updated_at":"2024-06-25T23:55:22.000000Z"},{"id":220,"name":"pizarra","email":"carne@ejemplo.com","created_at":"2024-05-20T21:04:38.000000Z","updated_at":"2024-06-21T20:54:26.000000Z"},{"id":240,"name":"andrea2","email":"abarber@ejemplo.com","created_at":"2024-05-22T14:46:04.000000Z","updated_at":"2024-05-22T14:46:04.000000Z"},{"id":242,"name":"yoli2","email":"yoli2@barber.com","created_at":"2024-05-22T14:54:35.000000Z","updated_at":"2024-06-05T16:48:41.000000Z"},{"id":249,"name":"nueva1","email":"prueba1@ehemplp.com","created_at":"2024-05-26T12:07:04.000000Z","updated_at":"2024-05-26T12:07:04.000000Z"},{"id":250,"name":"nuevo1","email":"nuevo@klint.cl","created_at":"2024-05-27T15:22:01.000000Z","updated_at":"2024-06-05T12:06:29.000000Z"},{"id":252,"name":"fifo","email":"fifo@gmail.com","created_at":"2024-05-27T20:53:07.000000Z","updated_at":"2024-05-27T20:53:07.000000Z"},{"id":255,"name":"daniela","email":"daneila@ejemplo.com","created_at":"2024-05-28T14:18:25.000000Z","updated_at":"2024-05-28T14:18:25.000000Z"},{"id":266,"name":"coordinador1","email":"Coordinador1@klint.cl","created_at":"2024-05-29T19:50:40.000000Z","updated_at":"2024-06-10T19:02:15.000000Z"},{"id":271,"name":"barbero2","email":"barbero2@klint.cl","created_at":"2024-06-05T12:53:30.000000Z","updated_at":"2024-06-05T12:53:30.000000Z"},{"id":290,"name":"adminSP","email":"adminsp@dfjfdf.df","created_at":"2024-06-06T17:21:39.000000Z","updated_at":"2024-06-06T17:21:39.000000Z"},{"id":347,"name":"viviana","email":"viviana@ejemplo.com","created_at":"2024-06-18T20:23:26.000000Z","updated_at":"2024-06-24T23:04:41.000000Z"},{"id":401,"name":"Vasquez","email":"luisruz1235@gmail.com","created_at":"2024-06-24T23:06:58.000000Z","updated_at":"2024-06-26T00:22:45.000000Z"},{"id":403,"name":"hernandez","email":"Gregory@ejemplo2.com","created_at":"2024-06-24T23:17:42.000000Z","updated_at":"2024-06-24T23:21:12.000000Z"},{"id":404,"name":"marin","email":"Richard@ejemplo2.com","created_at":"2024-06-24T23:18:24.000000Z","updated_at":"2024-06-24T23:21:20.000000Z"},{"id":405,"name":"esteban","email":"Gregorio@ejemplo2.com","created_at":"2024-06-24T23:19:49.000000Z","updated_at":"2024-06-24T23:21:32.000000Z"},{"id":406,"name":"Benitez","email":"Ricardo@ejemplo2.com","created_at":"2024-06-24T23:20:49.000000Z","updated_at":"2024-06-24T23:20:49.000000Z"},{"id":407,"name":"Garcia","email":"anfreny@ejemplo.com","created_at":"2024-06-24T23:23:15.000000Z","updated_at":"2024-06-24T23:23:15.000000Z"},{"id":408,"name":"Petit","email":"andres@ejemplo2.com","created_at":"2024-06-24T23:25:07.000000Z","updated_at":"2024-06-24T23:25:07.000000Z"},{"id":409,"name":"Pbosquemar","email":"pizarra@bosquemar.com","created_at":"2024-06-24T23:33:39.000000Z","updated_at":"2024-06-24T23:33:39.000000Z"},{"id":410,"name":"guerrero","email":"viviana@cordinadora.com","created_at":"2024-06-24T23:42:12.000000Z","updated_at":"2024-06-24T23:42:12.000000Z"},{"id":411,"name":"tbosquemar","email":"totem@bosquemar.com","created_at":"2024-06-24T23:44:00.000000Z","updated_at":"2024-06-26T13:21:03.000000Z"},{"id":436,"name":"mariolys","email":"mariolys@cajera.com","created_at":"2024-06-25T23:55:56.000000Z","updated_at":"2024-06-25T23:55:56.000000Z"},{"id":437,"name":"romero","email":"mariolys@coordinadora.com","created_at":"2024-06-25T23:56:36.000000Z","updated_at":"2024-06-25T23:56:36.000000Z"},{"id":594,"name":"barbero3","email":"barbero3@klint.cl","created_at":"2024-07-01T14:38:47.000000Z","updated_at":"2024-07-01T14:38:47.000000Z"},{"id":595,"name":"encargado2","email":"encargado2@klint.cl","created_at":"2024-07-01T14:39:59.000000Z","updated_at":"2024-07-01T14:39:59.000000Z"},{"id":604,"name":"tecnico2","email":"tecnico2@klint.cl","created_at":"2024-07-01T15:33:30.000000Z","updated_at":"2024-07-01T15:33:30.000000Z"},{"id":767,"name":"christan","email":"christan@ejemplo.com","created_at":"2024-07-15T14:32:03.000000Z","updated_at":"2024-07-15T14:32:03.000000Z"},{"id":768,"name":"olivar","email":"olivar@ejemplo.com","created_at":"2024-07-15T14:39:28.000000Z","updated_at":"2024-07-15T14:39:28.000000Z"}]}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '43'
+          x-ratelimit-remaining: '56'
           vary: Origin
         description: null
         custom: []
@@ -328,7 +328,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '42'
+          x-ratelimit-remaining: '55'
           vary: Origin
         description: null
         custom: []
@@ -370,7 +370,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '41'
+          x-ratelimit-remaining: '54'
           vary: Origin
         description: null
         custom: []
@@ -412,7 +412,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '40'
+          x-ratelimit-remaining: '53'
           vary: Origin
         description: null
         custom: []
@@ -454,7 +454,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '39'
+          x-ratelimit-remaining: '52'
           vary: Origin
         description: null
         custom: []
@@ -3169,7 +3169,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '38'
+          x-ratelimit-remaining: '51'
           vary: Origin
         description: null
         custom: []
@@ -3211,7 +3211,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '37'
+          x-ratelimit-remaining: '50'
           vary: Origin
         description: null
         custom: []
@@ -3253,7 +3253,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '36'
+          x-ratelimit-remaining: '49'
           vary: Origin
         description: null
         custom: []
@@ -9826,13 +9826,13 @@ endpoints:
         name: code
         description: ''
         required: true
-        example: placeat
+        example: rerum
         type: string
         enumValues: []
         exampleWasSpecified: false
         custom: []
     cleanBodyParameters:
-      code: placeat
+      code: rerum
     fileParameters: []
     responses:
       -
@@ -9842,7 +9842,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '35'
+          x-ratelimit-remaining: '48'
           vary: Origin
         description: null
         custom: []
@@ -13987,7 +13987,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '34'
+          x-ratelimit-remaining: '47'
           vary: Origin
         description: null
         custom: []
@@ -16962,12 +16962,12 @@ endpoints:
     responses:
       -
         status: 200
-        content: '2024-07-22 17:44'
+        content: '2024-07-23 09:00'
         headers:
           content-type: 'text/html; charset=UTF-8'
           cache-control: 'no-cache, private'
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '33'
+          x-ratelimit-remaining: '46'
           vary: Origin
         description: null
         custom: []
@@ -17020,48 +17020,6 @@ endpoints:
   -
     httpMethods:
       - GET
-    uri: api/table-test-truncate
-    metadata:
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      custom: []
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-      Accept-Language: es
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        status: 200
-        content: '{"msg":"Tablas vaciadas correctamente"}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '32'
-          vary: Origin
-        description: null
-        custom: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-    custom: []
-  -
-    httpMethods:
-      - GET
     uri: api/closebox-month
     metadata:
       groupName: Endpoints
@@ -17091,7 +17049,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '60'
+          x-ratelimit-remaining: '45'
           vary: Origin
         description: null
         custom: []
@@ -17133,7 +17091,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '59'
+          x-ratelimit-remaining: '44'
           vary: Origin
         description: null
         custom: []
@@ -17175,7 +17133,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '58'
+          x-ratelimit-remaining: '43'
           vary: Origin
         description: null
         custom: []
@@ -17217,7 +17175,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '57'
+          x-ratelimit-remaining: '42'
           vary: Origin
         description: null
         custom: []
@@ -17259,7 +17217,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '56'
+          x-ratelimit-remaining: '41'
           vary: Origin
         description: null
         custom: []
@@ -17301,7 +17259,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '55'
+          x-ratelimit-remaining: '40'
           vary: Origin
         description: null
         custom: []
@@ -17343,7 +17301,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '54'
+          x-ratelimit-remaining: '39'
           vary: Origin
         description: null
         custom: []
@@ -17380,12 +17338,12 @@ endpoints:
     responses:
       -
         status: 200
-        content: '{"business":[{"id":20,"icon":"mdi-store","title":"Sucursal Prueba","subtitle":"Sucursal","phone":"+56925458754","location":"Direcci\u00f2n Prueba","location_link":"LOCAL 118M UBICADO EN NIVEL 1 DEL CENTRO COMERCIAL PASEO PALOMA, 5480000 Puerto Montt, Los Lagos","phone_link":"https:\/\/wa.me\/+56925458754","image":"branches\/20.jpg","business_id":1,"type":"Branch"},{"id":21,"icon":"mdi-store","title":"prueba bosquemar","subtitle":"Sucursal","phone":"+56953410006","location":"los notros 1282","location_link":"https:\/\/maps.app.goo.gl\/87JJFXdgPFnfUYnq6","phone_link":"https:\/\/wa.me\/+56953410006","image":"branches\/21.png","business_id":1,"type":"Branch"},{"id":22,"icon":"mdi-store","title":"osorno","subtitle":"Sucursal","phone":"+56936278263","location":"osorno 2","location_link":null,"phone_link":"https:\/\/wa.me\/+56936278263","image":"branches\/22.png","business_id":1,"type":"Branch"},{"id":23,"icon":"mdi-store","title":"nueva","subtitle":"Sucursal","phone":"+56937217373","location":"ijij","location_link":null,"phone_link":"https:\/\/wa.me\/+56937217373","image":"branches\/default.jpg","business_id":1,"type":"Branch"},{"id":24,"icon":"mdi-store","title":"Bosquemar","subtitle":"Sucursal","phone":"+56953410055","location":"Unimarc los notros 1280","location_link":"https:\/\/maps.app.goo.gl\/EmshjvqAazcZFYMc9","phone_link":"https:\/\/wa.me\/+56953410055","image":"branches\/24.jpg","business_id":1,"type":"Branch"},{"id":4,"icon":"mdi-school","title":"prueba","subtitle":"Academia","phone":"+56949879923","location":"qwwqwqdqwd","location_link":"dwqdqwdwqqwqd","phone_link":"https:\/\/wa.me\/+56949879923","image":"enrollments\/4.jpg","business_id":4,"type":"Academia"},{"id":9,"icon":"mdi-school","title":"Academia Hernandez","subtitle":"Academia","phone":"+56950499706","location":"Guillermo Gallardo 310, 5502283 Puerto Montt, Los Lagos","location_link":"https:\/\/maps.app.goo.gl\/Lrqamj4yoeM1ZNJv9","phone_link":"https:\/\/wa.me\/+56950499706","image":"enrollments\/9.jpg","business_id":9,"type":"Academia"}]}'
+        content: '{"business":[{"id":20,"icon":"mdi-store","title":"Sucursal Prueba","subtitle":"Sucursal","phone":"+56925458754","location":"Direcci\u00f2n Prueba","location_link":"LOCAL 118M UBICADO EN NIVEL 1 DEL CENTRO COMERCIAL PASEO PALOMA, 5480000 Puerto Montt, Los Lagos","phone_link":"https:\/\/wa.me\/+56925458754","image":"branches\/20.jpg","business_id":1,"type":"Branch"},{"id":21,"icon":"mdi-store","title":"prueba bosquemar","subtitle":"Sucursal","phone":"+56953410006","location":"los notros 1282","location_link":"https:\/\/maps.app.goo.gl\/87JJFXdgPFnfUYnq6","phone_link":"https:\/\/wa.me\/+56953410006","image":"branches\/21.jpg","business_id":1,"type":"Branch"},{"id":22,"icon":"mdi-store","title":"osorno","subtitle":"Sucursal","phone":"+56936278263","location":"osorno 2","location_link":"null","phone_link":"https:\/\/wa.me\/+56936278263","image":"branches\/22.png","business_id":1,"type":"Branch"},{"id":23,"icon":"mdi-store","title":"nueva","subtitle":"Sucursal","phone":"+56937217373","location":"ijij","location_link":"null","phone_link":"https:\/\/wa.me\/+56937217373","image":"branches\/23.jpg","business_id":1,"type":"Branch"},{"id":24,"icon":"mdi-store","title":"Bosquemar","subtitle":"Sucursal","phone":"+56953410055","location":"Unimarc los notros 1280","location_link":"https:\/\/maps.app.goo.gl\/EmshjvqAazcZFYMc9","phone_link":"https:\/\/wa.me\/+56953410055","image":"branches\/24.png","business_id":1,"type":"Branch"},{"id":4,"icon":"mdi-school","title":"prueba","subtitle":"Academia","phone":"+56949879923","location":"qwwqwqdqwd","location_link":"dwqdqwdwqqwqd","phone_link":"https:\/\/wa.me\/+56949879923","image":"enrollments\/4.jpg","business_id":4,"type":"Academia"},{"id":9,"icon":"mdi-school","title":"Academia Hernandez","subtitle":"Academia","phone":"+56950499706","location":"Guillermo Gallardo 310, 5502283 Puerto Montt, Los Lagos","location_link":"https:\/\/maps.app.goo.gl\/Lrqamj4yoeM1ZNJv9","phone_link":"https:\/\/wa.me\/+56950499706","image":"enrollments\/9.jpg","business_id":9,"type":"Academia"}]}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '53'
+          x-ratelimit-remaining: '38'
           vary: Origin
         description: null
         custom: []
@@ -17422,12 +17380,12 @@ endpoints:
     responses:
       -
         status: 200
-        content: '{"services":[{"id":3,"name":"Barba","simultaneou":0,"price_service":7000,"type_service":"Regular","profit_percentaje":50,"duration_service":20,"image_service":"services\/3.png?$2024-07-22 17:44:52","service_comment":"Perfilado de barba","created_at":"2023-09-20T19:13:20.000000Z","updated_at":"2024-05-09T21:00:55.000000Z","ponderation":1},{"id":5,"name":"color global","simultaneou":1,"price_service":60000,"type_service":"Especial","profit_percentaje":70,"duration_service":240,"image_service":"services\/5.png?$2024-07-22 17:44:52","service_comment":"platinado, rubio, ceniza o fantas\u00eda el color a elecci\u00f3n del cliente","created_at":"2023-10-13T16:02:04.000000Z","updated_at":"2024-06-24T23:01:02.000000Z","ponderation":3},{"id":19,"name":"Corte Degradado","simultaneou":0,"price_service":12000,"type_service":"Especial","profit_percentaje":50,"duration_service":40,"image_service":"services\/19.png?$2024-07-22 17:44:52","service_comment":"Corte a elecci\u00f3n del cliente + caf\u00e9 de cortes\u00eda.","created_at":"2024-03-25T09:26:20.000000Z","updated_at":"2024-05-09T21:13:31.000000Z","ponderation":0},{"id":20,"name":"Barba con Vapor","simultaneou":0,"price_service":10000,"type_service":"Regular","profit_percentaje":50,"duration_service":40,"image_service":"services\/20.png?$2024-07-22 17:44:52","service_comment":"perfilado de barba mas toalla caliente y su respectivos aceites hidratantes","created_at":"2024-03-28T13:58:33.000000Z","updated_at":"2024-06-24T22:59:24.000000Z","ponderation":0},{"id":21,"name":"Perfilado de cejas","simultaneou":0,"price_service":4000,"type_service":"Regular","profit_percentaje":50,"duration_service":10,"image_service":"services\/21.png?$2024-07-22 17:44:52","service_comment":"a elecci\u00f3n del cliente puede ser solo limpieza o delineado.","created_at":"2024-03-28T15:09:45.000000Z","updated_at":"2024-05-09T21:04:26.000000Z","ponderation":0},{"id":23,"name":"Ondulacion Permanente","simultaneou":1,"price_service":40000,"type_service":"Regular","profit_percentaje":70,"duration_service":120,"image_service":"services\/23.png?$2024-07-22 17:44:52","service_comment":"Transforma tu cabello de liso a ondulado.","created_at":"2024-04-17T19:31:34.000000Z","updated_at":"2024-06-24T23:00:34.000000Z","ponderation":0},{"id":24,"name":"Camuflaje de canas","simultaneou":1,"price_service":17000,"type_service":"Regular","profit_percentaje":70,"duration_service":20,"image_service":"services\/24.png?$2024-07-22 17:44:52","service_comment":"Desaparece las canas de tu cabello y renueva tu imagen con un efecto natural.","created_at":"2024-04-17T19:32:26.000000Z","updated_at":"2024-05-09T21:05:54.000000Z","ponderation":0},{"id":25,"name":"Lavado de cabello","simultaneou":0,"price_service":3000,"type_service":"Regular","profit_percentaje":50,"duration_service":10,"image_service":"services\/25.png?$2024-07-22 17:44:52","service_comment":"Rel\u00e1jate e hidrata tu cabello con los mejores tratamientos.","created_at":"2024-04-17T19:33:28.000000Z","updated_at":"2024-05-09T21:06:41.000000Z","ponderation":0},{"id":27,"name":"COLOR MECHAS","simultaneou":1,"price_service":50000,"type_service":"Regular","profit_percentaje":70,"duration_service":240,"image_service":"services\/27.png?$2024-07-22 17:44:52","service_comment":"Dale luz a tu cabello con unos visos al color que tu desees rubios o platinados.","created_at":"2024-04-17T19:37:49.000000Z","updated_at":"2024-06-24T23:00:00.000000Z","ponderation":0},{"id":28,"name":"lineas","simultaneou":0,"price_service":2000,"type_service":"Regular","profit_percentaje":50,"duration_service":5,"image_service":"services\/28.png?$2024-07-22 17:44:52","service_comment":"Atr\u00e9vete a un dise\u00f1o en tu cabello desde 2mil pesos depender\u00e1 de lo complejo del dibujo","created_at":"2024-04-17T19:39:32.000000Z","updated_at":"2024-05-09T21:08:28.000000Z","ponderation":0},{"id":30,"name":"Corte Tijera","simultaneou":0,"price_service":12000,"type_service":"Regular","profit_percentaje":50,"duration_service":40,"image_service":"services\/30.png?$2024-07-22 17:44:52","service_comment":"Corte solamente con tijera a un estilo tradicional.","created_at":"2024-05-09T21:14:37.000000Z","updated_at":"2024-05-09T21:14:37.000000Z","ponderation":0},{"id":31,"name":"Limpieza Facial","simultaneou":1,"price_service":10000,"type_service":"Regular","profit_percentaje":50,"duration_service":40,"image_service":"services\/31.png?$2024-07-22 17:44:52","service_comment":"Elimina los puntos negros de tu rostro con un tratamiento de limpieza facial.","created_at":"2024-05-09T21:27:33.000000Z","updated_at":"2024-06-17T20:55:21.000000Z","ponderation":0}]}'
+        content: '{"services":[{"id":3,"name":"Barba","simultaneou":0,"price_service":7000,"type_service":"Regular","profit_percentaje":50,"duration_service":20,"image_service":"services\/3.png?$2024-07-23 09:00:58","service_comment":"Perfilado de barba","created_at":"2023-09-20T19:13:20.000000Z","updated_at":"2024-05-09T21:00:55.000000Z","ponderation":1},{"id":5,"name":"color global","simultaneou":1,"price_service":60000,"type_service":"Especial","profit_percentaje":70,"duration_service":240,"image_service":"services\/5.png?$2024-07-23 09:00:58","service_comment":"platinado, rubio, ceniza o fantas\u00eda el color a elecci\u00f3n del cliente","created_at":"2023-10-13T16:02:04.000000Z","updated_at":"2024-06-24T23:01:02.000000Z","ponderation":3},{"id":19,"name":"Corte Degradado","simultaneou":0,"price_service":12000,"type_service":"Especial","profit_percentaje":50,"duration_service":40,"image_service":"services\/19.png?$2024-07-23 09:00:58","service_comment":"Corte a elecci\u00f3n del cliente + caf\u00e9 de cortes\u00eda.","created_at":"2024-03-25T09:26:20.000000Z","updated_at":"2024-05-09T21:13:31.000000Z","ponderation":0},{"id":20,"name":"Barba con Vapor","simultaneou":0,"price_service":10000,"type_service":"Regular","profit_percentaje":50,"duration_service":40,"image_service":"services\/20.png?$2024-07-23 09:00:58","service_comment":"perfilado de barba mas toalla caliente y su respectivos aceites hidratantes","created_at":"2024-03-28T13:58:33.000000Z","updated_at":"2024-06-24T22:59:24.000000Z","ponderation":0},{"id":21,"name":"Perfilado de cejas","simultaneou":0,"price_service":4000,"type_service":"Regular","profit_percentaje":50,"duration_service":10,"image_service":"services\/21.png?$2024-07-23 09:00:58","service_comment":"a elecci\u00f3n del cliente puede ser solo limpieza o delineado.","created_at":"2024-03-28T15:09:45.000000Z","updated_at":"2024-05-09T21:04:26.000000Z","ponderation":0},{"id":23,"name":"Ondulacion Permanente","simultaneou":1,"price_service":40000,"type_service":"Regular","profit_percentaje":70,"duration_service":120,"image_service":"services\/23.png?$2024-07-23 09:00:58","service_comment":"Transforma tu cabello de liso a ondulado.","created_at":"2024-04-17T19:31:34.000000Z","updated_at":"2024-06-24T23:00:34.000000Z","ponderation":0},{"id":24,"name":"Camuflaje de canas","simultaneou":1,"price_service":17000,"type_service":"Regular","profit_percentaje":70,"duration_service":20,"image_service":"services\/24.png?$2024-07-23 09:00:58","service_comment":"Desaparece las canas de tu cabello y renueva tu imagen con un efecto natural.","created_at":"2024-04-17T19:32:26.000000Z","updated_at":"2024-05-09T21:05:54.000000Z","ponderation":0},{"id":25,"name":"Lavado de cabello","simultaneou":0,"price_service":3000,"type_service":"Regular","profit_percentaje":50,"duration_service":10,"image_service":"services\/25.png?$2024-07-23 09:00:58","service_comment":"Rel\u00e1jate e hidrata tu cabello con los mejores tratamientos.","created_at":"2024-04-17T19:33:28.000000Z","updated_at":"2024-05-09T21:06:41.000000Z","ponderation":0},{"id":27,"name":"COLOR MECHAS","simultaneou":1,"price_service":50000,"type_service":"Regular","profit_percentaje":70,"duration_service":240,"image_service":"services\/27.png?$2024-07-23 09:00:58","service_comment":"Dale luz a tu cabello con unos visos al color que tu desees rubios o platinados.","created_at":"2024-04-17T19:37:49.000000Z","updated_at":"2024-06-24T23:00:00.000000Z","ponderation":0},{"id":28,"name":"lineas","simultaneou":0,"price_service":2000,"type_service":"Regular","profit_percentaje":50,"duration_service":5,"image_service":"services\/28.png?$2024-07-23 09:00:58","service_comment":"Atr\u00e9vete a un dise\u00f1o en tu cabello desde 2mil pesos depender\u00e1 de lo complejo del dibujo","created_at":"2024-04-17T19:39:32.000000Z","updated_at":"2024-05-09T21:08:28.000000Z","ponderation":0},{"id":30,"name":"Corte Tijera","simultaneou":0,"price_service":12000,"type_service":"Regular","profit_percentaje":50,"duration_service":40,"image_service":"services\/30.png?$2024-07-23 09:00:58","service_comment":"Corte solamente con tijera a un estilo tradicional.","created_at":"2024-05-09T21:14:37.000000Z","updated_at":"2024-05-09T21:14:37.000000Z","ponderation":0},{"id":31,"name":"Limpieza Facial","simultaneou":1,"price_service":10000,"type_service":"Regular","profit_percentaje":50,"duration_service":40,"image_service":"services\/31.png?$2024-07-23 09:00:58","service_comment":"Elimina los puntos negros de tu rostro con un tratamiento de limpieza facial.","created_at":"2024-05-09T21:27:33.000000Z","updated_at":"2024-06-17T20:55:21.000000Z","ponderation":0}]}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '52'
+          x-ratelimit-remaining: '37'
           vary: Origin
         description: null
         custom: []
@@ -17469,52 +17427,9 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '51'
+          x-ratelimit-remaining: '36'
           vary: Origin
         description: null
-        custom: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-    custom: []
-  -
-    httpMethods:
-      - GET
-    uri: api/course
-    metadata:
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: index
-      description: 'Mostrar los cursos'
-      authenticated: false
-      custom: []
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-      Accept-Language: es
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        status: 200
-        content: '{"course":{"id":6,"enrollment_id":4,"name":"Nuevo Prueba","description":"kslfksf","price":12000,"startDate":"2024-05-21","endDate":"2024-05-31","course_image":"courses\/6.jpg?$2024-07-22 13:23:01","total_enrollment":10,"available_slots":8,"reservation_price":12000,"duration":10,"practical_percentage":10,"theoretical_percentage":90,"enrollment":{"id":4,"business_id":1,"name":"Academia Hernandez","description":"Cursos de barberia B\u00e1sicos y avanzados","created_at":"2024-03-25T09:30:12.000000Z","updated_at":"2024-05-17T00:03:52.000000Z","location":"dwqdqwdwqqwqd","image_data":"enrollments\/4.jpg","address":"qwwqwqdqwd","phone":56949879923}}}'
-        headers: []
-        description: ''
-        custom: []
-      -
-        status: 500
-        content: '{"msg":"Error al mostrar los cursos"}'
-        headers: []
-        description: ''
         custom: []
     responseFields: []
     auth: []
@@ -17554,7 +17469,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '50'
+          x-ratelimit-remaining: '35'
           vary: Origin
         description: null
         custom: []
@@ -17627,7 +17542,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '49'
+          x-ratelimit-remaining: '34'
           vary: Origin
         description: null
         custom: []
@@ -17669,7 +17584,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '48'
+          x-ratelimit-remaining: '33'
           vary: Origin
         description: null
         custom: []
@@ -17711,7 +17626,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '47'
+          x-ratelimit-remaining: '32'
           vary: Origin
         description: null
         custom: []
@@ -17753,7 +17668,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '46'
+          x-ratelimit-remaining: '31'
           vary: Origin
         description: null
         custom: []
@@ -17790,12 +17705,12 @@ endpoints:
     responses:
       -
         status: 200
-        content: '{"branches":[{"id":20,"name":"Sucursal Prueba","phone":"+56925458754","address":"Direcci\u00f2n Prueba","image_data":"branches\/20.jpg","business_id":1,"business_type_id":11,"created_at":"2024-05-17T20:03:54.000000Z","updated_at":"2024-05-17T20:03:54.000000Z","useTechnical":1,"location":"LOCAL 118M UBICADO EN NIVEL 1 DEL CENTRO COMERCIAL PASEO PALOMA, 5480000 Puerto Montt, Los Lagos","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}},{"id":21,"name":"prueba bosquemar","phone":"+56953410006","address":"los notros 1282","image_data":"branches\/21.png","business_id":1,"business_type_id":11,"created_at":"2024-05-18T14:51:42.000000Z","updated_at":"2024-06-24T22:52:12.000000Z","useTechnical":0,"location":"https:\/\/maps.app.goo.gl\/87JJFXdgPFnfUYnq6","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}},{"id":22,"name":"osorno","phone":"+56936278263","address":"osorno 2","image_data":"branches\/22.png","business_id":1,"business_type_id":11,"created_at":"2024-05-27T20:45:54.000000Z","updated_at":"2024-05-27T20:45:54.000000Z","useTechnical":0,"location":null,"business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}},{"id":23,"name":"nueva","phone":"+56937217373","address":"ijij","image_data":"branches\/default.jpg","business_id":1,"business_type_id":12,"created_at":"2024-05-27T21:41:56.000000Z","updated_at":"2024-05-27T21:41:56.000000Z","useTechnical":0,"location":null,"business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":12,"name":"Manicure","created_at":"2023-08-22T19:52:41.000000Z","updated_at":"2023-08-22T19:52:41.000000Z"}},{"id":24,"name":"Bosquemar","phone":"+56953410055","address":"Unimarc los notros 1280","image_data":"branches\/24.jpg","business_id":1,"business_type_id":11,"created_at":"2024-06-24T22:53:14.000000Z","updated_at":"2024-06-24T22:53:14.000000Z","useTechnical":0,"location":"https:\/\/maps.app.goo.gl\/EmshjvqAazcZFYMc9","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}}]}'
+        content: '{"branches":[{"id":20,"name":"Sucursal Prueba","phone":"+56925458754","address":"Direcci\u00f2n Prueba","image_data":"branches\/20.jpg","business_id":1,"business_type_id":11,"created_at":"2024-05-17T20:03:54.000000Z","updated_at":"2024-05-17T20:03:54.000000Z","useTechnical":1,"location":"LOCAL 118M UBICADO EN NIVEL 1 DEL CENTRO COMERCIAL PASEO PALOMA, 5480000 Puerto Montt, Los Lagos","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}},{"id":21,"name":"prueba bosquemar","phone":"+56953410006","address":"los notros 1282","image_data":"branches\/21.jpg","business_id":1,"business_type_id":11,"created_at":"2024-05-18T14:51:42.000000Z","updated_at":"2024-07-23T03:07:41.000000Z","useTechnical":0,"location":"https:\/\/maps.app.goo.gl\/87JJFXdgPFnfUYnq6","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}},{"id":22,"name":"osorno","phone":"+56936278263","address":"osorno 2","image_data":"branches\/22.png","business_id":1,"business_type_id":11,"created_at":"2024-05-27T20:45:54.000000Z","updated_at":"2024-07-23T03:10:29.000000Z","useTechnical":0,"location":"null","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}},{"id":23,"name":"nueva","phone":"+56937217373","address":"ijij","image_data":"branches\/23.jpg","business_id":1,"business_type_id":12,"created_at":"2024-05-27T21:41:56.000000Z","updated_at":"2024-07-23T03:05:09.000000Z","useTechnical":0,"location":"null","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":12,"name":"Manicure","created_at":"2023-08-22T19:52:41.000000Z","updated_at":"2023-08-22T19:52:41.000000Z"}},{"id":24,"name":"Bosquemar","phone":"+56953410055","address":"Unimarc los notros 1280","image_data":"branches\/24.png","business_id":1,"business_type_id":11,"created_at":"2024-06-24T22:53:14.000000Z","updated_at":"2024-07-23T03:17:47.000000Z","useTechnical":0,"location":"https:\/\/maps.app.goo.gl\/EmshjvqAazcZFYMc9","business":{"id":1,"name":"Barber\u00eda Hern\u00e1ndez","address":"Puerto Montt","professional_id":11,"created_at":"2023-08-08T00:28:11.000000Z","updated_at":"2023-08-08T00:28:11.000000Z"},"business_type":{"id":11,"name":"Barber\u00eda","created_at":"2023-08-22T02:30:00.000000Z","updated_at":"2023-08-22T02:30:00.000000Z"}}]}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '45'
+          x-ratelimit-remaining: '30'
           vary: Origin
         description: null
         custom: []
@@ -17827,7 +17742,7 @@ endpoints:
         name: foldername
         description: ''
         required: true
-        example: aut
+        example: pariatur
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -17836,14 +17751,14 @@ endpoints:
         name: filename
         description: ''
         required: true
-        example: Fl
+        example: '*'
         type: string
         enumValues: []
         exampleWasSpecified: false
         custom: []
     cleanUrlParameters:
-      foldername: aut
-      filename: Fl
+      foldername: pariatur
+      filename: '*'
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -17860,7 +17775,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '44'
+          x-ratelimit-remaining: '29'
           vary: Origin
         description: null
         custom: []

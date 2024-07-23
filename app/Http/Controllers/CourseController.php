@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Knuckles\Scribe\Attributes\Endpoint;
+use Knuckles\Scribe\Attributes\Group;
 use Knuckles\Scribe\Attributes\Response;
 
 class CourseController extends Controller
@@ -15,6 +16,7 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      */
+    #[Group('Landing', 'Endpoints de la landing')]
     #[Endpoint('index', 'Mostrar los cursos')]
     #[Response(['course' => [
         "id" => 6,
