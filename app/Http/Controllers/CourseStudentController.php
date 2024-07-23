@@ -61,12 +61,12 @@ class CourseStudentController extends Controller
 
     #[Group('Landing', 'Endpoints de la landing')]
     #[Endpoint('store_landing', 'Matricular estudiante al curso')]
-    #[BodyParam('course_id', 'numeric', required: true, example: '5')]
-    #[BodyParam('name', 'string', required: true, example: 'Pepe Rosales Mora')]
-    #[BodyParam('phone', 'string', required: true, example: '+56912345678')]
-    #[BodyParam('email', 'email', required: true, example: 'ejemplo@gmail.com')]
-    #[BodyParam('course_image', 'file', required: false)]
-    #[BodyParam('fie', 'file', required: false)]
+    #[BodyParam('course_id', 'numeric', required: true, example: '5', description:'id del curso')]
+    #[BodyParam('name', 'string', required: true, example: 'Pepe Rosales Mora', description:'nombre y apellido del estudiante')]
+    #[BodyParam('phone', 'string', required: true, example: '+56912345678', description:'teléfono del estudiante')]
+    #[BodyParam('email', 'email', required: true, example: 'ejemplo@gmail.com', description:'correo del estudiante')]
+    #[BodyParam('course_image', 'file', required: false, description:'imagen del estudiante')]
+    #[BodyParam('fie', 'file', required: false, description:'imagen del estudiante')]
     #[Response(['msg' => 'Estudiante matriculado correctamente al curso'], 200)]
     #[Response(['msg' => 'Error al matricular el estudiante al curso'], 500)]
     public function store_landing(Request $request)

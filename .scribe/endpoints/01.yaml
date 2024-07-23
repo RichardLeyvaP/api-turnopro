@@ -104,7 +104,7 @@ endpoints:
         custom: []
       course_image:
         name: course_image
-        description: ''
+        description: 'imagen del cliente'
         required: false
         example: null
         type: file

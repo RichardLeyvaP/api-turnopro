@@ -535,15 +535,17 @@ class OrderController extends Controller
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
                 $reservation->save();
                 //reducir tiempo al reloj
-                $updated = Carbon::createFromFormat('H:i:s', $order->updated_at);
+                $updated = Carbon::parse($order->updated_at);
                 $starnow = Carbon::now();
                 $diffInSegunds = $updated->diffInSeconds($starnow, false);
-                $timeMod =  ($service->duration_service*60)+$diffInSegunds;
                 Log::info('diferencia en segundos'.$diffInSegunds);
+                $timeMod =  ($service->duration_service*60)+$diffInSegunds;
+                Log::info('diferencia en segundos1'.$timeMod);
                 $tail = $reservation->tail;
                 $timeClock = $tail->timeClock - $timeMod;
                 Log::info('diferencia en segundos - reloj actual'.$timeClock);
                 $timeClock1 = $timeClock <=0 ? 0 : $timeClock;
+                Log::info('diferencia en segundos - reloj actual bd'.$timeClock1);
                 $tail->timeClock = $timeClock1;
                 $tail->save();
                 $notification = new Notification();
