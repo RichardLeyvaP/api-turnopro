@@ -68,7 +68,7 @@ endpoints:
     bodyParameters:
       course_id:
         name: course_id
-        description: ''
+        description: 'id del curso'
         required: true
         example: '5'
         type: numeric
@@ -77,7 +77,7 @@ endpoints:
         custom: []
       name:
         name: name
-        description: ''
+        description: 'nombre y apellido del estudiante'
         required: true
         example: 'Pepe Rosales Mora'
         type: string
@@ -86,7 +86,7 @@ endpoints:
         custom: []
       phone:
         name: phone
-        description: ''
+        description: 'teléfono del estudiante'
         required: true
         example: '+56912345678'
         type: string
@@ -95,7 +95,7 @@ endpoints:
         custom: []
       email:
         name: email
-        description: ''
+        description: 'correo del estudiante'
         required: true
         example: ejemplo@gmail.com
         type: email
@@ -104,7 +104,7 @@ endpoints:
         custom: []
       course_image:
         name: course_image
-        description: 'imagen del cliente'
+        description: 'imagen del estudiante'
         required: false
         example: null
         type: file
@@ -113,7 +113,7 @@ endpoints:
         custom: []
       fie:
         name: fie
-        description: ''
+        description: 'imagen del estudiante'
         required: false
         example: null
         type: file
