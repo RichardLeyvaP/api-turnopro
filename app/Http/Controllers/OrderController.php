@@ -520,6 +520,7 @@ class OrderController extends Controller
                 $notification->tittle = 'Aceptada Eliminación de Producto';
                 $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
                 $notification->type = 'Barbero';
+                $notification->state = 3;
                 $notification->save();
 
             }
@@ -544,8 +545,9 @@ class OrderController extends Controller
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
-                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'min'.'.'.$reservation->id;
+                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'seg'.'.'.$reservation->id;
                 $notification->type = 'Barbero';
+                $notification->state = 3;
                 $notification->save();
             }
             $amountTemp = $car->amount - $order->price;
