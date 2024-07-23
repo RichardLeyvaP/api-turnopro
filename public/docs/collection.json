@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Laravel",
-        "_postman_id": "b81d4665-5e3e-4abc-90b5-394d6b39ea59",
+        "_postman_id": "78725128-4844-4ac1-9948-e31cd1c24fd5",
         "description": "API Restfull Simplifies",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -11893,7 +11893,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"code\":\"rerum\"}"
+                            "raw": "{\"code\":\"ut\"}"
                         },
                         "description": "Muestra los datos de un estudiante dado un codigo",
                         "auth": {
@@ -20609,7 +20609,7 @@
                                 }
                             ],
                             "code": 200,
-                            "body": "2024-07-23 09:00",
+                            "body": "2024-07-23 12:29",
                             "name": ""
                         }
                     ]
@@ -21201,7 +21201,7 @@
                                 }
                             ],
                             "code": 200,
-                            "body": "{\"services\":[{\"id\":3,\"name\":\"Barba\",\"simultaneou\":0,\"price_service\":7000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":20,\"image_service\":\"services\\\/3.png?$2024-07-23 09:00:58\",\"service_comment\":\"Perfilado de barba\",\"created_at\":\"2023-09-20T19:13:20.000000Z\",\"updated_at\":\"2024-05-09T21:00:55.000000Z\",\"ponderation\":1},{\"id\":5,\"name\":\"color global\",\"simultaneou\":1,\"price_service\":60000,\"type_service\":\"Especial\",\"profit_percentaje\":70,\"duration_service\":240,\"image_service\":\"services\\\/5.png?$2024-07-23 09:00:58\",\"service_comment\":\"platinado, rubio, ceniza o fantas\\u00eda el color a elecci\\u00f3n del cliente\",\"created_at\":\"2023-10-13T16:02:04.000000Z\",\"updated_at\":\"2024-06-24T23:01:02.000000Z\",\"ponderation\":3},{\"id\":19,\"name\":\"Corte Degradado\",\"simultaneou\":0,\"price_service\":12000,\"type_service\":\"Especial\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/19.png?$2024-07-23 09:00:58\",\"service_comment\":\"Corte a elecci\\u00f3n del cliente + caf\\u00e9 de cortes\\u00eda.\",\"created_at\":\"2024-03-25T09:26:20.000000Z\",\"updated_at\":\"2024-05-09T21:13:31.000000Z\",\"ponderation\":0},{\"id\":20,\"name\":\"Barba con Vapor\",\"simultaneou\":0,\"price_service\":10000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/20.png?$2024-07-23 09:00:58\",\"service_comment\":\"perfilado de barba mas toalla caliente y su respectivos aceites hidratantes\",\"created_at\":\"2024-03-28T13:58:33.000000Z\",\"updated_at\":\"2024-06-24T22:59:24.000000Z\",\"ponderation\":0},{\"id\":21,\"name\":\"Perfilado de cejas\",\"simultaneou\":0,\"price_service\":4000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":10,\"image_service\":\"services\\\/21.png?$2024-07-23 09:00:58\",\"service_comment\":\"a elecci\\u00f3n del cliente puede ser solo limpieza o delineado.\",\"created_at\":\"2024-03-28T15:09:45.000000Z\",\"updated_at\":\"2024-05-09T21:04:26.000000Z\",\"ponderation\":0},{\"id\":23,\"name\":\"Ondulacion Permanente\",\"simultaneou\":1,\"price_service\":40000,\"type_service\":\"Regular\",\"profit_percentaje\":70,\"duration_service\":120,\"image_service\":\"services\\\/23.png?$2024-07-23 09:00:58\",\"service_comment\":\"Transforma tu cabello de liso a ondulado.\",\"created_at\":\"2024-04-17T19:31:34.000000Z\",\"updated_at\":\"2024-06-24T23:00:34.000000Z\",\"ponderation\":0},{\"id\":24,\"name\":\"Camuflaje de canas\",\"simultaneou\":1,\"price_service\":17000,\"type_service\":\"Regular\",\"profit_percentaje\":70,\"duration_service\":20,\"image_service\":\"services\\\/24.png?$2024-07-23 09:00:58\",\"service_comment\":\"Desaparece las canas de tu cabello y renueva tu imagen con un efecto natural.\",\"created_at\":\"2024-04-17T19:32:26.000000Z\",\"updated_at\":\"2024-05-09T21:05:54.000000Z\",\"ponderation\":0},{\"id\":25,\"name\":\"Lavado de cabello\",\"simultaneou\":0,\"price_service\":3000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":10,\"image_service\":\"services\\\/25.png?$2024-07-23 09:00:58\",\"service_comment\":\"Rel\\u00e1jate e hidrata tu cabello con los mejores tratamientos.\",\"created_at\":\"2024-04-17T19:33:28.000000Z\",\"updated_at\":\"2024-05-09T21:06:41.000000Z\",\"ponderation\":0},{\"id\":27,\"name\":\"COLOR MECHAS\",\"simultaneou\":1,\"price_service\":50000,\"type_service\":\"Regular\",\"profit_percentaje\":70,\"duration_service\":240,\"image_service\":\"services\\\/27.png?$2024-07-23 09:00:58\",\"service_comment\":\"Dale luz a tu cabello con unos visos al color que tu desees rubios o platinados.\",\"created_at\":\"2024-04-17T19:37:49.000000Z\",\"updated_at\":\"2024-06-24T23:00:00.000000Z\",\"ponderation\":0},{\"id\":28,\"name\":\"lineas\",\"simultaneou\":0,\"price_service\":2000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":5,\"image_service\":\"services\\\/28.png?$2024-07-23 09:00:58\",\"service_comment\":\"Atr\\u00e9vete a un dise\\u00f1o en tu cabello desde 2mil pesos depender\\u00e1 de lo complejo del dibujo\",\"created_at\":\"2024-04-17T19:39:32.000000Z\",\"updated_at\":\"2024-05-09T21:08:28.000000Z\",\"ponderation\":0},{\"id\":30,\"name\":\"Corte Tijera\",\"simultaneou\":0,\"price_service\":12000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/30.png?$2024-07-23 09:00:58\",\"service_comment\":\"Corte solamente con tijera a un estilo tradicional.\",\"created_at\":\"2024-05-09T21:14:37.000000Z\",\"updated_at\":\"2024-05-09T21:14:37.000000Z\",\"ponderation\":0},{\"id\":31,\"name\":\"Limpieza Facial\",\"simultaneou\":1,\"price_service\":10000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/31.png?$2024-07-23 09:00:58\",\"service_comment\":\"Elimina los puntos negros de tu rostro con un tratamiento de limpieza facial.\",\"created_at\":\"2024-05-09T21:27:33.000000Z\",\"updated_at\":\"2024-06-17T20:55:21.000000Z\",\"ponderation\":0}]}",
+                            "body": "{\"services\":[{\"id\":3,\"name\":\"Barba\",\"simultaneou\":0,\"price_service\":7000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":20,\"image_service\":\"services\\\/3.png?$2024-07-23 12:29:24\",\"service_comment\":\"Perfilado de barba\",\"created_at\":\"2023-09-20T19:13:20.000000Z\",\"updated_at\":\"2024-05-09T21:00:55.000000Z\",\"ponderation\":1},{\"id\":5,\"name\":\"color global\",\"simultaneou\":1,\"price_service\":60000,\"type_service\":\"Especial\",\"profit_percentaje\":70,\"duration_service\":240,\"image_service\":\"services\\\/5.png?$2024-07-23 12:29:24\",\"service_comment\":\"platinado, rubio, ceniza o fantas\\u00eda el color a elecci\\u00f3n del cliente\",\"created_at\":\"2023-10-13T16:02:04.000000Z\",\"updated_at\":\"2024-06-24T23:01:02.000000Z\",\"ponderation\":3},{\"id\":19,\"name\":\"Corte Degradado\",\"simultaneou\":0,\"price_service\":12000,\"type_service\":\"Especial\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/19.png?$2024-07-23 12:29:24\",\"service_comment\":\"Corte a elecci\\u00f3n del cliente + caf\\u00e9 de cortes\\u00eda.\",\"created_at\":\"2024-03-25T09:26:20.000000Z\",\"updated_at\":\"2024-05-09T21:13:31.000000Z\",\"ponderation\":0},{\"id\":20,\"name\":\"Barba con Vapor\",\"simultaneou\":0,\"price_service\":10000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/20.png?$2024-07-23 12:29:24\",\"service_comment\":\"perfilado de barba mas toalla caliente y su respectivos aceites hidratantes\",\"created_at\":\"2024-03-28T13:58:33.000000Z\",\"updated_at\":\"2024-06-24T22:59:24.000000Z\",\"ponderation\":0},{\"id\":21,\"name\":\"Perfilado de cejas\",\"simultaneou\":0,\"price_service\":4000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":10,\"image_service\":\"services\\\/21.png?$2024-07-23 12:29:24\",\"service_comment\":\"a elecci\\u00f3n del cliente puede ser solo limpieza o delineado.\",\"created_at\":\"2024-03-28T15:09:45.000000Z\",\"updated_at\":\"2024-05-09T21:04:26.000000Z\",\"ponderation\":0},{\"id\":23,\"name\":\"Ondulacion Permanente\",\"simultaneou\":1,\"price_service\":40000,\"type_service\":\"Regular\",\"profit_percentaje\":70,\"duration_service\":120,\"image_service\":\"services\\\/23.png?$2024-07-23 12:29:24\",\"service_comment\":\"Transforma tu cabello de liso a ondulado.\",\"created_at\":\"2024-04-17T19:31:34.000000Z\",\"updated_at\":\"2024-06-24T23:00:34.000000Z\",\"ponderation\":0},{\"id\":24,\"name\":\"Camuflaje de canas\",\"simultaneou\":1,\"price_service\":17000,\"type_service\":\"Regular\",\"profit_percentaje\":70,\"duration_service\":20,\"image_service\":\"services\\\/24.png?$2024-07-23 12:29:24\",\"service_comment\":\"Desaparece las canas de tu cabello y renueva tu imagen con un efecto natural.\",\"created_at\":\"2024-04-17T19:32:26.000000Z\",\"updated_at\":\"2024-05-09T21:05:54.000000Z\",\"ponderation\":0},{\"id\":25,\"name\":\"Lavado de cabello\",\"simultaneou\":0,\"price_service\":3000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":10,\"image_service\":\"services\\\/25.png?$2024-07-23 12:29:24\",\"service_comment\":\"Rel\\u00e1jate e hidrata tu cabello con los mejores tratamientos.\",\"created_at\":\"2024-04-17T19:33:28.000000Z\",\"updated_at\":\"2024-05-09T21:06:41.000000Z\",\"ponderation\":0},{\"id\":27,\"name\":\"COLOR MECHAS\",\"simultaneou\":1,\"price_service\":50000,\"type_service\":\"Regular\",\"profit_percentaje\":70,\"duration_service\":240,\"image_service\":\"services\\\/27.png?$2024-07-23 12:29:24\",\"service_comment\":\"Dale luz a tu cabello con unos visos al color que tu desees rubios o platinados.\",\"created_at\":\"2024-04-17T19:37:49.000000Z\",\"updated_at\":\"2024-06-24T23:00:00.000000Z\",\"ponderation\":0},{\"id\":28,\"name\":\"lineas\",\"simultaneou\":0,\"price_service\":2000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":5,\"image_service\":\"services\\\/28.png?$2024-07-23 12:29:24\",\"service_comment\":\"Atr\\u00e9vete a un dise\\u00f1o en tu cabello desde 2mil pesos depender\\u00e1 de lo complejo del dibujo\",\"created_at\":\"2024-04-17T19:39:32.000000Z\",\"updated_at\":\"2024-05-09T21:08:28.000000Z\",\"ponderation\":0},{\"id\":30,\"name\":\"Corte Tijera\",\"simultaneou\":0,\"price_service\":12000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/30.png?$2024-07-23 12:29:24\",\"service_comment\":\"Corte solamente con tijera a un estilo tradicional.\",\"created_at\":\"2024-05-09T21:14:37.000000Z\",\"updated_at\":\"2024-05-09T21:14:37.000000Z\",\"ponderation\":0},{\"id\":31,\"name\":\"Limpieza Facial\",\"simultaneou\":1,\"price_service\":10000,\"type_service\":\"Regular\",\"profit_percentaje\":50,\"duration_service\":40,\"image_service\":\"services\\\/31.png?$2024-07-23 12:29:24\",\"service_comment\":\"Elimina los puntos negros de tu rostro con un tratamiento de limpieza facial.\",\"created_at\":\"2024-05-09T21:27:33.000000Z\",\"updated_at\":\"2024-06-17T20:55:21.000000Z\",\"ponderation\":0}]}",
                             "name": ""
                         }
                     ]
@@ -21670,13 +21670,13 @@
                                 {
                                     "id": "foldername",
                                     "key": "foldername",
-                                    "value": "pariatur",
+                                    "value": "voluptas",
                                     "description": ""
                                 },
                                 {
                                     "id": "filename",
                                     "key": "filename",
-                                    "value": "%2A",
+                                    "value": "",
                                     "description": ""
                                 }
                             ]
@@ -21714,20 +21714,12 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "x-ratelimit-limit",
-                                    "value": "60"
-                                },
-                                {
-                                    "key": "x-ratelimit-remaining",
-                                    "value": "29"
-                                },
-                                {
                                     "key": "vary",
                                     "value": "Origin"
                                 }
                             ],
                             "code": 404,
-                            "body": "{\n    \"message\": \"\"\n}",
+                            "body": "{\n    \"message\": \"The route api\/images\/voluptas could not be found.\"\n}",
                             "name": ""
                         }
                     ]

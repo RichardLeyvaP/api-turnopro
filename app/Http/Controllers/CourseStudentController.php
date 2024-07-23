@@ -14,6 +14,9 @@ use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
 use Knuckles\Scribe\Attributes\Response;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CourseStudentController extends Controller
 {
@@ -87,8 +90,19 @@ class CourseStudentController extends Controller
               }
 
             $course = Course::find($data['course_id']);
+            $code = Str::random(8);
+            $url = 'https://landingbh.simplifies.cl/student/?code=' . rawurlencode($code);
+            $qrCode = QrCode::format('svg')->size(250)->generate($url);
+            // Guardar el código QR en storage/students/qr_codes
+            $fileName = $code . uniqid() . '.svg';
+            Storage::disk('public')->put('students/qr_codes/' . $fileName, $qrCode);
+
+            // La ruta del archivo guardado
+            $qrCodeFilePath = 'students/qr_codes/' . $fileName;
            
             $student = new Student;
+            $student->code = $code;
+            $student->qr_url = $qrCodeFilePath;
             $student->name = $data['name'];
             //$student->surname = $data['surname'];
             //$student->second_surname = $data['second_surname'];
@@ -154,8 +168,8 @@ class CourseStudentController extends Controller
                 return [
                     'id' => $student->id, 
                     'name' => $student->name, // Asume que tus estudiantes tienen un campo 'name'
-                    'surname' => $student->surname,
-                    'second_surname' => $student->second_surname,
+                    //'surname' => $student->surname,
+                    //'second_surname' => $student->second_surname,
                     'student_image' => $student->student_image,
                     'email' => $student->email, 
                     'phone' => $student->phone, 

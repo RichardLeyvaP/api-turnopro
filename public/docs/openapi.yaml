@@ -7455,7 +7455,7 @@ paths:
                 code:
                   type: string
                   description: ''
-                  example: rerum
+                  example: ut
               required:
                 - code
       security: []
@@ -9316,7 +9316,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 20
-                      image_service: 'services/3.png?$2024-07-23 09:00:58'
+                      image_service: 'services/3.png?$2024-07-23 12:29:24'
                       service_comment: 'Perfilado de barba'
                       created_at: '2023-09-20T19:13:20.000000Z'
                       updated_at: '2024-05-09T21:00:55.000000Z'
@@ -9329,7 +9329,7 @@ paths:
                       type_service: Especial
                       profit_percentaje: 70
                       duration_service: 240
-                      image_service: 'services/5.png?$2024-07-23 09:00:58'
+                      image_service: 'services/5.png?$2024-07-23 12:29:24'
                       service_comment: 'platinado, rubio, ceniza o fantasía el color a elección del cliente'
                       created_at: '2023-10-13T16:02:04.000000Z'
                       updated_at: '2024-06-24T23:01:02.000000Z'
@@ -9342,7 +9342,7 @@ paths:
                       type_service: Especial
                       profit_percentaje: 50
                       duration_service: 40
-                      image_service: 'services/19.png?$2024-07-23 09:00:58'
+                      image_service: 'services/19.png?$2024-07-23 12:29:24'
                       service_comment: 'Corte a elección del cliente + café de cortesía.'
                       created_at: '2024-03-25T09:26:20.000000Z'
                       updated_at: '2024-05-09T21:13:31.000000Z'
@@ -9355,7 +9355,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 40
-                      image_service: 'services/20.png?$2024-07-23 09:00:58'
+                      image_service: 'services/20.png?$2024-07-23 12:29:24'
                       service_comment: 'perfilado de barba mas toalla caliente y su respectivos aceites hidratantes'
                       created_at: '2024-03-28T13:58:33.000000Z'
                       updated_at: '2024-06-24T22:59:24.000000Z'
@@ -9368,7 +9368,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 10
-                      image_service: 'services/21.png?$2024-07-23 09:00:58'
+                      image_service: 'services/21.png?$2024-07-23 12:29:24'
                       service_comment: 'a elección del cliente puede ser solo limpieza o delineado.'
                       created_at: '2024-03-28T15:09:45.000000Z'
                       updated_at: '2024-05-09T21:04:26.000000Z'
@@ -9381,7 +9381,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 70
                       duration_service: 120
-                      image_service: 'services/23.png?$2024-07-23 09:00:58'
+                      image_service: 'services/23.png?$2024-07-23 12:29:24'
                       service_comment: 'Transforma tu cabello de liso a ondulado.'
                       created_at: '2024-04-17T19:31:34.000000Z'
                       updated_at: '2024-06-24T23:00:34.000000Z'
@@ -9394,7 +9394,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 70
                       duration_service: 20
-                      image_service: 'services/24.png?$2024-07-23 09:00:58'
+                      image_service: 'services/24.png?$2024-07-23 12:29:24'
                       service_comment: 'Desaparece las canas de tu cabello y renueva tu imagen con un efecto natural.'
                       created_at: '2024-04-17T19:32:26.000000Z'
                       updated_at: '2024-05-09T21:05:54.000000Z'
@@ -9407,7 +9407,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 10
-                      image_service: 'services/25.png?$2024-07-23 09:00:58'
+                      image_service: 'services/25.png?$2024-07-23 12:29:24'
                       service_comment: 'Relájate e hidrata tu cabello con los mejores tratamientos.'
                       created_at: '2024-04-17T19:33:28.000000Z'
                       updated_at: '2024-05-09T21:06:41.000000Z'
@@ -9420,7 +9420,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 70
                       duration_service: 240
-                      image_service: 'services/27.png?$2024-07-23 09:00:58'
+                      image_service: 'services/27.png?$2024-07-23 12:29:24'
                       service_comment: 'Dale luz a tu cabello con unos visos al color que tu desees rubios o platinados.'
                       created_at: '2024-04-17T19:37:49.000000Z'
                       updated_at: '2024-06-24T23:00:00.000000Z'
@@ -9433,7 +9433,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 5
-                      image_service: 'services/28.png?$2024-07-23 09:00:58'
+                      image_service: 'services/28.png?$2024-07-23 12:29:24'
                       service_comment: 'Atrévete a un diseño en tu cabello desde 2mil pesos dependerá de lo complejo del dibujo'
                       created_at: '2024-04-17T19:39:32.000000Z'
                       updated_at: '2024-05-09T21:08:28.000000Z'
@@ -9446,7 +9446,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 40
-                      image_service: 'services/30.png?$2024-07-23 09:00:58'
+                      image_service: 'services/30.png?$2024-07-23 12:29:24'
                       service_comment: 'Corte solamente con tijera a un estilo tradicional.'
                       created_at: '2024-05-09T21:14:37.000000Z'
                       updated_at: '2024-05-09T21:14:37.000000Z'
@@ -9459,7 +9459,7 @@ paths:
                       type_service: Regular
                       profit_percentaje: 50
                       duration_service: 40
-                      image_service: 'services/31.png?$2024-07-23 09:00:58'
+                      image_service: 'services/31.png?$2024-07-23 12:29:24'
                       service_comment: 'Elimina los puntos negros de tu rostro con un tratamiento de limpieza facial.'
                       created_at: '2024-05-09T21:27:33.000000Z'
                       updated_at: '2024-06-17T20:55:21.000000Z'
@@ -9476,7 +9476,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 20
-                        image_service: 'services/3.png?$2024-07-23 09:00:58'
+                        image_service: 'services/3.png?$2024-07-23 12:29:24'
                         service_comment: 'Perfilado de barba'
                         created_at: '2023-09-20T19:13:20.000000Z'
                         updated_at: '2024-05-09T21:00:55.000000Z'
@@ -9489,7 +9489,7 @@ paths:
                         type_service: Especial
                         profit_percentaje: 70
                         duration_service: 240
-                        image_service: 'services/5.png?$2024-07-23 09:00:58'
+                        image_service: 'services/5.png?$2024-07-23 12:29:24'
                         service_comment: 'platinado, rubio, ceniza o fantasía el color a elección del cliente'
                         created_at: '2023-10-13T16:02:04.000000Z'
                         updated_at: '2024-06-24T23:01:02.000000Z'
@@ -9502,7 +9502,7 @@ paths:
                         type_service: Especial
                         profit_percentaje: 50
                         duration_service: 40
-                        image_service: 'services/19.png?$2024-07-23 09:00:58'
+                        image_service: 'services/19.png?$2024-07-23 12:29:24'
                         service_comment: 'Corte a elección del cliente + café de cortesía.'
                         created_at: '2024-03-25T09:26:20.000000Z'
                         updated_at: '2024-05-09T21:13:31.000000Z'
@@ -9515,7 +9515,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 40
-                        image_service: 'services/20.png?$2024-07-23 09:00:58'
+                        image_service: 'services/20.png?$2024-07-23 12:29:24'
                         service_comment: 'perfilado de barba mas toalla caliente y su respectivos aceites hidratantes'
                         created_at: '2024-03-28T13:58:33.000000Z'
                         updated_at: '2024-06-24T22:59:24.000000Z'
@@ -9528,7 +9528,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 10
-                        image_service: 'services/21.png?$2024-07-23 09:00:58'
+                        image_service: 'services/21.png?$2024-07-23 12:29:24'
                         service_comment: 'a elección del cliente puede ser solo limpieza o delineado.'
                         created_at: '2024-03-28T15:09:45.000000Z'
                         updated_at: '2024-05-09T21:04:26.000000Z'
@@ -9541,7 +9541,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 70
                         duration_service: 120
-                        image_service: 'services/23.png?$2024-07-23 09:00:58'
+                        image_service: 'services/23.png?$2024-07-23 12:29:24'
                         service_comment: 'Transforma tu cabello de liso a ondulado.'
                         created_at: '2024-04-17T19:31:34.000000Z'
                         updated_at: '2024-06-24T23:00:34.000000Z'
@@ -9554,7 +9554,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 70
                         duration_service: 20
-                        image_service: 'services/24.png?$2024-07-23 09:00:58'
+                        image_service: 'services/24.png?$2024-07-23 12:29:24'
                         service_comment: 'Desaparece las canas de tu cabello y renueva tu imagen con un efecto natural.'
                         created_at: '2024-04-17T19:32:26.000000Z'
                         updated_at: '2024-05-09T21:05:54.000000Z'
@@ -9567,7 +9567,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 10
-                        image_service: 'services/25.png?$2024-07-23 09:00:58'
+                        image_service: 'services/25.png?$2024-07-23 12:29:24'
                         service_comment: 'Relájate e hidrata tu cabello con los mejores tratamientos.'
                         created_at: '2024-04-17T19:33:28.000000Z'
                         updated_at: '2024-05-09T21:06:41.000000Z'
@@ -9580,7 +9580,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 70
                         duration_service: 240
-                        image_service: 'services/27.png?$2024-07-23 09:00:58'
+                        image_service: 'services/27.png?$2024-07-23 12:29:24'
                         service_comment: 'Dale luz a tu cabello con unos visos al color que tu desees rubios o platinados.'
                         created_at: '2024-04-17T19:37:49.000000Z'
                         updated_at: '2024-06-24T23:00:00.000000Z'
@@ -9593,7 +9593,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 5
-                        image_service: 'services/28.png?$2024-07-23 09:00:58'
+                        image_service: 'services/28.png?$2024-07-23 12:29:24'
                         service_comment: 'Atrévete a un diseño en tu cabello desde 2mil pesos dependerá de lo complejo del dibujo'
                         created_at: '2024-04-17T19:39:32.000000Z'
                         updated_at: '2024-05-09T21:08:28.000000Z'
@@ -9606,7 +9606,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 40
-                        image_service: 'services/30.png?$2024-07-23 09:00:58'
+                        image_service: 'services/30.png?$2024-07-23 12:29:24'
                         service_comment: 'Corte solamente con tijera a un estilo tradicional.'
                         created_at: '2024-05-09T21:14:37.000000Z'
                         updated_at: '2024-05-09T21:14:37.000000Z'
@@ -9619,7 +9619,7 @@ paths:
                         type_service: Regular
                         profit_percentaje: 50
                         duration_service: 40
-                        image_service: 'services/31.png?$2024-07-23 09:00:58'
+                        image_service: 'services/31.png?$2024-07-23 12:29:24'
                         service_comment: 'Elimina los puntos negros de tu rostro con un tratamiento de limpieza facial.'
                         created_at: '2024-05-09T21:27:33.000000Z'
                         updated_at: '2024-06-17T20:55:21.000000Z'
@@ -9650,7 +9650,7 @@ paths:
                           example: 20
                         image_service:
                           type: string
-                          example: 'services/3.png?$2024-07-23 09:00:58'
+                          example: 'services/3.png?$2024-07-23 12:29:24'
                         service_comment:
                           type: string
                           example: 'Perfilado de barba'
@@ -12782,7 +12782,7 @@ paths:
             text/plain:
               schema:
                 type: string
-                example: '2024-07-23 09:00'
+                example: '2024-07-23 12:29'
       tags:
         - Endpoints
       security: []
@@ -13405,11 +13405,11 @@ paths:
               schema:
                 type: object
                 example:
-                  message: ''
+                  message: 'The route api/images/voluptas could not be found.'
                 properties:
                   message:
                     type: string
-                    example: ''
+                    example: 'The route api/images/voluptas could not be found.'
       tags:
         - Endpoints
       security: []
@@ -13418,7 +13418,7 @@ paths:
         in: path
         name: foldername
         description: ''
-        example: pariatur
+        example: voluptas
         required: true
         schema:
           type: string
@@ -13426,7 +13426,7 @@ paths:
         in: path
         name: filename
         description: ''
-        example: '*'
+        example: ''
         required: true
         schema:
           type: string
