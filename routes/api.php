@@ -721,7 +721,7 @@ Route::get('/workplace-reset', [WorkplaceController::class, 'resetWorkplaces']);
 
 Route::get('/professional-reservations-time', [ProfessionalController::class, 'professional_reservations_time']); // dado un professional una branch y una fecha devuelve los horarios reservados de ese professional
     
-Route::get('/business-branch-academy', [BusinessController::class, 'business_branch_academy']);//Ganancias por negocioscompany_close_car
+Route::get('/business-branch-academy', [BusinessController::class, 'business_branch_academy']);//Academias y sucursales del negocio
 
 
 Route::get('/service', [ServiceController::class, 'index']);
