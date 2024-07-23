@@ -19,30 +19,51 @@ class CourseController extends Controller
     #[Group('Landing', 'Endpoints de la landing')]
     #[Endpoint('index', 'Mostrar los cursos')]
     #[Response(['course' => [
+        // ID del curso
         "id" => 6,
+        // ID de la sucursal
         "enrollment_id" => 4,
+        // nombre del curso
         "name" => "Nuevo Prueba",
+        // descripción del curso
         "description" => "kslfksf",
+        // precio del curso
         "price" => 12000,
+        // fecha de inicio del curso
         "startDate" => "2024-05-21",
+        // fecha de terminar del curso
         "endDate" => "2024-05-31",
+        // imagen del curso
         "course_image" => "courses/6.jpg?$2024-07-22 13:23:01",
+        // total de capacidades del curso
         "total_enrollment" => 10,
+        // capacidades libres del curso
         "available_slots" => 8,
+        // precio de reservación del curso
         "reservation_price" => 12000,
+        // duración del curso
         "duration" => 10,
         "practical_percentage" => 10,
         "theoretical_percentage" => 90,
+        // datos de la academia del curso
         "enrollment" => [
+            // ID de la academia
             "id" => 4,
+            // ID del negocio
             "business_id" => 1,
+            // nombre de la academia
             "name" => "Academia Hernandez",
+            // descripción de la academia
             "description" => "Cursos de barberia Básicos y avanzados",
             "created_at" => "2024-03-25T09:30:12.000000Z",
             "updated_at" => "2024-05-17T00:03:52.000000Z",
+            // localización de google map de la academia
             "location" => "dwqdqwdwqqwqd",
+            // imagen de la academia
             "image_data" => "enrollments/4.jpg",
+            // dirección de la academia
             "address" => "qwwqwqdqwd",
+            // teléfono de la academia
             "phone" => 56949879923
         ]]], 200)]
     #[Response(['msg' => 'Error al mostrar los cursos'], 500)]

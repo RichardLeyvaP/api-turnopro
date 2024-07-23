@@ -545,6 +545,8 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
                 $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'min'.'.'.$reservation->id;
+                $notification->type = 'Barbero';
+                $notification->save();
             }
             $amountTemp = $car->amount - $order->price;
             $car->amount = $amountTemp;
