@@ -539,9 +539,10 @@ class OrderController extends Controller
                 $starnow = Carbon::now();
                 $diffInSegunds = $updated->diffInSeconds($starnow, false);
                 $timeMod =  ($service->duration_service*60)+$diffInSegunds;
-
+                Log::info('diferencia en segundos'.$diffInSegunds);
                 $tail = $reservation->tail;
                 $timeClock = $tail->timeClock - $timeMod;
+                Log::info('diferencia en segundos - reloj actual'.$timeClock);
                 $timeClock1 = $timeClock <=0 ? 0 : $timeClock;
                 $tail->timeClock = $timeClock1;
                 $tail->save();
