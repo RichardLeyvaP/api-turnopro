@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\Comment;
+use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Record;
 use App\Models\Restday;
 use App\Models\Service;
 use App\Models\Vacation;
@@ -336,6 +338,7 @@ class BranchProfessionalController extends Controller
                 'type' => 'required|string',
                 'state' => 'required|numeric'
             ]);
+            DB::beginTransaction();
             $professional = Professional::find($data['professional_id']);
             if ($professional->state == 2) {
                 $professional->end_time = Carbon::now();
@@ -364,7 +367,7 @@ class BranchProfessionalController extends Controller
             $professional->state = $data['state'];
             $professional->start_time = Carbon::now();
             $professional->save();
-            if ($data['state'] == 2) {
+            if ($data['state'] == 2 || $data['state'] == 0) {
                 $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
@@ -381,10 +384,33 @@ class BranchProfessionalController extends Controller
                     Workplace::whereIn('id', $places)->update(['select' => 0]);
                 }
                 }
-            }
+                $ProfessionalWorkPlace->state = 0;
+                $ProfessionalWorkPlace->save();
+                if ($data['state'] == 2) {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Aceptada su solicitud de Colacion';
+                    $notification->description = 'Aceptada su solicitud de Colación, de ('.Carbon::now()->format('H:i').' a '.Carbon::now()->addMinutes(60)->format('H:i').')';
+                    $notification->save();
+                }else {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Aceptada su solicitud de Salida';
+                    $notification->description = 'Aceptada su solicitud de Salida,'.Carbon::now()->format('H:i');
+                    $notification->save();
 
+                    $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
+                    $record->end_time = Carbon::now();
+                    $record->save();
+                }
+                
+            }
+            DB::commit();
             return response()->json(['msg' => 'Estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
         }

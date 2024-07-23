@@ -90,8 +90,8 @@ class CourseStudentController extends Controller
            
             $student = new Student;
             $student->name = $data['name'];
-            $student->surname = $data['surname'];
-            $student->second_surname = $data['second_surname'];
+            //$student->surname = $data['surname'];
+            //$student->second_surname = $data['second_surname'];
             $student->email = $data['email'];
             $student->phone = $data['phone'];
             $student->save();

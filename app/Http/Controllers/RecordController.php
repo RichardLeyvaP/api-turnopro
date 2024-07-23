@@ -147,9 +147,9 @@ class RecordController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $recordProfessional = Record::where('branch_id', $data['branch_id'])
-    ->where('professional_id', $data['professional_id'])
-    ->whereDate('start_time', Carbon::today())
-    ->first();
+        ->where('professional_id', $data['professional_id'])
+        ->whereDate('start_time', Carbon::today())
+        ->first();
 
             if ($recordProfessional != null) {
                 return 1;
