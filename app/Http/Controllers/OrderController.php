@@ -520,7 +520,6 @@ class OrderController extends Controller
                 $notification->tittle = 'Aceptada Eliminación de Producto';
                 $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
                 $notification->type = 'Barbero';
-                $notification->state = 3;
                 $notification->save();
 
             }
