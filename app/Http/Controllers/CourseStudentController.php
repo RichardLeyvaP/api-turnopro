@@ -65,8 +65,8 @@ class CourseStudentController extends Controller
     #[BodyParam('name', 'string', required: true, example: 'Pepe Rosales Mora', description:'nombre y apellido del estudiante')]
     #[BodyParam('phone', 'string', required: true, example: '+56912345678', description:'teléfono del estudiante')]
     #[BodyParam('email', 'email', required: true, example: 'ejemplo@gmail.com', description:'correo del estudiante')]
-    #[BodyParam('course_image', 'file', required: false, description:'imagen del estudiante')]
-    #[BodyParam('fie', 'file', required: false, description:'imagen del estudiante')]
+    #[BodyParam('client_image', 'file', required: false, description:'imagen del estudiante')]
+    #[BodyParam('fie', 'file', required: false, description:'comprobante de pago')]
     #[Response(['msg' => 'Estudiante matriculado correctamente al curso'], 200)]
     #[Response(['msg' => 'Error al matricular el estudiante al curso'], 500)]
     public function store_landing(Request $request)
@@ -113,7 +113,7 @@ class CourseStudentController extends Controller
             $filename = ""; 
             if ($request->hasFile('client_image')) {
                 Log::info("tiene una imagen");
-               $filename = $request->file('course_image')->storeAs('students',$student->id.'.'.$request->file('course_image')->extension(),'public');
+               $filename = $request->file('client_image')->storeAs('students',$student->id.'.'.$request->file('client_image')->extension(),'public');
             }
           
            

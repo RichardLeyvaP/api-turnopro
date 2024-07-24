@@ -3,7 +3,7 @@
 API Restfull Simplifies
 
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost</code>
+    <strong>Base URL</strong>: <code>https://api2.simplifies.cl/</code>
 </aside>
 
 Esta documentación tiene como objetivo proporcionar toda la información que necesita para trabajar con nuestra API.

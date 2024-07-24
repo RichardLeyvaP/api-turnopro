@@ -8,7 +8,7 @@
 
     <link href="https://fonts.googleapis.com/css?family=PT+Sans&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="../docs/css/theme-elements.style.css" media="screen">
+    <link rel="stylesheet" href="{{ asset("/vendor/scribe/css/theme-elements.style.css") }}" media="screen">
 
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"></script>
 
@@ -26,7 +26,7 @@
             var useCsrf = Boolean();
             var csrfUrl = "/sanctum/csrf-cookie";
         </script>
-        <script src="../docs/js/tryitout-4.37.1.js"></script>
+        <script src="{{ asset("/vendor/scribe/js/tryitout-4.37.1.js") }}"></script>
         <style>
             .code-editor, .response-content {
                 color: whitesmoke;
@@ -359,11 +359,11 @@
                     Laravel Documentation
                 </h1>
                                     <a title="Download Postman collection" class="sl-mx-1"
-                       href="../docs/collection.json" target="_blank">
+                       href="{{ route("scribe.postman") }}" target="_blank">
                         <small>Postman collection →</small>
                     </a>
                                                     <a title="Download OpenAPI spec" class="sl-mx-1"
-                       href="../docs/openapi.yaml" target="_blank">
+                       href="{{ route("scribe.openapi") }}" target="_blank">
                         <small>OpenAPI spec →</small>
                     </a>
                             </div>
@@ -1031,7 +1031,7 @@ response.json()</code></pre>                                        </div>
                 <span>Example:</span> <!-- <span> important for spacing -->
                 <div class="sl-flex sl-flex-1 sl-flex-wrap" style="gap: 4px;">
                     <div class="sl-max-w-full sl-break-all sl-px-1 sl-bg-canvas-tint sl-text-muted sl-rounded sl-border">
-                        C:\Users\im769\AppData\Local\Temp\phpBEAB.tmp
+                        C:\Users\im769\AppData\Local\Temp\php6F80.tmp
                     </div>
                 </div>
             </div>
@@ -1056,7 +1056,7 @@ response.json()</code></pre>                                        </div>
                 <span>Example:</span> <!-- <span> important for spacing -->
                 <div class="sl-flex sl-flex-1 sl-flex-wrap" style="gap: 4px;">
                     <div class="sl-max-w-full sl-break-all sl-px-1 sl-bg-canvas-tint sl-text-muted sl-rounded sl-border">
-                        C:\Users\im769\AppData\Local\Temp\phpBEBB.tmp
+                        C:\Users\im769\AppData\Local\Temp\php6FB0.tmp
                     </div>
                 </div>
             </div>
@@ -1382,11 +1382,11 @@ $response = $client-&gt;post(
             ],
             [
                 'name' =&gt; 'client_image',
-                'contents' =&gt; fopen('C:\Users\im769\AppData\Local\Temp\phpBEAB.tmp', 'r')
+                'contents' =&gt; fopen('C:\Users\im769\AppData\Local\Temp\php6F80.tmp', 'r')
             ],
             [
                 'name' =&gt; 'fie',
-                'contents' =&gt; fopen('C:\Users\im769\AppData\Local\Temp\phpBEBB.tmp', 'r')
+                'contents' =&gt; fopen('C:\Users\im769\AppData\Local\Temp\php6FB0.tmp', 'r')
             ],
         ],
     ]
@@ -1408,8 +1408,8 @@ files = {
   'name': (None, 'Pepe Rosales Mora'),
   'phone': (None, '+56912345678'),
   'email': (None, 'ejemplo@gmail.com'),
-  'client_image': open('C:\Users\im769\AppData\Local\Temp\phpBEAB.tmp', 'rb'),
-  'fie': open('C:\Users\im769\AppData\Local\Temp\phpBEBB.tmp', 'rb')}
+  'client_image': open('C:\Users\im769\AppData\Local\Temp\php6F80.tmp', 'rb'),
+  'fie': open('C:\Users\im769\AppData\Local\Temp\php6FB0.tmp', 'rb')}
 payload = {
     "course_id": "5",
     "name": "Pepe Rosales Mora",
@@ -1439,8 +1439,8 @@ response.json()</code></pre>                                        </div>
     --form "name=Pepe Rosales Mora"\
     --form "phone=+56912345678"\
     --form "email=ejemplo@gmail.com"\
-    --form "client_image=@C:\Users\im769\AppData\Local\Temp\phpBEAB.tmp" \
-    --form "fie=@C:\Users\im769\AppData\Local\Temp\phpBEBB.tmp" </code></pre>                                        </div>
+    --form "client_image=@C:\Users\im769\AppData\Local\Temp\php6F80.tmp" \
+    --form "fie=@C:\Users\im769\AppData\Local\Temp\php6FB0.tmp" </code></pre>                                        </div>
                                     </div>
                                 </div>
                                                     </div>
