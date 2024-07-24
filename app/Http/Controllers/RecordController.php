@@ -120,6 +120,11 @@ class RecordController extends Controller
                 DB::commit();
                 return response()->json(['msg' => 'Record creado correctamente'], 200);
             } else {
+                $professional = Professional::find($data['professional_id']);
+                if ($professional->charge->name == 'Coordinador' || $professional->charge->name == 'Encargado') {
+                    $professional->state = 1;
+                    $professional->save();
+                }
                 DB::commit();
                 return response()->json(['msg' => 'Ya registró entrada en el día de hoy'], 200);
             }
