@@ -112,6 +112,11 @@ class RecordController extends Controller
                 $record->branch_id = $data['branch_id'];
                 $record->start_time = Carbon::now();
                 $record->save();
+                $professional = Professional::find($data['professional_id']);
+                if ($professional->charge->name == 'Coordinador') {
+                    $professional->state = 1;
+                    $professional->save();
+                }
                 DB::commit();
                 return response()->json(['msg' => 'Record creado correctamente'], 200);
             } else {
