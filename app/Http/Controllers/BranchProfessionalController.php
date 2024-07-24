@@ -241,15 +241,15 @@ class BranchProfessionalController extends Controller
         Log::info($diaActualIngles);
          // Obtener el día actual en español
          /*$diaActualEspañol = ucfirst(Carbon::now()->translatedFormat('l'));
-    Log::info('Día actual en español: ' . $diaActualEspañol);
-         // Inicializar el array de fechas
-    $fechas = [];
+        Log::info('Día actual en español: ' . $diaActualEspañol);
+            // Inicializar el array de fechas
+        $fechas = [];
 
-    // Si el día actual está en el array de días de la semana, agregar su fecha correspondiente
-    if (in_array($diaActualEspañol, $diasSemana)) {
-        Log::info('El día actual está en los días seleccionados');
-        $fechas[] = Carbon::now()->format('Y-m-d');
-    }*/
+        // Si el día actual está en el array de días de la semana, agregar su fecha correspondiente
+        if (in_array($diaActualEspañol, $diasSemana)) {
+            Log::info('El día actual está en los días seleccionados');
+            $fechas[] = Carbon::now()->format('Y-m-d');
+        }*/
         // Obtener las fechas para cada día de la semana en el array
         foreach ($diasSemana as $dia) {
             // Restablecer la fecha actual para cada iteración del bucle
@@ -399,14 +399,14 @@ class BranchProfessionalController extends Controller
                     $workplace->save();
                 }
                 if ($data['type'] == 'Tecnico') {
-                    $workplace->busy = 0;
-                    $workplace->save();
+                    //$workplace->busy = 0;
+                    //$workplace->save();
                     $places = json_decode($ProfessionalWorkPlace->places, true);
                     Workplace::whereIn('id', $places)->update(['select' => 0]);
                 }
-                }
                 $ProfessionalWorkPlace->state = 0;
                 $ProfessionalWorkPlace->save();
+                }
                 if ($data['state'] == 2) {                                    
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
