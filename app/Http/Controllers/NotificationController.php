@@ -321,7 +321,7 @@ class NotificationController extends Controller
             $notifications1 = $branch->notifications()
                 ->where('professional_id', $data['professional_id'])
                 ->whereDate('created_at', Carbon::now())
-                ->where('description', $frase)
+                ->where('description', 'like', '%' . $frase . '%')
                 ->latest('created_at') // Ordena por 'created_at' en orden descendente
                 ->first(); // Obtiene el primer registro en el orden especificado
 
