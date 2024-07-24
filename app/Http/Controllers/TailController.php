@@ -702,6 +702,7 @@ class TailController extends Controller
                 return [
                     'clock' => intval($query->clock),
                     'timeClock' => intval($query->timeClock),
+                    'attended' => intval($query->attended),
                     'detached' => intval($query->detached)
                 ];
             })->sortBy('clock')->values();
