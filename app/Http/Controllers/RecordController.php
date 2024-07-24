@@ -113,7 +113,7 @@ class RecordController extends Controller
                 $record->start_time = Carbon::now();
                 $record->save();
                 $professional = Professional::find($data['professional_id']);
-                if ($professional->charge->name == 'Coordinador') {
+                if ($professional->charge->name == 'Coordinador' || $professional->charge->name == 'Encargado') {
                     $professional->state = 1;
                     $professional->save();
                 }
@@ -177,6 +177,7 @@ class RecordController extends Controller
     {
         Log::info("Guardar");
         Log::info($request);
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -186,9 +187,16 @@ class RecordController extends Controller
             $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
             $record->end_time = Carbon::now();
             $record->save();
+            $professional = Professional::find($data['professional_id']);
+                if ($professional->charge->name == 'Coordinador' || $professional->charge->name == 'Encargado') {
+                    $professional->state = 0;
+                    $professional->save();
+                }
+                DB::commit();
             return response()->json(['msg' => 'Record creado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
+            DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al crear un record'], 500);
         }
     }
