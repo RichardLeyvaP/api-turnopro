@@ -317,24 +317,27 @@ class NotificationController extends Controller
                 }
             }else {
                 $frase = 'Aceptada su solicitud de Salida';
-                $notifications = $branch->notifications()
-                            ->where('professional_id', $data['professional_id'])
-                            ->whereDate('created_at', Carbon::now())
-                            ->where('description', $frase)->get()
-                            ->orderByDesc('created_at')
-                            ->first()->map(function ($query) {
-                                return [
-                                    'id' => $query->id,
-                                    'professional_id' => $query->professional_id,
-                                    'branch_id' => $query->branch_id,
-                                    'tittle' => $query->tittle,
-                                    'description' => $query->description,
-                                    'state' => $query->state,
-                                    'type' => $query->type,
-                                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
-                                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
-                                ];
-                            });
+
+            $notifications1 = $branch->notifications()
+                ->where('professional_id', $data['professional_id'])
+                ->whereDate('created_at', Carbon::now())
+                ->where('description', $frase)
+                ->latest('created_at') // Ordena por 'created_at' en orden descendente
+                ->first(); // Obtiene el primer registro en el orden especificado
+
+            if ($notifications1) {
+                $notifications = [
+                    'id' => $notifications1->id,
+                    'professional_id' => $notifications1->professional_id,
+                    'branch_id' => $notifications1->branch_id,
+                    'tittle' => $notifications1->tittle,
+                    'description' => $notifications1->description,
+                    'state' => $notifications1->state,
+                    'type' => $notifications1->type,
+                    'created_at' => Carbon::parse($notifications1->created_at)->format('Y-m-d h:i A'),
+                    'updated_at' => Carbon::parse($notifications1->updated_at)->format('Y-m-d h:i A')
+                ];
+            }
             }
             return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
