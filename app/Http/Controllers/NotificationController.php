@@ -316,6 +316,7 @@ class NotificationController extends Controller
                         ->values();
                 }
             }else {
+                $frase = 'Aceptada su solicitud de Salida';
                 $now = Carbon::now();
                 $threeMinutesAgo = Carbon::now()->subMinutes(3);
                 //Log::info('Minutos de diferencia con la peticion de salida:'.$threeMinutesAgo);
@@ -323,7 +324,7 @@ class NotificationController extends Controller
                 ->where('professional_id', $data['professional_id'])
                 ->whereDate('created_at', Carbon::now())
                 ->whereBetween('created_at', [$threeMinutesAgo, $now])
-                ->where('tittle', 'Aceptada su solicitud de Salida')
+                ->where('tittle', 'like', '%' . $frase . '%')
                 ->latest('created_at') // Ordena por 'created_at' en orden descendente
                 ->first(); // Obtiene el primer registro en el orden especificado
 
