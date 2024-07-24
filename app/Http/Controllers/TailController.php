@@ -1110,7 +1110,7 @@ class TailController extends Controller
                         $notification->professional_id = $data['professional_id'];
                         $notification->branch_id = $reservation->branch_id;
                         $notification->tittle = 'Incumplimiento de convivencia';
-                        $notification->description = 'Tu tirmpo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
+                        $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
                         $notification->type = 'Barbero';
                         $notification->save();
                     }
