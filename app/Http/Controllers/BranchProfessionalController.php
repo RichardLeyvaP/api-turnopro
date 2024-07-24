@@ -366,9 +366,6 @@ class BranchProfessionalController extends Controller
                 $branchProfessional->save();
 
             }
-            $professional->state = $data['state'];
-            $professional->start_time = Carbon::now();
-            $professional->save();
             if ($data['state'] == 1) {
                 if ($professional->state == 4) {
                     $notification = new Notification();
@@ -391,7 +388,7 @@ class BranchProfessionalController extends Controller
                     $notification->save();
                 }
             }
-            if ($data['state'] == 2 || $data['state'] == 0) {
+            elseif ($data['state'] == 2 || $data['state'] == 0) {
                 $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
                     $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                 })->first();
@@ -410,7 +407,8 @@ class BranchProfessionalController extends Controller
                 }
                 $ProfessionalWorkPlace->state = 0;
                 $ProfessionalWorkPlace->save();
-                if ($data['state'] == 2) {
+                if ($data['state'] == 2) {                                    
+                    $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->branch_id = $data['branch_id'];
@@ -434,7 +432,7 @@ class BranchProfessionalController extends Controller
                 }
                 
             }
-            if ($data['state'] == 4 || $data['state'] == 3){
+            elseif ($data['state'] == 4 || $data['state'] == 3){
                 $branch = Branch::find($data['branch_id']);
                 //if ($data['type'] == 'Ambos') {
                 /*$professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
@@ -498,6 +496,8 @@ class BranchProfessionalController extends Controller
                 }
                 //}
             }
+            $professional->state = $data['state'];
+            $professional->save();
             DB::commit();
             return response()->json(['msg' => 'Estado modificado correctamente'], 200);
         } catch (\Throwable $th) {

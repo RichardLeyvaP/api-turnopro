@@ -11,6 +11,7 @@ use App\Models\Schedule;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 
@@ -37,6 +38,7 @@ class RecordController extends Controller
     {
         Log::info("Guardar");
         Log::info($request);
+        DB::beginTransaction();
         try {
             // Validación de los datos de entrada
             $data = $request->validate([
@@ -49,6 +51,25 @@ class RecordController extends Controller
                 ->where('professional_id', $data['professional_id'])
                 ->whereDate('start_time', Carbon::now())
                 ->first();
+
+                // Obtener el número máximo de llegada para la sucursal dada
+                $maxArrival = BranchProfessional::where('branch_id', $data['branch_id'])->max('arrival');
+
+                // Si no hay valores, inicializar a 0
+                if (is_null($maxArrival)) {
+                    $maxArrival = 0;
+                }
+
+                // Encontrar el registro específico y actualizar el campo arrival
+                $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                        ->where('professional_id', $data['professional_id'])
+                                                        ->firstOrFail();
+
+                // Asignar el siguiente número de llegada
+                $branchProfessional->arrival = $maxArrival + 1;
+
+                // Guardar los cambios
+                $branchProfessional->save();
 
             if (!$record) {
                 // Obtener el nombre del día en español
@@ -91,32 +112,14 @@ class RecordController extends Controller
                 $record->branch_id = $data['branch_id'];
                 $record->start_time = Carbon::now();
                 $record->save();
-
-                // Obtener el número máximo de llegada para la sucursal dada
-        $maxArrival = BranchProfessional::where('branch_id', $data['branch_id'])->max('arrival');
-
-        // Si no hay valores, inicializar a 0
-        if (is_null($maxArrival)) {
-            $maxArrival = 0;
-        }
-
-        // Encontrar el registro específico y actualizar el campo arrival
-        $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
-                                                ->where('professional_id', $data['professional_id'])
-                                                ->firstOrFail();
-
-        // Asignar el siguiente número de llegada
-        $branchProfessional->arrival = $maxArrival + 1;
-
-        // Guardar los cambios
-        $branchProfessional->save();
-
-                
+                DB::commit();
                 return response()->json(['msg' => 'Record creado correctamente'], 200);
             } else {
+                DB::commit();
                 return response()->json(['msg' => 'Ya registró entrada en el día de hoy'], 200);
             }
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::error($th);
             return response()->json(['msg' => 'Error al crear un record: ' . $th->getMessage()], 500);
         }
