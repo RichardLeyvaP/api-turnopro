@@ -6,6 +6,7 @@ use App\Jobs\SendEmailJob;
 use App\Models\Branch;
 use App\Models\Business;
 use App\Models\Client;
+use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
 use App\Models\Record;
@@ -599,5 +600,22 @@ class UserController extends Controller
             Log::error($th);
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }
+    }
+
+    public function logout_phone(Request $request){   
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional' => 'required|numeric'
+            ]);            
+        Notification::where('professional_id', $data['professional_id'])->where('branch_id', $data['branch_id'])->where('state', '!=', 1)->update(['state' => 1]);
+            auth()->user()->tokens()->delete();
+            return response()->json([
+                "msg" => "Session cerrada correctamente"
+            ], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => 'Error al cerrar la session'], 500);
+        }     
     }
 }

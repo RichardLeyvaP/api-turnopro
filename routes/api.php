@@ -96,6 +96,7 @@ Route::get('change_password', [UserController::class, 'change_password']);
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
+    Route::get('logout-phone', [UserController::class, 'logout_phone']);//cerrar session del apk, al hacerlo pasar las notificaciones a vistas y luego destruir el token
     Route::get('/notification-professional-web', [NotificationController::class, 'professional_show_web']); //dada una branch y un profesional mostrar las notificaciones de este prfessional
     Route::get('/tail_branch_attended_shiftboard', [TailController::class, 'tail_branch_attended']); //dado una id de la branch Mostrar los clientes que estan siendo atendidos (attended [1:por el barbero, 2:por el tecnico capilar])
     
