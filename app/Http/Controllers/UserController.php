@@ -606,7 +606,7 @@ class UserController extends Controller
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
-                'professional' => 'required|numeric'
+                'professional_id' => 'required|numeric'
             ]);            
         Notification::where('professional_id', $data['professional_id'])->where('branch_id', $data['branch_id'])->where('state', '!=', 1)->update(['state' => 1]);
             auth()->user()->tokens()->delete();
