@@ -339,7 +339,8 @@ class BranchProfessionalController extends Controller
                 'state' => 'required|numeric'
             ]);
             $tittle = '';
-            $description = '';
+            $description = '';            
+            $ProfessionalWorkPlace = [];
             DB::beginTransaction();
             $professional = Professional::find($data['professional_id']);
             if ($professional->state == 2) {
@@ -389,24 +390,30 @@ class BranchProfessionalController extends Controller
                 }
             }
             elseif ($data['state'] == 2 || $data['state'] == 0) {
-                $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
-                    $query->where('busy', 1)->where('branch_id', $data['branch_id']);
-                })->first();
-                if ($ProfessionalWorkPlace != null) {
-                    $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
                 if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
+                    $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
+                        $query->where('busy', 1)->where('branch_id', $data['branch_id']);
+                    })->latest('created_at')->first();
+                    if ($ProfessionalWorkPlace != null) {
+                        $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
                     $workplace->busy = 0;
                     $workplace->save();
-                }
+                    $ProfessionalWorkPlace->state = 0;
+                    $ProfessionalWorkPlace->save();
+                    }
+                }//end if de barbero
                 if ($data['type'] == 'Tecnico') {
-                    //$workplace->busy = 0;
-                    //$workplace->save();
-                    $places = json_decode($ProfessionalWorkPlace->places, true);
+                    $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })->latest('created_at')->first();
+                    if ($ProfessionalWorkPlace != null){
+                        $places = json_decode($ProfessionalWorkPlace->places, true);
                     Workplace::whereIn('id', $places)->update(['select' => 0]);
-                }
-                $ProfessionalWorkPlace->state = 0;
-                $ProfessionalWorkPlace->save();
-                }
+                    $ProfessionalWorkPlace->state = 0;
+                    $ProfessionalWorkPlace->save();
+                    }
+                }//end if de tecnico
+
                 if ($data['state'] == 2) {                                    
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
