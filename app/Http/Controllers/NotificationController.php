@@ -318,7 +318,6 @@ class NotificationController extends Controller
             }else {
                 $frase = 'Aceptada su solicitud de Salida';
                 $frase1 = 'Aceptada su solicitud de Colación';
-                //Log::info('Minutos de diferencia con la peticion de salida:'.$threeMinutesAgo);
                 $notifications1 = $branch->notifications()
                 ->where('professional_id', $data['professional_id'])
                 ->whereDate('created_at', Carbon::now())
