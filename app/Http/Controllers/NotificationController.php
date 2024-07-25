@@ -343,8 +343,8 @@ class NotificationController extends Controller
                         'updated_at' => Carbon::parse($notifications1->updated_at)->format('Y-m-d h:i A')
                     ]
                 ];
-            $notifications1->state = 1;
-            $notifications1->save();
+            //$notifications1->state = 1;
+            //$notifications1->save();
             }
             }
             return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
