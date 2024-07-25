@@ -256,7 +256,7 @@ class NotificationController extends Controller
             $notifications = [];
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            if ($professional->state !=0) {
+            if ($professional->state !=0 && $professional->state !=2) {
                 if ($professional->charge->name == "Tecnico") {
                     $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first();
                     Log::info('Workplaces');
@@ -314,8 +314,8 @@ class NotificationController extends Controller
                             return $notification['created_at'];
                         })
                         ->values();
-                }
-            }else {
+                }//end else sino
+            }elseif ($professional->state == 0 || $professional->state == 2) {
                 $frase = 'Aceptada su solicitud de Salida';
                 $frase1 = 'Aceptada su solicitud de Colación';
                 $notifications1 = $branch->notifications()
@@ -329,7 +329,7 @@ class NotificationController extends Controller
                 ->latest('created_at') // Ordena por 'created_at' en orden descendente
                 ->first(); // Obtiene el primer registro en el orden especificado
 
-            if ($notifications1) {
+            if ($notifications1 != null) {
                 $notifications = [
                     [
                         'id' => $notifications1->id,
