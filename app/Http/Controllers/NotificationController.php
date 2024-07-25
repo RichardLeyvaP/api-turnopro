@@ -318,13 +318,11 @@ class NotificationController extends Controller
             }else {
                 $frase = 'Aceptada su solicitud de Salida';
                 $frase1 = 'Aceptada su solicitud de Colación';
-                $now = Carbon::now();
-                $threeMinutesAgo = Carbon::now()->subMinutes(3);
                 //Log::info('Minutos de diferencia con la peticion de salida:'.$threeMinutesAgo);
                 $notifications1 = $branch->notifications()
                 ->where('professional_id', $data['professional_id'])
                 ->whereDate('created_at', Carbon::now())
-                ->whereBetween('created_at', [$threeMinutesAgo, $now])
+                ->whereNot('state', 1)
                 ->where(function ($query) use ($frase, $frase1) {
                     $query->where('tittle', 'like', '%' . $frase . '%')
                           ->orWhere('tittle', 'like', '%' . $frase1 . '%');
@@ -346,7 +344,8 @@ class NotificationController extends Controller
                         'updated_at' => Carbon::parse($notifications1->updated_at)->format('Y-m-d h:i A')
                     ]
                 ];
-            
+            $notifications1->state = 1;
+            $notifications1->save();
             }
             }
             return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
