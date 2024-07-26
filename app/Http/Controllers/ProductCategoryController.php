@@ -93,8 +93,8 @@ class ProductCategoryController extends Controller
                 $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
                       ->where('status_product', '=', $statusProduct);
             }])
-            ->whereHas('product', function ($query) use ($category) {
-                $query->where('product_category_id', '=', $category->id);
+            ->whereHas('product', function ($query) use ($category, $statusProduct) {
+                $query->where('product_category_id', '=', $category->id)->where('status_product', '=', $statusProduct);
             })
             ->whereHas('store.branches', function ($query) use ($branchId) {
                 $query->where('branches.id', '=', $branchId);
@@ -109,19 +109,23 @@ class ProductCategoryController extends Controller
                 'description' => $category->description,
                 'products' => $productStores->map(function ($productStore) {
                     $product = $productStore->product;
-                    return [
-                        'id' => $productStore->id,
-                        'product_exit' => $productStore->product_exit,
-                        'product_id' => $productStore->product_id,
-                        'name' => $product->name,
-                        'reference' => $product->reference,
-                        'code' => $product->code,
-                        'description' => $product->description,
-                        'status_product' => $product->status_product,
-                        'purchase_price' => $product->purchase_price,
-                        'sale_price' => $product->sale_price,
-                        'image_product' => $product->image_product
-                    ];
+                    Log::info('Producto'.$product);
+                    if ($product) {
+                        return [
+                            'id' => $productStore->id,
+                            'product_exit' => $productStore->product_exit,
+                            'product_id' => $productStore->product_id,
+                            'name' => $product->name,
+                            'reference' => $product->reference,
+                            'code' => $product->code,
+                            'description' => $product->description,
+                            'status_product' => $product->status_product,
+                            'purchase_price' => $product->purchase_price,
+                            'sale_price' => $product->sale_price,
+                            'image_product' => $product->image_product
+                        ];
+                    }
+                    
                 })
             ];
         });

@@ -320,7 +320,7 @@ class ProductStoreController extends Controller
                   ->where('status_product', '=', 'En venta');
         }])
         ->whereHas('product', function ($query) use ($data) {
-            $query->where('product_category_id', '=', $data['id']);
+            $query->where('product_category_id', '=', $data['id'])->where('status_product', '=', 'En venta');
         })
         ->whereHas('store.branches', function ($query) use ($data){
             $query->where('branches.id', '=', $data['branch_id']);
@@ -330,20 +330,23 @@ class ProductStoreController extends Controller
         ->get();
 
         $productsArray = $productStores->map(function ($productStore) {
-            $product = $productStore->product; // Almacenar producto en una variable local
-            return [
-                'id' => $productStore->id,
-                'product_exit' => $productStore->product_exit,
-                'product_id' => $productStore->product_id,
-                'name' => $product->name,
-                'reference' => $product->reference,
-                'code' => $product->code,
-                'description' => $product->description,
-                'status_product' => $product->status_product,
-                'purchase_price' => $product->purchase_price,
-                'sale_price' => $product->sale_price,
-                'image_product' => $product->image_product
-            ];
+            $product = $productStore->product;
+            Log::info('Producto'.$product);
+            if ($product) {
+                return [
+                    'id' => $productStore->id,
+                    'product_exit' => $productStore->product_exit,
+                    'product_id' => $productStore->product_id,
+                    'name' => $product->name,
+                    'reference' => $product->reference,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product
+                ];
+            }
         });
 
         return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
