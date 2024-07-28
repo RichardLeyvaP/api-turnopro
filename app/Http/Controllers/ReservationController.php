@@ -209,7 +209,7 @@ class ReservationController extends Controller
                 //$client->second_surname = $data['second_surname'];
                 $client->email = $data['email_client'];
                 $client->phone = $data['phone_client'];
-                $client->client_image = 'comments/default.jpg';
+                //$client->client_image = 'comments/default.jpg';
                 $client->user_id = $user->id;
                 $client->save();
                 $id_client = $client->id;
