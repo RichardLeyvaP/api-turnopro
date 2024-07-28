@@ -52,7 +52,7 @@ class CommentController extends Controller
                 $client->client_image = $filename;
                 $client->save();
              }
-            $comment->image_look = $filename;
+            $comment->client_look = $filename;
             $comment->save();
             //$client->client_image = $filename;
             //$client->save();
