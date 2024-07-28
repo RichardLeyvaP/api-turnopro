@@ -184,7 +184,7 @@ class ReservationController extends Controller
                     $client->email = $data['email_client'];
                     $client->phone = $data['phone_client'];
                     $client->user_id = $userNew->id;
-                    $client->client_image = 'clients/default_profile.jpg';
+                    //$client->client_image = 'clients/default_profile.jpg';
                     $client->save();
                     $id_client = $client->id;
 
