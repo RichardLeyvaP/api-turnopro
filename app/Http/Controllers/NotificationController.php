@@ -503,6 +503,34 @@ class NotificationController extends Controller
         }
     }
 
+    public function update_state3(Request $request)
+    {
+        Log::info('Modificar el estado de una notificacion de colacion y salida a 1');
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $frase = 'Aceptada su solicitud de Salida';
+            $frase1 = 'Aceptada su solicitud de Colación';
+            $branch = Branch::find($data['branch_id']);
+            //$professional = Professional::find($data['professional_id']);
+            $branch->notifications()
+                ->where('professional_id', $data['professional_id'])
+                ->where(function ($query) use ($frase, $frase1) {
+                    $query->where('tittle', 'like', '%' . $frase . '%')
+                          ->orWhere('tittle', 'like', '%' . $frase1 . '%');
+                })
+                ->where('state', 3)
+                ->update(['state' => 1]);
+
+            return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
+        }
+    }
+
     public function update3(Request $request)
     {
         Log::info('Modificar el estado de una notificacion');

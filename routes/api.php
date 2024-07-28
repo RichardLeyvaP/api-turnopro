@@ -756,6 +756,7 @@ Route::get('/survey', [SurveyController::class, 'index']);
 
 Route::get('/branch', [BranchController::class, 'index']);
 
+Route::put('/notification-state3', [NotificationController::class, 'update_state3']);//dado un professional y una sucursal cambiar el estado de las notificaciones de 3 a 1
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
