@@ -258,11 +258,7 @@ class NotificationController extends Controller
             $professional = Professional::find($data['professional_id']);
             $record = $professional->records()->whereDate('start_time', now())->first();
             if ($record) {
-                if ($professional->end_time != NULL) {
-                    $startTime = $professional->end_time;
-                }else {                    
                 $startTime = $record->start_time;
-                }
 
                 if ($professional->state != 0 && $professional->state != 2) {
                     if ($professional->charge->name == "Tecnico") {
