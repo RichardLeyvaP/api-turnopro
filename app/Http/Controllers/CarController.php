@@ -1663,12 +1663,21 @@ class CarController extends Controller
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
 
-                $reservation = $reservations->first();
-                $professional = $reservation->car->clientProfessional->professional;
+                $reservation = $reservations->sortByDesc('start_time')
+                ->filter(function ($query) {
+                    return $query->confirmation == 2;
+                })
+                ->first();
+                if ($reservation != null) {                   
+                    $professional = $reservation->car->clientProfessional->professional;
+                }
+                else{
+                    $professional = [];
+                }
                 $result[] = [
                     'clientName' => $client->name,
-                    'professionalName' => $professional->name,
-                    'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+                    'professionalName' => $professional ? $professional->name : '',
+                    'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
                     'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
                     'cantVisit' => $reservations->count(),
                     'endLook' => $comment ? $comment->look : null,

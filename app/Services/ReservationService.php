@@ -196,9 +196,10 @@ class ReservationService
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
             $query->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-        $reservation2 = $reservations->filter(function ($query){
-            return $query->car->where('pay', 1);
-        });
+        $reservation2 = $reservations->sortByDesc('start_time')
+            ->filter(function ($query) {
+                return $query->confirmation == 2;
+            });
        $reservationids2 = $reservation2->pluck('car_id')->take(3);
         $products = Product::with(['orders' => function ($query) use ($data, $reservationids2) {
             $query->selectRaw('SUM(cant) as total_sale_price')
@@ -214,20 +215,25 @@ class ReservationService
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         //if ($reservations !== null && !$reservations->isEmpty()) {
             Log::info('Tiene Reserva');
-            $reservation = $reservation2->first();
-            $branch = $reservation->branch;
-            $professional = $reservation->car->clientProfessional->professional;
-
+            if ($reservation2->isEmpty()) {
+                $branch = [];
+                $professional = [];
+                $reservation = [];
+            }else {
+                $reservation = $reservation2->first();
+                $branch = $reservation->branch;
+                $professional = $reservation->car->clientProfessional->professional;
+            }
             $result = [
                 'clientName' => $client->name,
-                'professionalName' => $professional->name,
-                'branchName' => $branch->name,
-                'image_data' => $branch->image_data ? $branch->image_data : 'branches/default.jpg',
-                'image_url' => $professional->image_url ? $professional->image_url : 'professionals/default_profile.jpg',
+                'professionalName' => $professional ? $professional->name : '',
+                'branchName' => $branch ? $branch->name : '',
+                'image_data' => $branch ? $branch->image_data : 'branches/default.jpg',
+                'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
                 'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
                 'cantVisit' => $reservation2->count(),
                 'endLook' => $comment ? $comment->look : null,
-                'lastDate' => $reservation->data,
+                'lastDate' => $reservation ? $reservation->data : '',
                 'frecuencia' => $frecuencia,
                 'services' => $services->map(function ($service) use ($cantMaxService) {
                     return [

@@ -880,7 +880,7 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $this->tailService->reasigned_client($data);
-            $reservation = Reservation::where(' id', $data['reservation_id'])->first();
+            $reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
                 $reservation->timeClock = now();
                 $reservation->save();
