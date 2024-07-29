@@ -330,7 +330,7 @@ class OrderController extends Controller
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Solicitud de Eliminación Rechazada';
-                $notification->description = 'Atención.. El ervicio'.' '.$service->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminación';
+                $notification->description = 'Atención.. El servicio'.' '.$service->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminación';
                 $notification->type = 'Barbero';
                 $notification->save();
              }

@@ -331,7 +331,7 @@ class ProfessionalService
                     } else {                        
                         $professional->start_time = Carbon::parse($reserv->final_hour)->format('H:i');
                     }*/
-                    $professional->start_time = $colacion_time->format('h:i');
+                    $professional->start_time = $colacion_time->format('H:i');
                 }
                 }
                 

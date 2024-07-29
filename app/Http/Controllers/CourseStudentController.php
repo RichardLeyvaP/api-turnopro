@@ -9,6 +9,7 @@ use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
@@ -73,6 +74,7 @@ class CourseStudentController extends Controller
     {
         Log::info("Matricular estudiante al curso");
         Log::info($request);
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
@@ -114,26 +116,31 @@ class CourseStudentController extends Controller
             if ($request->hasFile('client_image')) {
                 Log::info("tiene una imagen");
                $filename = $request->file('client_image')->storeAs('students',$student->id.'.'.$request->file('client_image')->extension(),'public');
+                
+            $student->student_image = $filename;
+            $student->save();
             }
-          
-           
-            $atributosParaActualizar = [
+            if ($request->hasFile('file')) {
+                Log::info("tiene un documento");
+               $file = $request->file('file')->storeAs('students/pagos',$student->id.'-'.$data['course_id'].'.'.$request->file('file')->extension(),'public');
+               $atributosParaActualizar = [
               
-                'image_url' => $filename,
+                'image_url' => $file,
             ];
 
             $student->courses()->syncWithoutDetaching([
                 $data['course_id'] => $atributosParaActualizar,
-            ]);          
-          
-
-
+            ]);  
+            }else {
+                $course->students()->attach($student->id);
+            }
            // $course->students()->attach($student->id);
             $course->available_slots = $course->available_slots - 1;
             $course->save();
-
+            DB::commit();
             return response()->json(['msg' => 'Estudiante matriculado correctamente al curso'], 200);
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al matricular el estudiante al curso'], 500);
         }

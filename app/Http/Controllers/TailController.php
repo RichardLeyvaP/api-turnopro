@@ -755,6 +755,7 @@ class TailController extends Controller
 
             Log::info("Mandar a eliminar la cola");
             Tail::truncate();
+            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL]);
             BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
             return response()->json(['msg' => "Cola eliminada correctamente"], 200);
         } catch (\Throwable $th) {
@@ -788,6 +789,7 @@ class TailController extends Controller
             Workplace::query()->update(['busy' => 0, 'select' => 0]);
             BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
             Record::truncate(); //Hora de entrada y salida de los professionales
+            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL]);
             User::whereDoesntHave('professional')->delete(); //borrar los usuarios que no professionales
 
             return response()->json(['msg' => "Tablas vaciadas correctamente"], 200);
@@ -1087,12 +1089,6 @@ class TailController extends Controller
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
                     if($diferenciaEnMinutos >= 3){
-                        //consulta para despues asignar la no convivencia
-                        $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
-                            $query->where('type', 'Tiempo');
-                        })->where('branch_id', $data['branch_id'])->first();
-                    $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();                        
-                        $professionalConv = Professional::find($data['professional_id']);
                     $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
                     if (!empty($professional)) {
                         $firstProfessional = $professional[0];
@@ -1105,6 +1101,13 @@ class TailController extends Controller
                         $this->tailService->reasigned_client($dataReasigned);
                         $reservation->timeClock = now();
                     $reservation->save();
+                    //consulta para despues asignar la no convivencia
+                    $professionalConv = Professional::find($data['professional_id']);
+                    if ($professionalConv->charge->name != 'Barbero y Encargado') {
+                        $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
+                            $query->where('type', 'Tiempo');
+                        })->where('branch_id', $data['branch_id'])->first();
+                    $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();                        
                     if ($existencia != null && $existencia->estado != 0) {
                         $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
                         $notification = new Notification();
@@ -1115,12 +1118,20 @@ class TailController extends Controller
                         $notification->type = 'Barbero';
                         $notification->save();
                     }
+                }
+                    
                     DB::commit();
                     return response()->json(1, 200);
                     }
                     else {//si no hay barbero disponible
                             $reservation->timeClock = now();
                             $reservation->save();
+                            $professionalConv = Professional::find($data['professional_id']);
+                    if ($professionalConv->charge->name != 'Barbero y Encargado') {
+                        $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
+                            $query->where('type', 'Tiempo');
+                        })->where('branch_id', $data['branch_id'])->first();
+                        $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();
                             if ($existencia != null && $existencia->estado != 0) {
                                 $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
                                 $notification = new Notification();
@@ -1131,6 +1142,7 @@ class TailController extends Controller
                                 $notification->type = 'Barbero';
                                 $notification->save();
                             }
+                        }
                         DB::commit();
                         return response()->json(0, 200);
                     }
