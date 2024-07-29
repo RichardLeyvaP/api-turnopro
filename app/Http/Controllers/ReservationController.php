@@ -154,23 +154,21 @@ class ReservationController extends Controller
             $code = '';
             $reservation = [];
             //1-Verificar que el usuario no este registrado
-            $user = User::where('email', $data['email_client'])->first();
-            // Verificar si se encontró un usuario
-            if ($user) {
-                Log::info("Encontro el ususario");
-                Log::info($user);
-                Log::info($request->client_id);
-                // Buscar el cliente
-                if ($data['client_id'] != 0){                    
-                    $id_client = $data['client_id'];
+            if ($data['client_id'] != 0) {
+                $id_client = $data['client_id'];
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
-                }else{
-                    $client = Client::where('email', $data['email_client'])->first();
-                if ($client && $client->name == $data['name_client']) {
-                    Log::info("Buscar el cliente");
+            }
+            else {
+                $user = User::where('email', $data['email_client'])->whereHas('client', function ($query) use ($data){
+                    $query->where('name', $data['name_client']);
+                })->first();
+                if ($user) {
+                    Log::info("Encontro el ususario");
+                    Log::info($user);
+                    $client = $user->client;
                     $id_client = $client->id;
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
-                } else {
+                }else {
                     Log::info("Si no existe registrarlo");
                     $userNew = User::create([
                         'name' => $data['name_client'],
@@ -192,35 +190,8 @@ class ReservationController extends Controller
                     Log::info($id_client);
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
                 }
-                }
-            } else {
-                Log::info("Crear Usuario");
-                // Crear Usuario
-                $user = User::create([
-                    'name' => $data['name_client'],
-                    'email' => $data['email_client'],
-                    'password' => Hash::make($data['email_client'])
-                ]);
-                Log::info("Crear client");
-
-                $client = new Client();
-                $client->name = $data['name_client'];
-                //$client->surname = $data['surname_client'];
-                //$client->second_surname = $data['second_surname'];
-                $client->email = $data['email_client'];
-                $client->phone = $data['phone_client'];
-                //$client->client_image = 'comments/default.jpg';
-                $client->user_id = $user->id;
-                $client->save();
-                $id_client = $client->id;
-
-                Log::info("Id que obtuvo");
-                Log::info($id_client);
-                $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
-
-            DB::commit();
-
+            
             // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
             Log::info("5.comparando fechas");
 
@@ -268,6 +239,8 @@ class ReservationController extends Controller
                     $notification->save();
              }
             }
+            
+            DB::commit();
             if ($data['from_home'] == 1) {
                 $code = $reservation->code;
                 //optener nombre del professional
