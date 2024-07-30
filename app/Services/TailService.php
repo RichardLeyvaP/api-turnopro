@@ -373,15 +373,13 @@ class TailService
             //$reservation->final_hour = date('H:i:s', strtotime($current_date) + strtotime($reservation->total_time));            
             $reservation->started_at = now();
             $reservation->save();
-        }
-        $tail->attended = $attended;
-        $tail->save();
+        }//if 1
         if ($attended == 2) {
             $reservation = Reservation::findOrFail($reservation_id);
             $reservation->finished_at = now();
             $reservation->confirmation = 2;
             $reservation->save();
-        }
+        }//if 2
         if ($attended == 5) {
             $car = Car::whereHas('reservation', function ($query) use ($reservation_id) {
                 $query->where('id', $reservation_id);
@@ -414,7 +412,7 @@ class TailService
                 $car->tecnico_id = $tecnicoId;
                 $car->save();
             }
-        }
+        }//if 5
         if ($attended == 3) {
             $reservation = Reservation::findOrFail($reservation_id);
             $car = $reservation->car;
@@ -473,7 +471,13 @@ class TailService
                         $branch->notifications()->save($notification);
                     }
                 }
+        }//if 3
+        if ($attended == 4) {
+            $tail->timeThecnical = now();
         }
+        $tail->attended = $attended;
+        $tail->save();
+
     }
     
 
@@ -558,7 +562,7 @@ class TailService
                 $query->where('branch_id', $branch_id)->whereHas('car.clientProfessional', function ($query) use ($professionals) {
                     $query->whereIn('professional_id', $professionals);
                 });
-            })->orderBy('updated_at')->whereIn('attended', [4, 5, 33])->get()->map(function ($tail) {
+            })->orderBy('timeThecnical')->whereIn('attended', [4, 5, 33])->get()->map(function ($tail) {
                 $client = $tail->reservation->car->clientProfessional->client;
                 $professional = $tail->reservation->car->clientProfessional->professional;
                 $reservation = $tail->reservation;
