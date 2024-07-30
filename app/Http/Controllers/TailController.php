@@ -1056,7 +1056,8 @@ class TailController extends Controller
         try {
         $data = $request->validate([
             'professional_id' => 'required|numeric',
-            'branch_id' => 'required|numeric'
+            'branch_id' => 'required|numeric',
+            'place' => 'required|numeric'
         ]);
         //Saber si esta disponible distinto [0, 2, 3]
         $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
@@ -1074,6 +1075,42 @@ class TailController extends Controller
                 $query->whereIn('attended', [0, 3]);
             })->whereDate('data', Carbon::now())->orderBy('start_time')->first();
             if ($reservation != null) {
+                if ($data['place'] == 0) {
+                    $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
+                    if (!empty($professional)) {
+                        $firstProfessional = $professional[0];
+                        $dataReasigned = [
+                            'reservation_id' => $reservation->id,
+                            'professional_id' => $firstProfessional->id,
+                            'client_id' => $reservation->car->clientProfessional->client_id
+    
+                        ];
+                        $this->tailService->reasigned_client($dataReasigned);
+                        $reservation->timeClock = now();
+                    $reservation->save();
+                    //consulta para despues asignar la no convivencia
+                    $professionalConv = Professional::find($data['professional_id']);
+                    if ($professionalConv->charge->name != 'Barbero y Encargado') {
+                        $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
+                            $query->where('type', 'Tiempo');
+                        })->where('branch_id', $data['branch_id'])->first();
+                    $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();                        
+                    if ($existencia != null && $existencia->estado != 0) {
+                        $professionalConv->branchrules()->updateExistingPivot($branchrule->id,['estado'=> 0]);
+                        $notification = new Notification();
+                        $notification->professional_id = $data['professional_id'];
+                        $notification->branch_id = $reservation->branch_id;
+                        $notification->tittle = 'Incumplimiento de convivencia';
+                        $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
+                        $notification->type = 'Barbero';
+                        $notification->save();
+                    }
+                }
+                    
+                    DB::commit();
+                    return response()->json(1, 200);
+                    }
+                }//if de place
                 if ($reservation->timeClock == NUll) {
                     $reservation->timeClock = now();
                     $reservation->save();
