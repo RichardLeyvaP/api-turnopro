@@ -315,7 +315,7 @@ class ReservationController extends Controller
             if ($reservation->timeClock == NUll) {
                 $reservation->timeClock = now();
                 $reservation->save();
-                return response()->json($seg, 200);
+                return response()->json(intval($seg), 200);
             }else {
                 $horaActual = now();
                     // Convertir las cadenas de tiempo a objetos Carbon
@@ -325,11 +325,11 @@ class ReservationController extends Controller
                     $currentTime->subSeconds(20);
                     // Calcular la diferencia en minutos
                     $diferenciaEnSegundos = $currentTime->diffInSeconds($startTime);
-                    return response()->json($diferenciaEnSegundos, 200); 
+                    return response()->json(intval($diferenciaEnSegundos), 200); 
             }
         }//if si tiene reservation 
         else {
-            return response()->json($seg, 200);
+            return response()->json(intval($seg), 200);
         }
         } catch (\Throwable $th) {
             //throw $th;
