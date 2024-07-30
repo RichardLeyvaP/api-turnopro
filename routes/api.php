@@ -188,6 +188,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/reservation-notconfirm', [ReservationController::class, 'reserve_noconfirm']);//Reservas no confirmadas, eliminarlas, tarea programada
     Route::get('/branch-reservations', [ReservationController::class, 'branch_reservations']);//Dado una branch devolver las reservations del dia
     Route::get('/reservations-count', [ReservationController::class, 'reservations_count']);//Dado un business devolver las reservations del dia reservations_count_week
+    Route::get('/time-clock-reservation', [ReservationController::class, 'time_clock_reservation']);//Dado una branch y un professional devolver el estado del reloj del primer cliente a tomar para atender 
 
     //associated
     Route::get('/associated', [AssociatedController::class, 'index']);

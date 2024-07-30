@@ -18,6 +18,7 @@ use App\Models\Client;
 use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\User;
+use App\Services\ProfessionalService;
 use App\Services\ReservationService;
 use App\Services\SendEmailService;
 use DateTime;
@@ -27,14 +28,15 @@ use Symfony\Component\Mailer\Exception\TransportException;
 
 class ReservationController extends Controller
 {
-
     private ReservationService $reservationService;
     private SendEmailService $sendEmailService;
+    private ProfessionalService $professionalService;
 
-    public function __construct(ReservationService $reservationService, SendEmailService $sendEmailService)
+    public function __construct(ReservationService $reservationService, SendEmailService $sendEmailService, ProfessionalService $professionalService)
     {
         $this->reservationService = $reservationService;
         $this->sendEmailService = $sendEmailService;
+        $this->professionalService = $professionalService;
     }
 
     public function index()
@@ -135,12 +137,17 @@ class ReservationController extends Controller
                 'name_client' => 'required',
                 'client_id' => 'nullable',
                 //'second_surname' => 'required',
-            ]);
+            ]);            
+            $servs = $request->input('services');
             if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
                 // Actualiza el campo 'living' a NULL para el branch_id dado
                 BranchProfessional::where('branch_id', $data['branch_id'])
                 ->update(['living' => NULL]);
+                $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+                if ($professionals) {
+                    $data['professional_id'] = $professionals[0]['id'];
+                }
             } else {
                 $data['select_professional'] = 1;
             }
@@ -149,7 +156,6 @@ class ReservationController extends Controller
             } else {
                 $data['from_home'] = 1;
             }
-            $servs = $request->input('services');
             $id_client = 0;
             $code = '';
             $reservation = [];
@@ -280,6 +286,55 @@ class ReservationController extends Controller
 
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
+        }
+    }
+
+    public function time_clock_reservation(Request $request){
+        Log::info("Saber tiempo del reloj de los 3 minutos");
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
+            ]);
+            $seg = 180;
+            //Saber si esta disponible distinto [0, 2, 3]
+        $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
+            $query->where('professional_id', $data['professional_id']);
+        })->whereHas('tail', function ($query) use ($data) {
+            $query->whereNotIn('attended', [0, 2, 3]);
+        })->whereDate('data', Carbon::now())->orderBy('start_time')->get();
+        if ($reservationAttended->isNotEmpty()) {
+            return response()->json(intval($seg), 200);
+        }
+        $reservation = Reservation::where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereHas('car.clientProfessional', function ($query) use ($data) {
+            $query->where('professional_id', $data['professional_id']);
+        })->whereHas('tail', function ($query) use ($data) {
+            $query->whereIn('attended', [0, 3]);
+        })->whereDate('data', Carbon::now())->orderBy('start_time')->first();
+        if ($reservation != null){
+            if ($reservation->timeClock == NUll) {
+                $reservation->timeClock = now();
+                $reservation->save();
+                return response()->json($seg, 200);
+            }else {
+                $horaActual = now();
+                    // Convertir las cadenas de tiempo a objetos Carbon
+                    $currentTime = Carbon::parse($horaActual);
+                    $startTime = $reservation->timeClock;
+                    //restar 20 segundos a hora actual
+                    $currentTime->subSeconds(20);
+                    // Calcular la diferencia en minutos
+                    $diferenciaEnSegundos = $currentTime->diffInSeconds($startTime);
+                    return response()->json($diferenciaEnSegundos, 200); 
+            }
+        }//if si tiene reservation 
+        else {
+            return response()->json($seg, 200);
+        }
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
 

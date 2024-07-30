@@ -190,8 +190,10 @@ class RecordController extends Controller
             ]);
 
             $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
+            if($record != null){                
             $record->end_time = Carbon::now();
             $record->save();
+            }
             $professional = Professional::find($data['professional_id']);
                 if ($professional->charge->name == 'Coordinador' || $professional->charge->name == 'Encargado') {
                     $professional->state = 0;

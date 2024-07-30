@@ -260,7 +260,7 @@ class UserController extends Controller
         }
     }
 
-    public function login_phone_get_branch(Request $request){
+    /*public function login_phone_get_branch(Request $request){
         try {
             Log::info("entra a buscar los usuarios");
 
@@ -296,9 +296,49 @@ class UserController extends Controller
             Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
+    }*/
+
+    public function login_phone_get_branch(Request $request){
+        try {
+            Log::info("entra a buscar los usuarios");
+
+            $validator = Validator::make($request->all(), [
+                'email' => 'required',
+                'password' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $userData = [];
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $userData = Auth::user();
+            }    
+            // Intentar la autenticación con el nombre de usuario
+            elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
+                $userData = Auth::user();
+            }
+            if(!$userData){
+                $branches = [];
+            }else {
+                //return $user = User::find($userData['id']);
+                $branches = $userData->professional->branches->map(function ($branch){
+                    return [
+                        'branch_id' => $branch->id,
+                        'nameBranch' => $branch->name
+                    ];
+                });
+            }
+            
+            return response()->json(['branches' => $branches], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error interno del sistema"], 500);
+        }
     }
 
-    public function login_phone(Request $request)
+    /*public function login_phone(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -396,9 +436,186 @@ class UserController extends Controller
             Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
+    }*/
+
+    public function login_phone(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required',
+                'password' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $branch = [
+                'branch_id' => null,
+                'nameBranch' => null,
+                'useTechnical' => 0,
+                'business_id' => 0,
+                'nameBusiness' => ''
+            ];
+            $user = [];
+            Log::info("obtener el usuario");
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }    
+            // Intentar la autenticación con el nombre de usuario
+            elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }
+            //$user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
+            //Log::info($user);
+            if ($user) {
+                    $professional = $user->professional;
+                    $business = Business::where('id', $professional->business_id)->get();
+                    if ($professional->branches->isNotEmpty()) { // Check if branches exist
+                        Log::info("Es professional");
+                        $branch = $professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
+                            return [
+                                'branch_id' => $branch->id,
+                                'nameBranch' => $branch->name,
+                                'useTechnical' => $branch->useTechnical,
+                                'business_id' => $branch->business->id,
+                                'nameBusiness' => $branch->business->name
+                            ];
+                        })->values()->first();
+
+                        $charge = $professional->charge->name;
+                        if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
+                            //return $user->professional->branchRules->where('branch_id', $request->branch_id);
+                           $professionalRules = $professional->branchRules()
+                            ->where('branch_id', $request->branch_id)
+                            ->get()->map->pivot->where('data', Carbon::now()->toDateString());
+                            if ($professionalRules->isEmpty()) {
+                                $branchRules = Branch::find($request->branch_id);
+                            $professional = Professional::find($user->professional->id);
+                            Log::info($professionalRules);
+                                $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
+                                Log::info($branchRulesId);
+                                $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+                            }
+                        }//if del cargo
+                    }//if de la sucursal
+
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    Auth::user();     
+                    return response()->json([
+                        'id' => $user->id,
+                        'userName' => $user->name,
+                        'email' => $user->email,
+                        'business_id' => $business->value('id'),
+                        'nameBusiness' => $business->value('name'),
+                        'charge' => $user->professional ? $user->professional->charge->name : null,
+                        'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
+                        'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
+                        'professional_id' => $user->professional ? ($user->professional->id) : 0,
+                        'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
+                        'client_id' => $user->client ? ($user->client->id) : 0,
+                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
+                        'nameBranch' => $branch ? $branch['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
+                        'token' => $token,
+                    ], 200, [], JSON_NUMERIC_CHECK);
+            } else {
+                return response()->json([
+                    "msg" => "Usuario no registrado"
+                ], 404);
+            }
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
+        }
     }
 
     public function login(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required',
+                'password' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $branch = [
+                'branch_id' => 0,
+                'nameBranch' => null,
+                'useTechnical' => 0,
+                'business_id' => 0,
+                'nameBusiness' => ''
+            ];
+            $user = [];
+            Log::info("obtener el usuario");
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }    
+            // Intentar la autenticación con el nombre de usuario
+            elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }
+            Log::info($user);
+            if ($user) {
+                    Log::info("Pass correct");
+                    $business = Business::where('professional_id', $user->professional->id)->first();
+                    Log::info($business);
+
+                    if ($user->professional->branches->where('id', $request->branch_id)->isNotEmpty()) { // Check if branches exist
+                        Log::info("Es professional");
+                        if ($request->branch_id !== null  && strtolower($request->branch_id !== 'null')){
+                        $branch = $user->professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
+
+                            return [
+                                'branch_id' => $branch->id,
+                                'nameBranch' => $branch->name,
+                                'useTechnical' => $branch->useTechnical,
+                                'business_id' => $branch->business->id,
+                                'nameBusiness' => $branch->business->name
+                            ];
+                        })->values()->first();}
+                    }
+                    
+                
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    Auth::user();                  
+            
+                    //return $branch;
+                    return response()->json([
+                        'id' => $user->id,
+                        'userName' => $user->name,
+                        'email' => $user->email,
+                        'business_id' => $business ? $business->id : $branch['business_id'],
+                        'nameBusiness' => $business ? $business->name : $branch['nameBusiness'],
+                        'charge' => $user->professional ? $user->professional->charge->name : null,
+                        'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
+                        'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
+                        'professional_id' => $user->professional ? ($user->professional->id) : 0,
+                        'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
+                        'client_id' => $user->client ? ($user->client->id) : 0,
+                        'branch_id' => $branch ? $branch['branch_id'] : 0,
+                        'nameBranch' => $branch ? $branch['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
+                        'token' => $token,
+                        'permissions' => $user->professional ? $user->professional->charge->permissions->map(function ($query){
+                            return $query->name . ', ' . $query->module;
+                        })->values()->all() : [],
+                    ], 200, [], JSON_NUMERIC_CHECK);
+            } else {
+                return response()->json([
+                    "msg" => "Usuario no registrado"
+                ], 401);
+            }
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
+        }
+    }
+
+    /*public function login(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -480,7 +697,7 @@ class UserController extends Controller
             Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
-    }
+    }*/
 
     public function userProfile()
     {
