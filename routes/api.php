@@ -707,7 +707,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate']); //vaciar la cola
+Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate']); //vaciar la cola
 
 Route::get('/closebox-month', [BoxCloseController::class, 'box_close_month']);//para tarea progradad enviar el cierre de caja
 
