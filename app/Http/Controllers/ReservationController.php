@@ -139,6 +139,7 @@ class ReservationController extends Controller
                 //'second_surname' => 'required',
             ]);            
             $servs = $request->input('services');
+            Log::info($request);
             if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
                 // Actualiza el campo 'living' a NULL para el branch_id dado
@@ -147,6 +148,7 @@ class ReservationController extends Controller
                 $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
                 if ($professionals) {
                     $data['professional_id'] = $professionals[0]['id'];
+                    $data['start_time'] = $professionals[0]['start_time'];
                 }
             } else {
                 $data['select_professional'] = 1;
