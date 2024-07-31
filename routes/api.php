@@ -93,7 +93,7 @@ Route::get('qrCode-otros', [UserController::class, 'qrCodeOtros']);
 Route::get('reactive-password', [UserController::class, 'reactive_password']);
 Route::get('change_password', [UserController::class, 'change_password']);
 
-Route::group( ['middleware' => ["custom_auth"]], function(){
+Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
     Route::get('logout', [UserController::class, 'logout']);
     Route::get('logout-phone', [UserController::class, 'logout_phone']);//cerrar session del apk, al hacerlo pasar las notificaciones a vistas y luego destruir el token
