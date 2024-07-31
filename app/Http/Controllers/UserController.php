@@ -578,11 +578,13 @@ class UserController extends Controller
                             ];
                         })->values()->first();}
                     }
-                    
+                         
+                    $professional = $user->professional;
+                    $professional->state = 1;
+                    $professional->save();
                 
                     $token = $user->createToken('auth_token')->plainTextToken;
-                    Auth::user();                  
-            
+                    Auth::user();             
                     //return $branch;
                     return response()->json([
                         'id' => $user->id,
@@ -809,6 +811,10 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         try {
+            $user = auth()->user();
+            $professional = $user->professional;
+                    $professional->state = 0;
+                    $professional->save();
             auth()->user()->tokens()->delete();
             return response()->json([
                 "msg" => "Session cerrada correctamente"

@@ -35,6 +35,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class TailController extends Controller
 {
@@ -755,8 +756,9 @@ class TailController extends Controller
 
             Log::info("Mandar a eliminar la cola");
             Tail::truncate();
-            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL]);
+            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL, 'state' => 0]);
             BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
+            PersonalAccessToken::query()->delete();
             return response()->json(['msg' => "Cola eliminada correctamente"], 200);
         } catch (\Throwable $th) {
             Log::error($th);
