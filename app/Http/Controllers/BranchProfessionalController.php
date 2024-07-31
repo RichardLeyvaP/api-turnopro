@@ -459,9 +459,9 @@ class BranchProfessionalController extends Controller
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
 
                 // Extrae los IDs de los profesionales para cada cargo
-                $encargados = $groupedProfessionals->get('Encargado')->pluck('professional_id');
-                $coordinadors = $groupedProfessionals->get('Coordinador')->pluck('professional_id');
-                $barberoEncargados = $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id');
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+$coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+$barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;
                 if ($data['state'] == 4) {

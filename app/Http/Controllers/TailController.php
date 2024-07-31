@@ -1059,8 +1059,18 @@ class TailController extends Controller
         $data = $request->validate([
             'professional_id' => 'required|numeric',
             'branch_id' => 'required|numeric',
-            'place' => 'required|numeric'
+                'place' => 'sometimes|numeric'
         ]);
+        // Verificar si el campo 'place' está presente en la solicitud
+        if ($request->has('place')) {
+            $data['place'] = $request->input('place');
+            // Realiza las acciones necesarias con el campo 'place'
+            Log::info("Campo 'place' presente con valor: ".$data['place']);
+        } else {
+            // Realiza las acciones necesarias cuando 'place' no está presente
+            Log::info("Campo 'place' no está presente");
+            $data['place'] = 1;
+        }
         //Saber si esta disponible distinto [0, 2, 3]
         $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
             $query->where('professional_id', $data['professional_id']);
