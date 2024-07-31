@@ -791,7 +791,7 @@ class TailController extends Controller
             Workplace::query()->update(['busy' => 0, 'select' => 0]);
             BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
             Record::truncate(); //Hora de entrada y salida de los professionales
-            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL]);
+            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL, 'state' => 0]);
             User::whereDoesntHave('professional')->delete(); //borrar los usuarios que no professionales
 
             return response()->json(['msg' => "Tablas vaciadas correctamente"], 200);
