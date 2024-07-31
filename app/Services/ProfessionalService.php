@@ -1246,7 +1246,7 @@ class ProfessionalService
         $currentTime = Carbon::now();
 
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id)->where('arrival', '!=', NULL);;
+            $query->where('branch_id', $branch_id)->where('arrival', '!=', NULL);
         })->whereHas('branchServiceProfessionals', function ($query) use ($branchService) {
             $query->whereIn('branch_service_id', $branchService);
         }, '=', count($branchService))->whereHas('charge', function ($query) {
@@ -1334,6 +1334,123 @@ class ProfessionalService
         
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
                                 Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
+                                $professionalFree[] = $professional;
+                                break;
+                            }else{
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $professionalFree;
+    }
+
+    public function professionals_state_tottem($branch_id, $services)
+    {
+        //$reservation = Reservation::find($reservation_id);
+        //$orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
+        //$services = $servs;
+        $total_timeMin = Service::whereIn('id', $services)->get()->sum('duration_service');
+        //$total_timeMin = $this->convertirHoraAMinutos($totalTiempo);
+        //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
+        $currentTime = Carbon::now();
+
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })->whereHas('branchServices', function ($query) use ($services, $branch_id) {
+            $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
+        }, '=', count($services))->whereHas('charge', function ($query) {
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+        })->where('state', 1)->join('branch_professional', function ($join) use ($branch_id) {
+            $join->on('professionals.id', '=', 'branch_professional.professional_id')
+                ->where('branch_professional.branch_id', '=', $branch_id)
+                ->where('branch_professional.arrival', '!=', NULL);
+        })->select(
+            'professionals.id',
+            'professionals.name',
+            'professionals.surname',
+            'professionals.second_surname',
+            'professionals.email',
+            'professionals.phone',
+            'professionals.charge_id',
+            'professionals.state',
+            'professionals.image_url',
+            'branch_professional.arrival',
+            'branch_professional.living',
+            'branch_professional.numberRandom'
+            )->orderBy('branch_professional.numberRandom', 'asc')
+            ->orderBy('branch_professional.living', 'asc')
+            ->orderBy('branch_professional.arrival', 'asc')
+            ->get();
+            Log::info('Professionales trabajando que realizan ese servicio');
+            Log::info($professionals);
+        $professionalFree = [];
+        // Convertir el campo telefono a string
+        // Iterar sobre los profesionales
+        foreach ($professionals as $professional) {
+            Log::info('Professional analizando');
+            Log::info($professional);
+            // Convertir el campo teléfono a string
+            $professional->phone = (string) $professional->phone;
+        
+            // Verificar la disponibilidad del profesional en su lugar de trabajo
+            $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
+                ->whereDate('data', Carbon::now())
+                ->where('state', 1)
+                ->whereHas('workplace', function ($query) use ($branch_id) {
+                    $query->where('busy', 1)->where('branch_id', $branch_id);
+                })->first();
+        
+            Log::info('Puesto de trabajo');
+            Log::info($workplaceProfessional);
+        
+            $current_date = Carbon::now();
+            $nuevaHoraInicio = Carbon::now();
+        
+            if ($workplaceProfessional) {
+                $professional->position = $workplaceProfessional->workplace->name;
+                $professional->charge_id = $professional->charge->name;
+        
+                $attended = $professional->reservations()
+                    ->where('branch_id', $branch_id)
+                    ->whereIn('confirmation', [1, 4])
+                    ->whereDate('data', Carbon::now())
+                    ->whereHas('tail', function ($subquery) {
+                        $subquery->whereIn('attended', [1, 11, 111, 4, 5, 33]);
+                    })
+                    ->get();
+        
+                if ($attended->isNotEmpty()) {
+                    Log::info('Está atendiendo');
+                } else {
+                    $reservations = $professional->reservations()
+                        ->where('branch_id', $branch_id)
+                        ->whereIn('confirmation', [1, 4])
+                        ->whereDate('data', Carbon::now())
+                        ->whereHas('tail', function ($subquery) {
+                            $subquery->where('aleatorie', '!=', 1);
+                        })
+                        ->orderBy('start_time')
+                        ->get();
+        
+                    if ($reservations->isEmpty()) {
+                        Log::info('No tiene reservas, lo agrego como libre');
+                        $professional->start_time = Carbon::now()->format('H:i');
+                        $professionalFree[] = $professional;
+                    } else {
+                        foreach ($reservations as $reservation1) {
+                            // Comprobación de start_time y attended
+                            Log::info('Reservaciones');
+                            Log::info($reservation1);
+                            $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+                            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+        
+                            if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
+                                Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
+                                $professional->start_time = Carbon::now()->format('H:i');
                                 $professionalFree[] = $professional;
                                 break;
                             }else{
