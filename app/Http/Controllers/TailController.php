@@ -872,7 +872,7 @@ class TailController extends Controller
         }
     }
 
-    public function reasigned_client(Request $request)
+    public function reasigned_client_coordinador(Request $request)
     {
         try {
 
@@ -884,6 +884,32 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $this->tailService->reasigned_clientOld($data);
+            $reservation = Reservation::where('id', $data['reservation_id'])->first();
+            if ($reservation != null) {
+                $reservation->timeClock = now();
+                $reservation->save();
+            }
+            DB::commit();
+            return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
+        }
+    }
+
+    public function reasigned_client(Request $request)
+    {
+        try {
+
+            Log::info("Reasignar Cliente a barbero");
+            DB::beginTransaction();
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
+                'client_id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
+            ]);
+            $this->tailService->reasigned_client($data);
             $reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
                 $reservation->timeClock = now();

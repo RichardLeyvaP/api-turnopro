@@ -832,7 +832,7 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function professionals_state(Request $request)
+    public function professionals_state_coordinador(Request $request)
     {
         Log::info('Obtener profesionales disponibles para reasignar en coordinador');
         try {
@@ -855,7 +855,7 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function professionals_state_old(Request $request)
+    public function professionals_state(Request $request)
     {
         try {
             $data = $request->validate([
