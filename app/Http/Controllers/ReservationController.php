@@ -298,7 +298,7 @@ class ReservationController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $seg = 180;
+            $seg = -222;
             //Saber si esta disponible distinto [0, 2, 3]
         $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
             $query->where('professional_id', $data['professional_id']);
@@ -323,8 +323,8 @@ class ReservationController extends Controller
                     // Convertir las cadenas de tiempo a objetos Carbon
                     $currentTime = Carbon::parse($horaActual);
                     $startTime = $reservation->timeClock;
-                    //restar 20 segundos a hora actual
-                    $currentTime->subSeconds(20);
+                    /*//restar 20 segundos a hora actual
+                    $currentTime->subSeconds(20);*/
                     // Calcular la diferencia en minutos
                     $diferenciaEnSegundos = $currentTime->diffInSeconds($startTime);
                     return response()->json(intval($diferenciaEnSegundos), 200); 
