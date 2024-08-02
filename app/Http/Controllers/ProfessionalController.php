@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BranchProfessional;
+use App\Models\BranchService;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Client;
@@ -841,13 +842,15 @@ class ProfessionalController extends Controller
                 'reservation_id' => 'required|numeric'
             ]);
             $reservation = Reservation::find($data['reservation_id']);
+            $professional_id = $reservation->car->clientProfessional->professional_id;
             $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
-            $servs = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
+            $services = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
+            $servs = BranchService::whereIn('id', $services)->pluck('service_id');
             Log::info('Servicios del nuevlo cliente a realizar');
             Log::info($servs);
             //$total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
             //$professional = $this->professionalService->professionals_state($data['branch_id'], $data['reservation_id']);
-            $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+            $professionals = $this->professionalService->branch_professionals_service_tottem($data['branch_id'], $servs, $professional_id);
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);

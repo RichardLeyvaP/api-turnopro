@@ -434,8 +434,10 @@ class BranchProfessionalController extends Controller
                     $notification->type = $data['type'];
                     $notification->save();
                     $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
-                    $record->end_time = Carbon::now();
-                    $record->save();
+                    if ($record != null) {
+                        $record->end_time = Carbon::now();
+                        $record->save();
+                    }
                 }
                 
             }
