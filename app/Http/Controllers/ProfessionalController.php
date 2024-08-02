@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\BranchProfessional;
+use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Client;
 use App\Models\ClientProfessional;
+use App\Models\Order;
 use App\Models\Professional;
+use App\Models\Reservation;
 use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\User;
@@ -830,6 +833,29 @@ class ProfessionalController extends Controller
     }
 
     public function professionals_state(Request $request)
+    {
+        Log::info('Obtener profesionales disponibles para reasignar en coordinador');
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'reservation_id' => 'required|numeric'
+            ]);
+            $reservation = Reservation::find($data['reservation_id']);
+            $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
+            $servs = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
+            Log::info('Servicios del nuevlo cliente a realizar');
+            Log::info($servs);
+            //$total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
+            //$professional = $this->professionalService->professionals_state($data['branch_id'], $data['reservation_id']);
+            $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Professionals con orden de disponibilidad"], 500);
+        }
+    }
+
+    public function professionals_state_old(Request $request)
     {
         try {
             $data = $request->validate([
