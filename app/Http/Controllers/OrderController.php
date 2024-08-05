@@ -335,7 +335,7 @@ class OrderController extends Controller
                 $notification->save();
              }
              //para las notificaciones de solicitud a 1
-             Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'orden'.$data['id'])->update(['state' => 1]);
+             Notification::where('branch_id', $reservation->branch_id)->where('state', 0)->where('stateApk', 'orden'.$data['id'])->update(['state' => 1]);
             }
              DB::commit();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
@@ -560,7 +560,7 @@ class OrderController extends Controller
                 $notification->save();
             }
             //para las notificaciones de solicitud a 1
-            Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'orden'.$data['id'])->update(['state' => 1]);
+            Notification::where('branch_id', $reservation->branch_id)->where('state', 0)->where('stateApk', 'orden'.$data['id'])->update(['state' => 1]);
             $amountTemp = $car->amount - $order->price;
             $car->amount = $amountTemp;
             $order->delete();

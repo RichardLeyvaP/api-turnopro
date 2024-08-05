@@ -890,7 +890,7 @@ class ReservationController extends Controller
                     $notification->state = 3;
                     $notification->type = 'Barbero';                     
                     $notification->save();
-                    Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'reservacion'.$data['id'])->update(['state' => 1]);
+                    Notification::where('branch_id', $branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$data['id'])->update(['state' => 1]);
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

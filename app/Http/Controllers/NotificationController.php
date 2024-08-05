@@ -36,10 +36,11 @@ class NotificationController extends Controller
                 'description' => 'required|string',
                 'type' => 'required|string',
             ]);
+            $stateApk = "";
             $branch = Branch::find($data['branch_id']);
             if ($data['type'] == 'Ambos') {
                 if ($request->has('stateApk')) {
-                    $data['stateApk'] = $request->stateApk;
+                    $stateApk = $request->stateApk;
                 }
                 $professionals = BranchProfessional::with(['professional' => function($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
@@ -63,7 +64,7 @@ class NotificationController extends Controller
                         $notification->tittle = $data['tittle'];
                         $notification->description = $data['description'];
                         $notification->type = 'Encargado';
-                        $notification->stateApk = $data['stateApk'];
+                        $notification->stateApk = $stateApk;
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -74,7 +75,7 @@ class NotificationController extends Controller
                         $notification->tittle = $data['tittle'];
                         $notification->description = $data['description'];
                         $notification->type = 'Coordinador';
-                        $notification->stateApk = $data['stateApk'];
+                        $notification->stateApk = $stateApk;
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -85,7 +86,7 @@ class NotificationController extends Controller
                         $notification->tittle = $data['tittle'];
                         $notification->description = $data['description'];
                         $notification->type = 'Encargado';
-                        $notification->stateApk = $data['stateApk'];
+                        $notification->stateApk = $stateApk;
                         $branch->notifications()->save($notification);
                     }
                 }

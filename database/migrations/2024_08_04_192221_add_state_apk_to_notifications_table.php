@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            $table->integer('stateApk')->nullable();
+            $table->string('stateApk')->nullable();
         });
     }
 
