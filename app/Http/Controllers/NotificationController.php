@@ -34,16 +34,28 @@ class NotificationController extends Controller
                 'branch_id' => 'required|numeric',
                 'tittle' => 'required|string',
                 'description' => 'required|string',
-                'type' => 'required|string'
+                'type' => 'required|string',
             ]);
             $branch = Branch::find($data['branch_id']);
             if ($data['type'] == 'Ambos') {
-                $professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
-                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Barbero y Encargado');
-                })->get();
-                $encargados = $professionals->where('professional.charge.name', 'Encargado')->pluck('professional_id');
-                $coordinadors = $professionals->where('professional.charge.name', 'Coordinador')->pluck('professional_id');
-                $barberoEncargados = $professionals->where('professional.charge.name', 'Barbero y Encargado')->pluck('professional_id');
+                if ($request->has('stateApk')) {
+                    $data['stateApk'] = $request->stateApk;
+                }
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $data['branch_id'])
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
                 if (!$encargados->isEmpty()) {
                     foreach ($encargados as $encargado) {
                         $notification = new Notification();
@@ -51,6 +63,7 @@ class NotificationController extends Controller
                         $notification->tittle = $data['tittle'];
                         $notification->description = $data['description'];
                         $notification->type = 'Encargado';
+                        $notification->stateApk = $data['stateApk'];
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -61,6 +74,7 @@ class NotificationController extends Controller
                         $notification->tittle = $data['tittle'];
                         $notification->description = $data['description'];
                         $notification->type = 'Coordinador';
+                        $notification->stateApk = $data['stateApk'];
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -71,6 +85,7 @@ class NotificationController extends Controller
                         $notification->tittle = $data['tittle'];
                         $notification->description = $data['description'];
                         $notification->type = 'Encargado';
+                        $notification->stateApk = $data['stateApk'];
                         $branch->notifications()->save($notification);
                     }
                 }

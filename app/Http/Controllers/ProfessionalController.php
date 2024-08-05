@@ -848,9 +848,7 @@ class ProfessionalController extends Controller
             $servs = BranchService::whereIn('id', $services)->pluck('service_id');
             Log::info('Servicios del nuevlo cliente a realizar');
             Log::info($servs);
-            //$total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
-            //$professional = $this->professionalService->professionals_state($data['branch_id'], $data['reservation_id']);
-            $professionals = $this->professionalService->branch_professionals_service_tottem($data['branch_id'], $servs, $professional_id);
+            $professionals = $this->professionalService->branch_professionals_service_tottem($data['branch_id'], $servs, $professional_id, $reservation);
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);

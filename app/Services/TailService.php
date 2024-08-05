@@ -341,6 +341,7 @@ class TailService
     public function tail_attended($reservation_id, $attended)
     {
         $tecnicoId = 0;
+        $reservationNoti = Reservation::where('id', $reservation_id)->first();
         $tail = Tail::where('reservation_id', $reservation_id)->first();
         if ($attended == 1) {
             $current_date = Carbon::now()->format('H:i:s');
@@ -434,9 +435,9 @@ class TailService
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
 
                 // Extrae los IDs de los profesionales para cada cargo
-                $encargados = $groupedProfessionals->get('Encargado')->pluck('professional_id');
-                $coordinadors = $groupedProfessionals->get('Coordinador')->pluck('professional_id');
-                $barberoEncargados = $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id');
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;               
                     $tittle = 'Solicitud de rechazo';
@@ -448,6 +449,7 @@ class TailService
                         $notification->tittle = $tittle;
                         $notification->description = $description;
                         $notification->type = 'Encargado';
+                        $notification->stateApk = 'reservacion'.$reservation_id;
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -458,6 +460,7 @@ class TailService
                         $notification->tittle = $tittle;
                         $notification->description = $description;
                         $notification->type = 'Coordinador';
+                        $notification->stateApk = 'reservacion'.$reservation_id;
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -468,12 +471,17 @@ class TailService
                         $notification->tittle = $tittle;
                         $notification->description = $description;
                         $notification->type = 'Encargado';
+                        $notification->stateApk = 'reservacion'.$reservation_id;
                         $branch->notifications()->save($notification);
                     }
                 }
         }//if 3
         if ($attended == 4) {
             $tail->timeThecnical = now();
+            Notification::where('branch_id', $reservationNoti->branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$reservation_id)->update(['state' => 1]);
+        }
+        if ($attended == 0 || $attended == 11) {
+        Notification::where('branch_id', $reservationNoti->branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$reservation_id)->update(['state' => 1]);
         }
         $tail->attended = $attended;
         $tail->save();
@@ -892,7 +900,7 @@ class TailService
         $nuevaHoraInicio = $horaActual;
         $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
 
-        foreach ($reservations as $reservation1) {
+        foreach ($reservations as $index => $reservation1) {
             $car = $reservation1->car;
             if ($reservation1->from_home == 1 && $reservation1->confirmation == 4) {
                 $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
@@ -901,11 +909,37 @@ class TailService
             }
             elseif ($reservation1->from_home == 1 && $reservation1->confirmation == 1) {
                 $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
-            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
-                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                    $encontrado = true;
-                    break;
-                }
+                $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+                if (isset($reservations[$index + 1])) {
+                    $nextReservation = $reservations[$index + 1];
+                    $final_hour_next = Carbon::parse($nextReservation->final_hour);
+                    $final_hour_nextMin = $this->convertirHoraAMinutos($final_hour_next->format('H:i'));
+    
+                    if (($final_hour_nextMin + $total_timeMin) <= $start_timeMin) {
+                        Log::info('Se coloca antes del reservadobh no ha confirmado');
+                        $nuevaHoraInicio = $final_hour_next;
+                        $encontrado = true;
+                        break;
+                    }else {
+                        //if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                            Log::info('Ne se coloca antes del reservadobh no ha confirmado porque no tiene tiempo');
+                            $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
+                            $encontrado = true;
+                            break;
+                        //}
+                    }
+                }else {
+                    if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                        Log::info('No tiene mas reservas y cabe antes de la bh no comfirmada hora de inicio hora actual');
+                        $encontrado = true;
+                        break;
+                    }else {
+                        Log::info('Ne se coloca antes del reservadobh no ha confirmado porque no tiene tiempo hora de inicio finalizacion de la bh');
+                        $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
+                            $encontrado = true;
+                            break;
+                    }
+                } 
             }elseif ($reservation1->from_home == 0 && $car->select_professional == 1) {
                 $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);
                 $encontrado = true;
@@ -917,16 +951,6 @@ class TailService
                     break;
                 }
             }
-            /*Log::info('Revisando reservas coordinador');
-            $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
-            $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
-            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
-
-            if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                $encontrado = true;
-                break;
-            }
-            $nuevaHoraInicio = Carbon::parse($reservation1->final_hour);*/
         }
 
         if (!$encontrado) {

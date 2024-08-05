@@ -180,7 +180,73 @@ class ProfessionalService
         return $arrayHoras[count($arrayHoras) - 1];
     }*/
 
-    public function branch_professionals_service_tottem($branch_id, $services, $professional_id)
+    private function encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation)
+    {
+        Log::info('Revisando reservas coordinador estado del professionals');
+        $encontrado = false;
+        $nuevaHoraInicio = $horaActual;
+        $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
+
+        foreach ($reservations as $index => $reservation1) {
+            $car = $reservation1->car;
+            if ($reservation1->from_home == 1 && $reservation1->confirmation == 4) {
+                $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+                $encontrado = true;
+                break;
+            }
+            elseif ($reservation1->from_home == 1 && $reservation1->confirmation == 1) {
+                $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+            if (isset($reservations[$index + 1])) {
+                $nextReservation = $reservations[$index + 1];
+                $final_hour_next = Carbon::parse($nextReservation->final_hour);
+                $final_hour_nextMin = $this->convertirHoraAMinutos($final_hour_next->format('H:i'));
+
+                if (($final_hour_nextMin + $total_timeMin) <= $start_timeMin) {
+                    $nuevaHoraInicio = Carbon::parse($final_hour_next)->format('H:i');//$final_hour_next;
+                    $encontrado = true;
+                    break;
+                }else {
+                        $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+                        $encontrado = true;
+                        break;
+                }
+            } else {
+                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
+                    $nuevaHoraInicio = $nuevaHoraInicio->format('H:i');
+                    $encontrado = true;
+                    break;
+                }else {
+                    $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+                            $encontrado = true;
+                            break;
+                }
+            }
+            }elseif ($reservation1->from_home == 0 && $car->select_professional == 1) {
+                $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+                $encontrado = true;
+                break;
+            }elseif ($car->select_professional == 0) {
+                if ($reservation1->created_at < $reservation->created_at) {
+                    $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+                    $encontrado = true;
+                    break;
+                }
+            }else {
+                $nuevaHoraInicio = Carbon::parse($horaActual)->format('H:i');
+                $encontrado = true;
+                break;
+            }
+        }
+
+        if (!$encontrado) {
+            $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour)->format('H:i');
+        }
+
+        return $nuevaHoraInicio;
+    }
+
+    public function branch_professionals_service_tottem($branch_id, $services, $professional_id, $reservation)
     {
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
@@ -204,7 +270,7 @@ class ProfessionalService
                     $join->on('professionals.id', '=', 'branch_professional.professional_id')
                         ->where('branch_professional.branch_id', '=', $branch_id)
                         ->where('branch_professional.arrival', '!=', NULL);
-                })->whereNot('id', $professional_id)
+                })->whereNot('professionals.id', $professional_id)
                 ->select(
                     'professionals.id',
                     'professionals.name',
@@ -223,70 +289,26 @@ class ProfessionalService
                 ->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
-            foreach ($professionals1 as $professional1) {
-                $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
-                    ->whereDate('endDate', '>=', $fechaDada)
-                    ->first();
-                Log::info($vacation);
-                if (!$vacation) {
-                    //Log::info();
-                    $professionals[] = $professional1;
-                }
-            }
-            $current_time = now()->format('H:i:s');
+            $horaActual = $horaActual = Carbon::now();
+            $tiempoReserva = $reservation->total_time;
             foreach ($professionals1 as $professional) {
-                $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
-                    ->whereDate('data', $current_date)
-                    /*->whereHas('tail', function ($subquery) {
-                        $subquery->where('aleatorie', '!=', 1);
-                    })*/
-                    ->get()
-                    ->sortBy('start_time')
-                    ->map(function ($query) use ($current_time, $professional) {
-                        $attended_values = [1, 11, 111, 4, 5, 33];
-                        // Comprobación de start_time y attended
-                        Log::info('Resevaciones');
-                        Log::info($query);
-                        if ($query->confirmation == 4 && $query->from_home == 1) {
-                             Log::info('Msg-Este profesional no esta libre');
-                            Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
-                            Log::info('Professional id' . $professional->id);
-                            Log::info('Tiempoo inicio de la reserva' . $query->start_time);
-                            Log::info('Tiempoo total de la reserva' . $query->total_time);
-                            $start_time = $current_time;
-                            $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->total_time) - strtotime('TODAY'));
-                            Log::info('Tiempoo inicio de la reserva actualizado' . $start_time);
-                            Log::info('Tiempoo final de la reserva' . $final_hour);
-                            return [
-                                'start_time' => $start_time,
-                                'final_hour' => $final_hour
-                            ];
-                        }
-                        return [
-                            'start_time' => $query->start_time,
-                            'final_hour' => $query->final_hour
-                        ];
-                    });
-                Log::info('$reservations');
-                Log::info($reservations);
-                // Decodificar la entrada JSON a un array de objetos
-                $entrada = json_decode($reservations, true);
-                //return $entrada[0];
+                $reservations = $professional->reservations()
+                ->where('branch_id', $branch_id)
+                ->whereIn('confirmation', [1, 4])
+                ->whereHas('tail', function ($query) {
+                    $query->whereNot('aleatorie', 1);
+                })
+                ->whereDate('data', Carbon::now())
+                ->orderByDesc('start_time')
+                ->get();
                 if ($reservations->isEmpty()) {
-                    if (Carbon::now() < Carbon::parse($startTime)) {
-                        $professional->start_time = Carbon::parse($startTime)->format('H:i');
-                        $availableProfessionals[] = $professional;
-                    } else {
-                        $professional->start_time = date('H:i');
-                        $availableProfessionals[] = $professional;
-                    }
-                } else {
-                    //$arrayHoras = $this->professional_reservations_time1($branch_id, $professional->id, $current_date);
-                    //return $arrayHoras;
-                    $professional->start_time = $this->encontrarHoraDisponible($totalTiempo, $entrada, $startTime);
+                    $professional->start_time = date('H:i');
                     $availableProfessionals[] = $professional;
-                    //break;
-                } //else
+                }else {
+                    $nuevaHoraInicio = $this->encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation);
+                    $professional->start_time = $nuevaHoraInicio;
+                    $availableProfessionals[] = $professional;
+                }
             } //for
         } //else
         //return $availableProfessionals;
@@ -326,9 +348,6 @@ class ProfessionalService
                     ->whereDate('data', $current_date)
                     ->where('start_time', '>', $colacion_time->format('H:i'))
                     ->orderBy('start_time')
-                    /*->whereHas('tail', function ($subquery) {
-                        $subquery->where('aleatorie', '!=', 1);
-                    })*/
                     ->get();
                     $colacion_time1 = $colacion_time;
                     if($reservs->isNotEmpty()){
@@ -341,11 +360,6 @@ class ProfessionalService
                             }
                         }
                     }
-                    /*if($reserv != Null && Carbon::parse($reserv->start_time) >= $colacion_time->addMinutes($totalTiempo)){
-                        $professional->start_time = Carbon::parse($professional->colacion_time)->addMinutes(60)->format('H:i');
-                    } else {                        
-                        $professional->start_time = Carbon::parse($reserv->final_hour)->format('H:i');
-                    }*/
                     $professional->start_time = $colacion_time->format('H:i');
                 }
                 }

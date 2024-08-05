@@ -1411,8 +1411,8 @@ class CarController extends Controller
                 $car = $orderData->car;
                 $clientProfessional = $car->clientProfessional;
 
-                $profesionalName = $clientProfessional->professional->name . ' ' . $clientProfessional->professional->surname . ' ' . $clientProfessional->client->second_surname;
-                $clientName = $clientProfessional->client->name . ' ' . $clientProfessional->client->surname . ' ' . $clientProfessional->client->second_surname;
+                $profesionalName = $clientProfessional->professional->name;
+                $clientName = $clientProfessional->client->name;
 
                 $hora = $orderData->updated_at;
                 if ($orderData->is_product == true) {

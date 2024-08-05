@@ -388,6 +388,8 @@ class BranchProfessionalController extends Controller
                     $notification->type = $data['type'];                    
                     $notification->save();
                 }
+                //para las notificaciones de solicitud a 1
+                Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
             }
             elseif ($data['state'] == 2 || $data['state'] == 0) {
                 if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
@@ -439,6 +441,8 @@ class BranchProfessionalController extends Controller
                         $record->save();
                     }
                 }
+                //para las notificaciones de solicitud a 1
+                Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
                 
             }
             elseif ($data['state'] == 4 || $data['state'] == 3){
@@ -462,8 +466,8 @@ class BranchProfessionalController extends Controller
 
                 // Extrae los IDs de los profesionales para cada cargo
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
-$coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-$barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;
                 if ($data['state'] == 4) {
@@ -480,6 +484,7 @@ $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupe
                         $notification->tittle = $tittle;
                         $notification->description = $description;
                         $notification->type = 'Encargado';
+                        $notification->stateApk = 'profesional'.$data['professional_id'];
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -490,6 +495,7 @@ $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupe
                         $notification->tittle = $tittle;
                         $notification->description = $description;
                         $notification->type = 'Coordinador';
+                        $notification->stateApk = 'profesional'.$data['professional_id'];
                         $branch->notifications()->save($notification);
                     }
                 }
@@ -500,6 +506,7 @@ $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupe
                         $notification->tittle = $tittle;
                         $notification->description = $description;
                         $notification->type = 'Encargado';
+                        $notification->stateApk = 'profesional'.$data['professional_id'];
                         $branch->notifications()->save($notification);
                     }
                 }
