@@ -303,9 +303,15 @@ class ProfessionalService
                 ->get();
                 if ($reservations->isEmpty()) {
                     $professional->start_time = date('H:i');
+                    $professional->free = 'Libre';
                     $availableProfessionals[] = $professional;
                 }else {
-                    $nuevaHoraInicio = $this->encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation);
+                    $nuevaHoraInicio = $this->encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation);                    
+                    if (Carbon::parse($nuevaHoraInicio) == $horaActual) {
+                        $professional->free = 'Libre';
+                    }else {
+                        $professional->free = 'Ocupado';
+                    }
                     $professional->start_time = $nuevaHoraInicio;
                     $availableProfessionals[] = $professional;
                 }
@@ -360,6 +366,7 @@ class ProfessionalService
                             }
                         }
                     }
+                    $professional->free = 'Ocupado';
                     $professional->start_time = $colacion_time->format('H:i');
                 }
                 }

@@ -776,16 +776,31 @@ class TailService
             } else {
                 $client_professional_id = $client_professional->pivot->id;
             }
-            Log::info($client_professional_id);
+            Log::info('Relacion Cliente Professional'.$client_professional_id);
 
-            $tail = $reservation->tail;
+           /* $tail = $reservation->tail;
             if ($tail && $tail->aleatorie != 0) {
-                $tail->aleatorie = 1;
+                $tail->aleatorie = 2;
                 $tail->save();
-            }
+            }*/
 
             $car->client_professional_id = $client_professional_id;
             $car->save();
+            $reservationsComp = $professional->reservations()
+                ->where('branch_id', $reservation->branch_id)
+                ->whereIn('confirmation', [1, 4])
+                ->whereDate('data', Carbon::now())
+                ->orderBy('start_time')
+                ->first();
+            $tail = $reservation->tail;
+            if ($tail && $tail->aleatorie != 0) {
+                if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
+                    $tail->aleatorie = 2;
+                }else {
+                    $tail->aleatorie = 1;
+                }
+                $tail->save();
+            }
 
             $this->reassignServices($servicesOrders, $service_professionals);
                 $notification = new Notification();
