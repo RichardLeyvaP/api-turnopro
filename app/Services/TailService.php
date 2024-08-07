@@ -799,17 +799,25 @@ class TailService
             if($reservationsComp != NULL && $reservationsComp->id == $reservation->id){
                 $reservation->timeClock = now();
                 $reservation->save();
+                if ($tail && $tail->aleatorie != 0) {
+                    //if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
+                        $tail->aleatorie = 2;
+                    //}else {
+                        //$tail->aleatorie = 1;
+                    //}
+                    $tail->save();
+                }
             }else {
                 $reservation->timeClock = NULL;
+                if ($tail && $tail->aleatorie != 0) {
+                    //if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
+                        $tail->aleatorie = 1;
+                    //}else {
+                        //$tail->aleatorie = 1;
+                    //}
+                    $tail->save();
+                }
                     $reservation->save();
-            }
-            if ($tail && $tail->aleatorie != 0) {
-                //if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
-                    $tail->aleatorie = 2;
-                //}else {
-                    //$tail->aleatorie = 1;
-                //}
-                $tail->save();
             }
 
             $this->reassignServices($servicesOrders, $service_professionals);
