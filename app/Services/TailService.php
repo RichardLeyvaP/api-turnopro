@@ -788,17 +788,24 @@ class TailService
             $car->save();
             $reservationsComp = $professional->reservations()
                 ->where('branch_id', $reservation->branch_id)
-                ->whereIn('confirmation', [1, 4])
+                ->where('confirmation', 4)
                 ->whereDate('data', Carbon::now())
+                ->whereHas('tail', function ($query) {
+                    $query->whereNot('aleatorie', 1);
+                })
                 ->orderBy('start_time')
                 ->first();
             $tail = $reservation->tail;
+            if($reservationsComp != NULL && $reservationsComp->id == $reservation->id){
+                $reservation->timeClock = now();
+                $reservation->save();
+            }
             if ($tail && $tail->aleatorie != 0) {
-                if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
+                //if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
                     $tail->aleatorie = 2;
-                }else {
-                    $tail->aleatorie = 1;
-                }
+                //}else {
+                    //$tail->aleatorie = 1;
+                //}
                 $tail->save();
             }
 

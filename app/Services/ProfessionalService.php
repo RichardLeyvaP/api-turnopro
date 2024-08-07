@@ -194,7 +194,7 @@ class ProfessionalService
                 $encontrado = true;
                 break;
             }
-            elseif ($reservation1->from_home == 1 && $reservation1->confirmation == 1) {
+            /*elseif ($reservation1->from_home == 1 && $reservation1->confirmation == 1) {
                 $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
             if (isset($reservations[$index + 1])) {
@@ -222,16 +222,16 @@ class ProfessionalService
                             break;
                 }
             }
-            }elseif ($reservation1->from_home == 0 && $car->select_professional == 1) {
-                $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+            }*/elseif ($reservation1->from_home == 0 && $car->select_professional == 1) {
+                $nuevaHoraInicio = $reservation1->final_hour;
                 $encontrado = true;
                 break;
-            }elseif ($car->select_professional == 0) {
-                if ($reservation1->created_at < $reservation->created_at) {
-                    $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
+            }elseif ($car->select_professional == 0 && $reservation1->tail->aleatorie == 2) {
+                //if ($reservation1->created_at < $reservation->created_at) {
+                    $nuevaHoraInicio = $reservation1->final_hour;
                     $encontrado = true;
                     break;
-                }
+                //}
             }else {
                 $nuevaHoraInicio = Carbon::parse($horaActual)->format('H:i');
                 $encontrado = true;
@@ -294,7 +294,7 @@ class ProfessionalService
             foreach ($professionals1 as $professional) {
                 $reservations = $professional->reservations()
                 ->where('branch_id', $branch_id)
-                ->whereIn('confirmation', [1, 4])
+                ->where('confirmation', 4)
                 ->whereHas('tail', function ($query) {
                     $query->whereNot('aleatorie', 1);
                 })
@@ -307,7 +307,7 @@ class ProfessionalService
                     $availableProfessionals[] = $professional;
                 }else {
                     $nuevaHoraInicio = $this->encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation);                    
-                    if (Carbon::parse($nuevaHoraInicio) == $horaActual) {
+                    if ($nuevaHoraInicio == $horaActual->format('H:i')) {
                         $professional->free = 'Libre';
                     }else {
                         $professional->free = 'Ocupado';
@@ -366,11 +366,10 @@ class ProfessionalService
                             }
                         }
                     }
-                    $professional->free = 'Ocupado';
                     $professional->start_time = $colacion_time->format('H:i');
                 }
-                }
-                
+                }                
+                $professional->free = 'Colación';
             }
         }
 

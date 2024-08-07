@@ -824,11 +824,11 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $this->tailService->reasigned_clientOld($data);
-            $reservation = Reservation::where('id', $data['reservation_id'])->first();
+            /*$reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
                 $reservation->timeClock = now();
                 $reservation->save();
-            }
+            }*/
             DB::commit();
             return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
         } catch (\Throwable $th) {
