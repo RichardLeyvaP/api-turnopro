@@ -799,6 +799,9 @@ class TailService
             if($reservationsComp != NULL && $reservationsComp->id == $reservation->id){
                 $reservation->timeClock = now();
                 $reservation->save();
+            }else {
+                $reservation->timeClock = NULL;
+                    $reservation->save();
             }
             if ($tail && $tail->aleatorie != 0) {
                 //if ($reservationsComp != NULL && $reservationsComp->id == $reservation->id) {
