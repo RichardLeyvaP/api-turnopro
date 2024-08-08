@@ -454,8 +454,11 @@ class BranchProfessionalController extends Controller
                     if ($reservations->isNotEmpty()) {
                     // Itera sobre las reservas y actualiza el campo 'aleatorie' de las relaciones 'tail'
                         foreach ($reservations as $reservation) {
-                            Log::info('Pasando aleatorias a state 1 reservation_id:'.$reservation->id);
-                            $reservation->tail()->update(['aleatorie' => 1]);
+                            $tail = $reservation->tail;
+                            $tail->aleatorie = 1;
+                            $tail->save();
+                            //$reservation->tail()->update(['aleatorie' => 1]);                            
+                            Log::info('Pasando aleatorios a state 1 reservation_id:'.$reservation->id);
                         }
                     }
             }

@@ -48,7 +48,10 @@ class AssistantController extends Controller
             //cola
             $branch_id = $branch->id;
             $professional_id = $professional->id;
-            $this->verific_aleatorie($branch_id, $professional);
+            if ($professional->state == 1) {        
+                Log::info('Estado del Professional Llama a la cola de los aleatorios');        
+                $this->verific_aleatorie($branch_id, $professional);
+            }
             Log::info('Dada una sucursal y un professional devuelve la cola del día');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
