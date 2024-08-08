@@ -850,7 +850,9 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             $professional = Professional::find($data['professional_id']);
-            if ($professional->state != 1) {
+            if ($professional && $professional->state != 1) {
+                return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
+            }else {
                 return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
             }
             $reservation = Reservation::where('id', $data['reservation_id'])->first();
