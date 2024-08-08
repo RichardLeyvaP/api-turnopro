@@ -849,12 +849,24 @@ class TailController extends Controller
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
-            $this->tailService->reasigned_client($data);
             $reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
-                $reservation->timeClock = now();
-                $reservation->save();
-            }
+                $professional = $this->professionalService->professionals_state($reservation->branch_id, $data['reservation_id']);
+                //Log::info('professionales disponibles reasignar primer plano');
+                //Log::info($professional);
+                if (!empty($professional)) {
+                $firstProfessional = $professional[0];
+                Log::info('professional disponible primero id');
+                Log::info($firstProfessional->id);
+                    $data['professional_id'] = $firstProfessional->id;
+                    $this->tailService->reasigned_client($data);
+                }
+                if ($reservation != null) {
+                    $reservation->timeClock = now();
+                    $reservation->save();
+                }
+            }            
+            //$this->tailService->reasigned_client($data);
             DB::commit();
             return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
         } catch (\Throwable $th) {

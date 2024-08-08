@@ -403,6 +403,20 @@ class BranchProfessionalController extends Controller
                     $ProfessionalWorkPlace->state = 0;
                     $ProfessionalWorkPlace->save();
                     }
+                    $reservations = $professional->reservations()
+                    ->where('branch_id', $data['branch_id'])
+                    ->where('confirmation', 4)
+                    ->whereDate('data', Carbon::now())
+                    ->whereHas('tail', function ($query) {
+                        $query->where('aleatorie', 2);
+                    })
+                    ->get();
+                    if ($reservations->isNotEmpty()) {
+                    // Itera sobre las reservas y actualiza el campo 'aleatorie' de las relaciones 'tail'
+                        foreach ($reservations as $reservation) {
+                            $reservation->tail()->update(['aleatorie' => 1]);
+                        }
+                    }
                 }//end if de barbero
                 if ($data['type'] == 'Tecnico') {
                     $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {

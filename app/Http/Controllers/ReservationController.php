@@ -371,16 +371,29 @@ class ReservationController extends Controller
             ]);
             Log::info($request);
             $dates = [];
+            $color = 'red';
+            $type = '';
             $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
             })->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
             foreach ($reservations as $reservation) {
                 $client = $reservation['car']['clientProfessional']['client'];
                 $startTime = Carbon::parse($reservation['start_time']);
+                if ($reservation['from_home'] == 1) {
+                    $color = 'yellow';
+                    $type = 'Reserv';
+                }elseif ($reservation['from_home'] == 0 && $reservation['car']['select_professional'] == 1) {
+                    $color = 'green';
+                    $type = 'Select';
+                }else {
+                    $color = 'blue';
+                    $type = 'Aleat';
+                }
                 $dates[] = [
                     'startDate' => $reservation['data'] . 'T' . $reservation['start_time'],
                     'endDate' => $reservation['data'] . 'T' . $reservation['final_hour'],
-                    'clientName' => $startTime->format('h:i A') . ': ' . $client['name']
+                    'clientName' => $startTime->format('h:i A') . ': ' . $client['name'].'-'.$type,
+                    'color' => $color
                 ];
             }
             $sortedDates = collect($dates)->sortBy('startDate')->values()->all();

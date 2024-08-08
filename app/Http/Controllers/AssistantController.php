@@ -149,6 +149,12 @@ class AssistantController extends Controller
                         $this->verific_services($tails, $branch_id, $professional);
                     }
                 }
+                elseif ($reservationsTail && $reservationsTail->from_home == 1 && $reservationsTail->confirmation == 1) {
+                    $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+                        $query->where('branch_id', $branch_id)->orderBy('created_at');
+                    })->where('aleatorie', 1)->get();
+                    $this->verific_services_bh($tails, $branch_id, $professional, $reservationsTail->start_time);
+                }
             //$current_date = Carbon::now()->format('H:i:s');
             elseif($reservationsTail && $reservationsTail->from_home == 0 && $reservationsTail->car->select_professional == 1) {
                 $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $reservationsTail) {
@@ -217,6 +223,78 @@ class AssistantController extends Controller
                 $this->reassignServices($servicesOrders, $service_professionals);
                 // Retorna true indicando que se ha procesado una 'tail'
             return true;
+            } //if diferencia de si realiza los servicios
+
+        }//for aleatorie
+         // Retorna false indicando que no se ha procesado ninguna 'tail'
+        return false;
+    }
+
+    private function verific_services_bh($tails, $branch_id, $professional, $start_time)
+    {
+        Log::info('Verificar aleatorios en aistanController');
+        foreach ($tails as $tail) {
+            $reservation = $tail->reservation;
+            $tiempoReserva = $reservation->total_time;
+            $car = $reservation->car;
+
+            $servicesOrders = Order::where('car_id', $car->id)
+                ->where('is_product', 0)
+                ->with(['branchServiceProfessional.branchService.service'])
+                ->get();
+
+            $services_id = $servicesOrders->pluck('branchServiceProfessional.branchService.service.id')->toArray();
+
+            $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($branch_id, $professional) {
+                $query->where('branch_id', $branch_id);
+            })
+                ->where('professional_id', $professional->id)
+                ->with('branchService.service')
+                ->get();
+            $service_professional_id = $service_professionals->pluck('branchService.service.id')->toArray();
+
+            $services_id_collection = collect($services_id);
+            $service_professional_id_collection = collect($service_professional_id);
+            $diff = $services_id_collection->diff($service_professional_id_collection);
+            if ($diff->isEmpty()) {
+                Log::info('Realiza todos los servicios');
+                // Hora actual
+                $horaActual = Carbon::now();
+                // Sumar el tiempo de reserva a la hora actual
+                $horaActualConReserva = $horaActual->addSeconds(Carbon::parse($tiempoReserva)->secondsSinceMidnight());
+                $startTime = Carbon::parse($start_time); // Suponiendo que `start_time` es un campo en tu modelo
+                $startTimeMas20Min = $startTime->addMinutes(20);
+                Log::info('Hora actual mas tiempo de reserava aleatoria(aistanController)'.$horaActualConReserva);
+                Log::info('Hora de inicio de la reserva bh no confirmada(aistanController)'.$startTimeMas20Min);
+                if ($horaActualConReserva->lessThan($startTimeMas20Min)) {
+                    $client = $car->clientProfessional->client;
+                //$professional = Professional::find($professional_id);
+
+                $nuevaHoraInicio = Carbon::now();
+                list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
+                $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
+                $reservation->final_hour = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva)->format('H:i:s');
+                $reservation->save();
+
+                $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
+                if (!$client_professional) {
+                    Log::info("No existe relación cliente-profesional");
+                    $professional->clients()->attach($client->id);
+                    $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
+                    Log::info($client_professional_id);
+                } else {
+                    $client_professional_id = $client_professional->pivot->id;
+                }
+
+                $car->client_professional_id = $client_professional_id;
+                $car->save();
+
+                $tail->aleatorie = 2;
+                $tail->save();
+                $this->reassignServices($servicesOrders, $service_professionals);
+                // Retorna true indicando que se ha procesado una 'tail'
+                return true;
+                }                
             } //if diferencia de si realiza los servicios
 
         }//for aleatorie

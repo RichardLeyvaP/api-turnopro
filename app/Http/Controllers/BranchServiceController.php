@@ -87,20 +87,24 @@ class BranchServiceController extends Controller
                     'ponderation' => $branchService // Verificar si $branchService es null
                 ];
                });*/
-               $branch = Branch::find($data['branch_id']);
-            $services = $branch->services->map(function ($service){
-                return [
-                    'id' => $service->id,
-                    'name' => $service->name,
-                    'price_service' => $service->price_service,
-                    'type_service' => $service->type_service,
-                    'profit_percentaje' => $service->profit_percentaje,                    
-                    'duration_service' => $service->duration_service,
-                    'image_service' => $service->image_service,
-                    'service_comment' => $service->service_comment,
-                    'ponderation' => $service->pivot->ponderation
-                ];
-            })->sortBy('name')->sortBy('ponderation')->values();
+               $services = [];
+               if ($data['branch_id'] != null) {
+                $branch = Branch::find($data['branch_id']);
+                $services = $branch->services->map(function ($service){
+                    return [
+                        'id' => $service->id,
+                        'name' => $service->name,
+                        'price_service' => $service->price_service,
+                        'type_service' => $service->type_service,
+                        'profit_percentaje' => $service->profit_percentaje,                    
+                        'duration_service' => $service->duration_service,
+                        'image_service' => $service->image_service,
+                        'service_comment' => $service->service_comment,
+                        'ponderation' => $service->pivot->ponderation
+                    ];
+                })->sortBy('name')->sortBy('ponderation')->values();
+               }
+               
                 return response()->json(['services' => $services],200); 
           
             } catch (\Throwable $th) {  
