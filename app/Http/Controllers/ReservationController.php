@@ -327,6 +327,9 @@ class ReservationController extends Controller
                     $currentTime->subSeconds(20);*/
                     // Calcular la diferencia en minutos
                     $diferenciaEnSegundos = $currentTime->diffInSeconds($startTime);
+                    if ($diferenciaEnSegundos > 180) {
+                        $diferenciaEnSegundos = 2;
+                    }
                     return response()->json(intval($diferenciaEnSegundos), 200); 
             }
         }//if si tiene reservation 
