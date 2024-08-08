@@ -403,20 +403,6 @@ class BranchProfessionalController extends Controller
                     $ProfessionalWorkPlace->state = 0;
                     $ProfessionalWorkPlace->save();
                     }
-                    $reservations = $professional->reservations()
-                    ->where('branch_id', $data['branch_id'])
-                    ->where('confirmation', 4)
-                    ->whereDate('data', Carbon::now())
-                    ->whereHas('tail', function ($query) {
-                        $query->where('aleatorie', 2);
-                    })
-                    ->get();
-                    if ($reservations->isNotEmpty()) {
-                    // Itera sobre las reservas y actualiza el campo 'aleatorie' de las relaciones 'tail'
-                        foreach ($reservations as $reservation) {
-                            $reservation->tail()->update(['aleatorie' => 1]);
-                        }
-                    }
                 }//end if de barbero
                 if ($data['type'] == 'Tecnico') {
                     $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
@@ -457,7 +443,20 @@ class BranchProfessionalController extends Controller
                 }
                 //para las notificaciones de solicitud a 1
                 Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
-                
+                $reservations = $professional->reservations()
+                    ->where('branch_id', $data['branch_id'])
+                    ->where('confirmation', 4)
+                    ->whereDate('data', Carbon::now())
+                    ->whereHas('tail', function ($query) {
+                        $query->where('aleatorie', '!=', 0);
+                    })
+                    ->get();
+                    if ($reservations->isNotEmpty()) {
+                    // Itera sobre las reservas y actualiza el campo 'aleatorie' de las relaciones 'tail'
+                        foreach ($reservations as $reservation) {
+                            $reservation->tail()->update(['aleatorie' => 1]);
+                        }
+                    }
             }
             elseif ($data['state'] == 4 || $data['state'] == 3){
                 $branch = Branch::find($data['branch_id']);
