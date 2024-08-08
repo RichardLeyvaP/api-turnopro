@@ -230,7 +230,9 @@ class TailService
     public function cola_branch_professional($branch_id, $professional_id)
     {
         $professional = Professional::find($professional_id);
-        $this->verific_aleatorie($branch_id, $professional);
+        if ($professional->state == 1) {
+            $this->verific_aleatorie($branch_id, $professional);
+        }
       $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
             })
