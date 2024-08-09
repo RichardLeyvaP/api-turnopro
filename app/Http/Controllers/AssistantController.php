@@ -72,6 +72,20 @@ class AssistantController extends Controller
                 $reservation =  $tail->reservation;
                 $client = $reservation->car->clientProfessional->client;
                 $professional = $reservation->car->clientProfessional->professional;
+                $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', 0)->get();
+            $services = $orderServicesDatas->map(function ($orderData) {
+                $service = $orderData->branchServiceProfessional->branchService->service;
+                return [
+                    'name' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'description' => $service->service_comment
+                ];
+            });
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => intval($reservation->car_id),
@@ -90,9 +104,10 @@ class AssistantController extends Controller
                     'clock' => intval($tail->clock),
                     'timeClock' => intval($tail->timeClock),
                     'detached' => intval($tail->detached),
-                    'total_services' => intval(Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', false)->count()),
+                    'total_services' => intval($services->count()),
                     'from_home' => intval($reservation->from_home),
-                    'select_professional' => intval($reservation->car->select_professional)
+                    'select_professional' => intval($reservation->car->select_professional),
+                    'services' => $services
 
                 ];
             })->values();
