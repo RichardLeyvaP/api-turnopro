@@ -609,6 +609,24 @@ class TailController extends Controller
         }
     }
 
+    public function tail_branch_professional(Request $request)
+    {
+        try {
+
+            Log::info("Mostrar la cola del dia de un professional en una branch");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
+            ]);
+
+
+            return response()->json(['tail' => $this->tailService->tail_branch_professional($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar las Tail"], 500);
+        }
+    }
+
 
     public function type_of_service(Request $request)
     {
@@ -849,13 +867,15 @@ class TailController extends Controller
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
+            $reservation = Reservation::where('id', $data['reservation_id'])->first();
             $professional = Professional::find($data['professional_id']);
             if ($professional && $professional->state != 1) {
-                return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
-            }else {
+                if ($reservation != null) {
+                    $reservation->timeClock = now();
+                    $reservation->save();
+                }
                 return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
             }
-            $reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
                 $professional = $this->professionalService->professionals_state($reservation->branch_id, $data['reservation_id']);
                 //Log::info('professionales disponibles reasignar primer plano');
@@ -867,10 +887,10 @@ class TailController extends Controller
                     $data['professional_id'] = $firstProfessional->id;
                     $this->tailService->reasigned_client($data);
                 }
-                if ($reservation != null) {
+                //if ($reservation != null) {
                     $reservation->timeClock = now();
                     $reservation->save();
-                }
+                //}
             }
             //$this->tailService->reasigned_client($data);
             DB::commit();

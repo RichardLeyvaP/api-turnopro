@@ -278,6 +278,72 @@ class TailService
         return $branchTails;
     }
 
+    public function tail_branch_professional($branch_id, $professional_id)
+    {
+        $professional = Professional::find($professional_id);
+        if ($professional->state == 1) {
+            $this->verific_aleatorie($branch_id, $professional);
+        }
+      $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
+            })
+            ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
+                $query->where('professional_id', $professional_id);
+            })
+            ->whereNot('attended', [2])
+            ->where('aleatorie', '!=', 1)
+            ->join('reservations', 'tails.reservation_id', '=', 'reservations.id')
+            ->orderByRaw('reservations.confirmation = 4 DESC')
+            ->orderBy('reservations.from_home', 'desc')
+            ->orderBy('reservations.start_time', 'asc')
+            ->select('tails.*')  // Selecciona sólo las columnas del modelo Tail
+            ->with('reservation') // Carga la relación reservation
+            ->get();
+        $branchTails = $tails->map(function ($tail) use ($branch_id) {
+            $reservation = $tail->reservation;
+            $professional = $reservation->car->clientProfessional->professional;
+            $client = $reservation->car->clientProfessional->client;
+            $orderServicesDatas = Order::whereHas('car.reservation')->whereRelation('car', 'id', '=', $reservation->car_id)->where('is_product', 0)->get();
+            $services = $orderServicesDatas->map(function ($orderData) {
+                $service = $orderData->branchServiceProfessional->branchService->service;
+                return [
+                    'name' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'description' => $service->service_comment
+                ];
+            });
+            return [
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
+                'from_home' => intval($reservation->from_home),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
+                'total_time' => $reservation->total_time,
+                'confirmation' => intval($reservation->confirmation),
+                'client_name' => $client->name,
+                'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
+                'professional_name' => $professional->name,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
+                'attended' => $tail->attended,
+                'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
+                'clock' => $tail->clock,
+                'timeClock' => $tail->timeClock,
+                'detached' => $tail->detached,
+                'total_services' => $services->count(),
+                'select_professional' => intval($reservation->car->select_professional),
+                'services' => $services
+
+            ];
+        })->values();
+        return $branchTails;
+    }
+
     public function cola_branch_professional_new($branch_id, $professional_id)
     {
         $professional = Professional::find($professional_id);
