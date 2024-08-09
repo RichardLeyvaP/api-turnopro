@@ -1525,6 +1525,12 @@ class ProfessionalService
                         ->whereDate('data', Carbon::now())
                         ->whereHas('tail', function ($subquery) {
                             $subquery->where('aleatorie', '!=', 1);
+                        })->where(function ($query) {
+                            $query->where('confirmation', '!=', 1)
+                                  ->orWhere(function ($subquery) {
+                                      $subquery->where('confirmation', 1)
+                                               ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [Carbon::now()->format('H:i:s')]);
+                                  });
                         })
                         ->orderBy('start_time')
                         ->get();

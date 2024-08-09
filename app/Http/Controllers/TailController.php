@@ -1065,6 +1065,13 @@ class TailController extends Controller
                 $query->where('professional_id', $data['professional_id']);
             })->whereHas('tail', function ($query) use ($data) {
                 $query->whereNotIn('attended', [0, 2, 3]);
+            })->whereIn('confirmation', [1, 4])
+            ->where(function ($query) {
+                $query->where('confirmation', '!=', 1)
+                      ->orWhere(function ($subquery) {
+                          $subquery->where('confirmation', 1)
+                                   ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [Carbon::now()->format('H:i:s')]);
+                      });
             })->whereDate('data', Carbon::now())->orderBy('start_time')->get();
             if ($reservationAttended->isNotEmpty()) {
                 return response()->json(0, 200);
