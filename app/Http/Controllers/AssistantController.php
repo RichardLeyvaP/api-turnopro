@@ -136,6 +136,12 @@ class AssistantController extends Controller
                 ->whereDate('data', Carbon::now())
                 ->whereHas('tail', function ($subquery) {
                     $subquery->where('aleatorie', '!=', 1);
+                })->where(function ($query) {
+                    $query->where('confirmation', '!=', 1)
+                          ->orWhere(function ($subquery) {
+                              $subquery->where('confirmation', 1)
+                                       ->whereRaw('TIME_ADD(start_time, INTERVAL 20 MINUTE) <= ?', [Carbon::now()->format('H:i:s')]);
+                          });
                 })
                 ->orderByRaw('confirmation = 4 DESC') // Ordenar por confirmation, 4 primero
                 ->orderByDesc('from_home') // Ordenar por from_home, 1 primero
