@@ -302,18 +302,28 @@ class ProfessionalService
                 ->orderByDesc('start_time')
                 ->get();
                 if ($reservations->isEmpty()) {
+                    Log::info('Reservaciones vacias');
+                    Log::info($reservation);
                     $professional->start_time = date('H:i');
                     $professional->free = 'Libre';
                     $availableProfessionals[] = $professional;
                 }else {
+                    Log::info('Con Reservaciones');
                     $nuevaHoraInicio = $this->encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation);                    
                     if ($nuevaHoraInicio == $horaActual->format('H:i')) {
+                        Log::info('Linea 314');
                         $professional->free = 'Libre';
                     }else {
                         $professional->free = 'Ocupado';
                     }
                     $professional->start_time = $nuevaHoraInicio;
                     $availableProfessionals[] = $professional;
+                    $firstReservation = $reservations->first();
+                    Log::info('Primera reserva que tiene'.$professional);
+                    Log::info($firstReservation);
+                    if (in_array($firstReservation->tail->attended, [1, 11, 111, 4, 5, 33])) { // Cambia 'estado1', 'estado2', etc., por los estados específicos
+                        $professional->free = 'Ocupado';
+                    }
                 }
             } //for
         } //else
@@ -370,6 +380,7 @@ class ProfessionalService
                 }
                 }                
                 $professional->free = 'Colación';
+                $professional->position = 'COLACIÓN';
             }
         }
 
