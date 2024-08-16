@@ -198,6 +198,7 @@ class BoxCloseController extends Controller
             $branches = Branch::all();
             foreach ($branches as $branch) {
                 $boxCloseData = [];
+                $winProduct = 0;
                 $professionalsData = [];
                 $boxClose = BoxClose::whereHas('box', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
@@ -213,17 +214,6 @@ class BoxCloseController extends Controller
                 SUM(totalOther) as totalOther,
                 SUM(totalCardGif) as totalCardGif
             ')->first();
-                $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
-                if (!$finances->isEmpty()) {
-
-                    foreach ($finances as $finance) {
-                        if ($finance->operation == 'Gasto') {
-                            $gasto = $gasto + $finance->amount;
-                        } else {
-                            $ingreso = $ingreso + $finance->amount;
-                        }
-                    }
-                }
                 /*$boxCloseArray = [
                     'totalMount' => $boxClose->totalMount ?? 0,
                     'totalService' => $boxClose->totalService ?? 0,
@@ -273,7 +263,7 @@ class BoxCloseController extends Controller
                     } else {
                         $winProduct = $percent_win * 0.50;
                     }
-
+                    Log::info('Bono producto'.$winProduct.$professional->name);
                     // Agregar los datos del profesional al arreglo solo si $winProduct es mayor que 0
                     if ($winProduct > 0) {
                         $professionalData = [
@@ -281,11 +271,53 @@ class BoxCloseController extends Controller
                             'winProduct' => $winProduct,
                         ];
 
+                        $finance = Finance::orderBy('control', 'desc')->first();
+                        if ($finance !== null) {
+                            $control = $finance->control + 1;
+                        } else {
+                            $control = 1;
+                        }
+                        Log::info('Bono de Producto'.$winProduct.$professional->name);
+                        //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
+                        //if ($filteredPayments->isEmpty()) {
+                            $professionalPayment = new ProfessionalPayment();
+                            $professionalPayment->branch_id = $branch->id;
+                            $professionalPayment->professional_id = $professional->id;
+                            $professionalPayment->date = Carbon::now();
+                            $professionalPayment->amount = $winProduct;
+                            $professionalPayment->type = 'Bono productos';
+                            $professionalPayment->cant = $venta;
+                            $professionalPayment->save();
+        
+        
+                            $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $winProduct;
+                            $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
+                            $finance->branch_id = $branch->id;
+                            $finance->type = 'Sucursal';
+                            $finance->expense_id = 5;
+                            $finance->data = Carbon::now();
+                            $finance->file = '';
+                            $finance->save();
+                        //}
+
                         // Agregar los datos del profesional al arreglo general
                         $professionalsData[] = $professionalData;
                     }
                 }
-                
+                $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
+                if (!$finances->isEmpty()) {
+
+                    foreach ($finances as $finance) {
+                        if ($finance->operation == 'Gasto') {
+                            $gasto = $gasto + $finance->amount;
+                        } else {
+                            $ingreso = $ingreso + $finance->amount;
+                        }
+                    }
+                }
                      Log::info("Generar PDF");
                      $boxData = $añoAnterior . '-' . $mesAnterior;
            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensual', ['branchBusinessName' => $branch->business['name'], 'branchName' => $branch->name, 'boxData' => $boxData, 'totalTip' => $boxClose->totalTip, 'totalProduct' => $boxClose->totalProduct, 'totalService' => $boxClose->totalService, 'totalCash' => $boxClose->totalCash, 'totalCreditCard' => $boxClose->totalCreditCard, 'totalDebit' => $boxClose->totalDebit, 'totalTransfer' => $boxClose->totalTransfer, 'totalOther' => $boxClose->totalOther, 'totalMount' => $boxClose->totalMount, 'totalCardGif' => $boxClose->totalCardGif, 'ingreso' =>  round($ingreso, 2), 'gasto' => round($gasto, 2), 'utilidad' => round($ingreso - $gasto, 2), 'professionalBonus' => $professionalsData]);
@@ -304,7 +336,7 @@ class BoxCloseController extends Controller
                 $emailassociated = $branch->associates()->pluck('email');
                 $emailArray = $emailassociated->toArray();
                 $mergedEmails = $emails->merge($emailArray);
-                Log::info($mergedEmails);
+                Log::info($mergedEmails);    
                 foreach ($mergedEmails as $email) {
                     try {
                         $this->sendEmailService->emailBoxClosureMonthly(

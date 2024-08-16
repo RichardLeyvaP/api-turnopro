@@ -80,7 +80,8 @@ class ProductCategoryController extends Controller
         // Obtener categorías con productos filtrados y sus relaciones necesarias
         $categories = ProductCategory::whereHas('products.stores.branches', function ($query) use ($branchId) {
             $query->where('branch_id', $branchId);
-        })->with(['products' => function ($query) use ($branchId, $statusProduct) {
+        })->where('name', '!=', 'Bebidas') // Filtra las categorías cuyo nombre sea distinto de "Bebidas"
+        ->with(['products' => function ($query) use ($branchId, $statusProduct) {
             $query->whereHas('stores.branches', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             })->where('status_product', $statusProduct)

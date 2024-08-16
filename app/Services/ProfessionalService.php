@@ -1275,6 +1275,16 @@ class ProfessionalService
             /*$winProfessional =$cars->sum(function ($car){
             return $car->orders->sum('percent_win');
         });*/
+        $totalPrice = 0;
+        $totalPercentWin = 0;
+        foreach ($ServiceEspecial as $order) {
+            if ($order->meta == 1) {
+                $totalPrice += $order->price;
+            } elseif ($order->meta == 0) {
+                $totalPercentWin += $order->percent_win;
+            }
+        }
+        $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
             $winProfessional = $orderServ->sum('percent_win');
             $retentionPorcent = $professional->retention ? $professional->retention : 0;
             $winTips = intval($cars->sum('tip') * 0.80);
@@ -1286,7 +1296,7 @@ class ProfessionalService
                 'Cantidad de Servicios' => $services,
                 'Servicios Regulares' => $ServiceRegular->count(),
                 'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => number_format(round($ServiceRegular->sum('percent_win'), 2), 2),
+                'Monto Servicios Especial' => $totalAmount,
                 'Propina' => number_format(round($cars->sum('tip'), 2), 2),
                 'Propina 80%' => number_format(round($winTips, 2), 2),
                 'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
@@ -1346,6 +1356,16 @@ class ProfessionalService
             /*$winProfessional =$cars->sum(function ($car){
             return $car->orders->sum('percent_win');
         });*/
+        $totalPrice = 0;
+        $totalPercentWin = 0;
+        foreach ($ServiceEspecial as $order) {
+            if ($order->meta == 1) {
+                $totalPrice += $order->price;
+            } elseif ($order->meta == 0) {
+                $totalPercentWin += $order->percent_win;
+            }
+        }
+        $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
             $winProfessional = $orderServ->sum('percent_win');
             $retentionPorcent = $professional->retention ? $professional->retention : 0;
             $winTips = intval($cars->sum('tip') * 0.80);
@@ -1357,7 +1377,7 @@ class ProfessionalService
                 'Cantidad de Servicios' => $services,
                 'Servicios Regulares' => $ServiceRegular->count(),
                 'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => number_format(round($ServiceRegular->sum('percent_win'), 2), 2),
+                'Monto Servicios Especial' => $totalAmount,
                 'Propina' => number_format(round($cars->sum('tip'), 2), 2),
                 'Propina 80%' => number_format(round($winTips, 2), 2),
                 'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
@@ -1417,6 +1437,16 @@ class ProfessionalService
             /*$winProfessional =$cars->sum(function ($car){
                 return $car->orders->sum('percent_win');
             });*/
+            $totalPrice = 0;
+        $totalPercentWin = 0;
+        foreach ($ServiceEspecial as $order) {
+            if ($order->meta == 1) {
+                $totalPrice += $order->price;
+            } elseif ($order->meta == 0) {
+                $totalPercentWin += $order->percent_win;
+            }
+        }
+        $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
             $winProfessional = $orderServ->sum('percent_win');
             $retentionPorcent = $professional->retention ? $professional->retention : 0;
             $winTips = intval($cars->sum('tip') * 0.80);
@@ -1428,7 +1458,7 @@ class ProfessionalService
                 'Cantidad de Servicios' => $services,
                 'Servicios Regulares' => $ServiceRegular->count(),
                 'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => number_format(round($ServiceRegular->sum('percent_win'), 2), 2),
+                'Monto Servicios Especial' => $totalAmount,
                 'Propina' => number_format(round($cars->sum('tip'), 2), 2),
                 'Propina 80%' => number_format(round($winTips, 2), 2),
                 'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios

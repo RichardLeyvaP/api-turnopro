@@ -36,7 +36,7 @@ class UserController extends Controller
     {
         try {
 
-            Log::info("entra a buscar los usuarios");
+            Log::info("Entra a buscar los usuarios");
             return response()->json(['users' => User::all()], 200);
         } catch (\Throwable $th) {
             Log::error($th);
