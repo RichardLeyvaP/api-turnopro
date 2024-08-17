@@ -68,6 +68,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 //agregando el import de websocket
 use App\Http\Controllers\TestingEventController;
+use Laravel\Socialite\Facades\Socialite;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +93,17 @@ Route::get('qrCode', [UserController::class, 'qrCode']);
 Route::get('qrCode-otros', [UserController::class, 'qrCodeOtros']);
 Route::get('reactive-password', [UserController::class, 'reactive_password']);
 Route::get('change_password', [UserController::class, 'change_password']);
+
+//login google y facebook
+Route::get('/login-google', function () {
+    return Socialite::driver('google')->stateless()->redirect();
+});
+
+Route::get('/login-facebook', function () {
+    return Socialite::driver('facebook')->stateless()->redirect();
+});
+Route::get('/google-callback', [UserController::class, 'googleCallback']);
+Route::get('/facebook-callback', [UserController::class, 'facebookCallback']);
 
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('profile', [UserController::class, 'userProfile']);
