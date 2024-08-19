@@ -23,7 +23,6 @@ use App\Services\SendEmailService;
 use Symfony\Component\Mailer\Exception\TransportException;
 use GuzzleHttp;
 use Illuminate\Support\Facades\DB;
-use Laravel\Socialite\Facades\Socialite;
 
 class UserController extends Controller
 {
@@ -841,58 +840,5 @@ class UserController extends Controller
             Log::error($th);
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }     
-    }
-
-    public function googleCallback()
-    {
-        Log::info('Logueo por cuenta de google');
-        try {
-            // Intentar obtener el usuario de Google
-            $userGoogle = Socialite::driver('google')->stateless()->user();
-
-            // Verificar si $userGoogle es null
-            if (!$userGoogle) {
-                return response()->json(['msg' => 'GoogleNotFound',], 400);
-            }else {
-                return response()->json([
-                    'id' => $userGoogle->id,
-                    'userName' => $userGoogle->name,
-                    'email' => $userGoogle->email
-                ], 200, [], JSON_NUMERIC_CHECK);
-            }
-        } catch (\Exception $e) {
-            // Captura cualquier excepción que pueda ocurrir durante el proceso
-            Log::info('AuthController->googleCallback');
-            Log::error($e);
-            return response()->json(['error' => 'ServerError'], 500);
-        }
-    }
-
-    public function facebookCallback()
-    {
-        Log::info('Logueo por cuenta de facebook');
-        try {
-            // Intentar obtener el usuario de Google
-            $userFacebook = Socialite::driver('facebook')->stateless()->user();
-
-            // Verificar si $userFacebook es null
-            if (!$userFacebook) {
-                return response()->json(['msg' => 'FacebookNotFound'], 400);
-            }else {
-                return response()->json([
-                    'id' => $userFacebook->id,
-                    'userName' => $userFacebook->name,
-                    'email' => $userFacebook->email
-                ], 200, [], JSON_NUMERIC_CHECK);
-            }
-
-           
-        } catch (\Exception $e) {
-            // Captura cualquier excepción que pueda ocurrir durante el proceso
-            Log::info('AuthController->facebookCallback');
-            Log::error($e->getMessage());
-
-            return response()->json(['error' => 'ServerError'], 500);
-        }
     }
 }
