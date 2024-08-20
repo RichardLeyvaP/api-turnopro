@@ -18,6 +18,19 @@ class MetaService
 {
     public function store($branch)
     {        
+        // Eliminar los registros que coincidan
+        Finance::where('branch_id', $branch->id)
+        ->whereDate('data', Carbon::now())
+        ->where('operation', 'Gasto')
+        ->where(function($query) {
+            $query->where('comment', 'like', '%Gasto por pago de bono de convivencias a%')
+                ->orWhere('comment', 'like', '%Gasto por pago de bono de servicios a%');
+        })
+        ->delete();
+
+        //Retention
+        Retention::where('branch_id', $branch->id)
+        ->whereDate('data', Carbon::now())->delete();
         $idService=null;
         $bonus = [];
         $percentWinSum = 0;
@@ -55,7 +68,7 @@ class MetaService
                 $query->where('branch_id', $branch->id)->where('estado', 0)->whereDate('data', Carbon::now());
             })->get();
 
-            $professionalPayments = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->get();
+            //$professionalPaymentsServices = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->get()->first();
 
             if ($rules->isEmpty()) {
                 $idService = BranchServiceProfessional::where('professional_id', $professional->id)->whereHas('branchService.branch', function ($query) use ($branch) {
@@ -66,13 +79,14 @@ class MetaService
                     if (!$orders->isEmpty()) {
                         $cant = $orders->count();
                         $amount = $orders->first()->price * $cant;
-                        $filteredPayments = $professionalPayments->filter(function ($payment) {
+                        /*$filteredPayments = $professionalPayments->filter(function ($payment) {
                             return $payment->type == 'Bono convivencias';
-                        });
-                        //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
-                        if ($filteredPayments->isEmpty()) {
-                            $retentionAmount = $retentionP ? $amount * $retentionP / 100 : 0;
+                        })->first();*/
+                        $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
+                        if ($professionalPayment == null) {
                             $professionalPayment = new ProfessionalPayment();
+                        }
+                            $retentionAmount = $retentionP ? $amount * $retentionP / 100 : 0;
                             $professionalPayment->branch_id = $branch->id;
                             $professionalPayment->professional_id = $professional->id;
                             $professionalPayment->date = Carbon::now();
@@ -98,6 +112,7 @@ class MetaService
                             $finance->file = '';
                             $finance->save();
                             if($retentionP){
+                                Log::info('Entra a retencion bono de convivencias'.$professional->name.$retentionAmount);
                                 $retention = new Retention();
                                 $retention->branch_id = $branch->id;
                                 $retention->professional_id = $professional->id;
@@ -111,7 +126,7 @@ class MetaService
                                 $order->percent_win = 0;
                                 $order->save();
                             }
-                        }
+                        //}
                     }
                 }
             }
@@ -124,20 +139,21 @@ class MetaService
             $orderServPay = $orderServs->where('meta', 0)->sum('price');
             $catServices = $orderServs->count();
             if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
-                $filteredPayments = $professionalPayments->filter(function ($payment) {
+                /*$filteredPayments = $professionalPayments->filter(function ($payment) {
                     return $payment->type == 'Bono servicios';
-                });
-                //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
-                if ($filteredPayments->isEmpty()) {
+                });*/
+                $professionalPaymentService = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
+                if ($professionalPaymentService == null) {
+                    $professionalPaymentService = new ProfessionalPayment();
+                }
                     $retentionAmount = $retentionP ? $profesionalbonus->mountpay * $retentionP / 100 : 0;
-                    $professionalPayment = new ProfessionalPayment();
-                    $professionalPayment->branch_id = $branch->id;
-                    $professionalPayment->professional_id = $professional->id;
-                    $professionalPayment->date = Carbon::now();
-                    $professionalPayment->amount = $profesionalbonus->mountpay - $retentionAmount;
-                    $professionalPayment->type = 'Bono servicios';
-                    $professionalPayment->cant = $catServices;
-                    $professionalPayment->save();
+                    $professionalPaymentService->branch_id = $branch->id;
+                    $professionalPaymentService->professional_id = $professional->id;
+                    $professionalPaymentService->date = Carbon::now();
+                    $professionalPaymentService->amount = $profesionalbonus->mountpay - $retentionAmount;
+                    $professionalPaymentService->type = 'Bono servicios';
+                    $professionalPaymentService->cant = $catServices;
+                    $professionalPaymentService->save();
                     $bonus[] = [
                         'name' => $professional->name,
                         'image_url' => $professional->image_url,
@@ -156,6 +172,7 @@ class MetaService
                     $finance->file = '';
                     $finance->save();
                     if($retentionP){
+                        Log::info('Entra a retencion bono de servicios'.$professional->name.$retentionAmount);
                         $retention = new Retention();
                         $retention->branch_id = $branch->id;
                         $retention->professional_id = $professional->id;
@@ -163,7 +180,7 @@ class MetaService
                         $retention->retention = intval($retentionAmount);
                         $retention->save();
                     }
-                }
+                //}
             }
 
             //retention de ganancia de servicios
@@ -175,6 +192,7 @@ class MetaService
                     //}
                     if ($percentWinSum) {
                         if($retentionP){
+                            Log::info('Entra a retencion de servicios'.$professional->name.$percentWinSum * $retentionP / 100);
                             $retention = new Retention();
                             $retention->branch_id = $branch->id;
                             $retention->professional_id = $professional->id;
@@ -185,71 +203,7 @@ class MetaService
                     }
                 }
             //end Retention
-            /*$winProduct = 0;
-            $products = Order::whereIn('car_id', $carIdsPay)
-                ->where('is_product', 1)
-                ->groupBy('product_store_id')
-                ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
-                ->get();
-            $venta = $products->sum('total_cant');
-            $percent_win = $products->sum('total_percent_win');
-            Log::info('$venta');
-            Log::info($venta);
-            Log::info('$percent_win');
-            Log::info($percent_win);
-            if ($venta <= 24) {
-                $winProduct = $percent_win * 0.15;
-            } else if ($venta > 24 && $venta <= 49) {
-                $winProduct = $percent_win * 0.25;
-            } else {
-                $winProduct = $percent_win * 0.50;
-            }
-            Log::info('$winProduct');
-            Log::info($winProduct);
-            /*foreach ($products  as $product) {
-                if($product->total_cant <= 24){
-                    $winProduct += $product->total_percent_win*0.15;
-                }
-                else if ($product->total_cant < 24 && $product->total_cant <= 49) {
-                    $winProduct += $product->total_percent_win*0.25;
-                }
-                else{
-                    $winProduct += $product->total_percent_win*0.50;
-                }
-            }*/
-            /*if ($winProduct > 0) {
-                $filteredPayments = $professionalPayments->filter(function ($payment) {
-                    return $payment->type == 'Bono productos';
-                });
-                //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
-                if ($filteredPayments->isEmpty()) {
-                    $professionalPayment = new ProfessionalPayment();
-                    $professionalPayment->branch_id = $branch->id;
-                    $professionalPayment->professional_id = $professional->id;
-                    $professionalPayment->date = Carbon::now();
-                    $professionalPayment->amount = $winProduct;
-                    $professionalPayment->type = 'Bono productos';
-                    $professionalPayment->cant = $venta;
-                    $professionalPayment->save();
-
-
-                    $finance = new Finance();
-                    $finance->control = $control++;
-                    $finance->operation = 'Gasto';
-                    $finance->amount = $winProduct;
-                    $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
-                    $finance->branch_id = $branch->id;
-                    $finance->type = 'Sucursal';
-                    $finance->expense_id = 5;
-                    $finance->data = Carbon::now();
-                    $finance->file = '';
-                    $finance->save();
-                }
-            }
-            /*$mountProduct = $orderProdPay->sum('price');
-            if($cantProduct <= 24){
-
-            }*/
+            
         }
         return $bonus;
     }

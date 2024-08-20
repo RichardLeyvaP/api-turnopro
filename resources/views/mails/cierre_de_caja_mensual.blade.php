@@ -92,9 +92,9 @@
                 <td>Prestación de Servicios</td>
             </tr>
             <tr>
-                <td>{{ $totalTip }}</td>
-                <td>{{ $totalProduct }}</td>
-                <td>{{ $totalService }}</td>
+                <td>{{ number_format(round($totalTip, 2), 2) }}</td>
+                <td>{{ number_format(round($totalProduct, 2), 2) }}</td>
+                <td>{{ number_format(round($totalService, 2), 2) }}</td>
             </tr>
         </table>
         <table>
@@ -107,9 +107,9 @@
                 <td>Débito</td>
             </tr>
             <tr>
-                <td>{{ $totalCash }}</td>
-                <td>{{ $totalCreditCard }}</td>
-                <td>{{ $totalDebit }}</td>
+                <td>{{ number_format(round($totalCash, 2), 2) }}</td>
+                <td>{{ number_format(round($totalCreditCard, 2), 2) }}</td>
+                <td>{{ number_format(round($totalDebit, 2), 2) }}</td>
             </tr>
             <tr>
                 <td>Transferencia</td>
@@ -117,13 +117,13 @@
                 <td>Otros Métodos</td>
             </tr>
             <tr>
-                <td>{{ $totalTransfer }}</td>
-                <td>{{ $totalGiftcard }}</td>
-                <td>{{ $totalOther }}</td>
+                <td>{{ number_format(round($totalTransfer, 2), 2) }}</td>
+                <td>{{ number_format(round($totalGiftcard, 2), 2) }}</td>
+                <td>{{ number_format(round($totalOther, 2), 2) }}</td>
             </tr>
             <tr class="total-row">
                 <td colspan="2">Total Ingresado</td>
-                <td>{{ $totalMount }}</td>
+                <td>{{ number_format(round($totalMount, 2), 2) }}</td>
             </tr>
         </table>
         <table>
@@ -133,9 +133,9 @@
                 <td>Utilidad</td>
             </tr>
             <tr>
-                <td>{{ $ingreso }}</td>
-                <td>{{ $gasto }}</td>
-                <td>{{ $utilidad }}</td>
+                <td>{{ number_format(round($ingreso, 2), 2) }}</td>
+                <td>{{ number_format(round($gasto, 2), 2) }}</td>
+                <td>{{ number_format(round($utilidad, 2), 2) }}</td>
             </tr>
         </table>
         <div class="section-header">
@@ -149,7 +149,7 @@
             @foreach($professionalBonus as $bonus)
             <tr>
                 <td>{{ $bonus['name'] }}</td>
-                <td>{{ $bonus['winProduct'] }}</td>
+                <td>{{ number_format(round($bonus['winProduct'], 2), 2) }}</td>
             </tr>
             @endforeach
         </table>

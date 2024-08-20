@@ -68,14 +68,14 @@ class OperationTipController extends Controller
                 $carIds = $request->input('car_ids');
                 Car::whereIn('id', $carIds)->update(['operation_tip_id' => $operationTip->id]);
             }
-            if($data['coffe_percent']){
+            /*if($data['coffe_percent']){
                 $finance = Finance::orderBy('control', 'desc')->first(); 
             /*if ($finance !== null) {
                 $finance->amount = $finance->amount + $data['coffe_percent'];
                 $finance->save();
             } else {
                 $finance = Finance::where('branch_id', $data['branch_id'])orderBy('control', 'desc')->first();*/
-                if ($finance) {
+                /*if ($finance) {
                     $control = $finance->control + 1;
                 } else {
                     $control = 1;
@@ -92,7 +92,7 @@ class OperationTipController extends Controller
                 $finance->file = '';
                 $finance->save();
             //}
-            }
+            }*/
             $professional = Professional::find($data['professional_id']);
             //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
             /*$finance = Finance::orderBy('control', 'desc')->first();              

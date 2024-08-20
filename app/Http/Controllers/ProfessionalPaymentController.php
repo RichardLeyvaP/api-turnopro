@@ -51,52 +51,52 @@ class ProfessionalPaymentController extends Controller
                 $professionalPayment->amount = $data['amount'];
                 $professionalPayment->type = $data['type'];
 
-            // Guardar el modelo
-            $professionalPayment->save();
-            $courseProfessional->pay = $professionalPayment->id;
-            $courseProfessional->save();
-            /*Log::info($request->input('course_ids'));
-            if ($request->input('course_ids')) {
-                // Actualizar carros con professional_payment_id
-                Log::info('entra a pago los cursos');
-                $course_ids = $request->input('course_ids');
-                CourseProfessional::whereIn('id', $course_ids)->update(['professional_payment_id' => $professionalPayment->id]);
-            }*/
+                // Guardar el modelo
+                $professionalPayment->save();
+                $courseProfessional->pay = $professionalPayment->id;
+                $courseProfessional->save();
+                /*Log::info($request->input('course_ids'));
+                if ($request->input('course_ids')) {
+                    // Actualizar carros con professional_payment_id
+                    Log::info('entra a pago los cursos');
+                    $course_ids = $request->input('course_ids');
+                    CourseProfessional::whereIn('id', $course_ids)->update(['professional_payment_id' => $professionalPayment->id]);
+                }*/
 
-            $professional = Professional::find($data['professional_id']);
+                $professional = Professional::find($data['professional_id']);
 
-            //$finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
-            $finance = Finance::orderBy('control', 'desc')->first();             
-            if($finance !== null)
-            {
-                $control = $finance->control+1;
-            }
-            else {
-                $control = 1;
-            }
-            $finance = new Finance();
-                            $finance->control = $control++;
-                            $finance->operation = 'Gasto';
-                            $finance->amount = $data['amount'];
-                            $finance->comment = 'Gasto por pago de curso a '.$professional->name;
-                            $finance->enrollment_id = $enrollment_id;
-                            $finance->type = 'Academia';
-                            $finance->expense_id = 6;
-                            $finance->data = Carbon::now();                
-                            $finance->file = '';
-                            $finance->save();
+                //$finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+                $finance = Finance::orderBy('control', 'desc')->first();             
+                if($finance !== null)
+                {
+                    $control = $finance->control+1;
+                }
+                else {
+                    $control = 1;
+                }
+                $finance = new Finance();
+                                $finance->control = $control++;
+                                $finance->operation = 'Gasto';
+                                $finance->amount = $data['amount'];
+                                $finance->comment = 'Gasto por pago de curso a '.$professional->name;
+                                $finance->enrollment_id = $enrollment_id;
+                                $finance->type = 'Academia';
+                                $finance->expense_id = 6;
+                                $finance->data = Carbon::now();                
+                                $finance->file = '';
+                                $finance->save();
 
-                            /*$finance = new Finance();
-                            $finance->control = $control++;
-                            $finance->operation = 'Ingreso';
-                            $finance->amount = $courseProfessional->course->price-$data['amount'];
-                            $finance->comment = 'Ingreso por pago de curso a '.$professional->name;
-                            $finance->enrollment_id = $enrollment_id;
-                            $finance->type = 'Academia';
-                            $finance->revenue_id = 9;
-                            $finance->data = Carbon::now();                
-                            $finance->file = '';
-                            $finance->save();*/
+                                /*$finance = new Finance();
+                                $finance->control = $control++;
+                                $finance->operation = 'Ingreso';
+                                $finance->amount = $courseProfessional->course->price-$data['amount'];
+                                $finance->comment = 'Ingreso por pago de curso a '.$professional->name;
+                                $finance->enrollment_id = $enrollment_id;
+                                $finance->type = 'Academia';
+                                $finance->revenue_id = 9;
+                                $finance->data = Carbon::now();                
+                                $finance->file = '';
+                                $finance->save();*/
             }else{
                 $professionalPayment = new ProfessionalPayment();
                 $professionalPayment->branch_id = $data['branch_id'];

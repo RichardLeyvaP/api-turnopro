@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\Car;
 use App\Models\Finance;
 use App\Models\Order;
@@ -1238,6 +1239,7 @@ class BranchService
         })->get();
         //$branches = Branch::select('id', 'name')->get();
         foreach ($professionals as $professional) {
+            $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
             $payments = ProfessionalPayment::where('branch_id', $branch_id)
                 ->where('professional_id', $professional->id)
                 ->whereDate('date', Carbon::now())
@@ -1251,25 +1253,45 @@ class BranchService
             })->where('pay', 1)->get();
             $retention = $professional->retention;
             $winProfessional = $cars->sum(function ($car) {
-                return $car->orders->sum('percent_win');
+                return $car->orders->sum(function ($order) {
+                    return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                });
             });
             $amuntGenerate = $cars->sum(function ($car) {
                 return $car->orders->sum('price');
             });
             $retentionPorcent = round(($winProfessional * $retention) / 100);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
-            $bonus = $payments->sum('amount');
+            $tips = round($cars->sum('tip'), 2);
+            $bonus = 0;
+
+            foreach ($payments as $payment) {
+                if ($payment->type == 'Bono convivencias') {
+                    // Aplica la fórmula para obtener el amount original
+                    $originalAmount = $payment->amount / (1 - $retention / 100);
+                    $bonus += $originalAmount;
+                } elseif($payment->type == 'Bono servicios'){
+                    $bonus += $profesionalbonus->mountpay;
+                }else {
+                    // Suma el amount directamente si no es 'Bono convivencias'
+                    $bonus += $payment->amount;
+                }
+            }
+            Log::info('Bonos sin retetncion:'.$professional->id);
+            Log::info($bonus);
+            $bonusRetention = $payments->sum('amount');
             $dates[] =  [
                 //'branchName' => $branch->name,
                 'name' => $professional->name,
                 'image_url' => $professional->image_url,
-                'amount' => $winProfessional,
+                'amount' => $winProfessional - $retentionPorcent,
                 'amountGenerate' => $amuntGenerate,
                 'retention' => $retentionPorcent,
-                'tip' => round($cars->sum('tip'), 2),
+                'tip' => $tips,
                 'tip80' => $winTips,
-                'bonus' => $bonus,
-                'total' => ($winProfessional - $retentionPorcent + $winTips) + $bonus,
+                'bonus' => $bonusRetention,
+                'renta' => $winProfessional + $bonus,
+                'total' => ($winProfessional - $retentionPorcent) + $winTips + $bonusRetention,
                 'total_cars' => $cars->count()
             ];
             //})->sortByDesc('total')->values();
@@ -1368,6 +1390,7 @@ class BranchService
         })->get();
         //$branches = Branch::select('id', 'name')->get();
         foreach ($professionals as $professional) {
+            $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
             $payments = ProfessionalPayment::where('branch_id', $branch_id)
                 ->where('professional_id', $professional->id)
                 ->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
@@ -1381,25 +1404,45 @@ class BranchService
             })->where('pay', 1)->get();
             $retention = $professional->retention;
             $winProfessional = $cars->sum(function ($car) {
-                return $car->orders->sum('percent_win');
+                return $car->orders->sum(function ($order) {
+                    return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                });
             });
             $amuntGenerate = $cars->sum(function ($car) {
                 return $car->orders->sum('price');
             });
             $retentionPorcent = round(($winProfessional * $retention) / 100);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
-            $bonus = $payments->sum('amount');
+            $tips = round($cars->sum('tip'), 2);
+            $bonus = 0;
+            
+            foreach ($payments as $payment) {
+                if ($payment->type == 'Bono convivencias') {
+                    // Aplica la fórmula para obtener el amount original
+                    $originalAmount = $payment->amount / (1 - $retention / 100);
+                    $bonus += $originalAmount;
+                } elseif($payment->type == 'Bono servicios'){
+                    $bonus += $profesionalbonus->mountpay;
+                }else {
+                    // Suma el amount directamente si no es 'Bono convivencias'
+                    $bonus += $payment->amount;
+                }
+            }
+            Log::info('Bonos sin retetncion:'.$professional->id);
+            Log::info($bonus);
+            $bonusRetention = $payments->sum('amount');
             $dates[] =  [
                 //'branchName' => $branch->name,
                 'name' => $professional->name,
                 'image_url' => $professional->image_url,
-                'amount' => $winProfessional,
+                'amount' => $winProfessional - $retentionPorcent,
                 'amountGenerate' => $amuntGenerate,
                 'retention' => $retentionPorcent,
-                'tip' => round($cars->sum('tip'), 2),
+                'tip' => $tips,
                 'tip80' => $winTips,
-                'bonus' => $bonus,
-                'total' => ($winProfessional - $retentionPorcent + $winTips) + $bonus,
+                'bonus' => $bonusRetention,
+                'renta' => $winProfessional + $bonus,
+                'total' => ($winProfessional - $retentionPorcent) + $winTips + $bonusRetention,
                 'total_cars' => $cars->count()
             ];
             //})->sortByDesc('total')->values();

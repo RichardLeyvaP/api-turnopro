@@ -78,9 +78,9 @@
             <td colspan="3"><strong>Estado de la caja:</strong></td>
         </tr>
         <tr>
-            <td><strong>Fondo Inicio del día:</strong> {{ $boxCashFound }}</td>
-            <td><strong>Existencia:</strong> {{ $boxExistence }}</td>
-            <td><strong>Extracción:</strong> {{ $boxExtraction }}</td>
+            <td><strong>Fondo Inicio del día:</strong> {{ number_format(round($boxCashFound, 2), 2) }}</td>
+            <td><strong>Existencia:</strong> {{ number_format(round($boxExistence, 2), 2) }}</td>
+            <td><strong>Extracción:</strong> {{ number_format(round($boxExtraction, 2), 2) }}</td>
         </tr>
         <tr class="section-header">
             <td colspan="3"><strong>Cierre de las Cuentas y Formas de Pago:</strong></td>
@@ -94,25 +94,25 @@
         </tr>
         <tr>
             <td><strong>Propinas:</strong> {{ $totalTip }}</td>
-            <td><strong>Venta de Productos:</strong> {{ $totalProduct }}</td>
-            <td><strong>Prestación de Servicios:</strong> {{ $totalService }}</td>
+            <td><strong>Venta de Productos:</strong> {{ number_format(round($totalProduct, 2), 2) }}</td>
+            <td><strong>Prestación de Servicios:</strong> {{ number_format(round($totalService, 2), 2) }}</td>
         </tr>
         <tr class="section-header">
             <td colspan="3"><strong>Formas de pago</strong></td>
         </tr>
         <tr>
-            <td><strong>Efectivo en caja:</strong> {{ $totalCash }}</td>
-            <td><strong>Tarjeta de Créditos:</strong> {{ $totalCreditCard }}</td>
-            <td><strong>Débito:</strong> {{ $totalDebit }}</td>
+            <td><strong>Efectivo en caja:</strong> {{ number_format(round($totalCash, 2), 2) }}</td>
+            <td><strong>Tarjeta de Créditos:</strong> {{ number_format(round($totalCreditCard, 2), 2) }}</td>
+            <td><strong>Débito:</strong> {{ number_format(round($totalDebit, 2), 2) }}</td>
         </tr>
         <tr>
-            <td><strong>Transferencia:</strong> {{ $totalTransfer }}</td>
-            <td><strong>Total Giftcard:</strong> {{ $totalGiftcard }}</td>
-            <td><strong>Otros Métodos:</strong> {{ $totalOther }}</td>
+            <td><strong>Transferencia:</strong> {{ number_format(round($totalTransfer, 2), 2) }}</td>
+            <td><strong>Total Giftcard:</strong> {{ number_format(round($totalGiftcard, 2), 2) }}</td>
+            <td><strong>Otros Métodos:</strong> {{ number_format(round($totalOther, 2), 2) }}</td>
         </tr>
         <tr class="total-row">
-            <td><strong>Total de Bonos:</strong> {{ $totalBonus }}</td>
-            <td colspan="2"><strong>Total Ingresado:</strong> {{ $totalMount }}</td>
+            <td><strong>Total de Bonos:</strong> {{ number_format(round($totalBonus, 2), 2) }}</td>
+            <td colspan="2"><strong>Total Ingresado:</strong> {{ number_format(round($totalMount, 2), 2) }}</td>
         </tr>
     </table>
     <div class="footer">
@@ -122,56 +122,3 @@
 
 </body>
 </html>
-<!--<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cierre de Caja</title>
-</head>
-<body style="font-family: Arial, sans-serif;">
-
-<table width="100%" height="100%" style="border-collapse: collapse; border: 1.5px solid black">
-<tr height="10%" style="border-collapse: collapse;  background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
-    <td><strong>Empresa:</strong> {{ $branchBusinessName }}</td>
-    <td><strong>Sucursal:</strong> {{ $branchName }}</td>
-    <td><strong>Fecha:</strong> {{ $boxData }}</td>
-</tr>
-<tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Estado de la caja:</strong></td>
-</tr>
-<tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td><strong>Fondo Inicio del día:</strong> {{ $boxCashFound }}</td>
-    <td><strong>Existencia:</strong> {{ $boxExistence }}</td>
-    <td><strong>Extracción:</strong> {{ $boxExtraction }}</td>
-</tr>
-<tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1);  border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Cierre de las Cuentas y Formas de Pago:</strong></td>
-</tr>
-<tr height="10%" style="border-collapse: collapse; background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Tipos de ingreso</strong></td>
-</tr>
-<tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td><strong>Propinas:</strong> {{ $totalTip }}</td>
-    <td><strong>Venta de Productos:</strong> {{ $totalProduct }}</td>
-    <td><strong>Prestación de Servicios:</strong> {{ $totalService }}</td>
-</tr>
-<tr height="10%" style="border-collapse: collapse;  background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Formas de pago</strong></td>
-</tr>
-<tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td><strong>Efectivo en caja:</strong> {{ $totalCash }}</td>
-    <td><strong>Tarjeta de Créditos:</strong> {{ $totalCreditCard }}</td>
-    <td><strong>Débito:</strong> {{ $totalDebit }}</td>
-</tr>
-<tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td><strong>Transferencia:</strong> {{ $totalTransfer }}</td>
-    <td><strong>Total Giftcard:</strong> {{ $totalGiftcard }}</td>
-    <td><strong>Otros Méthodos:</strong> {{ $totalOther }}</td>
-</tr>
-<tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Total Ingresado:</strong> {{ $totalMount }}</td>
-</tr>
-</table>
-
-</body>
-</html>-->

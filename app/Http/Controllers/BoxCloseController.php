@@ -11,6 +11,7 @@ use App\Models\BranchProfessional;
 use App\Models\BranchRuleProfessional;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
+use App\Models\CashierSale;
 use App\Models\CloseBox;
 use App\Models\Finance;
 use App\Models\Order;
@@ -188,8 +189,8 @@ class BoxCloseController extends Controller
             $now = Carbon::now();
 
             // Obtener el mes y año del mes anterior
-            $mesAnterior = $now->subMonth()->month;
-            $añoAnterior = $now->subMonth()->year;
+            $mesAnterior = $now->month;
+            $añoAnterior = $now->year;
             //$boxCloseData = [];
             $professionalsData = [];
 
@@ -234,26 +235,26 @@ class BoxCloseController extends Controller
                 // Agregar al array de resultados
                 $boxCloseData[] = $boxCloseArray;*/
                 $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
-                    $query->where('branch_id', $branch->id);
-                })->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-                })->select('id', 'name', 'surname', 'retention')->get();
-                foreach ($professionals as $professional) {
-                    $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
-                        $query->where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior);
-                    })
-                        ->with(['clientProfessional.client', 'reservation'])
-                        ->whereHas('clientProfessional', function ($query) use ($professional) {
-                            $query->where('professional_id', $professional->id);
+                        $query->where('branch_id', $branch->id);
+                    })->whereHas('charge', function ($query) {
+                        $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    })->select('id', 'name', 'surname', 'retention')->get();
+                    foreach ($professionals as $professional) {
+                        $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
+                            $query->where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior);
                         })
-                        ->where('pay', 1)
-                        ->get();
-                    $carIdsPay = $cars->pluck('id');
-                    $products = Order::whereIn('car_id', $carIdsPay)
-                        ->where('is_product', 1)
-                        ->groupBy('product_store_id')
-                        ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
-                        ->get();
+                            ->with(['clientProfessional.client', 'reservation'])
+                            ->whereHas('clientProfessional', function ($query) use ($professional) {
+                                $query->where('professional_id', $professional->id);
+                            })
+                            ->where('pay', 1)
+                            ->get();
+                        $carIdsPay = $cars->pluck('id');
+                        $products = Order::whereIn('car_id', $carIdsPay)
+                            ->where('is_product', 1)
+                            ->groupBy('product_store_id')
+                            ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
+                            ->get();
                     $venta = $products->sum('total_cant');
                     $percent_win = $products->sum('total_percent_win');
                     if ($venta <= 24) {
@@ -307,6 +308,74 @@ class BoxCloseController extends Controller
                         $professionalsData[] = $professionalData;
                     }
                 }
+
+                $cashiers = Professional::whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branch_id', $branch->id);
+                })->whereHas('charge', function ($query) {
+                    $query->where('name', 'Cajero (a)');
+                })->select('id', 'name', 'retention')->get();
+                foreach ($cashiers as $cashier) {
+                    Log::info('Cajero:'.$cashier->name.'->ID:'.$cashier->id.' de la sucursal'.$branch->name);
+                    $productSales = CashierSale::where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->where('professional_id', $cashier->id)->where('pay', 1)->get();
+                    Log::info('Productos Vendidos');
+                    Log::info($productSales);
+                    //Comprobar venta de productos de los cajeros
+                    $ventaCashier = $productSales->sum('cant');
+                    Log::info('Cantidad Productos Vendidos');
+                    Log::info($ventaCashier);
+                    $percent_winCashier = $productSales->sum('percent_wint');
+                    Log::info('Porciento de Ganancia');
+                    Log::info($percent_winCashier);
+                    if ($ventaCashier <= 24) {
+                        $winProductCashier = $percent_winCashier * 0.15;
+                    } else if ($ventaCashier > 24 && $ventaCashier <= 49) {
+                        $winProductCashier = $percent_winCashier * 0.25;
+                    } else {
+                        $winProductCashier = $percent_winCashier * 0.50;
+                    }
+                    Log::info('Bono producto Cashier'.$winProductCashier.$cashier->name);
+                    // Agregar los datos del profesional al arreglo solo si $winProduct es mayor que 0
+                    if ($winProductCashier > 0) {
+                        $professionalData = [
+                            'name' => $cashier->name,
+                            'winProduct' => $winProductCashier,
+                        ];
+
+                        $finance = Finance::orderBy('control', 'desc')->first();
+                        if ($finance !== null) {
+                            $control = $finance->control + 1;
+                        } else {
+                            $control = 1;
+                        }
+                        Log::info('Bono de Producto Cashier'.$winProductCashier.$cashier->name);
+                        //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
+                        //if ($filteredPayments->isEmpty()) {
+                            $professionalPayment = new ProfessionalPayment();
+                            $professionalPayment->branch_id = $branch->id;
+                            $professionalPayment->professional_id = $cashier->id;
+                            $professionalPayment->date = Carbon::now();
+                            $professionalPayment->amount = $winProductCashier;
+                            $professionalPayment->type = 'Bono productos';
+                            $professionalPayment->cant = $ventaCashier;
+                            $professionalPayment->save();
+        
+        
+                            $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $winProductCashier;
+                            $finance->comment = 'Gasto por pago de bono de productos a ' . $cashier->name;
+                            $finance->branch_id = $branch->id;
+                            $finance->type = 'Sucursal';
+                            $finance->expense_id = 5;
+                            $finance->data = Carbon::now();
+                            $finance->file = '';
+                            $finance->save();
+                    }
+                
+                }
+                
+
                 $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
                 if (!$finances->isEmpty()) {
 
@@ -328,7 +397,7 @@ class BoxCloseController extends Controller
                         ->orWhere('name', 'Administrador de Sucursal');
                 })->whereHas('branches', function ($query) use ($branch) {
                     $query->where('branches.id', $branch->id);
-                })/*whereIn('charge_id', [3, 4, 5, 12])*/
+                })
                     ->pluck('email');
                     $emailassociated = [];
                     $emailArray = [];
