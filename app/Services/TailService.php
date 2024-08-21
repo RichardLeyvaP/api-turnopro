@@ -337,6 +337,7 @@ class TailService
                 'detached' => $tail->detached,
                 'total_services' => $services->count(),
                 'select_professional' => intval($reservation->car->select_professional),
+                'telefone_client' => $client->phone ? strval($client->phone) : '',
                 'services' => $services
 
             ];
