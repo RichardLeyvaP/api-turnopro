@@ -1261,6 +1261,9 @@ class BranchService
                 return $car->orders->sum('price');
             });
             $retentionPorcent = round(($winProfessional * $retention) / 100);
+            $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', Carbon::now())->sum('retention');
+            Log::info('Total de retenciones'.$professional->name);
+            Log::info($totalRetention);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
             $tips = round($cars->sum('tip'), 2);
             $bonus = 0;
@@ -1286,7 +1289,8 @@ class BranchService
                 'image_url' => $professional->image_url,
                 'amount' => $winProfessional - $retentionPorcent,
                 'amountGenerate' => $amuntGenerate,
-                'retention' => $retentionPorcent,
+                'retention' => $totalRetention ? $totalRetention : $retentionPorcent,
+                //'retention' => $retentionPorcent,
                 'tip' => $tips,
                 'tip80' => $winTips,
                 'bonus' => $bonusRetention,
@@ -1412,6 +1416,9 @@ class BranchService
                 return $car->orders->sum('price');
             });
             $retentionPorcent = round(($winProfessional * $retention) / 100);
+            $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
+            Log::info('Total de retenciones'.$professional->name);
+            Log::info($totalRetention);
             $winTips =  round($cars->sum('tip') * 0.8, 2);
             $tips = round($cars->sum('tip'), 2);
             $bonus = 0;
@@ -1437,7 +1444,8 @@ class BranchService
                 'image_url' => $professional->image_url,
                 'amount' => $winProfessional - $retentionPorcent,
                 'amountGenerate' => $amuntGenerate,
-                'retention' => $retentionPorcent,
+                'retention' => $totalRetention ? $totalRetention : $retentionPorcent,
+                //'retention' => $retentionPorcent,
                 'tip' => $tips,
                 'tip80' => $winTips,
                 'bonus' => $bonusRetention,
