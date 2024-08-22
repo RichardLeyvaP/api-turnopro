@@ -198,9 +198,16 @@ class BoxCloseController extends Controller
             $gasto = 0;
             $branches = Branch::all();
             foreach ($branches as $branch) {
+                Finance::where('branch_id', $branch->id)
+                ->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)
+                ->where('operation', 'Gasto')
+                ->where('comment', 'like', '%Gasto por pago de bono de productos%')
+                ->delete();
                 $boxCloseData = [];
                 $winProduct = 0;
                 $professionalsData = [];
+                $ingreso = 0;
+                $gasto = 0;
                 $boxClose = BoxClose::whereHas('box', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
                 })->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->selectRaw('
@@ -309,12 +316,12 @@ class BoxCloseController extends Controller
                     }
                 }
 
-                $cashiers = Professional::whereHas('branches', function ($query) use ($branch) {
+                /*$cashiers = Professional::whereHas('branches', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
-                })->whereHas('charge', function ($query) {
-                    $query->where('name', 'Cajero (a)');
-                })->select('id', 'name', 'retention')->get();
-                foreach ($cashiers as $cashier) {
+                    })->whereHas('charge', function ($query) {
+                        $query->where('name', 'Cajero (a)');
+                    })->select('id', 'name', 'retention')->get();
+                    foreach ($cashiers as $cashier) {
                     Log::info('Cajero:'.$cashier->name.'->ID:'.$cashier->id.' de la sucursal'.$branch->name);
                     $productSales = CashierSale::where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->where('professional_id', $cashier->id)->where('pay', 1)->get();
                     Log::info('Productos Vendidos');
@@ -373,7 +380,7 @@ class BoxCloseController extends Controller
                             $finance->save();
                     }
                 
-                }
+                }*/
                 
 
                 $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
@@ -381,12 +388,17 @@ class BoxCloseController extends Controller
 
                     foreach ($finances as $finance) {
                         if ($finance->operation == 'Gasto') {
-                            $gasto = $gasto + $finance->amount;
+                            $gasto += $finance->amount;
                         } else {
-                            $ingreso = $ingreso + $finance->amount;
+                            $ingreso += $finance->amount;
                         }
                     }
                 }
+
+                Log::info('Ingreso Sucursal'.$branch->name);
+                Log::info($ingreso);
+                Log::info('Gasto Sucursal'.$branch->name);
+                Log::info($gasto);
                      Log::info("Generar PDF");
                      $boxData = $añoAnterior . '-' . $mesAnterior;
            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensual', ['branchBusinessName' => $branch->business['name'], 'branchName' => $branch->name, 'boxData' => $boxData, 'totalTip' => $boxClose->totalTip, 'totalProduct' => $boxClose->totalProduct, 'totalService' => $boxClose->totalService, 'totalCash' => $boxClose->totalCash, 'totalCreditCard' => $boxClose->totalCreditCard, 'totalDebit' => $boxClose->totalDebit, 'totalTransfer' => $boxClose->totalTransfer, 'totalOther' => $boxClose->totalOther, 'totalMount' => $boxClose->totalMount, 'totalCardGif' => $boxClose->totalCardGif, 'ingreso' =>  round($ingreso, 2), 'gasto' => round($gasto, 2), 'utilidad' => round($ingreso - $gasto, 2), 'professionalBonus' => $professionalsData]);

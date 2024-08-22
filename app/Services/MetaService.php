@@ -31,6 +31,11 @@ class MetaService
         //Retention
         Retention::where('branch_id', $branch->id)
         ->whereDate('data', Carbon::now())->delete();
+
+        ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
+            $query->where('type', 'Bono convivencias')
+                ->orWhere('type', 'Bono servicios');
+        })->delete();
         $idService=null;
         $bonus = [];
         $percentWinSum = 0;

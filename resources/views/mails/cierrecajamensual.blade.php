@@ -37,7 +37,7 @@
     <td><strong>Otros Méthodos:</strong> {{ number_format(round($totalOther, 2), 2) }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;border: 1.5px solid black">
-    <td colspan="3" align="center"><strong>Total Ingresado:</strong> {{ $totalMount }}</td>
+    <td colspan="3" align="center"><strong>Total Ingresado:</strong> {{ number_format(round($totalMount, 2), 2) }}</td>
 </tr>
 <tr height="10%" style="border-collapse: collapse;  background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black">
     <td><strong>Ingreso:</strong> {{ number_format(round($ingreso, 2), 2) }}</td>
