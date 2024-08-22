@@ -18,6 +18,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
+use App\Models\Retention;
 use App\Services\MetaService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -203,6 +204,12 @@ class BoxCloseController extends Controller
                 ->where('operation', 'Gasto')
                 ->where('comment', 'like', '%Gasto por pago de bono de productos%')
                 ->delete();
+                 //Retention
+                Retention::where('branch_id', $branch->id)
+                ->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->where('type', 'Products')->delete();
+
+                ProfessionalPayment::where('branch_id', $branch->id)->whereYear('date', $añoAnterior)->whereMonth('date', $mesAnterior)->where('type', 'Bono productos')->delete();
+
                 $boxCloseData = [];
                 $winProduct = 0;
                 $professionalsData = [];
@@ -274,6 +281,18 @@ class BoxCloseController extends Controller
                     Log::info('Bono producto'.$winProduct.$professional->name);
                     // Agregar los datos del profesional al arreglo solo si $winProduct es mayor que 0
                     if ($winProduct > 0) {
+                        $retention = $professional->retention;
+                    if ($retention) {
+                        $resultRetention = round($winProduct * $retention / 100, 2);
+                        $winProduct = $winProduct - $resultRetention;
+                        $retention = new Retention();
+                        $retention->branch_id = $branch->id;
+                        $retention->professional_id = $professional->id;
+                        $retention->data = Carbon::now();
+                        $retention->retention = $resultRetention;
+                        $retention->type = 'Products';
+                        $retention->save();
+                    }
                         $professionalData = [
                             'name' => $professional->name,
                             'winProduct' => $winProduct,

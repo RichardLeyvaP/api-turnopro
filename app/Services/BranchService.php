@@ -1269,7 +1269,7 @@ class BranchService
             $bonus = 0;
 
             foreach ($payments as $payment) {
-                if ($payment->type == 'Bono convivencias') {
+                if ($payment->type == 'Bono convivencias' || $payment->type == 'Bono productos') {
                     // Aplica la fórmula para obtener el amount original
                     $originalAmount = $payment->amount / (1 - $retention / 100);
                     $bonus += $originalAmount;

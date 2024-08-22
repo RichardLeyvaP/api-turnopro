@@ -30,7 +30,7 @@ class MetaService
 
         //Retention
         Retention::where('branch_id', $branch->id)
-        ->whereDate('data', Carbon::now())->delete();
+        ->whereDate('data', Carbon::now())->where('type', 'Services')->delete();
 
         ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
             $query->where('type', 'Bono convivencias')
@@ -192,9 +192,11 @@ class MetaService
             $percentWinSum = 0;
             if (!$cars->isEmpty())
                 if ($retentionP) {
-                    //foreach ($cars as $car) {
-                        $percentWinSum = $orderServs->where('meta', 0)->sum('percent_win');
-                    //}
+                    $percentWinSum = $cars->sum(function ($car) {
+                        return $car->orders->sum(function ($order) {
+                            return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                        });
+                    });
                     if ($percentWinSum) {
                         if($retentionP){
                             Log::info('Entra a retencion de servicios'.$professional->name.$percentWinSum * $retentionP / 100);
