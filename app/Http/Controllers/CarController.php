@@ -1125,9 +1125,9 @@ class CarController extends Controller
                         'attendedClient' => 1,
                         'services' => $orderServ->count(),
                         'products' => $orderPrduct->sum('cant'),
-                        'totalServices' => intval($amountServ - $retention),
+                        'totalServices' => round(($amountServ - $retention), 2),
                         'clientAleator' => $car->select_professional,
-                        'amountGenerate' => intval($car->amount),
+                        'amountGenerate' => round($car->amount, 2),
                         'tip' => $car->tip * 0.80,
                         'meta' => ($orderServ->count() == 1 && $amountServ == 0) ? 'Si' : 'No',
                         'selectable' => ($orderServ->count() == 1 && $amountServ == 0 && ($car->tip * 0.80)<=0) ? false : true

@@ -419,7 +419,7 @@ class BoxCloseController extends Controller
                 Log::info('Gasto Sucursal'.$branch->name);
                 Log::info($gasto);
                      Log::info("Generar PDF");
-                     $boxData = $añoAnterior . '-' . $mesAnterior;
+                    $boxData = $now->format('Y-m-d');
            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensual', ['branchBusinessName' => $branch->business['name'], 'branchName' => $branch->name, 'boxData' => $boxData, 'totalTip' => $boxClose->totalTip, 'totalProduct' => $boxClose->totalProduct, 'totalService' => $boxClose->totalService, 'totalCash' => $boxClose->totalCash, 'totalCreditCard' => $boxClose->totalCreditCard, 'totalDebit' => $boxClose->totalDebit, 'totalTransfer' => $boxClose->totalTransfer, 'totalOther' => $boxClose->totalOther, 'totalMount' => $boxClose->totalMount, 'totalCardGif' => $boxClose->totalCardGif, 'ingreso' =>  round($ingreso, 2), 'gasto' => round($gasto, 2), 'utilidad' => round($ingreso - $gasto, 2), 'professionalBonus' => $professionalsData]);
             $reporte = $pdf->output();
                 //Aqui hacer la logicac de enviar el correo
@@ -436,6 +436,7 @@ class BoxCloseController extends Controller
                 $emailassociated = $branch->associates()->pluck('email');
                 $emailArray = $emailassociated->toArray();
                 $mergedEmails = $emails->merge($emailArray);
+            //  $mergedEmails = ['richardleyvap1991@gmail.com','yasmany891230@gmail.com'];
                 Log::info($mergedEmails);    
                 foreach ($mergedEmails as $email) {
                     try {
@@ -444,7 +445,7 @@ class BoxCloseController extends Controller
                             $reporte,
                             $branch->business['name'],
                             $branch->name,
-                            $añoAnterior . '-' . $mesAnterior,
+                            $now->format('Y-m-d'),
                             0,
                             0,
                             0,

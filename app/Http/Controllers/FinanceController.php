@@ -106,53 +106,53 @@ class FinanceController extends Controller
                         if($query->revenue){
                             if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
-                                $comment = 'IP '.$query->comment;
+                                $comment = 'IngresoProducto '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por porciento de propinas'){
                                 $typeDetail = 'Ingreso Propina';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por pago de servicios'){
                                 $typeDetail = 'Ingreso Servicio';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
                             $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
                             $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
+                            $comment = 'IngresoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Ingreso venta de producto en la caja')){
                             $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
+                            $comment = 'IngresoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
                             $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
-                            $comment = 'GP '.$query->comment;
+                            $comment = 'GastoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
                             $typeDetail = 'Gasto Propina';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if($query->expense){
                             if($query->expense->name == 'Compra de productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Pago a profesionales'){
                                 $typeDetail = 'Gasto Servicio';
-                                $comment = 'GS '.$query->comment;
+                                $comment = 'GastoServicio '.$query->comment;
                             }
                         }
                         return [
@@ -183,49 +183,53 @@ class FinanceController extends Controller
                         if($query->revenue){
                             if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
-                                $comment = 'IP '.$query->comment;
+                                $comment = 'IngresoProducto '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por porciento de propinas'){
                                 $typeDetail = 'Ingreso Propina';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por pago de servicios'){
                                 $typeDetail = 'Ingreso Servicio';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
                             $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
                             $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
+                            $comment = 'IngresoProducto '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Ingreso venta de producto en la caja')){
+                            $typeDetail = 'Ingreso Producto';
+                            $comment = 'IngresoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
                             $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
-                            $comment = 'GP '.$query->comment;
+                            $comment = 'GastoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
                             $typeDetail = 'Gasto Propina';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if($query->expense){
                             if($query->expense->name == 'Compra de productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Pago a profesionales'){
                                 $typeDetail = 'Gasto Servicio';
-                                $comment = 'GS '.$query->comment;
+                                $comment = 'GastoServicio '.$query->comment;
                             }
                         }
                         return [
@@ -303,49 +307,53 @@ class FinanceController extends Controller
                         if($query->revenue){
                             if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
-                                $comment = 'IP '.$query->comment;
+                                $comment = 'IngresoProducto '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por porciento de propinas'){
                                 $typeDetail = 'Ingreso Propina';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por pago de servicios'){
                                 $typeDetail = 'Ingreso Servicio';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
                             $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
                             $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
+                            $comment = 'IngresoProducto '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Ingreso venta de producto en la caja')){
+                            $typeDetail = 'Ingreso Producto';
+                            $comment = 'IngresoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
                             $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
                             $typeDetail = 'Gasto Producto';
-                            $comment = 'GP '.$query->comment;
+                            $comment = 'GastoProducto '.$query->comment;
                         }
                         if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
                             $typeDetail = 'Gasto Propina';
-                            $comment = 'GS '.$query->comment;
+                            $comment = 'GastoServicio '.$query->comment;
                         }
                         if($query->expense){
                             if($query->expense->name == 'Compra de productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Pago a profesionales'){
                                 $typeDetail = 'Gasto Servicio';
-                                $comment = 'GS '.$query->comment;
+                                $comment = 'GastoServicio '.$query->comment;
                             }
                         }
                         return [
@@ -372,54 +380,62 @@ class FinanceController extends Controller
                 if ($data['type'] == 'Sucursal'){
                     $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
                         $typeDetail = '';
-                        $comment = $query->comment;
+                        $comment = 'HH '.$query->comment;
                         if($query->revenue){
                             if($query->revenue->name == 'Ingreso venta de productos en la caja'){
                                 $typeDetail = 'Ingreso Producto';
-                                $comment = 'IP '.$query->comment;
+                                $comment = 'IngresoProducto '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por porciento de propinas'){
                                 $typeDetail = 'Ingreso Propina';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
                             if($query->revenue->name == 'Ingresos por pago de servicios'){
                                 $typeDetail = 'Ingreso Servicio';
-                                $comment = 'IS '.$query->comment;
+                                $comment = 'IngresoServicio '.$query->comment;
                             }
-                        }
-                        if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
-                            $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
-                        }
-                        if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
-                            $typeDetail = 'Ingreso Producto';
-                            $comment = 'IP '.$query->comment;
-                        }
-                        if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
-                            $typeDetail = 'Gasto Servicio';
-                            $comment = 'GS '.$query->comment;
-                        }
-                        if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
-                            $typeDetail = 'Gasto Producto';
-                            $comment = 'GP '.$query->comment;
-                        }
-                        if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
-                            $typeDetail = 'Gasto Propina';
-                            $comment = 'GS '.$query->comment;
                         }
                         if($query->expense){
                             if($query->expense->name == 'Compra de productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Productos'){
                                 $typeDetail = 'Gasto Producto';
-                                $comment = 'GP '.$query->comment;
+                                $comment = 'GastoProducto '.$query->comment;
                             }
                             if($query->expense->name == 'Pago a profesionales'){
                                 $typeDetail = 'Gasto Servicio';
-                                $comment = 'GS '.$query->comment;
+                                $comment = 'GastoServicio '.$query->comment;
                             }
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GastoServicio '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
+                            $typeDetail = 'Ingreso Producto';
+                            $comment = 'IngresoProducto '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Ingreso venta de producto en la caja')){
+                            $typeDetail = 'Ingreso Producto';
+                            $comment = 'IngresoProducto '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                            $typeDetail = 'Gasto Servicio';
+                            $comment = 'GastoServicio '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
+                            $typeDetail = 'Gasto Producto';
+                            $comment = 'GastoProducto '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                            $typeDetail = 'Gasto Propina';
+                            $comment = 'GastoServicio '.$query->comment;
+                        }
+                        if(str_contains($query->comment, 'Gasto por pago a cajero (a)')){
+                            $typeDetail = 'Gasto Producto';
+                            $comment = 'GastoProducto '.$query->comment;
                         }
                         return [
                             'id' => $query->id,
@@ -869,8 +885,13 @@ class FinanceController extends Controller
         // Agregar la fila del total por meses al final del array de datos
         $tableRevenue['Total'] = $totalRowRevenue;
         
+        $filteredRevenues = collect($tableRevenue)->filter(function ($revenue) {
+            return collect($revenue)->except(['tipo', 'operacion'])->some(function ($amount) {
+                return $amount > 0;
+            });
+        })->toArray();
         // Transformar los datos en una colección de objetos para usar en Vue.js
-        $tableRevenueCollection = collect($tableRevenue)->values()->all();
+        $tableRevenueCollection = collect($filteredRevenues)->values()->all();
 
         //-----------Gastos-------------
         $expenses = collect($monthsNames)->map(function ($monthName, $index) use ($currentYear, $data) {
@@ -944,7 +965,14 @@ class FinanceController extends Controller
         // Agregar la fila del total por meses al final del array de datos
         $tableExpense['Total'] = $totalRowExpense;
         
-        $tableExpenseCollection = collect($tableExpense)->values()->all();
+        // Filtrar los tipos de gastos que tienen un valor en al menos un mes
+        $filteredExpenses = collect($tableExpense)->filter(function ($expense) {
+            return collect($expense)->except(['tipo', 'operacion'])->some(function ($amount) {
+                return $amount > 0;
+            });
+        })->toArray();
+        
+        $tableExpenseCollection = collect($filteredExpenses)->values()->all();
         
         return $tableFinance = array_merge_recursive($tableRevenueCollection, $tableExpenseCollection);
 
@@ -1007,7 +1035,7 @@ class FinanceController extends Controller
                 'total_revenue' => $totalRevenue, // Agregar el total de ingresos para este mes
             ];
         });
-
+        
         // Inicializar un array para almacenar los datos reestructurados
         $tableRevenue = [];
         // Inicializar un array para almacenar los totales por mes
@@ -1050,9 +1078,14 @@ class FinanceController extends Controller
         
         // Agregar la fila del total por meses al final del array de datos
         $tableRevenue['Total'] = $totalRowRevenue;
-        
+        // Filtrar los tipos de ingresos que tienen un valor en al menos un mes
+        $filteredRevenues = collect($tableRevenue)->filter(function ($revenue) {
+            return collect($revenue)->except(['tipo', 'operacion'])->some(function ($amount) {
+                return $amount > 0;
+            });
+        })->toArray();
         // Transformar los datos en una colección de objetos para usar en Vue.js
-        $tableRevenueCollection = collect($tableRevenue)->values()->all();
+        $tableRevenueCollection = collect($filteredRevenues)->values()->all();
 
         //-----------Gastos-------------
         $expenses = collect($monthsNames)->map(function ($monthName, $index) use ($currentYear, $currentMonth,$data) {
@@ -1125,8 +1158,14 @@ class FinanceController extends Controller
         }
         // Agregar la fila del total por meses al final del array de datos
         $tableExpense['Total'] = $totalRowExpense;
+        // Filtrar los tipos de gastos que tienen un valor en al menos un mes
+        $filteredExpenses = collect($tableExpense)->filter(function ($expense) {
+            return collect($expense)->except(['tipo', 'operacion'])->some(function ($amount) {
+                return $amount > 0;
+            });
+        })->toArray();
         
-        $tableExpenseCollection = collect($tableExpense)->values()->all();
+        $tableExpenseCollection = collect($filteredExpenses)->values()->all();
         
         return $tableFinance = array_merge_recursive($tableRevenueCollection, $tableExpenseCollection);
 

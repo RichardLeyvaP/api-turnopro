@@ -93,7 +93,7 @@
             <td colspan="3"><strong>Tipos de ingreso</strong></td>
         </tr>
         <tr>
-            <td><strong>Propinas:</strong> {{ number_format(round($totalTip, 2), 2) }}</td>
+            <td><strong>Propinas:</strong> {{number_format(round($totalTip, 2), 2)   }}</td>
             <td><strong>Venta de Productos:</strong> {{ number_format(round($totalProduct, 2), 2) }}</td>
             <td><strong>Prestación de Servicios:</strong> {{ number_format(round($totalService, 2), 2) }}</td>
         </tr>

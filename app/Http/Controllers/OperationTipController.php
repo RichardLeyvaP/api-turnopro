@@ -94,15 +94,15 @@ class OperationTipController extends Controller
             //}
             }*/
             $professional = Professional::find($data['professional_id']);
-            //$finance = Finance::where('branch_id', $data['branch_id'])->where('expense_id', 4)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
-            /*$finance = Finance::orderBy('control', 'desc')->first();              
+            $finance = Finance::orderBy('control', 'desc')->first();
+                            
             if($finance !== null)
             {
                 $control = $finance->control+1;
             }
             else {
                 $control = 1;
-            }*/
+            }
             Log::info($control);
             $finance = new Finance();
                             $finance->control = $control++;
@@ -151,8 +151,8 @@ class OperationTipController extends Controller
                         'professional_id' => $query->professional_id,
                         'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
                         'type' => $query->type,
-                        'coffe_percent' => $query->coffe_percent,
-                        'amount' => $query->amount,
+                        'coffe_percent' => round($query->coffe_percent, 2),
+                        'amount' => round($query->amount, 2),
                         'car' => 1
                     ];
                 });
@@ -168,7 +168,7 @@ class OperationTipController extends Controller
                         'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                         'type' => $query->type,
                         'coffe_percent' => 0, // Valor por defecto ya que no existe en esta tabla
-                        'amount' => $query->amount,
+                        'amount' => round($query->amount, 2),
                         'car' => 0
                     ];
                 });
@@ -211,7 +211,7 @@ class OperationTipController extends Controller
                         'date' => $query->date,
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
-                        'amount' => $query->amount
+                        'amount' => round($query->amount, 2)
                     ];
                 });
            
@@ -250,14 +250,34 @@ class OperationTipController extends Controller
                         'professional_id' => $query->professional_id,
                         'date' => $query->date,
                         'type' => $query->type,
-                        'coffe_percent' => $query->coffe_percent,
-                        'amount' => $query->amount
+                        'coffe_percent' => round($query->coffe_percent, 2),
+                        'amount' => round($query->amount, 2)
                     ];
                 });
 
+                $payments2 = ProfessionalPayment::where('professional_id', $professionalId)
+                ->where('branch_id', $branchId)
+                ->get()
+                ->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        'branch_id' => $query->branch_id,
+                        'professional_id' => $query->professional_id,
+                        'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
+                        'type' => $query->type,
+                        'coffe_percent' => 0, // Valor por defecto ya que no existe en esta tabla
+                        'amount' => round($query->amount, 2),
+                        'car' => 0
+                    ];
+                });
+
+                $combinedPayments = $payments->concat($payments2)
+                             ->sortByDesc('date')
+                             ->values();
+
                 // Calcular totales
-            $totalCoffePercent = $payments->sum('coffe_percent');
-            $totalAmount = $payments->sum('amount');
+            $totalCoffePercent = $combinedPayments->sum('coffe_percent');
+            $totalAmount = $combinedPayments->sum('amount');
                 if($totalAmount){
             // Agregar fila de total
             $totalRow = [
@@ -270,10 +290,10 @@ class OperationTipController extends Controller
                 'amount' => $totalAmount
             ];
 
-            $payments->push($totalRow);
+            $combinedPayments->push($totalRow);
                 }
            
-            return response()->json($payments, 200);
+            return response()->json($combinedPayments, 200);
         } catch (ValidationException $e) {
             Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
@@ -309,7 +329,7 @@ class OperationTipController extends Controller
                         'date' => $query->date,
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
-                        'amount' => $query->amount
+                        'amount' => round($query->amount, 2)
                     ];
                 });
 
@@ -386,7 +406,7 @@ class OperationTipController extends Controller
                 $product = $cashierSale['productStore']['product'];
                 $sales[] = [
                     'id' => $cashierSale['id'],
-                    'price' => intval($cashierSale['price']),
+                    'price' => round($cashierSale['price'], 2),
                     'pay' => $cashierSale['pay'],
                     'cant' => $cashierSale['cant'],
                     'name' => $product['name'],
