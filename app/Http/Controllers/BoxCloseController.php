@@ -190,8 +190,10 @@ class BoxCloseController extends Controller
             $now = Carbon::now();
 
             // Obtener el mes y año del mes anterior
-            $mesAnterior = $now->month;
-            $añoAnterior = $now->year;
+            //$mesAnterior = $now->month;
+            //$añoAnterior = $now->year;
+            $mesAnterior = $now->subMonth()->month; // Devuelve el mes anterior
+            $añoAnterior = $now->subMonth()->year; // Devuelve el año anterior
             //$boxCloseData = [];
             $professionalsData = [];
 
