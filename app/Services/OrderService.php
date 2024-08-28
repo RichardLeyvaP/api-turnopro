@@ -54,6 +54,7 @@ class OrderService {
             
                 $service = $branchServiceprofessional->branchService->service;
                 $percent = $branchServiceprofessional->percent;
+                $duration = $service->duration_service;
                     $car->amount = $car->amount + $service->price_service;
                 $car->save();
                 $car_id = $car->id;
@@ -68,6 +69,18 @@ class OrderService {
                  $order->price = $service->price_service;   
                  $order->request_delete = false;
                  $order->save();
+
+                 $reservation = $car->reservation;
+                $tiempoGuardado = Carbon::createFromFormat('H:i:s', $reservation->total_time);
+
+                $tiempoGuardado->addMinutes($duration);
+
+
+                $tiempoGuardado = $tiempoGuardado->toTimeString();
+
+                $reservation->final_hour = Carbon::parse($reservation->final_hour)->addMinutes($duration)->toTimeString();
+                $reservation->total_time = $tiempoGuardado;
+                $reservation->save();
                 return $order;
     }
 
