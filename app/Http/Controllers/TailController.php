@@ -685,7 +685,13 @@ class TailController extends Controller
         try {
 
             Log::info("Modificar estado de la Cola");
-
+            $validator = Validator::make($request->all(), [
+                'reservation_id' => 'required|numeric|exists:reservations,id',
+                'attended' => 'required|numeric'
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['msg' => $validator->errors()->all()], 400);
+            }
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'attended' => 'required|numeric'
