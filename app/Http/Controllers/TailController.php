@@ -35,6 +35,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class TailController extends Controller
@@ -633,6 +634,13 @@ class TailController extends Controller
         try {
 
             Log::info("Mostarr la cola del dia de una branch");
+            $validator = Validator::make($request->all(), [
+                'branch_id' => 'required|numeric|exists:branches,id',
+                'professional_id' => 'required|numeric|exists:professionals,id'
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['msg' => $validator->errors()->all()], 400);
+            }
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'

@@ -16,6 +16,7 @@ use App\Models\Comment;
 use App\Models\Notification;
 use App\Models\ProfessionalWorkPlace;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -560,7 +561,8 @@ class TailService
 
     public function type_of_service($branch_id, $professional_id)
     {
-        Log::info('Entrando a type_of_service');
+        try {
+            Log::info('Entrando a type_of_service');
         $tails = Tail::with(['reservation' => function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         }])->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
@@ -594,6 +596,11 @@ class TailService
             //sini llega aca es que no hay servicios simultaneos
             return false;
         }
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el servicio: " . $e->getMessage());
+        }
+
     }
 
     public function cola_branch_capilar($branch_id)
