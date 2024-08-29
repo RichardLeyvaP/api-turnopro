@@ -182,7 +182,7 @@ class MetaService
                         $retention->branch_id = $branch->id;
                         $retention->professional_id = $professional->id;
                         $retention->data = Carbon::now();
-                        $retention->retention = intval($retentionAmount);
+                        $retention->retention = round($retentionAmount, 2);
                         $retention->save();
                     }
                 //}
@@ -204,7 +204,7 @@ class MetaService
                             $retention->branch_id = $branch->id;
                             $retention->professional_id = $professional->id;
                             $retention->data = Carbon::now();
-                            $retention->retention = $percentWinSum * $retentionP / 100;
+                            $retention->retention = round($percentWinSum * $retentionP / 100, 2);
                             $retention->save();
                         }
                     }
