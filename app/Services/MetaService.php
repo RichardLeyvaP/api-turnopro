@@ -103,7 +103,7 @@ class MetaService
                                 'name' => $professional->name,
                                 'image_url' => $professional->image_url,
                                 'bonus' => 'Bono convivencias',
-                                'amount' => number_format(round($amount - $retentionAmount, 2), 2),
+                                'amount' => round($amount - $retentionAmount, 2),
                             ];
                             $finance = new Finance();
                             $finance->control = $control++;
@@ -122,7 +122,7 @@ class MetaService
                                 $retention->branch_id = $branch->id;
                                 $retention->professional_id = $professional->id;
                                 $retention->data = Carbon::now();
-                                $retention->retention = intval($retentionAmount);
+                                $retention->retention = round($retentionAmount, 2);
                                 $retention->save();
                             }
 
@@ -163,7 +163,7 @@ class MetaService
                         'name' => $professional->name,
                         'image_url' => $professional->image_url,
                         'bonus' => 'Bono servicios',
-                        'amount' => number_format(round($profesionalbonus->mountpay-$retentionAmount, 2), 2),
+                        'amount' => round($profesionalbonus->mountpay-$retentionAmount, 2),
                     ];
                     $finance = new Finance();
                     $finance->control = $control++;
