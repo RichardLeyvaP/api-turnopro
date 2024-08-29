@@ -103,7 +103,7 @@ class MetaService
                                 'name' => $professional->name,
                                 'image_url' => $professional->image_url,
                                 'bonus' => 'Bono convivencias',
-                                'amount' => $amount - $retentionAmount,
+                                'amount' => number_format(round($amount - $retentionAmount, 2), 2),
                             ];
                             $finance = new Finance();
                             $finance->control = $control++;
@@ -163,7 +163,7 @@ class MetaService
                         'name' => $professional->name,
                         'image_url' => $professional->image_url,
                         'bonus' => 'Bono servicios',
-                        'amount' => intval($profesionalbonus->mountpay-$retentionAmount),
+                        'amount' => number_format(round($profesionalbonus->mountpay-$retentionAmount, 2), 2),
                     ];
                     $finance = new Finance();
                     $finance->control = $control++;
