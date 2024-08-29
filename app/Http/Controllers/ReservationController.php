@@ -132,7 +132,7 @@ class ReservationController extends Controller
                 'data' => 'required|date',
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'email_client' => 'required',
+                'email_client' => 'nullable',
                 'phone_client' => 'required',
                 'name_client' => 'required',
                 'client_id' => 'nullable',
@@ -167,9 +167,15 @@ class ReservationController extends Controller
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
             else {
+                if ($data['email_client'] != null) {                    
                 $user = User::where('email', $data['email_client'])->whereHas('client', function ($query) use ($data){
                     $query->where('name', $data['name_client']);
                 })->first();
+                }else {
+                    $user = User::where('name', $data['name_client'])->whereHas('client', function ($query) use ($data){
+                        $query->where('name', $data['name_client']);
+                    })->first();
+                }
                 if ($user) {
                     Log::info("Encontro el ususario");
                     Log::info($user);
@@ -181,7 +187,7 @@ class ReservationController extends Controller
                     $userNew = User::create([
                         'name' => $data['name_client'],
                         'email' => $data['email_client'],
-                        'password' => Hash::make($data['email_client'].''.$data['name_client'])
+                        'password' => Hash::make($data['phone_client'].''.$data['name_client'])
                     ]);
                     $client = new Client();
                     $client->name = $data['name_client'];

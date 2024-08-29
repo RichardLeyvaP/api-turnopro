@@ -611,7 +611,11 @@ class ClientController extends Controller
             $data = $request->validate([
                 'email' => 'required'
             ]);
-            return response()->json(['client' => Client::Where('email', $request->email)->orwhere('phone', $request->email)->get()], 200, [], JSON_NUMERIC_CHECK);
+            Log::info($data['email']);
+            $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$request->email)->get();
+            Log::info('Clientes encontrados');
+            Log::info($clients);
+            return response()->json(['client' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
