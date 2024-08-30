@@ -232,7 +232,8 @@ class BoxCloseController extends Controller
 
             Log::info('Datos del Bono');
             Log::info($data);
-
+            $totalAmount = 0;
+            
             //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
             $finance = Finance::orderBy('control', 'desc')->first();
             if ($finance !== null) {
@@ -243,149 +244,183 @@ class BoxCloseController extends Controller
             //return 1;
             $professional = Professional::find($data['professional_id']);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
-            $retentionP = $professional->retention;
-                        if ($data['type'] == 'Bono convivencias') {
-                            $subquery = ProfessionalPayment::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->where('type', $data['type'])->first();
-                            // Calcular la suma de los montos
-                            $totalAmount = $subquery->amount;
+            Log::info('Caja');
+            Log::info($box);
+            Log::info('Valor de type en $data: ' . $data['type']);
+            Log::info('Tipo de dato de $data["type"]: ' . gettype($data['type']));
+            Log::info('Valor de type en $data: ' . strval($data['type']));
+            if(strval($data['type']) === "Bono convivencias"){
+                Log::info('Entro a convivencias'.Carbon::now()->toDateString());
+                $subquery = ProfessionalPayment::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now()->toDateString())->where('type', $data['type'])->first();
+                Log::info('Paso a Subquery');
+                Log::info($subquery);
+                if ($subquery != null) {
+                     // Calcular la suma de los montos
+                $totalAmount = $subquery->amount;
+                Log::info('Paso a totalAmount');
+                Log::info($totalAmount);
+                // Eliminar los registros
+                $subquery->delete();
+                }
+                Log::info('Comprobacion de a Subquery');
+                if ($totalAmount != 0) {
+                    Log::info('Paso a totalAmount con datos');
+                     // Calcular la diferencia entre el monto actual y el nuevo monto
+                     $difference = $data['amount'] - $totalAmount;
+                     Log::info('Diferencia de bono Convivencia'.$difference);
+                     // Ajustar la existencia de $box según la diferencia
+                    if ($box != null) {
+                        // Si la diferencia es positiva, se resta de box->existence
+                        // Si es negativa, se suma a box->existence
+                        $box->existence -= $difference;
+                        $box->save(); // Guardar los cambios en $box
+                    }
+                }
+                else {
+                    Log::info('Paso a totalAmount igual a 0');
+                    if ($box != null) {
+                        Log::info('Entra a la caja a descontar existencia');
+                        // Si la diferencia es positiva, se resta de box->existence
+                        // Si es negativa, se suma a box->existence
+                        $box->existence -= $data['amount'];
+                        $box->save(); // Guardar los cambios en $box
+                    }
+                }
+                //if ($professionalPayment == null) {
+                $professionalPayment = new ProfessionalPayment();
+                //}
+                $professionalPayment->branch_id = $data['branch_id'];
+                $professionalPayment->professional_id = $professional->id;
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $data['amount'];
+                $professionalPayment->type = $data['type'];
+                $professionalPayment->cant = $data['cant'];
+                $professionalPayment->save();
+                $finance = Finance::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('comment', 'Gasto por pago de bono de convivencias a ' . $professional->name)->first();
+                if ($finance !=null) {                               
+                    // Actualizar el monto de finance
+                    $finance->amount = $data['amount'];
+                    $finance->save();
+                }else{
+                    $finance = new Finance();
+                    $finance->control = $control++;
+                    $finance->operation = 'Gasto';
+                    $finance->amount = $data['amount'];
+                    $finance->comment = 'Gasto por pago de bono de convivencias a ' . $professional->name;
+                    $finance->branch_id = $data['branch_id'];
+                    $finance->type = 'Sucursal';
+                    $finance->expense_id = 5;
+                    $finance->data = Carbon::now();
+                    $finance->file = '';
+                    $finance->save();  
+                    
+                    /*// Restar el monto a la existencia de $box
+                    if ($box != null) {
+                        $box->existence -= $finance->amount;
+                        $box->save(); // Guardar los cambios en $box
+                    }*/
+                }   
+                //Retention                         
+                $retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoConvivencia')->first();
+                if ($retention == null) {
+                    $retention = new Retention();
+                }                                
+                //if($retentionP){
+                    Log::info('Entra a retencion bono de convivencias'.$professional->name);
+                    $retention->branch_id = $data['branch_id'];
+                    $retention->professional_id = $professional->id;
+                    $retention->data = Carbon::now();
+                    $retention->retention = $data['retention'];
+                    $retention->type = 'BonoConvivencia';
+                    $retention->save();
+                //}
+                
 
-                            // Eliminar los registros
-                            $subquery->delete();
+                // Ejemplo de una acción, como actualizar un campo
+                Order::whereIn('id', $data['order_id'])->update(['meta' => 1, 'percent_win' => 0]);
+            }
+            if (strval($data['type']) === "Bono servicios"){
+                $subquery = ProfessionalPayment::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now()->toDateString())->where('type', $data['type'])->first();
+                Log::info('Paso a Subquery');
+                Log::info($subquery);
+                if ($subquery != null) {
+                     // Calcular la suma de los montos
+                $totalAmount = $subquery->amount;
+                Log::info('Paso a totalAmount');
+                Log::info($totalAmount);
+                // Eliminar los registros
+                $subquery->delete();
+                }
 
-                            if ($totalAmount) {
-                                 // Calcular la diferencia entre el monto actual y el nuevo monto
-                                 $difference = $data['amount'] - $totalAmount;
-                                 Log::info('Diferencia de bono Convivencia'.$difference);
-                                 // Ajustar la existencia de $box según la diferencia
-                                if ($box != null) {
-                                    // Si la diferencia es positiva, se resta de box->existence
-                                    // Si es negativa, se suma a box->existence
-                                    $box->existence -= $difference;
-                                    $box->save(); // Guardar los cambios en $box
-                                }
-                            }
-                            //if ($professionalPayment == null) {
-                            $professionalPayment = new ProfessionalPayment();
-                            //}
-                            $professionalPayment->branch_id = $data['branch_id'];
-                            $professionalPayment->professional_id = $professional->id;
-                            $professionalPayment->date = Carbon::now();
-                            $professionalPayment->amount = $data['amount'];
-                            $professionalPayment->type = $data['type'];
-                            $professionalPayment->cant = $data['cant'];
-                            $professionalPayment->save();
-                            $finance = Finance::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('comment', 'Gasto por pago de bono de convivencias a ' . $professional->name)->first();
-                            if ($finance !=null) {                               
-                                // Actualizar el monto de finance
-                                $finance->amount = $data['amount'];
-                                $finance->save();
-                            }else{
-                                $finance = new Finance();
-                                $finance->control = $control++;
-                                $finance->operation = 'Gasto';
-                                $finance->amount = $data['amount'];
-                                $finance->comment = 'Gasto por pago de bono de convivencias a ' . $professional->name;
-                                $finance->branch_id = $data['branch_id'];
-                                $finance->type = 'Sucursal';
-                                $finance->expense_id = 5;
-                                $finance->data = Carbon::now();
-                                $finance->file = '';
-                                $finance->save();  
-                                
-                                /*// Restar el monto a la existencia de $box
-                                if ($box != null) {
-                                    $box->existence -= $finance->amount;
-                                    $box->save(); // Guardar los cambios en $box
-                                }*/
-                            }   
-                            //Retention                         
-                            $retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoConvivencia')->first();
-                            if ($retention == null) {
-                                $retention = new Retention();
-                            }                                
-                            if($retentionP){
-                                Log::info('Entra a retencion bono de convivencias'.$professional->name);
-                                $retention->branch_id = $data['branch_id'];
-                                $retention->professional_id = $professional->id;
-                                $retention->data = Carbon::now();
-                                $retention->retention = $data['retention'];
-                                $retention->type = 'BonoConvivencia';
-                                $retention->save();
-                            }
-                            
+                if ($totalAmount) {
+                     // Calcular la diferencia entre el monto actual y el nuevo monto
+                     $difference = $data['amount'] - $totalAmount;
+                     Log::info('Diferencia de bono Servicio'.$difference);
+                     // Ajustar la existencia de $box según la diferencia
+                    if ($box != null) {
+                        // Si la diferencia es positiva, se resta de box->existence
+                        // Si es negativa, se suma a box->existence
+                        $box->existence -= $difference;
+                        $box->save(); // Guardar los cambios en $box
+                    }
+                }
+                else {
+                    if ($box != null) {
+                        // Si la diferencia es positiva, se resta de box->existence
+                        // Si es negativa, se suma a box->existence
+                        $box->existence -= $data['amount'];
+                        $box->save(); // Guardar los cambios en $box
+                    }
+                }
+                    $professionalPaymentService = new ProfessionalPayment();
+                //}
+                $professionalPaymentService->branch_id = $data['branch_id'];
+                $professionalPaymentService->professional_id = $professional->id;
+                $professionalPaymentService->date = Carbon::now();
+                $professionalPaymentService->amount = $data['amount'];
+                $professionalPaymentService->type = $data['type'];
+                $professionalPaymentService->cant = $data['cant'];
+                $professionalPaymentService->save();
 
-                            // Ejemplo de una acción, como actualizar un campo
-                            Order::whereIn('id', $data['order_id'])->update(['meta' => 1, 'percent_win' => 0]);
-                        }
-                        if ($data['type'] == 'Bono servicios'){
-                            $subquery = ProfessionalPayment::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->where('type', $data['type'])->first();
-                            // Calcular la suma de los montos
-                            $totalAmount = $subquery->amount;
+                $finance = Finance::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('comment', 'Gasto por pago de bono de servicios a ' . $professional->name)->first();
+                if ($finance !=null) {
+                    // Actualizar el monto de finance
+                    $finance->amount = $data['amount'];
+                    $finance->save();
+                }else {
+                    $finance = new Finance();
+                    $finance->control = $control++;
+                    $finance->operation = 'Gasto';
+                    $finance->amount = $data['amount'];
+                    $finance->comment = 'Gasto por pago de bono de servicios a ' . $professional->name;
+                    $finance->branch_id = $data['branch_id'];
+                    $finance->type = 'Sucursal';
+                    $finance->expense_id = 5;
+                    $finance->data = Carbon::now();
+                    $finance->file = '';
+                    $finance->save();
 
-                            // Eliminar los registros
-                            $subquery->delete();
-
-                            if ($totalAmount) {
-                                 // Calcular la diferencia entre el monto actual y el nuevo monto
-                                 $difference = $data['amount'] - $totalAmount;
-                                 Log::info('Diferencia de bono Servicio'.$difference);
-                                 // Ajustar la existencia de $box según la diferencia
-                                if ($box != null) {
-                                    // Si la diferencia es positiva, se resta de box->existence
-                                    // Si es negativa, se suma a box->existence
-                                    $box->existence -= $difference;
-                                    $box->save(); // Guardar los cambios en $box
-                                }
-                            }
-                                $professionalPaymentService = new ProfessionalPayment();
-                            //}
-                            $professionalPaymentService->branch_id = $data['branch_id'];
-                            $professionalPaymentService->professional_id = $professional->id;
-                            $professionalPaymentService->date = Carbon::now();
-                            $professionalPaymentService->amount = $data['amount'];
-                            $professionalPaymentService->type = $data['type'];
-                            $professionalPaymentService->cant = $data['cant'];
-                            $professionalPaymentService->save();
-
-                            $finance = Finance::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('comment', 'Gasto por pago de bono de servicios a ' . $professional->name)->first();
-                            if ($finance !=null) {
-                                // Actualizar el monto de finance
-                                $finance->amount = $data['amount'];
-                                $finance->save();
-                            }else {
-                                $finance = new Finance();
-                                $finance->control = $control++;
-                                $finance->operation = 'Gasto';
-                                $finance->amount = $data['amount'];
-                                $finance->comment = 'Gasto por pago de bono de servicios a ' . $professional->name;
-                                $finance->branch_id = $data['branch_id'];
-                                $finance->type = 'Sucursal';
-                                $finance->expense_id = 5;
-                                $finance->data = Carbon::now();
-                                $finance->file = '';
-                                $finance->save();
-
-                                // Restar el monto a la existencia de $box
-                                /*if ($box != null) {
-                                    $box->existence -= $finance->amount;
-                                    $box->save(); // Guardar los cambios en $box
-                                }*/
-                            }
-                            $retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoService')->first();
-                            if ($retention == null) {
-                                $retention = new Retention();
-                            }
-                                if($retentionP){
-                                    Log::info('Entra a retencion bono de servicios'.$professional->name);
-                                    $retention->branch_id = $data['branch_id'];
-                                    $retention->professional_id = $professional->id;
-                                    $retention->data = Carbon::now();
-                                    $retention->retention = $data['retention'];
-                                    $retention->type = 'BonoService';
-                                    $retention->save();
-                                }
-                            
-                        }
+                    // Restar el monto a la existencia de $box
+                    /*if ($box != null) {
+                        $box->existence -= $finance->amount;
+                        $box->save(); // Guardar los cambios en $box
+                    }*/
+                }
+                $retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoService')->first();
+                if ($retention == null) {
+                    $retention = new Retention();
+                }
+                    //if($retentionP){
+                        Log::info('Entra a retencion bono de servicios'.$professional->name);
+                        $retention->branch_id = $data['branch_id'];
+                        $retention->professional_id = $professional->id;
+                        $retention->data = Carbon::now();
+                        $retention->retention = $data['retention'];
+                        $retention->type = 'BonoService';
+                        $retention->save();
+                    //}
+                
+            }
 
             return response()->json(['msg' => 'Pago realizado correctamente'], 200);
         } catch (\Throwable $th) {
