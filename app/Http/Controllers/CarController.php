@@ -667,11 +667,12 @@ class CarController extends Controller
                     'professional_id' => $professional->id,
                     'image_url' => $image_url,
                     'payment' => $car->payment,
-                    'state' => (int)$state
+                    'state' => (int)$state,
+                    'updated_at' => $car->reservation->tail->updated_at
 
                 ];
                 //}
-            })->sortBy('state')->values();
+            })->sortBy('updated_at')->sortBy('state')->values();
             $box = Box::with('boxClose')->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
             $payments = Payment::whereDate('created_at', Carbon::now())->where('branch_id', $data['branch_id'])->get();
             $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->get();

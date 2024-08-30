@@ -12,6 +12,7 @@ use App\Models\Reservation;
 use App\Models\Service;
 use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +21,8 @@ class OrderService {
     use ProductExitTrait;
     
     public function product_order_store($data){
-            $car = Car::findOrFail($data['car_id']);
+        try{    
+        $car = Car::findOrFail($data['car_id']);
             $productStore = ProductStore::with('product')->where('id', $data['product_id'])->first();
                 $product = $productStore->product()->first();
                 $sale_price = $product->sale_price;
@@ -47,8 +49,13 @@ class OrderService {
                  $order->percent_win = $percent_wint*$data['cant'];
                  $order->save();
         return $order;
+    } catch (Exception $e) {
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el Orderservice(product_order_store): " . $e->getMessage());
     }
-    public function service_order_store1($data){
+    }
+    public function service_order_store1($data){            
+        try{
             $car = Car::findOrFail($data['car_id']);
             $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
             
@@ -82,9 +89,14 @@ class OrderService {
                 $reservation->total_time = $tiempoGuardado;
                 $reservation->save();
                 return $order;
+            } catch (Exception $e) {
+                // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+                throw new \RuntimeException("Error al ejecutar el Orderservice(service_order_store1): " . $e->getMessage());
+            }
     }
 
     public function service_order_store($data){
+        try {
         $car = Car::findOrFail($data['car_id']);
         $branchServiceprofessional = BranchServiceProfessional::with('branchService.service')->where('id', $data['service_id'])->first();
             $service = $branchServiceprofessional->branchService->service;
@@ -123,6 +135,10 @@ class OrderService {
             $tail->save();
 
         return $order;
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el OrderService(service_order_store): " . $e->getMessage());
+        }
     }
 
 

@@ -6,6 +6,7 @@ use App\Jobs\SendEmailJob;
 use App\Models\CardGift;
 use App\Models\CardGiftUser;
 use App\Models\Client;
+use App\Models\Professional;
 use App\Models\User;
 use App\Services\SendEmailService;
 use Carbon\Carbon;
@@ -76,14 +77,33 @@ class CardGiftUserController extends Controller
             $cardGiftUser->save();
             // variablespara el correo
             $client_email = $user->professional ? $user->professional->email : $user->client->email;
-            $client_name = $user->professional ? $user->professional->name.' '.$user->professional->surname.' '.$user->professional->second_surname : $user->client->name.' '.$user->client->surname.''.$user->client->second_surname;
+            $client_name = $user->professional ? $user->professional->name : $user->client->name;
             $code = $codigo;
             $value_card = $cardGift->value;
             $expiration_date = $data['expiration_date'];
             $image_cardgift = 'https://api2.simplifies.cl/api/images/'.$cardGift->image_cardgift;
+                $branch_id = $request->branch_id;
+                $emails = Professional::whereHas('charge', function ($query)  use ($branch_id) {
+                    $query->Where('name', 'Administrador de Sucursal');
+                })->whereHas('branches', function ($query) use ($branch_id) {
+                    $query->where('branches.id', $branch_id);
+                })/*whereIn('charge_id', [3, 4, 5, 12])*/
+                    ->pluck('email');
+                    $mergedEmails = $emails->merge($client_email);
 
+                    Log::info('$mergedEmails correos a enviar la tarjeta de regalo');
+            Log::info($mergedEmails);
+            foreach ($mergedEmails as $email) {
+                try {
+                    $this->sendEmailService->emailGitCard($email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
+                } catch (\Swift_TransportException $e) {
+                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                } catch (\Exception $e) {
+                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                }
+            }
             ///Aqui enviar codido por correo $user->email
-            $this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
+            //$this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
             //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
             /*$data = [
                 'send_gift_card' => true, // Indica que es un correo de envío de tarjeta de regalo

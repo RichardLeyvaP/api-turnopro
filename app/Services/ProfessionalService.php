@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\Vacation;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -248,6 +249,7 @@ class ProfessionalService
 
     public function branch_professionals_service_tottem($branch_id, $services, $professional_id, $reservation)
     {
+        try{
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
@@ -397,10 +399,15 @@ class ProfessionalService
         });
 
         return $returnedProfessionals;
+    } catch (Exception $e) {
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el Professionalservic(branch_professionals_service_tottem): " . $e->getMessage());
+    }
     }
 
     public function branch_professionals_service($branch_id, $services)
     {
+        try{
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
@@ -570,6 +577,10 @@ class ProfessionalService
         });
 
         return $returnedProfessionals;
+    } catch (Exception $e) {
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
+    }
     }
 
     /*public function branch_professionals_service($branch_id, $services)
@@ -806,6 +817,7 @@ class ProfessionalService
         //Log::info('Resp3');
         // Si no se encuentra ninguna hora disponible, devolvemos la última hora del último intervalo
         //return end($arrayIntervalos)['final_hour'];
+        
     }
 
     //todo ESTA DE AQUI ES NUEVA, NUEVO METODO DE ENCONTRAR HORA DISPONIBLE RLP
@@ -1487,6 +1499,7 @@ class ProfessionalService
 
     public function professionals_state($branch_id, $reservation_id)
     {
+        try{
         $reservation = Reservation::find($reservation_id);
         $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
         $branchService = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
@@ -1601,6 +1614,10 @@ class ProfessionalService
         }
 
         return $professionalFree;
+    } catch (Exception $e) {
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state): " . $e->getMessage());
+    }
     }
 
     public function professionals_state_tottem($branch_id, $services)

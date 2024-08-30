@@ -711,11 +711,11 @@ class OrderController extends Controller
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
-                    'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'client' => $client->name,
                     'amount' => $order->price,
                     'operation' => 'Solicitud de eliminación de Producto del carro: '.$car->id,
                     'details' => $product->name,
-                    'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'description' => $professional->name,
                 ];
                 $this->traceService->store($trace);
                 /*if(!$administradores->isEmpty()){
@@ -742,11 +742,11 @@ class OrderController extends Controller
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
-                    'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
+                    'client' => $client->name,
                     'amount' => $order->price,
                     'operation' => 'Solicitud de Eliminacion de orden de Servicio del carro: '.$car->id,
                     'details' => $service->name,
-                    'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
+                    'description' => $professional->name,
                 ];
                 $this->traceService->store($trace);
                 /*if(!$administradores->isEmpty()){

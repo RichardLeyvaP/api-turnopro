@@ -659,7 +659,7 @@ class ProfessionalController extends Controller
     {
         try {
             $data = $request->validate([
-                'name' => 'required|max:50',
+                'name' => 'required|max:250',
                 'surname' => 'required|max:50',
                 'second_surname' => 'required|max:50',
                 'email' => 'required|max:100|email|unique:professionals',

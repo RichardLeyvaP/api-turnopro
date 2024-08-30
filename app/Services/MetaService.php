@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Box;
 use App\Models\BranchProfessional;
 use App\Models\BranchRuleProfessional;
 use App\Models\BranchServiceProfessional;
@@ -11,6 +12,7 @@ use App\Models\Order;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
 use App\Models\Retention;
+use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -18,6 +20,7 @@ class MetaService
 {
     public function store($branch)
     {        
+        try{
         // Eliminar los registros que coincidan
         Finance::where('branch_id', $branch->id)
         ->whereDate('data', Carbon::now())
@@ -30,12 +33,25 @@ class MetaService
 
         //Retention
         Retention::where('branch_id', $branch->id)
-        ->whereDate('data', Carbon::now())->where('type', 'Services')->delete();
+        ->whereDate('data', Carbon::now())->where('type', 'Services')->orwhere('type', 'BonoConvivencia')->orwhere('type', 'BonoService')->delete();
 
-        ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
+        $subquery = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
             $query->where('type', 'Bono convivencias')
                 ->orWhere('type', 'Bono servicios');
         })->delete();
+
+        // Calcular la suma de los montos
+        //$totalAmount = $subquery->sum('amount');
+
+        // Eliminar los registros
+        //$subquery->delete();
+        /*$box = Box::whereDate('data', Carbon::now())->where('branch_id', $branch->id)->first();
+        if ($box != null) {
+            // Si la diferencia es positiva, se resta de box->existence
+            // Si es negativa, se suma a box->existence
+            $box->existence += $totalAmount;
+            $box->save(); // Guardar los cambios en $box
+        }*/
         $idService=null;
         $bonus = [];
         $percentWinSum = 0;
@@ -123,6 +139,7 @@ class MetaService
                                 $retention->professional_id = $professional->id;
                                 $retention->data = Carbon::now();
                                 $retention->retention = round($retentionAmount, 2);
+                                $retention->type = 'BonoConvivencia';
                                 $retention->save();
                             }
 
@@ -183,6 +200,7 @@ class MetaService
                         $retention->professional_id = $professional->id;
                         $retention->data = Carbon::now();
                         $retention->retention = round($retentionAmount, 2);
+                        $retention->type = 'BonoService';
                         $retention->save();
                     }
                 //}
@@ -213,5 +231,107 @@ class MetaService
             
         }
         return $bonus;
+    } catch (Exception $e) {
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el MetaServie(store): " . $e->getMessage());
+    }
+    }
+
+    public function bonus($branch_id)
+    {      
+        try{  
+        $idService=null;
+        $bonus = [];
+        $percentWinSum = 0;
+        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })->whereHas('charge', function ($query) {
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+        })->select('id', 'name', 'image_url', 'retention')->get();
+
+        Log::info($professionals);
+        foreach ($professionals as $professional) {
+            Log::info($professional->id);
+            $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
+            })
+                ->with(['clientProfessional.client', 'reservation'])
+                ->whereHas('clientProfessional', function ($query) use ($professional) {
+                    $query->where('professional_id', $professional->id);
+                })
+                ->where('pay', 1)
+                ->get();
+            //retention
+            $retentionP = $professional->retention;
+            $carIdsPay = $cars->pluck('id');
+            $rules =  BranchRuleProfessional::where('professional_id', $professional->id)->whereHas('branchRule', function ($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id)->where('estado', 0)->whereDate('data', Carbon::now());
+            })->get();
+
+            if ($rules->isEmpty()) {
+                $idService = BranchServiceProfessional::where('professional_id', $professional->id)->whereHas('branchService.branch', function ($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })->where('meta', 1)->first();
+                if ($idService != null) {
+                    $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();
+                    if (!$orders->isEmpty()) {
+                        $cant = $orders->count();
+                        $amount = $orders->first()->price * $cant;
+                        $professionalPayment = ProfessionalPayment::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
+                        if ($professionalPayment == null) {
+                            $professionalPayment = new ProfessionalPayment();
+                        }
+                            $retentionAmount = $retentionP ? $amount * $retentionP / 100 : 0;
+                            $bonus[] = [
+                                'name' => $professional->name,
+                                'professional_id' => $professional->id,
+                                'image_url' => $professional->image_url,
+                                'bonus' => 'Bono convivencias',
+                                'amount' => round($amount - $retentionAmount, 2),
+                                'branch_id' => $branch_id,
+                                'order_id' => $orders->pluck('id')->values(),
+                                'cant' => $cant,
+                                'retention' => round($retentionAmount, 2)
+                            ];
+                        //}
+                    }
+                }
+            }
+
+
+            $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
+
+            //Venta de productos y servicios
+            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
+            $orderServPay = $orderServs->where('meta', 0)->sum('price');
+            $catServices = $orderServs->count();
+            if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
+                /*$filteredPayments = $professionalPayments->filter(function ($payment) {
+                    return $payment->type == 'Bono servicios';
+                });*/
+                $professionalPaymentService = ProfessionalPayment::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
+                if ($professionalPaymentService == null) {
+                    $professionalPaymentService = new ProfessionalPayment();
+                }
+                    $retentionAmount = $retentionP ? $profesionalbonus->mountpay * $retentionP / 100 : 0;
+                    $bonus[] = [
+                        'name' => $professional->name,
+                        'professional_id' => $professional->id,
+                        'image_url' => $professional->image_url,
+                        'bonus' => 'Bono servicios',
+                        'amount' => round($profesionalbonus->mountpay-$retentionAmount, 2),
+                        'branch_id' => $branch_id,
+                        'order_id' => '',
+                        'cant' => $catServices,
+                        'retention' => round($retentionAmount, 2)
+                    ];
+                //}
+            }            
+        }
+        return $bonus;
+    } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el MetaServie(bonus): " . $e->getMessage());
+        }
     }
 }
