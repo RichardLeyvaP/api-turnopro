@@ -569,8 +569,8 @@ class ProfessionalService
             if ($reservation != null) {
                 $professional->disponible = $reservation->updated_at->format('H:i');
             }else {
-                $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_date')->first();
-                $professional->disponible = $record->start_time->format('H:i');
+                $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
+                $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
             }
         }
 
