@@ -65,10 +65,10 @@ class CommentController extends Controller
 
     public function storeByReservationId(Request $request)
     {
-        Log::info("Asignar cumplimiento de rule a un professional");
+        Log::info("storeByReservationId CommentController");
         try {
             $data = $request->validate([
-                'reservation_id' => 'required|numeric',
+                'reservation_id' => 'required|numeric|exists:reservations,id',
                 'look' => 'required'
             ]); 
             $filename = "comments/default_profile.jpg";
