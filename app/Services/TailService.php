@@ -1086,6 +1086,7 @@ class TailService
 
     private function verific_aleatorie($branch_id, $professional)
     {
+        try{
         //ver si hay aleatorios antes de algun cliente seleccionado
         //$professional = Professional::find($professional_id);
         $currentDateTime = Carbon::now()->format('H:i:s');
@@ -1110,8 +1111,28 @@ class TailService
             ->get();
             Log::info('$reservations de que esta ocupado');
             Log::info($reservations);
+            $now = Carbon::now();
+            $currentTime = $now->format('H:i:s');
         if ($reservations->isEmpty()) {//esta libre
             $reservationsTail = $professional->reservations()
+            ->where('branch_id', $branch_id)
+            ->whereIn('confirmation', [1, 4])
+            ->whereDate('data', $now)
+            ->whereHas('tail', function ($subquery) {
+                $subquery->where('aleatorie', '!=', 1);
+            })
+            ->where(function ($query) use ($currentTime) {
+                $query->where('confirmation', '!=', 2)
+                    ->orWhere(function ($subquery) use ($currentTime) {
+                        $subquery->where('confirmation', 1)
+                                ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [$currentTime]);
+                    });
+            })
+            ->orderBy('confirmation', 'desc') // Ordenar por confirmation en orden descendente (4 primero, luego 1)
+            ->orderByDesc('from_home') // Luego ordenar por from_home, 1 primero
+            ->orderBy('created_at') // Finalmente, ordenar por created_at
+            ->first();
+            /*$reservationsTail = $professional->reservations()
                 ->where('branch_id', $branch_id)
                 ->whereIn('confirmation', [1, 4])
                 ->whereDate('data', Carbon::now())
@@ -1119,15 +1140,16 @@ class TailService
                     $subquery->where('aleatorie', '!=', 1);
                 })->where(function ($query) {
                     $query->where('confirmation', '!=', 1)
+                    ->where('confirmation', '!=', 2) // Excluir explicitamente confirmation 2
                           ->orWhere(function ($subquery) {
                               $subquery->where('confirmation', 1)
                                        ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [Carbon::now()->format('H:i:s')]);
                           });
                 })
-                ->orderByRaw('confirmation = 4 DESC') // Ordenar por confirmation, 4 primero
+                  // Ordenar por confirmation, 4 primero
                 ->orderByDesc('from_home') // Ordenar por from_home, 1 primero
-                ->orderBy('start_time') // Luego ordenar por start_time
-                ->first();
+                ->orderBy('created_at') // Luego ordenar por start_time
+                ->first();*/
                 Log::info('$reservationsTail orden de las reservaciones');
                 Log::info($reservationsTail);
 
@@ -1157,10 +1179,14 @@ class TailService
             }
         }
         //end ver si hay aleatorios antes de algun cliente seleccionado
+    } catch (\Throwable $th) {
+        throw new \RuntimeException("Error al ejecutar el TailService(verific_aleatorie): " . $th->getMessage());
+    }
     }
 
     private function verific_services($tails, $branch_id, $professional)
     {
+       try{
         foreach ($tails as $tail) {
             $reservation = $tail->reservation;
             $tiempoReserva = $reservation->total_time;
@@ -1219,11 +1245,15 @@ class TailService
         }//for aleatorie
          // Retorna false indicando que no se ha procesado ninguna 'tail'
         return false;
+    } catch (\Throwable $th) {
+        throw new \RuntimeException("Error al ejecutar el TailService(verific_services): " . $th->getMessage());
+    }
     }
 
     private function verific_services_bh($tails, $branch_id, $professional, $start_time)
     {
-        Log::info('Verificar aleatorios en Tailservices');
+        try {
+            Log::info('Verificar aleatorios en Tailservices');
         foreach ($tails as $tail) {
             $reservation = $tail->reservation;
             $tiempoReserva = $reservation->total_time;
@@ -1291,10 +1321,14 @@ class TailService
         }//for aleatorie
          // Retorna false indicando que no se ha procesado ninguna 'tail'
         return false;
+        } catch (\Throwable $th) {
+            throw new \RuntimeException("Error al ejecutar el TailService(verific_services_bh): " . $th->getMessage());
+        }
     }
 
     private function reassignServices($servicesOrders, $service_professionals)
     {
+        try{
         $serviceProfessionalMap = $service_professionals->keyBy(function ($item) {
             return $item->branchService->service->id;
         });
@@ -1318,6 +1352,9 @@ class TailService
                 $service->delete();
             }
         }
+    } catch (\Throwable $th) {
+        throw new \RuntimeException("Error al ejecutar el TailService(reassignServices): " . $th->getMessage());
+    }
     }
 
 

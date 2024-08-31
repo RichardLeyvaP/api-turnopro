@@ -406,9 +406,11 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
 
     //Client
     Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplete']);
+    Route::get('/client-autocomplete1', [ClientController::class, 'client_autocomplete1']);
     Route::post('/client', [ClientController::class, 'store']);
     Route::get('/client-email', [ClientController::class, 'client_email']); // dado una email devolver si ya existe como professional
     Route::get('/client', [ClientController::class, 'index']);
+    Route::get('/client-branch', [ClientController::class, 'client_branch']);
     Route::post('/client-destroy', [ClientController::class, 'destroy']);
     Route::post('/client-update', [ClientController::class, 'update']);
     Route::get('/clients-frecuence-periodo', [ClientController::class, 'clients_frecuence_periodo']);///dado una business o branch devolver la cantidad de visitas a por clientes
@@ -476,6 +478,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
 
     //Professional
     Route::get('/professional', [ProfessionalController::class, 'index']);
+    Route::get('/professionalsBranch', [ProfessionalController::class, 'professionalsBranch']);
     Route::get('/professional-show', [ProfessionalController::class, 'show']);
     Route::get('/professional-show-apk', [ProfessionalController::class, 'show_apk']);
     Route::get('/professional-show-autocomplete-branch', [ProfessionalController::class, 'show_autocomplete_branch']);//mostrar solo los professionals de una branch dada

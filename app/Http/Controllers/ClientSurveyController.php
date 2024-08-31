@@ -26,12 +26,16 @@ class ClientSurveyController extends Controller
     {
         try {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required',
             'branch_id' => 'required|numeric'
         ]);
+        Log::info('Requesr Survey');
+            Log::info($request->email);
         $surveys = $request->input('survey_id');
         if (!empty($surveys)) {
-        $client = Client::where('email', $request->email)->first();
+            $client = Client::where('email', $request->email)->orwhere('phone', $request->email)->first();
+            Log::info('Cliente Encontrado');
+            Log::info($client);
         if (!empty($client)) {
             foreach ($surveys as $survey) {
                 $clientSurvey = new ClientSurvey();
@@ -39,7 +43,8 @@ class ClientSurveyController extends Controller
                 $clientSurvey->survey_id = $survey;
                 $clientSurvey->branch_id = $request->branch_id;
                 $clientSurvey->data = Carbon::now();
-                $clientSurvey->save();
+                $clientSurvey->save();                
+                Log::info($clientSurvey);
             }        
         //$client->surveys()->attach($surveys, ['data' => Carbon::now(), $request->branch_id]);
         }

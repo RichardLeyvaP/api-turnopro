@@ -144,24 +144,27 @@ class AssistantController extends Controller
             ->get();
             Log::info('$reservations de que esta ocupado');
             Log::info($reservations);
+            $now = Carbon::now();
+            $currentTime = $now->format('H:i:s');
         if ($reservations->isEmpty()) {//esta libre
             $reservationsTail = $professional->reservations()
-                ->where('branch_id', $branch_id)
-                ->whereIn('confirmation', [1, 4])
-                ->whereDate('data', Carbon::now())
-                ->whereHas('tail', function ($subquery) {
-                    $subquery->where('aleatorie', '!=', 1);
-                })->where(function ($query) {
-                    $query->where('confirmation', '!=', 1)
-                          ->orWhere(function ($subquery) {
-                              $subquery->where('confirmation', 1)
-                                       ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [Carbon::now()->format('H:i:s')]);
-                          });
-                })
-                ->orderByRaw('confirmation = 4 DESC') // Ordenar por confirmation, 4 primero
-                ->orderByDesc('from_home') // Ordenar por from_home, 1 primero
-                ->orderBy('start_time') // Luego ordenar por start_time
-                ->first();
+            ->where('branch_id', $branch_id)
+            ->whereIn('confirmation', [1, 4])
+            ->whereDate('data', $now)
+            ->whereHas('tail', function ($subquery) {
+                $subquery->where('aleatorie', '!=', 1);
+            })
+            ->where(function ($query) use ($currentTime) {
+                $query->where('confirmation', '!=', 2)
+                    ->orWhere(function ($subquery) use ($currentTime) {
+                        $subquery->where('confirmation', 1)
+                                ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [$currentTime]);
+                    });
+            })
+            ->orderBy('confirmation', 'desc') // Ordenar por confirmation en orden descendente (4 primero, luego 1)
+            ->orderByDesc('from_home') // Luego ordenar por from_home, 1 primero
+            ->orderBy('created_at') // Finalmente, ordenar por created_at
+            ->first();
                 Log::info('$reservationsTail orden de las reservaciones');
                 Log::info($reservationsTail);
 

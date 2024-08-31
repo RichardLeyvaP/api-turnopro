@@ -167,7 +167,7 @@ class ReservationController extends Controller
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
             else {
-                if ($data['email_client'] != null) {                    
+                /*if ($data['email_client'] != null) {                    
                 $user = User::where('email', $data['email_client'])->whereHas('client', function ($query) use ($data){
                     $query->where('name', $data['name_client']);
                 })->first();
@@ -182,7 +182,7 @@ class ReservationController extends Controller
                     $client = $user->client;
                     $id_client = $client->id;
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
-                }else {
+                }else {*/
                     Log::info("Si no existe registrarlo");
                     $userNew = User::create([
                         'name' => $data['name_client'],
@@ -203,7 +203,7 @@ class ReservationController extends Controller
                     Log::info("Id que tiene");
                     Log::info($id_client);
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
-                }
+                //}
             }
             
             // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy

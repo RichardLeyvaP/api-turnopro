@@ -47,6 +47,40 @@ class ClientController extends Controller
         }
     }
 
+    public function client_branch(Request $request)
+    {
+        try {
+
+            $data = $request->validate([
+                'branch_id' => 'nullable|numeric'
+            ]);
+
+            Log::info("entra a cliente");
+            Log::info("Sucursal ".$data['branch_id']);
+            $now = Carbon::now();
+            $dates = [];
+                $clients = Client::with('user')->whereHas('clientProfessionals.cars.reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })->get()->unique('id');
+                $dates = $clients->map(function ($client) use ($now){
+                    return [
+                        'id' => $client->id,
+                        'name' => $client->name,
+                        'email' => $client->email,
+                        'phone' => $client->phone,
+                        'client_image' => $client->client_image.'?$'.$now,
+                        'user_id' => $client->user_id
+                    ];
+                });
+                        
+            return response()->json(['clients' => $dates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            return response()->json(['msg' => "Error al mostrar los clientes"], 500);
+        }
+    }
+
     public function index_autocomplete()
     {
         try {
@@ -119,10 +153,21 @@ class ClientController extends Controller
         }
     }
 
-    public function client_autocomplete()
+    public function client_autocomplete1(Request $request)
     {
         try {
-            $clients = User::whereHas('client')->orWhereHas('professional')->get()->map(function ($user) {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $clients = User::where(function ($query) use ($data) {
+                $query->whereHas('client.clientProfessionals.cars.reservation', function ($subQuery) use ($data) {
+                    $subQuery->where('branch_id', $data['branch_id']);
+                });
+            })->orWhere(function ($query) use ($data) {
+                $query->whereHas('professional.branches', function ($subQuery) use ($data) {
+                    $subQuery->where('branch_id', $data['branch_id']);
+                });
+            })->distinct('id')->get()->map(function ($user) {
                 $name = '';
                 $image = '';
                 $id = '';

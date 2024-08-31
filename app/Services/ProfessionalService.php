@@ -7,6 +7,7 @@ use App\Models\Car;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Record;
 use App\Models\Reservation;
 use App\Models\Schedule;
 use App\Models\Service;
@@ -445,8 +446,7 @@ class ProfessionalService
                     'branch_professional.arrival',
                     'branch_professional.living',
                     'branch_professional.numberRandom'
-                )->orderBy('branch_professional.numberRandom', 'asc')
-                ->orderBy('branch_professional.living', 'asc')
+                )->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
             foreach ($professionals1 as $professional1) {
@@ -558,29 +558,60 @@ class ProfessionalService
                         $professional->start_time = Carbon::parse($reserv->final_hour)->format('H:i');
                     }*/
                     $professional->start_time = $colacion_time->format('H:i');
+                    
                 }
                 }
                 
+            }
+            $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
+                $query->where('professional_id', $professional->id);
+            })->orderByDesc('updated_at')->first();
+            if ($reservation != null) {
+                $professional->disponible = $reservation->updated_at->format('H:i');
+            }else {
+                $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_date', Carbon::now())->orderByDesc('start_date')->first();
+                $professional->disponible = $record->start_time->format('H:i');
             }
         }
 
         unset($professional); // Romper la referencia
 
-        // Ordenar por 'state' y luego por 'start_time'
+        // Ordenar por 'state', luego por 'start_time', luego por 'disponible', luego por 'living', y finalmente por 'arrival'
         usort($returnedProfessionals, function ($a, $b) {
+            // Comparar por 'state'
+            if ($a->state != $b->state) {
+                return $a->state - $b->state;
+            }
+            // Si 'state' es igual, comparar por 'start_time'
+            if (strtotime($a->start_time) != strtotime($b->start_time)) {
+                return strtotime($a->start_time) - strtotime($b->start_time);
+            }
+            // Si 'start_time' es igual, comparar por 'disponible'
+            if (strtotime($a->disponible) != strtotime($b->disponible)) {
+                return strtotime($a->disponible) - strtotime($b->disponible);
+            }
+            // Si 'start_time' y 'disponible' son iguales, comparar por 'living'
+            if ($a->living != $b->living) {
+                return $a->living - $b->living;
+            }
+            // Si 'start_time', 'disponible', y 'living' son iguales, comparar por 'arrival'
+            return $a->arrival - $b->arrival;
+        });
+        // Ordenar por 'state' y luego por 'start_time'
+        /*usort($returnedProfessionals, function ($a, $b) {
             // Primero comparar por 'state'
             if ($a->state != $b->state) {
                 return $a->state - $b->state;
             }
             // Si 'state' es igual, comparar por 'start_time'
             return strtotime($a->start_time) - strtotime($b->start_time);
-        });
+        });*/
 
         return $returnedProfessionals;
-    } catch (Exception $e) {
-        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
-        throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
-    }
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
+        }
     }
 
     /*public function branch_professionals_service($branch_id, $services)
