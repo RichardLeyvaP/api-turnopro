@@ -410,6 +410,7 @@ class TailService
 
     public function tail_attended($reservation_id, $attended)
     {
+        try{
         $tecnicoId = 0;
         $reservationNoti = Reservation::where('id', $reservation_id)->first();
         $tail = Tail::where('reservation_id', $reservation_id)->first();
@@ -555,6 +556,10 @@ class TailService
         }
         $tail->attended = $attended;
         $tail->save();
+    } catch (Exception $e) {
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
+    }
 
     }
     

@@ -9,6 +9,7 @@ use App\Models\Professional;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -66,6 +67,7 @@ class CommentController extends Controller
     public function storeByReservationId(Request $request)
     {
         Log::info("storeByReservationId CommentController");
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'reservation_id' => 'required|numeric|exists:reservations,id',
@@ -74,7 +76,7 @@ class CommentController extends Controller
             $filename = "comments/default_profile.jpg";
             
             $comment = new Comment();
-            $reservation = Reservation::find($data['reservation_id']);
+            $reservation = Reservation::findOrFail($data['reservation_id']);
             $client_professional_id = $reservation->car->clientProfessional->id;
             $comment->client_professional_id = $client_professional_id;
             $comment->data = Carbon::now();
@@ -89,9 +91,19 @@ class CommentController extends Controller
             }          
             $comment->client_look = $filename;
             $comment->save();
+
+            $reservation->finished_at = now();
+            $reservation->confirmation = 2;
+            $reservation->save();
+
+            $tail = $reservation->tail;
+            $tail->attended = 2;
+            $tail->save();
+            DB::commit();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
+            DB::rollback();
         return response()->json(['msg' =>$th->getMessage().'Error al el comentario'], 500);
         }
     }
