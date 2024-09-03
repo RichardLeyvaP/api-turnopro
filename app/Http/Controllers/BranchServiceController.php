@@ -69,8 +69,9 @@ class BranchServiceController extends Controller
         try {             
             Log::info( "Entra a buscar los servicio q brinda una sucursal o la sucursales donde se brinda determinado servicio");
             $data = $request->validate([
-                'branch_id' => 'nullable|numeric'
+                'branch_id' => 'sometimes|numeric'
             ]);
+            
             /*$services = Service::whereHas('branchServices', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
                })->get()->map(function ($service){
