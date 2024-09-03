@@ -172,7 +172,7 @@ class ClientController extends Controller
                 $image = '';
                 $id = '';
                 if ($client =$user->client) { 
-                    $name = $client->name . ' ' . $client->surname . ' ' . $client->second_surname;
+                    $name = $client->name;
                     $image = $client->client_image;
                     $id = $client->id;
                     $reservations = Reservation::whereHas('car', function ($query) use ($client) {

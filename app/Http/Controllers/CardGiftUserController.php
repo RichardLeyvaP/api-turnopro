@@ -136,11 +136,12 @@ class CardGiftUserController extends Controller
         try {             
             Log::info("Dado una cardGift devuelve los clientes que tienen asignado");
             $request->validate([
-                'card_gift_id' => 'required|numeric'
+                'card_gift_id' => 'required|numeric',
+                'branch_id' => 'required|numeric'
             ]);
             $now = Carbon::now();
          // Retrieve all CardGift instances with the specified business_id
-             $cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])->where('card_gift_id', $request->card_gift_id)->get()->map(function ($query) use($now){
+             /*$cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])->where('card_gift_id', $request->card_gift_id)->get()->map(function ($query) use($now){
                 $cardGift = $query->cardGift;
                 $client = $query->user->client;
                 $professional = $query->user->professional;
@@ -157,7 +158,34 @@ class CardGiftUserController extends Controller
                     'userName' => $client ? $client->name : $professional->name,
                     'image_url' => $client ? $client->client_image.'?$'.$now : $professional->image_url.'?$'.$now
                 ];
-             });
+             });*/
+             $cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])
+            ->where('card_gift_id', $request->card_gift_id)
+            ->whereHas('user.client.clientProfessionals.cars.reservation', function ($query) use ($request) {
+                $query->where('branch_id', $request->branch_id);
+            })
+            ->orWhereHas('user.professional.branches', function ($query) use ($request) {
+                $query->where('branch_id', $request->branch_id);
+            })
+            ->get()
+            ->map(function ($query) use($now) {
+                $cardGift = $query->cardGift;
+                $client = $query->user->client;
+                $professional = $query->user->professional;
+                return [
+                    'id' => $query->id,
+                    'code' => $query->code,
+                    'issue_date' => $query->issue_date,
+                    'exist' => $query->exist,
+                    'expiration_date' => $query->expiration_date,
+                    'value' => $cardGift->value,
+                    'name' => $cardGift->name,
+                    'state' => $query->state,
+                    'image_cardgift' => $cardGift->image_cardgift . '?$' . $now,
+                    'userName' => $client ? $client->name : $professional->name,
+                    'image_url' => $client ? $client->client_image . '?$' . $now : $professional->image_url . '?$' . $now
+                ];
+            });
              
                 return response()->json(['cardgiftUser' => $cardGifts],200, [], JSON_NUMERIC_CHECK); 
           
