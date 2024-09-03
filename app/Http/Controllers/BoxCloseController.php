@@ -91,8 +91,8 @@ class BoxCloseController extends Controller
                 $box->existence = 0;
                 $box->data = Carbon::now();
                 $box->branch_id = $request->branch_id;
+                $box->save();
             }
-            $box->save();
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = BoxClose::where('box_id', $box->id)->first();
             if (!$boxClose) {
@@ -192,6 +192,70 @@ class BoxCloseController extends Controller
         }
     }
 
+    public function store1(Request $request)
+    {
+
+        try {
+
+            Log::info("Editar");
+            $data = $request->validate([
+                //'box_id' => 'required|numeric',
+                'data' => 'required|date',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric'
+            ]);
+            $idService = null;
+            $totalBonus = 0;
+            Log::info($data);
+            $box = Box::whereDate('data', $data['data'])->where('branch_id', $data['branch_id'])->first();
+            if (!$box) {
+                $box = new Box();
+                $box->existence = 0;
+                $box->data = Carbon::now();
+                $box->branch_id = $request->branch_id;
+                $box->save();
+            }
+            $branch = Branch::where('id', $data['branch_id'])->with('business')->first();
+            $boxClose = BoxClose::where('box_id', $box->id)->first();
+            if (!$boxClose) {
+                $boxClose = new BoxClose();
+            }
+            $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', $data['data'])->where('professional_id', $data['professional_id'])->where(function($query) {
+                $query->where('type', 'Bono convivencias')
+                    ->orWhere('type', 'Bono servicios');
+            })->sum('amount');  
+            $bonus = $this->metaService->store1($branch, $data['data'], $data['professional_id']);
+            $bonusCollection = collect($bonus);
+
+            // Calcular la suma de 'amount'
+            $totalBonus = $bonusCollection->sum('amount');
+            Log::info('$totalBonus Bonussssssss');
+            Log::info($totalBonus);
+
+            if ($totalBonus) {      
+                Log::info('Entra a descontar los bonos de la existencia');
+                // Calcular la suma de los montos
+                //$totalAmount = $subquery->sum('amount');
+                $difference = $totalBonus - $totalAmount;
+                Log::info('Diferencia de bono ierre de caja'.$difference);
+                  // Ajustar la existencia de $box según la diferencia
+                    // Si la diferencia es positiva, se resta de box->existence
+                    // Si es negativa, se suma a box->existence
+                    $box->existence -= $difference;
+                    $box->save(); // Guardar los cambios en $box
+            }
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'bonus' => $bonus], 200);
+        } catch (TransportException $e) {
+
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
+        }
+    }
+
     /**
      * Display the specified resource.
      */
@@ -209,6 +273,18 @@ class BoxCloseController extends Controller
             ]);
 
             $bonus = $this->metaService->bonus($data['branch_id']);
+            $bonus = collect($bonus)->map(function ($bono) {
+                $professionalPayment = ProfessionalPayment::where('branch_id', $bono['branch_id'])
+                    ->where('professional_id', $bono['professional_id'])
+                    ->whereDate('date', Carbon::now())
+                    ->where('type', $bono['bonus'])
+                    ->first();
+            
+                // Agregar nueva columna 'pay'
+                $bono['pay'] = $professionalPayment != null;
+                
+                return $bono;
+            })->toArray();
             return response()->json(['bonus' => $bonus], 200);
         } catch (\Throwable $th) {
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);

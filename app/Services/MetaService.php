@@ -231,10 +231,199 @@ class MetaService
             
         }
         return $bonus;
-    } catch (Exception $e) {
-        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
-        throw new \RuntimeException("Error al ejecutar el MetaServie(store): " . $e->getMessage());
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el MetaServie(store): " . $e->getMessage());
+        }
     }
+
+    public function store1($branch, $data, $professional_id)
+    {        
+        try{
+            $professional = Professional::findOrfail($professional_id);
+        // Eliminar los registros que coincidan
+        Finance::where('branch_id', $branch->id)
+        ->whereDate('data', $data)
+        ->where('operation', 'Gasto')
+        ->where(function($query) use ($professional){
+            $query->where('comment', 'like', '%Gasto por pago de bono de convivencias a '.$professional->name.'%')
+                ->orWhere('comment', 'like', '%Gasto por pago de bono de servicios a '.$professional->name.'%');
+        })
+        ->delete();
+
+        //Retention
+        Retention::where('branch_id', $branch->id)->where('professional_id', $professional_id)
+        ->whereDate('data', $data)->where('type', 'BonoConvivencia')->orwhere('type', 'BonoService')->delete();
+
+        $subquery = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', $data)->where('professional_id', $professional_id)->where(function($query) {
+            $query->where('type', 'Bono convivencias')
+                ->orWhere('type', 'Bono servicios');
+        })->delete();
+
+        // Calcular la suma de los montos
+        //$totalAmount = $subquery->sum('amount');
+
+        // Eliminar los registros
+        //$subquery->delete();
+        /*$box = Box::whereDate('data', Carbon::now())->where('branch_id', $branch->id)->first();
+        if ($box != null) {
+            // Si la diferencia es positiva, se resta de box->existence
+            // Si es negativa, se suma a box->existence
+            $box->existence += $totalAmount;
+            $box->save(); // Guardar los cambios en $box
+        }*/
+        $idService=null;
+        $bonus = [];
+        $percentWinSum = 0;
+
+
+        //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
+        $finance = Finance::orderBy('control', 'desc')->first();
+        if ($finance !== null) {
+            $control = $finance->control + 1;
+        } else {
+            $control = 1;
+        }
+        //foreach ($professionals as $professional) {
+            Log::info($professional->id);
+            $cars = Car::whereHas('reservation', function ($query) use ($branch, $data) {
+                $query->where('branch_id', $branch->id)->whereDate('data', $data);
+            })
+                ->with(['clientProfessional.client', 'reservation'])
+                ->whereHas('clientProfessional', function ($query) use ($professional_id) {
+                    $query->where('professional_id', $professional_id);
+                })
+                ->where('pay', 1)
+                ->get();
+            //retention
+            $retentionP = $professional->retention;
+            $carIdsPay = $cars->pluck('id');
+            $rules =  BranchRuleProfessional::where('professional_id', $professional_id)->whereHas('branchRule', function ($query) use ($branch, $data) {
+                $query->where('branch_id', $branch->id)->where('estado', 0)->whereDate('data', $data);
+            })->get();
+
+            //$professionalPaymentsServices = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->get()->first();
+
+            if ($rules->isEmpty()) {
+                $idService = BranchServiceProfessional::where('professional_id', $professional_id)->whereHas('branchService.branch', function ($query) use ($branch) {
+                    $query->where('branch_id', $branch->id);
+                })->where('meta', 1)->first();
+                if ($idService != null) {
+                    $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();
+                    if (!$orders->isEmpty()) {
+                        $cant = $orders->count();
+                        $amount = $orders->first()->price * $cant;
+                        /*$filteredPayments = $professionalPayments->filter(function ($payment) {
+                            return $payment->type == 'Bono convivencias';
+                        })->first();*/
+                        $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', $data)->where('type', 'Bono convivencias')->first();
+                        if ($professionalPayment == null) {
+                            $professionalPayment = new ProfessionalPayment();
+                        }
+                            $retentionAmount = $retentionP ? $amount * $retentionP / 100 : 0;
+                            $professionalPayment->branch_id = $branch->id;
+                            $professionalPayment->professional_id = $professional_id;
+                            $professionalPayment->date = $data;
+                            $professionalPayment->amount = $amount - $retentionAmount;
+                            $professionalPayment->type = 'Bono convivencias';
+                            $professionalPayment->cant = $cant;
+                            $professionalPayment->save();
+                            $bonus[] = [
+                                'name' => $professional->name,
+                                'image_url' => $professional->image_url,
+                                'bonus' => 'Bono convivencias',
+                                'amount' => round($amount - $retentionAmount, 2),
+                            ];
+                            $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Gasto';
+                            $finance->amount = $amount - $retentionAmount;
+                            $finance->comment = 'Gasto por pago de bono de convivencias a ' . $professional->name;
+                            $finance->branch_id = $branch->id;
+                            $finance->type = 'Sucursal';
+                            $finance->expense_id = 5;
+                            $finance->data = $data;
+                            $finance->file = '';
+                            $finance->save();
+                            if($retentionP){
+                                Log::info('Entra a retencion bono de convivencias'.$professional->name.$retentionAmount);
+                                $retention = new Retention();
+                                $retention->branch_id = $branch->id;
+                                $retention->professional_id = $professional->id;
+                                $retention->data = $data;
+                                $retention->retention = round($retentionAmount, 2);
+                                $retention->type = 'BonoConvivencia';
+                                $retention->save();
+                            }
+
+                            foreach($orders as $order){
+                                $order->meta = 1;
+                                $order->percent_win = 0;
+                                $order->save();
+                            }
+                        //}
+                    }
+                }
+            }
+
+
+            $profesionalbonus = BranchProfessional::where('professional_id', $professional_id)->where('branch_id', $branch->id)->first();
+
+            //Venta de productos y servicios
+            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
+            $orderServPay = $orderServs->where('meta', 0)->sum('price');
+            $catServices = $orderServs->count();
+            if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
+                /*$filteredPayments = $professionalPayments->filter(function ($payment) {
+                    return $payment->type == 'Bono servicios';
+                });*/
+                $professionalPaymentService = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional_id)->whereDate('date', $data)->where('type', 'Bono servicios')->first();
+                if ($professionalPaymentService == null) {
+                    $professionalPaymentService = new ProfessionalPayment();
+                }
+                    $retentionAmount = $retentionP ? $profesionalbonus->mountpay * $retentionP / 100 : 0;
+                    $professionalPaymentService->branch_id = $branch->id;
+                    $professionalPaymentService->professional_id = $professional->id;
+                    $professionalPaymentService->date = $data;
+                    $professionalPaymentService->amount = $profesionalbonus->mountpay - $retentionAmount;
+                    $professionalPaymentService->type = 'Bono servicios';
+                    $professionalPaymentService->cant = $catServices;
+                    $professionalPaymentService->save();
+                    $bonus[] = [
+                        'name' => $professional->name,
+                        'image_url' => $professional->image_url,
+                        'bonus' => 'Bono servicios',
+                        'amount' => round($profesionalbonus->mountpay-$retentionAmount, 2),
+                    ];
+                    $finance = new Finance();
+                    $finance->control = $control++;
+                    $finance->operation = 'Gasto';
+                    $finance->amount = $profesionalbonus->mountpay-$retentionAmount;
+                    $finance->comment = 'Gasto por pago de bono de servicios a ' . $professional->name;
+                    $finance->branch_id = $branch->id;
+                    $finance->type = 'Sucursal';
+                    $finance->expense_id = 5;
+                    $finance->data = $data;
+                    $finance->file = '';
+                    $finance->save();
+                    if($retentionP){
+                        Log::info('Entra a retencion bono de servicios'.$professional->name.$retentionAmount);
+                        $retention = new Retention();
+                        $retention->branch_id = $branch->id;
+                        $retention->professional_id = $professional->id;
+                        $retention->data = $data;
+                        $retention->retention = round($retentionAmount, 2);
+                        $retention->type = 'BonoService';
+                        $retention->save();
+                    }
+                //}
+            }            
+        //}
+        return $bonus;
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el MetaServie(store): " . $e->getMessage());
+        }
     }
 
     public function bonus($branch_id)

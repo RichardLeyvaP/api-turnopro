@@ -495,6 +495,9 @@ class TailController extends Controller
                     $name = $professional->name;
                     $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
                 }
+                // Modificación para usar updated_at si from_home es igual a 1
+                $createdAt = $reservation->from_home == 1 ? $reservation->updated_at : $reservation->created_at;
+
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => $reservation->car_id,
@@ -512,12 +515,13 @@ class TailController extends Controller
                     'attended' => $tail->attended,
                     'puesto' => $workplace ? $workplace->name : null,
                     'code' => $reservation->code,
-                    'select_professional' => intval($reservation->car->select_professional)
+                    'select_professional' => intval($reservation->car->select_professional),
+                    'created_at' => $createdAt
                 ];
-            })->sortBy('start_time')->values();
+            })->sortBy('created_at')->values();
 
             $attendedReservations = $reservations->whereIn('attended', [1, 11, 111, 4, 5, 33])->sortByDesc('start_time')->values();
-            $unattendedReservations = $reservations->where('attended', '!=', 1)->values();
+            $unattendedReservations = $reservations->whereIn('attended', [0, 3])->sortBy('created_at')->values();
 
             return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
@@ -1243,7 +1247,7 @@ class TailController extends Controller
                 return response()->json(0, 200);
             }
             $tails = Tail::whereHas('reservation', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
+                $query->where('branch_id', $data['branch_id'])->orderBy('created_at');
             })->where('aleatorie', 1)->get();
 
             if ($tails->isEmpty()) {

@@ -248,7 +248,7 @@ class ProfessionalService
         return $nuevaHoraInicio;
     }
 
-    public function branch_professionals_service_tottem($branch_id, $services, $professional_id, $reservation)
+    public function branch_professionals_service_tottem($branch_id, $services, $professional_id, $reservation)//Cambio 31-08-24
     {
         try{
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
@@ -292,6 +292,40 @@ class ProfessionalService
                 ->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
+
+                /*$returnedProfessionals = $professionals1->map(function($professional) use ($branch_id) {
+                    $reservation = Reservation::where('branch_id', $branch_id)
+                        ->where('confirmation', 2)
+                        ->whereHas('car.clientProfessional', function ($query) use ($professional) {
+                            $query->where('professional_id', $professional->id);
+                        })->orderByDesc('updated_at')
+                        ->whereDate('data', Carbon::now())
+                        ->first();
+                
+                    if ($reservation != null) {
+                        $professional->disponible = $reservation->updated_at->format('H:i');
+                    } else {
+                        $record = Record::where('professional_id', $professional->id)
+                            ->where('branch_id', $branch_id)
+                            ->whereDate('start_time', Carbon::now())
+                            ->orderByDesc('start_time')
+                            ->first();
+                
+                        $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
+                    }
+                
+                    return $professional;
+                });
+                
+                $returnedProfessionals = $returnedProfessionals->sortBy(function ($professional) {
+                    return [
+                        strtotime($professional->disponible),
+                        $professional->living,
+                        $professional->arrival
+                    ];
+                });
+            */
+
             $horaActual = $horaActual = Carbon::now();
             $tiempoReserva = $reservation->total_time;
             foreach ($professionals1 as $professional) {
@@ -400,10 +434,10 @@ class ProfessionalService
         });
 
         return $returnedProfessionals;
-    } catch (Exception $e) {
-        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
-        throw new \RuntimeException("Error al ejecutar el Professionalservic(branch_professionals_service_tottem): " . $e->getMessage());
-    }
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el Professionalservic(branch_professionals_service_tottem): " . $e->getMessage());
+        }
     }
 
     public function branch_professionals_service($branch_id, $services)
@@ -565,12 +599,17 @@ class ProfessionalService
             }
             $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
                 $query->where('professional_id', $professional->id);
-            })->orderByDesc('updated_at')->first();
+            })->orderByDesc('updated_at')->whereDate('data', Carbon::now())->first();
             if ($reservation != null) {
                 $professional->disponible = $reservation->updated_at->format('H:i');
             }else {
                 $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
-                $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
+                if ($record != null) {
+                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
+                }else {
+                    $professional->disponible = Carbon::parse($startTime)->format('H:i');
+                }
+                
             }
         }
 
@@ -1528,7 +1567,7 @@ class ProfessionalService
         }
     }
 
-    public function professionals_state($branch_id, $reservation_id)
+    public function professionals_state($branch_id, $reservation_id)//cambio 31-08-24
     {
         try{
         $reservation = Reservation::find($reservation_id);
@@ -1565,6 +1604,39 @@ class ProfessionalService
             ->orderBy('branch_professional.living', 'asc')
             ->orderBy('branch_professional.arrival', 'asc')
             ->get();
+
+            /*$returnedProfessionals = $professionals->map(function($professional) use ($branch_id) {
+                $reservation = Reservation::where('branch_id', $branch_id)
+                    ->where('confirmation', 2)
+                    ->whereHas('car.clientProfessional', function ($query) use ($professional) {
+                        $query->where('professional_id', $professional->id);
+                    })->orderByDesc('updated_at')
+                    ->whereDate('data', Carbon::now())
+                    ->first();
+            
+                if ($reservation != null) {
+                    $professional->disponible = $reservation->updated_at->format('H:i');
+                } else {
+                    $record = Record::where('professional_id', $professional->id)
+                        ->where('branch_id', $branch_id)
+                        ->whereDate('start_time', Carbon::now())
+                        ->orderByDesc('start_time')
+                        ->first();
+            
+                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
+                }
+            
+                return $professional;
+            });
+            
+            $returnedProfessionals = $returnedProfessionals->sortBy(function ($professional) {
+                return [
+                    strtotime($professional->disponible),
+                    $professional->living,
+                    $professional->arrival
+                ];
+            });*/
+
         $professionalFree = [];
         // Convertir el campo telefono a string
         // Iterar sobre los profesionales
@@ -1645,14 +1717,15 @@ class ProfessionalService
         }
 
         return $professionalFree;
-    } catch (Exception $e) {
-        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
-        throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state): " . $e->getMessage());
-    }
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state): " . $e->getMessage());
+        }
     }
 
-    public function professionals_state_tottem($branch_id, $services)
+    public function professionals_state_tottem($branch_id, $services)//cambio 31-08-24
     {
+        try{
         //$reservation = Reservation::find($reservation_id);
         //$orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
         //$services = $servs;
@@ -1690,6 +1763,39 @@ class ProfessionalService
             ->get();
             Log::info('Professionales trabajando que realizan ese servicio');
             Log::info($professionals);
+
+            /*$returnedProfessionals = $professionals->map(function($professional) use ($branch_id) {
+                $reservation = Reservation::where('branch_id', $branch_id)
+                    ->where('confirmation', 2)
+                    ->whereHas('car.clientProfessional', function ($query) use ($professional) {
+                        $query->where('professional_id', $professional->id);
+                    })->orderByDesc('updated_at')
+                    ->whereDate('data', Carbon::now())
+                    ->first();
+            
+                if ($reservation != null) {
+                    $professional->disponible = $reservation->updated_at->format('H:i');
+                } else {
+                    $record = Record::where('professional_id', $professional->id)
+                        ->where('branch_id', $branch_id)
+                        ->whereDate('start_time', Carbon::now())
+                        ->orderByDesc('start_time')
+                        ->first();
+            
+                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
+                }
+            
+                return $professional;
+            });
+            
+            $returnedProfessionals = $returnedProfessionals->sortBy(function ($professional) {
+                return [
+                    strtotime($professional->disponible),
+                    $professional->living,
+                    $professional->arrival
+                ];
+            });
+            */
         $professionalFree = [];
         // Convertir el campo telefono a string
         // Iterar sobre los profesionales
@@ -1766,5 +1872,9 @@ class ProfessionalService
         }
 
         return $professionalFree;
+        } catch (Exception $e) {
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state_tottem): " . $e->getMessage());
+        }
     }
 }
