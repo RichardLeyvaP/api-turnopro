@@ -66,7 +66,7 @@ class CommentController extends Controller
 
     public function storeByReservationId(Request $request)
     {
-        Log::info("storeByReservationId CommentController");
+        Log::info("storeByReservationId CommentController reservation_id:".$request->reservation_id);
         DB::beginTransaction();
         try {
             $data = $request->validate([
