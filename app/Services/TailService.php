@@ -842,7 +842,7 @@ class TailService
             $car = Car::findOrFail($reservation->car_id);
             Log::info($car);
 
-            $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+            $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->distinct('id')->get();
 
             /*$service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
                 $query->where('branch_id', $reservation->branch_id);
@@ -850,7 +850,7 @@ class TailService
             $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
                 $query->where('branch_id', $reservation->branch_id);
             })->where('professional_id', $data['professional_id'])
-            ->distinct('branch_service_id', 'professional_id') // Asegura que los resultados sean únicos
+            ->distinct('branch_service_id') // Asegura que los resultados sean únicos
             ->get();
 
             $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
@@ -949,12 +949,12 @@ class TailService
             $car = Car::findOrFail($reservation->car_id);
             Log::info($car);
 
-            $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
+            $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->distinct('id')->get();
 
             $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
                 $query->where('branch_id', $reservation->branch_id);
             })->where('professional_id', $data['professional_id'])
-            ->distinct('branch_service_id', 'professional_id') // Asegura que los resultados sean únicos
+            ->distinct('branch_service_id') // Asegura que los resultados sean únicos
             ->get();
 
             $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();

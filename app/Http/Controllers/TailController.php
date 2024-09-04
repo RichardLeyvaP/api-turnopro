@@ -1269,6 +1269,7 @@ class TailController extends Controller
 
                 $servicesOrders = Order::where('car_id', $car->id)
                     ->where('is_product', 0)
+                    ->distinct('id')
                     ->with(['branchServiceProfessional.branchService.service'])
                     ->get();
 
