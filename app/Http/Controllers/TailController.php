@@ -700,6 +700,7 @@ class TailController extends Controller
                 'reservation_id' => 'required|numeric',
                 'attended' => 'required|numeric'
             ]);
+            Log::info("Entra a metodo se modificar estado de la cola reservation_id:".$data['reservation_id'].'attended:'.$data['attended']);
             $this->tailService->tail_attended($data['reservation_id'], $data['attended']);
 
             return response()->json(['msg' => "Cola modificado correctamente"], 200);
@@ -852,13 +853,14 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Reasignar Cliente a barbero");
+            Log::info("Reasignar Cliente a barbero Coordinador");
             DB::beginTransaction();
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
+            Log::info("Reasignar Cliente a barbero Coordinador Cliente:".$data['client_id'].'-professional_id:'.$data['professional_id']);
             $this->tailService->reasigned_clientOld($data);
             /*$reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
@@ -885,6 +887,7 @@ class TailController extends Controller
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
+            Log::info("Reasignar Cliente a barbero Cliente:".$data['client_id'].'-professional_id:'.$data['professional_id']);
             $reservation = Reservation::where('id', $data['reservation_id'])->first();
             $professional = Professional::find($data['professional_id']);
             if ($professional && $professional->state != 1) {
@@ -1084,6 +1087,7 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric',
                 'place' => 'sometimes|numeric'
             ]);
+            Log::info("Reasignar Cliente a barbero en Segundo plano professional_id:".$data['professional_id'].'-reservation_id:'.$data['reservation_id']);
             $professional = Professional::find($data['professional_id']);
             if ($professional->state != 1) {
                 return response()->json(0, 200);
@@ -1242,6 +1246,7 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
+            Log::info("Reasignar Cliente a barbero en totem professional_id:".$data['professional_id'].'-reservation_id:'.$data['reservation_id']);
             $professional = Professional::find($data['professional_id']);
             if ($professional->state != 1) {
                 return response()->json(0, 200);
@@ -1390,7 +1395,7 @@ class TailController extends Controller
     private function reassignServices($servicesOrders, $service_professionals)
     {
         // Construir un mapa de profesionales de servicio por ID de servicio
-        $serviceProfessionalMap = $service_professionals->keyBy(function ($item) {
+        $serviceProfessionalMap = $service_professionals->unique('branch_service_id')->keyBy(function ($item) {
             return $item->branchService->service->id;
         });
 
@@ -1406,7 +1411,7 @@ class TailController extends Controller
             Log::info('Profesional de servicio encontrado:', $serviceProfessional ? $serviceProfessional->toArray() : 'No encontrado');
 
             if ($serviceProfessional) {
-                $percent = $serviceProfessional->percent ?? 1;
+                $percent = $serviceProfessional->percent ?? 0;
 
                 $order = new Order();
                 $order->car_id = $service->car_id;
@@ -1414,7 +1419,7 @@ class TailController extends Controller
                 $order->branch_service_professional_id = $serviceProfessional->id;
                 $order->data = $service->data;
                 $order->is_product = false;
-                $order->percent_win = $serv->price_service * $percent / 100;
+                $order->percent_win = $percent ? $serv->price_service * $percent / 100 : $serv->price_service;
                 $order->price = $serv->price_service;
                 $order->request_delete = false;
 

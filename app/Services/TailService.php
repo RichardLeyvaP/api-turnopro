@@ -844,9 +844,14 @@ class TailService
 
             $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->get();
 
+            /*$service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
+                $query->where('branch_id', $reservation->branch_id);
+            })->where('professional_id', $data['professional_id'])->get();*/
             $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
                 $query->where('branch_id', $reservation->branch_id);
-            })->where('professional_id', $data['professional_id'])->get();
+            })->where('professional_id', $data['professional_id'])
+            ->distinct('branch_service_id', 'professional_id') // Asegura que los resultados sean únicos
+            ->get();
 
             $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
 
@@ -948,7 +953,9 @@ class TailService
 
             $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($reservation) {
                 $query->where('branch_id', $reservation->branch_id);
-            })->where('professional_id', $data['professional_id'])->get();
+            })->where('professional_id', $data['professional_id'])
+            ->distinct('branch_service_id', 'professional_id') // Asegura que los resultados sean únicos
+            ->get();
 
             $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
 
@@ -1334,7 +1341,7 @@ class TailService
     private function reassignServices($servicesOrders, $service_professionals)
     {
         try{
-        $serviceProfessionalMap = $service_professionals->keyBy(function ($item) {
+         $serviceProfessionalMap = $service_professionals->unique('branch_service_id')->keyBy(function ($item) {
             return $item->branchService->service->id;
         });
 
@@ -1343,14 +1350,14 @@ class TailService
             $serviceProfessional = $serviceProfessionalMap->get($serv->id);
 
             if ($serviceProfessional) {
-                $percent = $serviceProfessional->percent ?? 1;
+                $percent = $serviceProfessional->percent ?? 0;
                 $order = new Order();
                 $order->car_id = $service->car_id;
                 $order->product_store_id = null;
                 $order->branch_service_professional_id = $serviceProfessional->id;
                 $order->data = $service->data;
                 $order->is_product = false;
-                $order->percent_win = $serv->price_service * $percent / 100;
+                $order->percent_win = $percent ? $serv->price_service * $percent / 100 : $serv->price_service;
                 $order->price = $serv->price_service;
                 $order->request_delete = false;
                 $order->save();
