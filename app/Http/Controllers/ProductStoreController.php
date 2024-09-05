@@ -47,14 +47,12 @@ class ProductStoreController extends Controller
         }
     }
 
-    public function showStoresProducts(Request $request)
+    public function showStoresProductsold(Request $request)
     {
     try {
         Log::info("Entra a buscar los stores y productos");
-        
         $stores = Store::all('id', 'address', 'reference');
         $products = Product::all('id', 'name', 'image_product');
-        
         return response()->json([
             'stores' => $stores,
             'products' => $products
@@ -64,6 +62,28 @@ class ProductStoreController extends Controller
         return response()->json(['msg' => "Error al mostrar los stores y productos"], 500);
     }
     }
+
+    public function showStoresProducts(Request $request)
+    {
+    try {
+        Log::info("Entra a buscar los stores y productos");
+        $data = $request->validate([
+            'business_id' => 'required|numeric'
+        ]);
+        $stores = Store::all('id', 'address', 'reference');
+        $products = Product::all('id', 'name', 'image_product');
+        $branches = Branch::where('business_id', $data['business_id'])->select('id', 'name', 'image_data', 'address')->get();
+        return response()->json([
+            'stores' => $stores,
+            'products' => $products,
+            'branches' => $branches
+        ], 200, [], JSON_NUMERIC_CHECK);
+    } catch (\Throwable $th) {
+        Log::error($th);
+        return response()->json(['msg' => "Error al mostrar los stores y productos"], 500);
+    }
+    }
+
     public function store(Request $request)
     {
         Log::info("Asignar Productos a un almacen");
@@ -165,8 +185,10 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
-            $productStore = ProductStore::where('branch_id', $data['branch_id'])->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
+            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el de una branch");
+            $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
                     //'product_quantity' => $query->product_quantity,

@@ -239,6 +239,7 @@ class MetaService
 
     public function store1($branch, $data, $professional_id)
     {        
+
         try{
             $professional = Professional::findOrfail($professional_id);
         // Eliminar los registros que coincidan
@@ -260,6 +261,7 @@ class MetaService
                 ->orWhere('type', 'Bono servicios');
         })->delete();
 
+        
         // Calcular la suma de los montos
         //$totalAmount = $subquery->sum('amount');
 
@@ -295,6 +297,8 @@ class MetaService
                 })
                 ->where('pay', 1)
                 ->get();
+                Log::info('Carros pagados');
+                Log::info($cars);
             //retention
             $retentionP = $professional->retention;
             $carIdsPay = $cars->pluck('id');
@@ -308,14 +312,20 @@ class MetaService
                 $idService = BranchServiceProfessional::where('professional_id', $professional_id)->whereHas('branchService.branch', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
                 })->where('meta', 1)->first();
+                Log::info('Servicio Meta');
+                Log::info($idService);
                 if ($idService != null) {
                     $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();
+                    Log::info('Ordenes de los carros');
+                    Log::info($orders);
                     if (!$orders->isEmpty()) {
                         $cant = $orders->count();
                         $amount = $orders->first()->price * $cant;
                         /*$filteredPayments = $professionalPayments->filter(function ($payment) {
                             return $payment->type == 'Bono convivencias';
                         })->first();*/
+                        Log::info('Cantidad a pagar');
+                        Log::info($amount);
                         $professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', $data)->where('type', 'Bono convivencias')->first();
                         if ($professionalPayment == null) {
                             $professionalPayment = new ProfessionalPayment();
@@ -431,6 +441,7 @@ class MetaService
         try{  
         $idService=null;
         $bonus = [];
+        $order_id = [];
         $percentWinSum = 0;
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
@@ -462,7 +473,8 @@ class MetaService
                     $query->where('branch_id', $branch_id);
                 })->where('meta', 1)->first();
                 if ($idService != null) {
-                    $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();
+                    $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();                    
+                    $order_id = $orders->pluck('id')->values();
                     if (!$orders->isEmpty()) {
                         $cant = $orders->count();
                         $amount = $orders->first()->price * $cant;
@@ -491,7 +503,11 @@ class MetaService
             $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
 
             //Venta de productos y servicios
-            $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get();
+            if ($order_id->isNotEmpty()){
+                $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->whereNotIn('id', $order_id)->get();
+            }else{
+                $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get(); 
+            }
             $orderServPay = $orderServs->where('meta', 0)->sum('price');
             $catServices = $orderServs->count();
             if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {

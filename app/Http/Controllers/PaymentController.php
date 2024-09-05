@@ -94,10 +94,31 @@ class PaymentController extends Controller
                 $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
                 $cardGiftUser->save();
             }
-            if ($data['tipByCash'] == false) {
-                $data['debit'] +=  $data['tip'];
-            }else{
-                $data['cash'] +=  $data['tip'];  
+            // Lógica basada en el valor de $data['tipByCash']
+            switch ($data['tipByCash']) {
+                case 'Efectivo':
+                    $data['cash'] += $data['tip'];
+                    break;
+                
+                case 'Débito':
+                    $data['debit'] += $data['tip'];
+                    break;
+                
+                case 'Transferencia':
+                    $data['transfer'] += $data['tip'];
+                    break;
+                
+                case 'Tarjeta de regalo':
+                    $data['cardGift'] += $data['tip'];
+                    break;
+                
+                case 'Tarjeta de Crédito':
+                    $data['creditCard'] += $data['tip'];
+                    break;
+
+                case 'Otro Método':
+                    $data['other'] += $data['tip'];
+                    break;
             }
             //Log::info($cardGiftUser);
             $payment->car_id = $car->id;

@@ -1087,7 +1087,7 @@ class TailController extends Controller
                 'branch_id' => 'required|numeric',
                 'place' => 'sometimes|numeric'
             ]);
-            Log::info("Reasignar Cliente a barbero en Segundo plano professional_id:".$data['professional_id'].'-reservation_id:'.$data['reservation_id']);
+            Log::info("Reasignar Cliente a barbero en Segundo plano professional_id:".$data['professional_id'].'-branch_id:'.$data['branch_id']);
             $professional = Professional::find($data['professional_id']);
             if ($professional->state != 1) {
                 return response()->json(0, 200);
@@ -1241,7 +1241,8 @@ class TailController extends Controller
     public function reasigned_client_totem(Request $request)
     {
         try {
-            Log::info("Reasignar Cliente a barbero");
+            Log::info("Reasignar Cliente a barbero usuario:");
+            Log::info(auth()->user()->name.'-'."Profesional con la versión vieja");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
@@ -1275,12 +1276,16 @@ class TailController extends Controller
 
                 $services_id = $servicesOrders->pluck('branchServiceProfessional.branchService.service.id')->toArray();
 
-                $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
+                $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data, $services_id) {
+                    $query->whereIn('service_id', $services_id)->where('branch_id', $data['branch_id']);
                 })
                     ->where('professional_id', $data['professional_id'])
                     ->with('branchService.service')
                     ->get();
+                    /*
+                     $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
+            }, '=', count($services))
+                    */
 
                 $service_professional_id = $service_professionals->pluck('branchService.service.id')->toArray();
 

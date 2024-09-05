@@ -66,8 +66,8 @@ class BoxCloseController extends Controller
     public function store(Request $request)
     {
 
+        DB::beginTransaction();
         try {
-
             Log::info("Editar");
             $data = $request->validate([
                 //'box_id' => 'required|numeric',
@@ -149,7 +149,7 @@ class BoxCloseController extends Controller
             $this->traceService->store($trace);
             Log::info('$trace');
             Log::info($trace);
-            
+            DB::commit();
             //$professionals = $professionals->toArray();
             Log::info("Generar PDF");
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus]);
@@ -185,6 +185,7 @@ class BoxCloseController extends Controller
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
+            Log::info('BoxCloseController->store');
             Log::error($th);
 
             DB::rollback();
@@ -195,8 +196,8 @@ class BoxCloseController extends Controller
     public function store1(Request $request)
     {
 
+            DB::beginTransaction();
         try {
-
             Log::info("Editar");
             $data = $request->validate([
                 //'box_id' => 'required|numeric',
@@ -244,11 +245,13 @@ class BoxCloseController extends Controller
                     $box->existence -= $difference;
                     $box->save(); // Guardar los cambios en $box
             }
+            DB::commit();
             return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'bonus' => $bonus], 200);
         } catch (TransportException $e) {
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
+            Log::info('BoxCloseController->store1');
             Log::error($th);
 
             DB::rollback();
@@ -294,6 +297,7 @@ class BoxCloseController extends Controller
     public function bonu_payment(Request $request)
     {
         Log::info("Pagar un bono");
+        DB::beginTransaction();
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric|exists:branches,id',
@@ -327,7 +331,7 @@ class BoxCloseController extends Controller
             Log::info('Valor de type en $data: ' . strval($data['type']));
             if(strval($data['type']) === "Bono convivencias"){
                 Log::info('Entro a convivencias'.Carbon::now()->toDateString());
-                $subquery = ProfessionalPayment::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now()->toDateString())->where('type', $data['type'])->first();
+                $subquery = ProfessionalPayment::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->where('type', $data['type'])->first();
                 Log::info('Paso a Subquery');
                 Log::info($subquery);
                 if ($subquery != null) {
@@ -497,9 +501,13 @@ class BoxCloseController extends Controller
                     //}
                 
             }
-
+            DB::commit();
             return response()->json(['msg' => 'Pago realizado correctamente'], 200);
         } catch (\Throwable $th) {
+            Log::info('BoxCloseController->bonu_payment');
+            Log::error($th);
+
+            DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
     }

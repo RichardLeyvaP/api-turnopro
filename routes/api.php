@@ -124,7 +124,8 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']);//dada una branch devuelve los productos de los almacenes que hay en el
     Route::get('/products-academy-show', [ProductStoreController::class, 'products_academy_show']);//devuelve los productos por almacenes de una academia para autocomplete
     Route::get('/productstore', [ProductStoreController::class, 'index']);
-    Route::get('/productstore-show', [ProductStoreController::class, 'show']);
+    //Route::get('/productstore-show', [ProductStoreController::class, 'show']);
+    Route::get('/productstore-show', [ProductStoreController::class, 'show_branch']);
     Route::get('/show-stores-products', [ProductStoreController::class, 'showStoresProducts']); //devolver los products y los stores
     Route::get('/productstore-show-academy-web', [ProductStoreController::class, 'product_show_academy_web']);//dada una branch devuelve los productos de los almacenes que hay en el
     Route::post('/productstore', [ProductStoreController::class, 'store']);
