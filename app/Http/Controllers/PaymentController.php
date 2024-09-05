@@ -187,7 +187,7 @@ class PaymentController extends Controller
                 $finance->control = $control++;
                 $finance->operation = 'Ingreso';
                 $finance->amount = $data['tip'];
-                $finance->comment = 'Ingreso por pago de propina de cliente ' . $client;
+                $finance->comment = 'Ingreso por pago de propina de cliente ' . $client.' ['.$data['tipByCash'].']';
                 $finance->branch_id = $request->branch_id;
                 $finance->type = 'Sucursal';
                 $finance->revenue_id = 8;
