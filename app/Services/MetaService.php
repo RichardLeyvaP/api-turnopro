@@ -449,8 +449,9 @@ class MetaService
             $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
         })->select('id', 'name', 'image_url', 'retention')->get();
 
-        Log::info($professionals);
+        Log::info('Profesionales:'.$professionals);
         foreach ($professionals as $professional) {
+            $order_id = [];
             Log::info($professional->id);
             $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
@@ -469,11 +470,13 @@ class MetaService
             })->get();
 
             if ($rules->isEmpty()) {
+                Log::info('Calcular bono de Servicios metas');
                 $idService = BranchServiceProfessional::where('professional_id', $professional->id)->whereHas('branchService.branch', function ($query) use ($branch_id) {
                     $query->where('branch_id', $branch_id);
                 })->where('meta', 1)->first();
                 if ($idService != null) {
-                    $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();                    
+                    $orders = Order::where('branch_service_professional_id', $idService->id)->whereIn('car_id', $carIdsPay)->limit(4)->get();  
+                                    
                     $order_id = $orders->pluck('id')->values();
                     if (!$orders->isEmpty()) {
                         $cant = $orders->count();
@@ -501,16 +504,21 @@ class MetaService
 
 
             $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
-
+            Log::info('$order_id');
+            Log::info($order_id != null);
             //Venta de productos y servicios
-            if ($order_id->isNotEmpty()){
+            if ($order_id != null){
+                Log::info('Tiene servicios metas');
                 $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->whereNotIn('id', $order_id)->get();
             }else{
+                Log::info('No tiene servicios metas');
                 $orderServs = Order::whereIn('car_id', $carIdsPay)->where('is_product', 0)->get(); 
             }
+            Log::info('orders a contemplar:'.$orderServs);
             $orderServPay = $orderServs->where('meta', 0)->sum('price');
             $catServices = $orderServs->count();
             if ($orderServPay >= $profesionalbonus->limit && $profesionalbonus->mountpay > 0) {
+                Log::info('Calcular bono de Servicios');
                 /*$filteredPayments = $professionalPayments->filter(function ($payment) {
                     return $payment->type == 'Bono servicios';
                 });*/
@@ -535,6 +543,7 @@ class MetaService
         }
         return $bonus;
     } catch (Exception $e) {
+        Log::info($e->getMessage());
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el MetaServie(bonus): " . $e->getMessage());
         }
