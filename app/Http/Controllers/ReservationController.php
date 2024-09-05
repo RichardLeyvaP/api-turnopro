@@ -157,6 +157,26 @@ class ReservationController extends Controller
                 $data['from_home'] = $request->from_home;
             } else {
                 $data['from_home'] = 1;
+                return $timers = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
+                Log::info('horarios del baerbero');
+                Log::info($timers);
+                // Convertir la hora a verificar en un objeto DateTime
+                $time_to_check = new DateTime($data['start_time']);
+
+                // Convertir el array de intervalos a objetos DateTime para facilitar la comparación
+                $intervals = array_map(function($interval) {
+                    return new DateTime($interval);
+                }, $intervals);
+
+                // Verificar si la hora a verificar está dentro de los intervalos
+                $is_in_interval = in_array($time_to_check, $intervals);
+
+                // Resultado
+                if ($is_in_interval) {
+                    DB::commit();
+                    return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
+                } 
+                
             }
             $id_client = 0;
             $code = '';
@@ -424,7 +444,7 @@ class ReservationController extends Controller
             ]);
             $dates = [];
             $professionalDates = [];
-            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
+            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereIn('confirmation', [1,4])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
             foreach ($reservations as $reservation) {
                 $client = $reservation['car']['clientProfessional']['client'];
                 $startTime = Carbon::parse($reservation['start_time']);
@@ -794,7 +814,25 @@ class ReservationController extends Controller
                 ->orderBy('start_time')->get();
                 $current_date = Carbon::now();
                 $ct = 0;
+                $fechaHoy = Carbon::today();
+            // Obtener la fecha formateada como 'YYYY-MM-DD'
+                $fechaFormateada = $fechaHoy->toDateString();
+                Log::info($fechaFormateada);
             foreach ($reservations as $reservation) {
+                // Si la reserva es del día actual y no está confirmada (confirmation = 0)
+                if ($reservation->confirmation == 0 && $reservation->data == $fechaFormateada) {
+                    log::info('Eliminando reserva no confirmada: ' . $reservation->id);
+                    
+                    // Actualiza el campo cause antes de eliminar la reserva
+                    $reservation->cause = 'No confirmo la reserva';
+                    $reservation->save();
+                    
+                    // Soft delete de la reserva
+                    $reservation->delete();
+                    
+                    // Continua con la siguiente reserva
+                    continue;
+                }
                 log::info('Revisando este metodo - foreach:'.$ct);
                 if ($reservation->car->select_professional == 0) {
                     log::info('Revisando este metodo - select_professional == 0:'.$ct);

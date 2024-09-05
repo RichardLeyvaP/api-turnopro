@@ -68,7 +68,7 @@ class PaymentController extends Controller
                 'cardGift' => 'nullable|numeric',
                 'code' => 'nullable',
                 'tipByCash' => 'nullable'
-            ]);            
+            ]);         
             Log::info($data);
             $control = 0;
             $car = Car::find($data['car_id']);            
@@ -77,22 +77,6 @@ class PaymentController extends Controller
             $payment = Payment::where('car_id', $data['car_id'])->first();
             if (!$payment) {
                 $payment = new Payment();
-            }
-            Log::info($data['cardGift']);
-            if ($data['cardGift'] != 0) {
-                Log::info($data['code']);
-                $cardGiftUser = CardGiftUser::where('code',$data['code'])->first();
-                Log::info('tarjeta asognada');
-                Log::info($cardGiftUser);
-                Log::info('carro');
-                Log::info($car->id);
-                Log::info("ver si es cero al pagar");
-                Log::info($cardGiftUser->exist - $data['cardGift']);
-                if($cardGiftUser->exist - $data['cardGift'] <= 0){
-                    $cardGiftUser->state = "Redimida";
-                }
-                $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
-                $cardGiftUser->save();
             }
             // Lógica basada en el valor de $data['tipByCash']
             switch ($data['tipByCash']) {
@@ -119,6 +103,22 @@ class PaymentController extends Controller
                 case 'Otro Método':
                     $data['other'] += $data['tip'];
                     break;
+            }
+            Log::info($data['cardGift']);
+            if ($data['cardGift'] != 0) {
+                Log::info($data['code']);
+                $cardGiftUser = CardGiftUser::where('code',$data['code'])->first();
+                Log::info('tarjeta asognada');
+                Log::info($cardGiftUser);
+                Log::info('carro');
+                Log::info($car->id);
+                Log::info("ver si es cero al pagar");
+                Log::info($cardGiftUser->exist - $data['cardGift']);
+                if($cardGiftUser->exist - $data['cardGift'] <= 0){
+                    $cardGiftUser->state = "Redimida";
+                }
+                $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
+                $cardGiftUser->save();
             }
             //Log::info($cardGiftUser);
             $payment->car_id = $car->id;

@@ -561,7 +561,12 @@ class UserController extends Controller
             Log::info($user);
             if ($user) {
                     Log::info("Pass correct");
+                    Log::info($user->professional->business_id);
                     $business = Business::where('professional_id', $user->professional->id)->first();
+                    if ($business == null && $user->professional->charge->name == 'Administrador') {
+                        Log::info("No es dueño del negocio");
+                        $business = Business::where('id', $user->professional->business_id)->first();
+                    }
                     Log::info($business);
 
                     if ($user->professional->branches->where('id', $request->branch_id)->isNotEmpty()) { // Check if branches exist

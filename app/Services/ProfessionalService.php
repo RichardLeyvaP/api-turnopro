@@ -677,6 +677,276 @@ class ProfessionalService
         }
     }
 
+    public function professional_reservations_time($branch_id, $professional_id, $data)
+    {
+        try {
+            $data = [
+                'branch_id' => $branch_id,
+                'professional_id' => $professional_id,
+                'data' => $data
+            ];
+            $nombreDia = ucfirst(strtolower(Carbon::parse($data['data'])->locale('es_ES')->dayName));
+            $horario = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->first();
+            $start_time = Carbon::parse($horario->start_time)->format('H:i');
+            $closing_time = Carbon::parse($horario->closing_time)->format('H:i');
+            //$closing_time = $horario->closing_time;
+            //$startTime = strtotime($start_time);
+            $reservations = [];
+
+            $currentDateTime =  Carbon::now();
+            if (Carbon::parse($data['data'])->isToday()) {
+                $professional = Professional::where('professionals.id', $data['professional_id'])
+                    ->whereHas('branches', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })
+                    ->with(['reservations' => function ($query) use ($data) {
+                        $query->whereDate('data', $data['data'])
+                              ->orderBy('start_time')
+                              ->whereIn('confirmation', [1, 4])
+                              ->whereHas('tail', function ($subquery) {
+                                  $subquery->where('aleatorie', '!=', 1);
+                              });
+                    }])->where('state', 1) ->join('branch_professional', function ($join) use ($data) {
+                        $join->on('professionals.id', '=', 'branch_professional.professional_id')
+                            ->where('branch_professional.branch_id', '=', $data['branch_id'])
+                            ->where('branch_professional.arrival', '!=', NULL);
+                    })
+                    ->select(
+                        'professionals.id',
+                        'professionals.name',
+                        'professionals.surname',
+                        'professionals.second_surname',
+                        'professionals.email',
+                        'professionals.phone',
+                        'professionals.charge_id',
+                        'professionals.state',
+                        'professionals.image_url',
+                        'branch_professional.arrival',
+                        'branch_professional.living',
+                        'branch_professional.numberRandom'
+                    )->first();
+                if ($professional == null) {
+                    $startTime = Carbon::parse($start_time);
+                    //$horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                    $closingTime = Carbon::parse($closing_time);
+                    while ($startTime <= $closingTime) {
+                        $reservations[] = $startTime->format('H:i');
+                        $startTime->addMinutes(10);
+                    }
+                    sort($reservations);
+                    return response()->json(['reservations' => $reservations], 200);
+                } else {
+                    if ($professional->reservations->isNotEmpty()) {
+                        $reservations = $professional->reservations->filter(function ($reservation) {
+                            // Filtrar las relaciones 'tails' para que 'aleatorio' sea distinto de 1
+                            return $reservation->tail && $reservation->tail->aleatorio != 1;
+                        })->map(function ($reservation) use ($start_time) {
+                            $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                            $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+
+                            $intervalos = [$startFormatted];
+                            $startTime = Carbon::parse($startFormatted);
+
+                            $finalTime = Carbon::parse($reservation->final_hour);
+                            $finalMinutes = $finalTime->minute;
+
+                            /*if ($finalMinutes <= 15) {
+                                if ($finalMinutes <= 5) {
+                                    $roundedMinutes = '5';
+                                }elseif ($finalMinutes <= 10) {
+                                    $roundedMinutes = '10';
+                                }else{
+                                $roundedMinutes = '15';
+                                }
+                            } elseif ($finalMinutes <= 30) {
+                                if ($finalMinutes <= 20) {
+                                    $roundedMinutes = '15';
+                                }elseif ($finalMinutes <= 25) {
+                                    $roundedMinutes = '20';
+                                }
+                                else {
+                                $roundedMinutes = '25';
+                                }
+                            } elseif ($finalMinutes <= 45) {
+                                if ($finalMinutes <= 35) {
+                                    $roundedMinutes = '30';
+                                }elseif ($finalMinutes <= 40) {
+                                    $roundedMinutes = '35';
+                                }
+                                else {
+                                $roundedMinutes = '40';
+                                }
+                            } else {
+                                $finalTime->addHour();
+                                $roundedMinutes = '55';
+                            }*/
+                            if ($finalMinutes <= 10){
+                            $roundedMinutes = '05';
+                            }
+                         elseif ($finalMinutes <= 20) {
+                            
+                            $roundedMinutes = '15';
+                            }
+                         elseif ($finalMinutes <= 30) {
+                            $roundedMinutes = '25';
+                        }elseif ($finalMinutes <= 40) {
+                            $roundedMinutes = '35';
+                        } 
+                        elseif ($finalMinutes <= 50) {
+                            $roundedMinutes = '45';
+                        } 
+                        elseif ($finalMinutes <= 59) {
+                            $roundedMinutes = '55';
+                        }
+                        else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '00';
+                        }
+
+                            $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
+                            $finalTime = Carbon::parse($finalFormatted);
+                            $horaActual = Carbon::now();
+                            $horaActualMas2Horas = $horaActual->copy()->addHours(2);
+
+                            // Si $finalTime es menor que la hora actual más 2 horas, asignar la hora actual más 2 horas a $finalTime
+                            if ($finalTime->lessThan($horaActualMas2Horas)) {
+                                $finalTime = $horaActualMas2Horas;
+                            }
+                            while ($startTime->addMinutes(10) <= $finalTime) {
+                                $intervalos[] = $startTime->format('H:i');
+                            }
+
+                            return $intervalos;
+                        })->flatten()->values()->all();
+                        $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
+                        $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                        if ($horaActualMas2Horas->lessThan($firstReservationStartTime)) {
+                            $startTime = Carbon::parse($start_time);
+                            while ($startTime <= $horaActualMas2Horas) {
+                                $reservations[] = $startTime->format('H:i');
+                                $startTime->addMinutes(10);
+                            }
+                        } else {
+                            $startTime = Carbon::parse($start_time);
+                            while ($startTime <= $horaActualMas2Horas) {
+                                $reservations[] = $startTime->format('H:i');
+                                $startTime->addMinutes(10);
+                            }
+                        }
+
+                        sort($reservations);
+                        return $reservations;
+                    } else {
+                        $startTime = Carbon::parse($start_time);
+                        $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                        $closingTime = Carbon::parse($horaActualMas2Horas);
+                        while ($startTime <= $closingTime) {
+                            $reservations[] = $startTime->format('H:i');
+                            $startTime->addMinutes(10);
+                        }
+                        sort($reservations);
+                        return response()->json(['reservations' => $reservations], 200);
+                    }
+                }
+            } else {
+                $professional = Professional::where('id', $data['professional_id'])
+                    ->whereHas('branches', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })
+                    ->with(['reservations' => function ($query) use ($data) {
+                        $query->whereDate('data', $data['data'])->orderBy('start_time');
+                    }])
+                    ->first();
+                if ($professional && $professional->reservations->isNotEmpty()) {
+                    $reservations = $professional->reservations->map(function ($reservation) {
+                        $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
+                        $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
+
+                        $intervalos = [$startFormatted];
+                        $startTime = Carbon::parse($startFormatted);
+
+                        $finalTime = Carbon::parse($reservation->final_hour);
+                        $finalMinutes = $finalTime->minute;
+
+                        /*if ($finalMinutes <= 15) {
+                            if ($finalMinutes <= 5) {
+                                $roundedMinutes = '5';
+                            }elseif ($finalMinutes <= 10) {
+                                $roundedMinutes = '10';
+                            }else{
+                            $roundedMinutes = '15';
+                            }
+                        } elseif ($finalMinutes <= 30) {
+                            if ($finalMinutes <= 20) {
+                                $roundedMinutes = '15';
+                            }elseif ($finalMinutes <= 25) {
+                                $roundedMinutes = '20';
+                            }
+                            else {
+                            $roundedMinutes = '25';
+                            }
+                        } elseif ($finalMinutes <= 45) {
+                            if ($finalMinutes <= 35) {
+                                $roundedMinutes = '30';
+                            }elseif ($finalMinutes <= 40) {
+                                $roundedMinutes = '35';
+                            }
+                            else {
+                            $roundedMinutes = '40';
+                            }
+                        } else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '55';
+                        }*/
+
+                        if ($finalMinutes <= 10){
+                            $roundedMinutes = '05';
+                            }
+                         elseif ($finalMinutes <= 20) {
+                            
+                            $roundedMinutes = '15';
+                            }
+                         elseif ($finalMinutes <= 30) {
+                            $roundedMinutes = '25';
+                        }elseif ($finalMinutes <= 40) {
+                            $roundedMinutes = '35';
+                        } 
+                        elseif ($finalMinutes <= 50) {
+                            $roundedMinutes = '45';
+                        } 
+                        elseif ($finalMinutes <= 59) {
+                            $roundedMinutes = '55';
+                        }
+                        else {
+                            $finalTime->addHour();
+                            $roundedMinutes = '00';
+                        }
+
+
+                        $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
+                        $finalTime = Carbon::parse($finalFormatted);
+                        $horaActual = Carbon::now();
+                        /*if ($finalTime->lessThan($horaActual)) {
+                            $finalTime = $horaActual;
+                        }*/
+                        // Agregar las horas intermedias de 15 en 15 minutos
+                        while ($startTime->addMinutes(10) <= $finalTime) {
+                            $intervalos[] = $startTime->format('H:i');
+                        }
+
+                        return $intervalos;
+                    })->flatten()->values()->all();
+                }
+                sort($reservations);
+                return $reservations;
+            }
+        } catch (Exception $e) {
+            Log::info($e->getMessage());
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el Professionalservice(professional_reservations_time): " . $e->getMessage());
+        }
+    }
+
     /*public function branch_professionals_service($branch_id, $services)
     {
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');

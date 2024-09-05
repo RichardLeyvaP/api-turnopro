@@ -69,26 +69,55 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $now = Carbon::now();
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->with('user', 'charge')->get()->map(function ($professional) use ($now) {
-                return [
-                    'id' => $professional->id,
-                    'name' => $professional->name,
-                    'surname' => $professional->surname,
-                    'second_surname' => $professional->second_surname,
-                    'fullName' => $professional->fullName,
-                    'email' => $professional->email,
-                    'phone' => $professional->phone,
-                    'user_id' => $professional->user_id,
-                    'state' => $professional->state,
-                    'image_url' => $professional->image_url . '?$' . $now,
-                    'charge_id' => $professional->charge_id,
-                    'user' => $professional->user->name,
-                    'charge' => $professional->charge->name,
-                    'retention' => $professional->retention,
-                ];
-            });
+            if (auth()->user()->professional->charge->name == 'Administrador') {
+                $professionals = Professional::whereHas('branches', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })
+                ->orWhereHas('charge', function ($query) {
+                    $query->where('name', 'Administrador');
+                })
+                ->with('user', 'charge')
+                ->get()
+                ->map(function ($professional) use ($now) {
+                    return [
+                        'id' => $professional->id,
+                        'name' => $professional->name,
+                        'surname' => $professional->surname,
+                        'second_surname' => $professional->second_surname,
+                        'fullName' => $professional->fullName,
+                        'email' => $professional->email,
+                        'phone' => $professional->phone,
+                        'user_id' => $professional->user_id,
+                        'state' => $professional->state,
+                        'image_url' => $professional->image_url . '?$' . $now,
+                        'charge_id' => $professional->charge_id,
+                        'user' => $professional->user->name,
+                        'charge' => $professional->charge->name,
+                        'retention' => $professional->retention,
+                    ];
+                });
+            }else {
+                $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->with('user', 'charge')->get()->map(function ($professional) use ($now) {
+                    return [
+                        'id' => $professional->id,
+                        'name' => $professional->name,
+                        'surname' => $professional->surname,
+                        'second_surname' => $professional->second_surname,
+                        'fullName' => $professional->fullName,
+                        'email' => $professional->email,
+                        'phone' => $professional->phone,
+                        'user_id' => $professional->user_id,
+                        'state' => $professional->state,
+                        'image_url' => $professional->image_url . '?$' . $now,
+                        'charge_id' => $professional->charge_id,
+                        'user' => $professional->user->name,
+                        'charge' => $professional->charge->name,
+                        'retention' => $professional->retention,
+                    ];
+                });
+            }
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::error($th);
