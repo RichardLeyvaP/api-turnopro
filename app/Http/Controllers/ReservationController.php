@@ -17,6 +17,7 @@ use App\Models\Business;
 use App\Models\Client;
 use App\Models\Notification;
 use App\Models\Professional;
+use App\Models\Service;
 use App\Models\User;
 use App\Services\ProfessionalService;
 use App\Services\ReservationService;
@@ -161,18 +162,24 @@ class ReservationController extends Controller
                 Log::info('horarios del barbero');
                 Log::info($intervals );
                 // Convertir la hora a verificar en un objeto DateTime
-                $time_to_check = new DateTime($data['start_time']);
-
+                $start_to_check = new DateTime($data['start_time']);
+                $total_time = Service::whereIn('id', $servs)->sum('duration_service');
+                $start_time = Carbon::parse($data['start_time'])->toTimeString();
+                $final_hour = Carbon::parse($start_time)->addMinutes($total_time)->toTimeString();
+                Log::info('Hora de finalizacion');
+                Log::info($final_hour);
+                $end_to_check = new DateTime($final_hour);
                 // Convertir el array de intervalos a objetos DateTime para facilitar la comparación
                 $intervals = array_map(function($interval) {
                     return new DateTime($interval);
                 }, $intervals);
 
                 // Verificar si la hora a verificar está dentro de los intervalos
-                $is_in_interval = in_array($time_to_check, $intervals);
+                $is_in_interval_start = in_array($start_to_check, $intervals);
+                $is_in_interval_end = in_array($end_to_check, $intervals);
 
                 // Resultado
-                if ($is_in_interval) {
+                if ($is_in_interval_start || $is_in_interval_end) {
                     DB::commit();
                     return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
                 } 
