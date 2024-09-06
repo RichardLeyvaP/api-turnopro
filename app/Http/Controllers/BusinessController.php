@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Models\Professional;
 use App\Services\BusinessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -20,7 +21,18 @@ class BusinessController extends Controller
     public function index()
     {
         try {
-            return response()->json(['business' => Business::with('professional')->get()], 200, [], JSON_NUMERIC_CHECK);
+            $professionals = Professional::with('user', 'charge')->whereHas('charge', function ($query){
+                $query->where('name', 'Administrador');
+            })->get()->map(function ($professional) {
+                return [
+                    'id' => $professional->id,
+                    'name' => $professional->name,
+                    'image_url' => $professional->image_url,
+                    'charge' => $professional->charge->name
+
+                ];
+            });
+            return response()->json(['business' => Business::with('professional')->get(), 'professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los negocios"], 500);
