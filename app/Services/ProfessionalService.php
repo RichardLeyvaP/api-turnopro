@@ -601,13 +601,13 @@ class ProfessionalService
             $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
                 $query->where('professional_id', $professional->id);
             })->orderByDesc('finished_at')->whereDate('data', Carbon::now())->first();
-            
+            Log::info('Valor de end_time del professional '.$professional->name.':'.$professional->end_time);
             if ($reservation != null && $professional->end_time == null) {
                 Log::info('end_time:'.$professional->end_time);
                 Log::info('1er if Profesional:'.$professional->name);
-                $professional->disponible = $reservation->finished_at->format('H:i');
+                $professional->disponible = $reservation->finished_at->format('H:i:s');
             }
-            else if ($professional->end_time != null && $professional->end_time == Carbon::now()) {
+            else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
                 Log::info('end_time:'.$professional->end_time);
                 Log::info('2do if Profesional:'.$professional->name);
                 /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
@@ -618,57 +618,32 @@ class ProfessionalService
                 // Comparar y decidir el tiempo que se asignará a `disponible`
                 if ($lastReservationTime->gt($endTime)) {
                     Log::info('Tiempo de la última reserva es mayor que end_time');
-                    $professional->disponible = $lastReservationTime->format('H:i');
+                    $professional->disponible = $lastReservationTime->format('H:i:s');
                 } else {
                     Log::info('Tiempo de end_time o no hay última reserva');
-                    $professional->disponible = $endTime->format('H:i');
+                    $professional->disponible = $endTime->format('H:i:s');
                 }
             }
             else {
                 Log::info('3ro if Profesional:'.$professional->name);
                 $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
                 if ($record != null) {
-                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
+                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
                 }
                 else {
-                    $professional->disponible = Carbon::parse($startTime)->format('H:i');
+                    $professional->disponible = Carbon::parse($startTime)->format('H:i:s');
                 }
                 
             }
         }
 
-        unset($professional); // Romper la referencia
-
-        // Ordenar por 'state', luego por 'start_time', luego por 'disponible', luego por 'living', y finalmente por 'arrival'
-        usort($returnedProfessionals, function ($a, $b) {
-            // Comparar por 'state'
-            if ($a->state != $b->state) {
-                return $a->state - $b->state;
-            }
-            // Si 'state' es igual, comparar por 'start_time'
-            if (strtotime($a->start_time) != strtotime($b->start_time)) {
-                return strtotime($a->start_time) - strtotime($b->start_time);
-            }
-            // Si 'start_time' es igual, comparar por 'disponible'
-            if (strtotime($a->disponible) != strtotime($b->disponible)) {
-                return strtotime($a->disponible) - strtotime($b->disponible);
-            }
-            // Si 'start_time' y 'disponible' son iguales, comparar por 'living'
-            if ($a->living != $b->living) {
-                return $a->living - $b->living;
-            }
-            // Si 'start_time', 'disponible', y 'living' son iguales, comparar por 'arrival'
-            return $a->arrival - $b->arrival;
-        });
-        // Ordenar por 'state' y luego por 'start_time'
-        /*usort($returnedProfessionals, function ($a, $b) {
-            // Primero comparar por 'state'
-            if ($a->state != $b->state) {
-                return $a->state - $b->state;
-            }
-            // Si 'state' es igual, comparar por 'start_time'
-            return strtotime($a->start_time) - strtotime($b->start_time);
-        });*/
+        $returnedProfessionals = collect($returnedProfessionals)->sortBy([
+            ['state', 'asc'],
+            ['start_time', 'asc'],
+            ['disponible', 'asc'],
+            ['living', 'asc'],
+            ['arrival', 'asc']
+        ])->values();
 
         return $returnedProfessionals;
         } catch (Exception $e) {
@@ -845,7 +820,7 @@ class ProfessionalService
                             $startTime->addMinutes(10);
                         }
                         sort($reservations);
-                        return response()->json(['reservations' => $reservations], 200);
+                        return $reservations;
                     }
                 }
             } else {

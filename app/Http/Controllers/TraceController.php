@@ -21,7 +21,7 @@ class TraceController extends Controller
                 'day' => 'nullable'
             ]);
             $branch = Branch::where('id', $data['branch_id'])->first();
-            $traces = Trace::where('branch', $branch->name)->whereDate('data', $data['day'])->get();
+            $traces = Trace::where('branch', $branch->name)->whereDate('data', $data['day'])->orderByDesc('created_at')->get();
             return response()->json(['traces' => $traces], 200);
         } catch (\Throwable $th) {
             Log::error($th);

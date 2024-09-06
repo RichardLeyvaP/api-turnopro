@@ -9,7 +9,15 @@
 <h2 style="color: #F18254;">Hola {{$client_name}} &#x1F44B;,</h2>
 
 <p style="color: #333;">
-    &#x1F64F; ¡Gracias por elegir Simplifies! Estamos encantados de confirmar tu reserva para el siguiente servicio:
+    &#x1F64F; ¡Gracias por elegir Simplifies! has click en el botón de abajo para confirmar tu reserva.
+</p>
+<a href="https://api2.simplifies.cl/api/update-confirmation?id={{$id_reservation}}&confirmation=1" style="text-decoration: none;">
+    <button style="background-color: #4470F3; color: #FFFFFF; border: none; border-radius: 6px; padding: 12px 24px; font-size: 16px;">
+        CONFIRMACIÓN
+    </button>
+</a>
+<p style="color: #333;">
+    &#x1F64F; Estamos encantados de confirmar tu reserva para el siguiente servicio:
 </p>
 <img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">
 

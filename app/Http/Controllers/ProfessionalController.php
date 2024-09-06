@@ -249,7 +249,7 @@ class ProfessionalController extends Controller
                               ->whereHas('tail', function ($subquery) {
                                   $subquery->where('aleatorie', '!=', 1);
                               });
-                    }])->where('state', 1) ->join('branch_professional', function ($join) use ($data) {
+                    }])->whereIn('state', [1,2])->join('branch_professional', function ($join) use ($data) {
                         $join->on('professionals.id', '=', 'branch_professional.professional_id')
                             ->where('branch_professional.branch_id', '=', $data['branch_id'])
                             ->where('branch_professional.arrival', '!=', NULL);

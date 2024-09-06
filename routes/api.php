@@ -563,6 +563,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/tail-branch-professional', [TailController::class, 'tail_branch_professional']); //dado un branch_id  y un professional_id devolver la cola de esa branch y los servicios por carros
     Route::get('/cola_branch_delete', [TailController::class, 'cola_branch_delete']); //vaciar la cola de una branch_id
     Route::get('/tail_attended', [TailController::class, 'tail_attended']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado
+    Route::get('/tail-attended-client', [TailController::class, 'tail_attended_client']); //cambiar estado de cliente, en espera,atendiendo,atendido,rechazado
     Route::get('/type_of_service', [TailController::class, 'type_of_service']); //Saber si dentro del cliente q esta atendido uno de los servicios es simutaneu
     Route::get('/return_client_status', [TailController::class, 'return_client_status']);//devuelve el estado de la reservacion
     Route::get('/cola_branch_capilar', [TailController::class, 'cola_branch_capilar']); //dado un branch_id devolver la cola a atencion capilar de esa branch

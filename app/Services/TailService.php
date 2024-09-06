@@ -410,6 +410,7 @@ class TailService
 
     public function tail_attended($reservation_id, $attended)
     {
+        DB::beginTransaction();
         try{
         $tecnicoId = 0;
         $reservationNoti = Reservation::where('id', $reservation_id)->first();
@@ -556,7 +557,174 @@ class TailService
         }
         $tail->attended = $attended;
         $tail->save();
+        DB::commit();
     } catch (Exception $e) {
+        DB::rollback();
+        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+        throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
+    }
+
+    }
+
+    public function tail_attended_client($reservation_id, $attended, $data)
+    {
+        DB::beginTransaction();
+        try{
+        $tecnicoId = 0;
+        $reservationNoti = Reservation::where('id', $reservation_id)->first();
+        $tail = Tail::where('reservation_id', $reservation_id)->first();
+        if ($attended == 1) {
+            $current_date = Carbon::now()->format('H:i:s');
+            $tail->aleatorie = 0;
+            $reservation = Reservation::findOrFail($reservation_id);
+            $car = $reservation->car;
+            if ($car->select_professional == 0) {
+                $branchProfessional = BranchProfessional::where('professional_id', $car->clientProfessional->professional_id)
+                                                ->where('branch_id', $reservation->branch_id)
+                                                ->first();
+                                                
+                    if ($branchProfessional) {
+                        $branchProfessional->numberRandom += 1;
+                        $branchProfessional->save();
+                    }
+            }
+            $reservation->start_time = $current_date;  
+            $total_time = $reservation->total_time; // Ejemplo: '00:10:00'
+
+            // Convertimos $current_date y $total_time a instancias de Carbon
+            $current_time = Carbon::createFromFormat('H:i:s', $current_date);
+            $total_time_carbon = Carbon::createFromFormat('H:i:s', $total_time);
+
+            // Sumamos el tiempo total a la hora actual
+            $reservation->final_hour = $current_time->addHours($total_time_carbon->hour)
+                                                ->addMinutes($total_time_carbon->minute)
+                                                ->addSeconds($total_time_carbon->second)
+                                                ->format('H:i:s');
+          
+            //$reservation->final_hour = date('H:i:s', strtotime($current_date) + strtotime($reservation->total_time));            
+            $reservation->started_at = now();
+            $reservation->save();
+            if ($data['timeClock'] !== null) {
+                if ($tail) {
+                    $tail->timeClock = $data['timeClock'];
+                    $tail->detached = $data['detached'];
+                    $tail->clock = $data['clock'];
+                }
+            }
+        }//if 1
+        if ($attended == 2) {
+            $reservation = Reservation::findOrFail($reservation_id);
+            $reservation->finished_at = now();
+            $reservation->confirmation = 2;
+            $reservation->save();
+        }//if 2
+        if ($attended == 5) {
+            $car = Car::whereHas('reservation', function ($query) use ($reservation_id) {
+                $query->where('id', $reservation_id);
+            })->first();
+            Log::info('$car->id');
+            Log::info($car->id);
+            $professional = ClientProfessional::whereHas('cars', function ($query) use ($car) {
+                $query->where('id', $car->id);
+            })->first()->professional_id;
+            Log::info('$professional->id');
+            Log::info($professional);
+            $workplaceId = ProfessionalWorkPlace::where('professional_id', $professional)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) {
+                $query->where('busy', 1)->where('select', 1);
+            })->first();
+            $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query) {
+                $query->where('name', 'Tecnico');
+            })->orderByDesc('data')
+                //->whereJsonContains('places', (int)$workplaceId->workplace_id)
+                ->get();
+            if ($workplacetecnicos) {
+                foreach ($workplacetecnicos as $workplacetecnico) {
+                    $places = json_decode($workplacetecnico->places, true);
+                    if (in_array($workplaceId->workplace_id, $places)) {
+                        $tecnicoId = $workplacetecnico->professional_id;
+                        //$professional = $workplacetecnico->professional;
+                        break;
+                    }
+                }
+                $car->technical_assistance = $car->technical_assistance + 1;
+                $car->tecnico_id = $tecnicoId;
+                $car->save();
+            }
+        }//if 5
+        if ($attended == 3) {
+            $reservation = Reservation::findOrFail($reservation_id);
+            $car = $reservation->car;
+            $clientProfessional = $car->clientProfessional;
+            $professional = $clientProfessional->professional;
+            $client = $clientProfessional->client;
+            $branch = Branch::find($reservation->branch_id);
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $branch->id)
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+
+                // Extrae los IDs de los profesionales para cada cargo
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $charge = $professional->charge->name;
+                $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;               
+                    $tittle = 'Solicitud de rechazo';
+                    $description = 'EL profesional'.' '.$professional->name.' '.'está rechazando a'.' '.$client->name;
+                if (!$encargados->isEmpty()) {
+                    foreach ($encargados as $encargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $encargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = 'reservacion'.$reservation_id;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$coordinadors->isEmpty()) {
+                    foreach ($coordinadors as $coordinador) {
+                        $notification = new Notification();
+                        $notification->professional_id = $coordinador;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Coordinador';
+                        $notification->stateApk = 'reservacion'.$reservation_id;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$barberoEncargados->isEmpty()) {
+                    foreach ($barberoEncargados as $barberoEncargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $barberoEncargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = 'reservacion'.$reservation_id;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+        }//if 3
+        if ($attended == 4) {
+            $tail->timeThecnical = now();
+            Notification::where('branch_id', $reservationNoti->branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$reservation_id)->update(['state' => 1]);
+        }
+        if ($attended == 0 || $attended == 11) {
+        Notification::where('branch_id', $reservationNoti->branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$reservation_id)->update(['state' => 1]);
+        }
+        $tail->attended = $attended;
+        $tail->save();
+        DB::commit();
+    } catch (Exception $e) {
+        DB::rollback();
         // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
         throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
     }

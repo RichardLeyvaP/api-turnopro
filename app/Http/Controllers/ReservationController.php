@@ -202,6 +202,18 @@ class ReservationController extends Controller
             //1-Verificar que el usuario no este registrado
             if ($data['client_id'] != 0) {
                 $id_client = $data['client_id'];
+                $clientExist = Client::where('id', $data['client_id'])->first();
+                Log::info('Cliente Existente');
+                Log::info($clientExist);
+                if ($clientExist != null) {
+                    $clientExist->email = $data['email_client'];
+                    $clientExist->save();                    
+                    $userExist = $clientExist->user;
+                    Log::info('User Existente');
+                    Log::info($userExist);
+                    $userExist->email = $data['email_client'];
+                    $userExist->save();
+                }
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
             else {
@@ -292,7 +304,6 @@ class ReservationController extends Controller
              }
             }
             
-            DB::commit();
             if ($data['from_home'] == 1) {
                 $code = $reservation->code;
                 //optener nombre del professional
@@ -321,12 +332,14 @@ class ReservationController extends Controller
                     'code_reserva' => $code
                 ];
 
+                Log::info($data);
                 SendEmailJob::dispatch($data);
             }
+                DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {
-
-            return response()->json(['msg' => 'Reservación realizada correctamente.Error al enviar el correo electrónico '], 200);
+            DB::rollback();
+            return response()->json(['msg' => 'La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico '], 422);
         } catch (\Throwable $th) {
             Log::error($th);
 

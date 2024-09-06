@@ -686,8 +686,8 @@ class TailController extends Controller
 
     public function tail_attended(Request $request)
     {
+        DB::beginTransaction();
         try {
-
             Log::info("Modificar estado de la Cola");
             $validator = Validator::make($request->all(), [
                 'reservation_id' => 'required|numeric|exists:reservations,id',
@@ -702,10 +702,44 @@ class TailController extends Controller
             ]);
             Log::info("Entra a metodo se modificar estado de la cola reservation_id:".$data['reservation_id'].'attended:'.$data['attended']);
             $this->tailService->tail_attended($data['reservation_id'], $data['attended']);
-
+            DB::commit();
             return response()->json(['msg' => "Cola modificado correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
+            Log::error($th->getMessage());
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
+        }
+    }
+
+    public function tail_attended_client(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            Log::info("Modificar estado de la Cola tail-attended-client");
+            $validator = Validator::make($request->all(), [
+                'reservation_id' => 'required|numeric|exists:reservations,id',
+                'attended' => 'required|numeric',
+                'timeClock' => 'required|numeric',
+                'detached' => 'required|numeric',
+                'clock' => 'required|numeric'
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['msg' => $validator->errors()->all()], 400);
+            }
+            $data = $request->validate([
+                'reservation_id' => 'required|numeric',
+                'attended' => 'required|numeric',
+                'timeClock' => 'sometimes|numeric',
+                'detached' => 'sometimes|numeric',
+                'clock' => 'sometimes|numeric'
+            ]);
+            Log::info("Entra a metodo se modificar estado de la cola reservation_id:".$data['reservation_id'].'attended:'.$data['attended']);
+            $this->tailService->tail_attended_client($data['reservation_id'], $data['attended'], $data);
+            DB::commit();
+            return response()->json(['msg' => "Cola modificado correctamente"], 200);
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage());
+            DB::rollback();
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
         }
     }
