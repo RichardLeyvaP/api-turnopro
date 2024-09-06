@@ -20,9 +20,7 @@ class BusinessController extends Controller
     public function index()
     {
         try {
-            return response()->json(['business' => Business::join('professionals', 'businesses.professional_id', '=', 'professionals.id')
-                ->select('businesses.id', 'businesses.name', 'businesses.address', 'professionals.name as professional_name')
-                ->get()], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['business' => Business::with('professional')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los negocios"], 500);

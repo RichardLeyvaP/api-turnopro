@@ -54,7 +54,7 @@ class FinanceController extends Controller
             Log::info($request->file('file'));
             if ($request->hasFile('file')) {
 
-                $filename = $data['operation'] . '-' . $data['data'] . '.' . $request->file('file')->extension();
+                $filename = $data['operation'] . '-' . $data['data'] . '.'.$data['control'] . $request->file('file')->extension();
                 $data['file'] = $request->file('file')->storeAs('finances', $filename, 'public');
             } else {
                 $data['file'] = '';

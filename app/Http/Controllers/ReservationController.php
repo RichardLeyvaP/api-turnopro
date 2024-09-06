@@ -157,9 +157,9 @@ class ReservationController extends Controller
                 $data['from_home'] = $request->from_home;
             } else {
                 $data['from_home'] = 1;
-                return $timers = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
-                Log::info('horarios del baerbero');
-                Log::info($timers);
+                $intervals  = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
+                Log::info('horarios del barbero');
+                Log::info($intervals );
                 // Convertir la hora a verificar en un objeto DateTime
                 $time_to_check = new DateTime($data['start_time']);
 
@@ -409,7 +409,7 @@ class ReservationController extends Controller
                 $client = $reservation['car']['clientProfessional']['client'];
                 $startTime = Carbon::parse($reservation['start_time']);
                 if ($reservation['from_home'] == 1) {
-                    $color = 'yellow';
+                    $color = $reservation['confirmation'] == 0 ? 'red': 'yellow';
                     $type = 'Reserv';
                 }elseif ($reservation['from_home'] == 0 && $reservation['car']['select_professional'] == 1) {
                     $color = 'green';
@@ -421,7 +421,7 @@ class ReservationController extends Controller
                 $dates[] = [
                     'startDate' => $reservation['data'] . 'T' . $reservation['start_time'],
                     'endDate' => $reservation['data'] . 'T' . $reservation['final_hour'],
-                    'clientName' => $startTime->format('h:i A') . ': ' . $client['name'].'-'.$type,
+                    'clientName' => $startTime->format('h:i A') . ': ' . $client['name'].'-'.$type.':'.$client['phone'],
                     'color' => $color
                 ];
             }
@@ -444,7 +444,7 @@ class ReservationController extends Controller
             ]);
             $dates = [];
             $professionalDates = [];
-            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereIn('confirmation', [1,4])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
+            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
             foreach ($reservations as $reservation) {
                 $client = $reservation['car']['clientProfessional']['client'];
                 $startTime = Carbon::parse($reservation['start_time']);

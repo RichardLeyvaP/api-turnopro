@@ -107,13 +107,14 @@ class CashierSaleController extends Controller
     public function show(Request $request)
     {
         try {
+            Log::info('Entra a buscar la venta de productos en la caja');
             $validatedData = $request->validate([
                 'branch_id' => 'required|integer',
                 'professional_id' => 'required|integer'
             ]);
             $sales = [];
-            
-            $cashierSales = CashierSale::where('professional_id', $validatedData['professional_id'])->where('branch_id', $validatedData['branch_id'])->whereDate('data', Carbon::now())->orderBy('pay')->orderByDesc('id')->get();
+            if (auth()->user()->professional->charge->name == 'Administrador') {
+                $cashierSales = CashierSale::where('branch_id', $validatedData['branch_id'])->whereDate('data', Carbon::now())->orderBy('pay')->orderByDesc('id')->get();
             foreach ($cashierSales as $cashierSale) {
                 $product = $cashierSale['productStore']['product'];
                 $sales[] = [
@@ -125,6 +126,21 @@ class CashierSaleController extends Controller
                     'name' => $product['name'],
                     'image_product' => $product['image_product'],
                 ];
+            }
+            }else {
+                $cashierSales = CashierSale::where('professional_id', $validatedData['professional_id'])->where('branch_id', $validatedData['branch_id'])->whereDate('data', Carbon::now())->orderBy('pay')->orderByDesc('id')->get();
+            foreach ($cashierSales as $cashierSale) {
+                $product = $cashierSale['productStore']['product'];
+                $sales[] = [
+                    'id' => $cashierSale['id'],
+                    'price' => intval($cashierSale['price']),
+                    'sale_price' => intval($product['sale_price']),
+                    'pay' => $cashierSale['pay'],
+                    'cant' => $cashierSale['cant'],
+                    'name' => $product['name'],
+                    'image_product' => $product['image_product'],
+                ];
+            }
             }
     
             return response()->json(['sales' => $sales], 201);

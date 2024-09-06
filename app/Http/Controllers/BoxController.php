@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Box;
 use App\Models\Branch;
+use App\Models\Finance;
 use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -32,7 +33,88 @@ class BoxController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+
+            Log::info("Editar");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'cashFound' => 'nullable|numeric',
+                'existence' => 'nullable|numeric',
+                'extraction' => 'nullable|numeric',
+            ]);
+
+            $branch = Branch::find($data['branch_id']);
+            $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
+            $trace = [];
+            Log::info($box); 
+            if (!$box) {              
+                $box = new Box();
+                $box->existence = $data['cashFound'];
+                $box->extraction = $data['extraction'];
+            }else{                         
+                $box->existence += $data['cashFound'] - $data['extraction'];               
+                $box->extraction = $box->extraction + $data['extraction'];
+            }
+            $box->branch_id = $branch->id;
+            $box->cashFound = $data['cashFound'];
+            $box->data = Carbon::now();
+            $box->save();
+            if($data['extraction'] != 0){
+                $trace = [
+                    'branch' => $branch->name,
+                    'cashier' => $request->nameProfessional,
+                    'client' => '',
+                    'amount' => $data['extraction'],
+                    'operation' => 'Extracción de la caja',
+                    'details' => '',
+                    'description' => ''
+                ];                
+                $this->traceService->store($trace);
+                Log::info('$trace extrae');
+                Log::info($trace);
+                $finance = Finance::orderBy('control', 'desc')->first();
+                if ($finance !== null) {
+                    $control = $finance->control + 1;
+                } else {
+                    $control = 1;
+                }
+                if ($request->hasFile('file')) {
+                    $filename = $request->file('file')->storeAs('finances', 'Gasto-'.Carbon::now()->format('Y-m-d').'.'.$control. '.' . $request->file('file')->extension(), 'public');
+                } else {
+                    $filename = '';
+                }
+                $comment = $request->comment;
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Gasto';
+                $finance->amount = $data['extraction'];
+                $finance->comment = $comment;
+                $finance->branch_id = $request->branch_id;
+                $finance->type = 'Sucursal';
+                $finance->expense_id = 10;
+                $finance->data = Carbon::now();
+                $finance->file = $filename;
+                $finance->save();
+            }
+            if($data['cashFound'] != 0){
+                $trace = [
+                    'branch' => $branch->name,
+                    'cashier' => $request->nameProfessional,
+                    'client' => '',
+                    'amount' => $data['cashFound'],
+                    'operation' => 'Actualización de la caja',
+                    'details' => '',
+                    'description' => ''
+                ];
+                $this->traceService->store($trace);
+                Log::info('$trace actualiza');
+                Log::info($trace);
+            }
+            return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error al actualizar la caja'], 500);
+        }
     }
 
     /**

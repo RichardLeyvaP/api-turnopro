@@ -154,7 +154,7 @@ class ProfessionalController extends Controller
             $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) {
                 return [
                     'id' => $professional->id,
-                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'name' => $professional->name,
                     'image_url' => $professional->image_url,
                     'charge' => $professional->charge->name
 
