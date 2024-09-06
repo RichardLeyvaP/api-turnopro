@@ -178,8 +178,19 @@ class ReservationController extends Controller
                 $is_in_interval_start = in_array($start_to_check, $intervals);
                 $is_in_interval_end = in_array($end_to_check, $intervals);
 
+                // Verificar si algún intervalo cae entre la hora de inicio y finalización
+                $is_in_range = false;
+
+                foreach ($intervals as $interval) {
+                    // Si el intervalo está entre el start_time y el final_hour
+                    if ($interval >= $start_to_check && $interval <= $end_to_check) {
+                        $is_in_range = true;
+                        break; // Salimos del bucle si encontramos un intervalo en el rango
+                    }
+                }
+
                 // Resultado
-                if ($is_in_interval_start || $is_in_interval_end) {
+                if ($is_in_interval_start || $is_in_interval_end || $is_in_range) {
                     DB::commit();
                     return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
                 } 
