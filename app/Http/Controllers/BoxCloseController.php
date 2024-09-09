@@ -401,7 +401,7 @@ class BoxCloseController extends Controller
                     $box->save(); // Guardar los cambios en $box
             }
             DB::commit();
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'bonus' => $bonus], 200);
+            return response()->json(['msg' => 'Pago de bonos realizado correctamente', 'bonus' => $bonus], 200);
         } catch (TransportException $e) {
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);

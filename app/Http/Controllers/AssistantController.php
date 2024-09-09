@@ -126,7 +126,7 @@ class AssistantController extends Controller
         $currentDate = Carbon::now();
         $reservations = $professional->reservations()
             ->where('branch_id', $branch_id)
-            ->whereIn('confirmation', [1, 4])
+            ->where('confirmation', 4)
             ->whereDate('data', $currentDate)
             ->where(function ($query) use ($currentDateTime) {
                 $query->whereHas('tail', function ($subquery) {//Está atendiendo cliente
@@ -149,7 +149,7 @@ class AssistantController extends Controller
         if ($reservations->isEmpty()) {//esta libre
             $reservationsTail = $professional->reservations()
             ->where('branch_id', $branch_id)
-            ->whereIn('confirmation', [1, 4])
+            ->where('confirmation', 4)
             ->whereDate('data', $now)
             ->whereHas('tail', function ($subquery) {
                 $subquery->where('aleatorie', '!=', 1);
