@@ -63,6 +63,12 @@ class Send_mail extends Mailable
      public $code;
      public $value_card;
      public $image_cardgift;
+     
+     //propiedades para existencia de productos
+     public $branch;
+     public $store;
+     public $product;
+     public $productstoreexist;
 
 
     /**
@@ -136,7 +142,14 @@ class Send_mail extends Mailable
                 'expiration_date' => $this->expiration_date,
                 'code' => $this->code,
                 'value_card' => $this->value_card,
-                'image_cardgift' => $this->image_cardgift
+                'image_cardgift' => $this->image_cardgift,
+
+                
+                // Propiedades producos existencia
+                'branch' => $this->branch,
+                'store' => $this->store,
+                'product' => $this->product,
+                'productstoreexist' => $this->productstoreexist
 
 
             ]

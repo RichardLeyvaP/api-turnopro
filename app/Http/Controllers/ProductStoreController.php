@@ -558,6 +558,7 @@ class ProductStoreController extends Controller
             else
             {
                 $storeM->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity']]);
+                $productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first(); 
             }
         /*$productstoreE = new ProductStore();
             $productstoreM = new ProductStore();            

@@ -13,6 +13,23 @@ use App\Models\Client;
 class SendEmailService {
    
 
+    public function emailStockDepletion($client_email, $product, $store, $branch, $productstoreexist)
+    {
+      //  $logoUrl = 'https://api2.simplifies.cl/api/images/image/imagen_reservas.png'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+        $template = 'product_stock';        
+        
+
+              Log::info($client_email);
+              $mail = new Send_mail('logoUrl','client_name','','$data_reservation',$template,'$start_time','$branch_name','');
+              $mail->product = $product;
+              $mail->store = $store;
+              $mail->branch = $branch;
+              $mail->productstoreexist = $productstoreexist;
+              $this->sendEmail($client_email,$mail,'Alerta de Stock Bajo');
+
+
+    }
+
     public function confirmReservation($data_reservation,$start_time,$client_id,$branch_id,$type,$name_professional,$recipient,$id_reservation,$code_reserva)
     {
         $logoUrl = 'https://api2.simplifies.cl/api/images/image/imagen_reservas.png'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
