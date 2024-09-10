@@ -9,6 +9,7 @@ use App\Models\Notification;
 use App\Models\ProductStore;
 use App\Models\Professional;
 use App\Services\TraceService;
+use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 class CashierSaleController extends Controller
 {
+    use ProductExitTrait;
     
     private TraceService $traceService;
 
@@ -78,7 +80,8 @@ class CashierSaleController extends Controller
             $productStore->product_quantity = 1;
                 $productStore->product_exit = $productStore->product_exit - $validatedData['cant'];
                 $productStore->save();
-
+            //todo pendiente para revisar importante
+            $this->actualizarProductExit($productStore->product_id, $productStore->store_id);      
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,

@@ -599,7 +599,9 @@ class ClientController extends Controller
             Log::info($data);
                 Log::info('es una branch');
                 
-                $clientesConMasDeTresReservas = Client::withCount(['reservations' => function ($query) use ($data) {
+                $clientesConMasDeTresReservas = Client::whereHas('clientProfessionals.cars.reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })->withCount(['reservations' => function ($query) use ($data) {
                     ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
                     ///});

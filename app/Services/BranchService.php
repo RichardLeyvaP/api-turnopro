@@ -1136,7 +1136,7 @@ class BranchService
         $result[$i]['servicesAmount'] = $total_services;
         $result[$i]['earnings'] = $total_branch;
         $result[$i]['technical_assistance'] = $technical_assistance;
-        $result[$i++]['total'] = $total_company;
+        $result[$i++]['total'] = $total_company + $total_tip;
         return $result;
     }
 
@@ -1225,7 +1225,7 @@ class BranchService
         $result[$i]['servicesAmount'] = $total_services;
         $result[$i]['earnings'] = $total_branch;
         $result[$i]['technical_assistance'] = $technical_assistance;
-        $result[$i++]['total'] = $total_company;
+        $result[$i++]['total'] = $total_company + $total_tip;
         return $result;
     }
 

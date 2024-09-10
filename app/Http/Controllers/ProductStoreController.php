@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\MovementProduct;
 use App\Models\Product;
 use App\Models\ProductStore;
+use App\Models\Professional;
 use App\Models\Store;
 use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
@@ -68,9 +69,16 @@ class ProductStoreController extends Controller
     try {
         Log::info("Entra a buscar los stores y productos");
         $data = $request->validate([
-            'business_id' => 'required|numeric'
+            'business_id' => 'required|numeric',
+            'branch_id' => 'nullable|numeric'
         ]);
-        $stores = Store::all('id', 'address', 'reference');
+        if ($data['branch_id'] != 0) {
+            $stores = Store::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->get()->select('id', 'address', 'reference');
+        }else {
+            $stores = Store::all('id', 'address', 'reference');
+        }
         $products = Product::all('id', 'name', 'image_product');
         $branches = Branch::where('business_id', $data['business_id'])->select('id', 'name', 'image_data', 'address')->get();
         return response()->json([
@@ -183,30 +191,54 @@ class ProductStoreController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'nullable|numeric'
             ]);
             Log::info("Entra a buscar los almacenes con los productos pertenecientes en el de una branch");
-            $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
-                return [
-                    'id' => $query->id,
-                    //'product_quantity' => $query->product_quantity,
-                    'product_exit' => $query->product_exit,
-                    'product_id' => $query->product_id,
-                    'store_id' => $query->store_id,
-                    'stock_depletion' => $query->stock_depletion,
-                    'name' => $query->product->name,
-                    'reference' => $query->product->reference,
-                    'code' => $query->product->code,
-                    'status_product' => $query->product->status_product,
-                    'sale_price' => $query->product->sale_price,
-                    'purchase_price' => $query->product->purchase_price,
-                    'image_product' => $query->product->image_product,
-                    'direccionStore' => $query->store->address,
-                    'storetReference' => $query->store->reference
-                ];
-            });
+            if ($data['branch_id'] != 0) {
+                Log::info("No es Administrador");
+                $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        //'product_quantity' => $query->product_quantity,
+                        'product_exit' => $query->product_exit,
+                        'product_id' => $query->product_id,
+                        'store_id' => $query->store_id,
+                        'stock_depletion' => $query->stock_depletion,
+                        'name' => $query->product->name,
+                        'reference' => $query->product->reference,
+                        'code' => $query->product->code,
+                        'status_product' => $query->product->status_product,
+                        'sale_price' => $query->product->sale_price,
+                        'purchase_price' => $query->product->purchase_price,
+                        'image_product' => $query->product->image_product,
+                        'direccionStore' => $query->store->address,
+                        'storetReference' => $query->store->reference
+                    ];
+                });
+            }else {
+                $productStore = ProductStore::with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        //'product_quantity' => $query->product_quantity,
+                        'product_exit' => $query->product_exit,
+                        'product_id' => $query->product_id,
+                        'store_id' => $query->store_id,
+                        'stock_depletion' => $query->stock_depletion,
+                        'name' => $query->product->name,
+                        'reference' => $query->product->reference,
+                        'code' => $query->product->code,
+                        'status_product' => $query->product->status_product,
+                        'sale_price' => $query->product->sale_price,
+                        'purchase_price' => $query->product->purchase_price,
+                        'image_product' => $query->product->image_product,
+                        'direccionStore' => $query->store->address,
+                        'storetReference' => $query->store->reference,                    
+                    ];
+                });
+            }
+            
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -500,7 +532,7 @@ class ProductStoreController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
-                //'branch_id' => 'required|numeric',
+                'professional_id' => 'nullable|numeric',
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
                 'store_idM' => 'required|numeric',
@@ -580,14 +612,14 @@ class ProductStoreController extends Controller
             $movementprodct->product_id = $data['product_id'];
             //$movementprodct->branch_out_id = $data['branch_id'];
             $movementprodct->store_out_id = $data['store_id'];
-            //$movementprodct->branch_int_id = $data['branch_idM'];
+            $movementprodct->branch_int_id = $data['professional_id'];
             $movementprodct->store_int_id = $data['store_idM'];
             $movementprodct->store_out_exit = $productstore->pivot['product_exit']-$data['product_quantity'];
             $movementprodct->store_int_exit = $productstoreM->pivot['product_exit']+$data['product_quantity'];  
             $movementprodct->cant = $data['product_quantity'];
             $movementprodct->save();
             //todo pendiente para revisar importante
-            // $this->actualizarProductExit($productexist->id, $storeexist->id);
+            $this->actualizarProductExit($product->id, $store->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -598,46 +630,108 @@ class ProductStoreController extends Controller
     public function movement_products(Request $request){
         try {
             $data = $request->validate([
-                //'branch_id' => 'required|numeric',
+                'branch_id' => 'nullable|numeric',
                 'year' => 'required'
             ]);
             if($request->mounth){
-                $movement = MovementProduct::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->get()->map(function ($query){
-                    //$branchOut = Branch::where('id', $query->branch_out_id)->first();
-                    $storeOut = Store::where('id', $query->store_out_id)->first();
-                    //$branchInt = Branch::where('id', $query->branch_int_id)->first();
-                    $storeInt = Store::where('id', $query->store_int_id)->first();
-                    $product = Product::where('id', $query->product_id)->first();
-                    return [
-                        //'branchOut' => $branchOut->name,
-                        'storeOut' => $storeOut->address,
-                        //'branchInt' => $branchInt->name,
-                        'storeInt' => $storeInt->address,
-                        'cant' => $query->cant,
-                        'data' => $query->data,
-                        'nameProduct' => $product->name
-                    ];
-                })->sortByDesc('data')->values();
+                if ($data['branch_id'] != 0) {
+                    $storeIds = Store::whereHas('branches', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })->pluck('id');
+                    $movement = MovementProduct::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where(function ($query) use ($storeIds) {
+                        $query->whereIn('store_out_id', $storeIds)
+                              ->orWhereIn('store_int_id', $storeIds);
+                    })->get()->map(function ($query){
+                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
+                        $storeOut = Store::where('id', $query->store_out_id)->first();
+                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
+                        $storeInt = Store::where('id', $query->store_int_id)->first();
+                        $product = Product::where('id', $query->product_id)->first();
+                        $professional = Professional::where('id', $query->branch_int_id)->first();
+                        return [
+                            //'branchOut' => $branchOut->name,
+                            'storeOut' => $storeOut->address,
+                            //'branchInt' => $branchInt->name,
+                            'storeInt' => $storeInt->address,
+                            'cant' => $query->cant,
+                            'data' => $query->data,
+                            'nameProduct' => $product->name,
+                            'nameProfessional' => $professional->name,
+                            'image_url' => $professional->image_url
+                        ];
+                    })->sortByDesc('data')->values();
+                }else {
+                    $movement = MovementProduct::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->get()->map(function ($query){
+                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
+                        $storeOut = Store::where('id', $query->store_out_id)->first();
+                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
+                        $storeInt = Store::where('id', $query->store_int_id)->first();
+                        $product = Product::where('id', $query->product_id)->first();
+                        $professional = Professional::where('id', $query->branch_int_id)->first();
+                        return [
+                            //'branchOut' => $branchOut->name,
+                            'storeOut' => $storeOut->address,
+                            //'branchInt' => $branchInt->name,
+                            'storeInt' => $storeInt->address,
+                            'cant' => $query->cant,
+                            'data' => $query->data,
+                            'nameProduct' => $product->name,
+                            'nameProfessional' => $professional->name,
+                            'image_url' => $professional->image_url
+                        ];
+                    })->sortByDesc('data')->values();
+                }
             }
             else{
-            $movement = MovementProduct::whereYear('data', $data['year'])/*->where(function ($query) use($data){
-                $query->orWhere('branch_out_id', $data['branch_id'])->orWhere('branch_int_id', $data['branch_id']);
-            })*/->get()->map(function ($query){
-                //$branchOut = Branch::where('id', $query->branch_out_id)->first();
-                //$branchInt = Branch::where('id', $query->branch_int_id)->first();
-                $storeInt = Store::where('id', $query->store_int_id)->first();
-                $storeOut = Store::where('id', $query->store_out_id)->first();                
-                $product = Product::where('id', $query->product_id)->first();
-                return [
-                    //'branchOut' => $branchOut->name,
-                    'storeOut' => $storeOut->address,
-                    //'branchInt' => $branchInt->name,
-                    'storeInt' => $storeInt->address,
-                    'cant' => $query->cant,
-                    'data' => $query->data,
-                    'nameProduct' => $product->name
-                ];
-            })->sortByDesc('data')->values();
+                if ($data['branch_id'] != 0){
+                    $storeIds = Store::whereHas('branches', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })->pluck('id');
+                    $movement = MovementProduct::whereYear('data', $data['year'])->where(function ($query) use ($storeIds) {
+                        $query->whereIn('store_out_id', $storeIds)
+                              ->orWhereIn('store_int_id', $storeIds);
+                    })->get()->map(function ($query){
+                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
+                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
+                        $storeInt = Store::where('id', $query->store_int_id)->first();
+                        $storeOut = Store::where('id', $query->store_out_id)->first();                
+                        $product = Product::where('id', $query->product_id)->first();
+                        $professional = Professional::where('id', $query->branch_int_id)->first();
+                        return [
+                            //'branchOut' => $branchOut->name,
+                            'storeOut' => $storeOut->address,
+                            //'branchInt' => $branchInt->name,
+                            'storeInt' => $storeInt->address,
+                            'cant' => $query->cant,
+                            'data' => $query->data,
+                            'nameProduct' => $product->name,
+                            'nameProfessional' => $professional->name,
+                            'image_url' => $professional->image_url
+                        ];
+                    })->sortByDesc('data')->values();
+                }else {
+                    $movement = MovementProduct::whereYear('data', $data['year'])/*->where(function ($query) use($data){
+                        $query->orWhere('branch_out_id', $data['branch_id'])->orWhere('branch_int_id', $data['branch_id']);
+                    })*/->get()->map(function ($query){
+                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
+                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
+                        $storeInt = Store::where('id', $query->store_int_id)->first();
+                        $storeOut = Store::where('id', $query->store_out_id)->first();                
+                        $product = Product::where('id', $query->product_id)->first();
+                        $professional = Professional::where('id', $query->branch_int_id)->first();
+                        return [
+                            //'branchOut' => $branchOut->name,
+                            'storeOut' => $storeOut->address,
+                            //'branchInt' => $branchInt->name,
+                            'storeInt' => $storeInt->address,
+                            'cant' => $query->cant,
+                            'data' => $query->data,
+                            'nameProduct' => $product->name,
+                            'nameProfessional' => $professional->name,
+                            'image_url' => $professional->image_url
+                        ];
+                    })->sortByDesc('data')->values();
+                }
         }
             return response()->json(['movimientos' => $movement], 200);
         } catch (\Throwable $th) {

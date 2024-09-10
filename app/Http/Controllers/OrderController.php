@@ -629,7 +629,7 @@ class OrderController extends Controller
                 Log::info('$trace Pproduct');
                 Log::info($trace);*/
                 //todo pendiente para revisar importante
-               // $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
+               //$this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
             elseif (!$order->is_product) {
                 Log::info("servicio");

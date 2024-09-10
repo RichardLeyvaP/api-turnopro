@@ -99,6 +99,17 @@ class BoxCloseController extends Controller
             if (!$boxClose) {
                 $boxClose = new BoxClose();
             }
+            /*$bonus = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
+                $query->where('type', 'Bono convivencias')
+                    ->orWhere('type', 'Bono servicios');
+            })->get()->map(function ($payment) {
+                return [
+                    'name' => $payment->professional->name,
+                    'image_url' => $payment->professional->image_url,
+                    'bonus' => $payment->type,
+                    'amount' => round($payment->amount),
+                ];
+            }); */ 
             $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
                 $query->where('type', 'Bono convivencias')
                     ->orWhere('type', 'Bono servicios');

@@ -124,46 +124,83 @@ class ProductController extends Controller
     public function product_mostSold(Request $request)
     {
         try {
-            /*$data = $request->validate([
+            $data = $request->validate([
                 'branch_id' => 'nullable'
-            ]);*/
-            $products = Product::with(['orders' => function ($query) {
-                $query->selectRaw('SUM(cant) as total_sale_price')
-                    ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
-            }, 'productSales' => function ($query) {
-                $query->selectRaw('SUM(cant) as total_cant')
-                    ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
-            },'cashiersales' => function ($query) {
-                $query->selectRaw('product_id, SUM(cant) as total_cashier')
-                    ->groupBy('product_id')
-                    ->whereDate('data', Carbon::now());
-            }])/*->whereHas('productStores', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-                })*/
-            ->get()
-            ->map(function ($product) {
-                $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
-                $total_cant = $product->productSales->isEmpty() ? 0 : $product->productSales->first()->total_cant;
-                $total_cashier = $product->cashiersales->isEmpty() ? 0 : $product->cashiersales->first()->total_cashier;
-                
-                // Calcular el valor total de ventas y sumarle total_cant
-                $total_sales = $total_sale_price + $total_cant + $total_cashier;
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'reference' => $product->reference,
-                    'code' => $product->code,
-                    'description' => $product->description,
-                    'status_product' => $product->status_product,
-                    'purchase_price' => $product->purchase_price,
-                    'sale_price' => $product->sale_price,
-                    'image_product' => $product->image_product,
-                    'product_category_id' => $product->product_category_id,
-                    'created_at' => $product->created_at,
-                    'updated_at' => $product->updated_at,
-                    'orders_count' => $total_sales,
-                ];
-            })->sortByDesc('orders_count')->values();
+            ]);
+            if ($data['branch_id'] != null) {
+                $products = Product::with(['orders' => function ($query) {
+                    $query->selectRaw('SUM(cant) as total_sale_price')
+                        ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
+                },'cashiersales' => function ($query) {
+                    $query->selectRaw('product_id, SUM(cant) as total_cashier')
+                        ->groupBy('product_id')
+                        ->whereDate('data', Carbon::now());
+                }])/*->whereHas('productStores', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                    })*/
+                ->get()
+                ->map(function ($product) {
+                    $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                    $total_cashier = $product->cashiersales->isEmpty() ? 0 : $product->cashiersales->first()->total_cashier;
+                    
+                    // Calcular el valor total de ventas y sumarle total_cant
+                    $total_sales = $total_sale_price + $total_cashier;
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'reference' => $product->reference,
+                        'code' => $product->code,
+                        'description' => $product->description,
+                        'status_product' => $product->status_product,
+                        'purchase_price' => $product->purchase_price,
+                        'sale_price' => $product->sale_price,
+                        'image_product' => $product->image_product,
+                        'product_category_id' => $product->product_category_id,
+                        'created_at' => $product->created_at,
+                        'updated_at' => $product->updated_at,
+                        'orders_count' => $total_sales,
+                    ];
+                })->sortByDesc('orders_count')->values();
+            }else {
+                $products = Product::with(['orders' => function ($query) {
+                    $query->selectRaw('SUM(cant) as total_sale_price')
+                        ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
+                }, 'productSales' => function ($query) {
+                    $query->selectRaw('SUM(cant) as total_cant')
+                        ->groupBy('product_store.product_id'); // Agrupar por el ID del producto en la tabla intermedia
+                },'cashiersales' => function ($query) {
+                    $query->selectRaw('product_id, SUM(cant) as total_cashier')
+                        ->groupBy('product_id')
+                        ->whereDate('data', Carbon::now());
+                }])/*->whereHas('productStores', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                    })*/
+                ->get()
+                ->map(function ($product) {
+                    $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                    $total_cant = $product->productSales->isEmpty() ? 0 : $product->productSales->first()->total_cant;
+                    $total_cashier = $product->cashiersales->isEmpty() ? 0 : $product->cashiersales->first()->total_cashier;
+                    
+                    // Calcular el valor total de ventas y sumarle total_cant
+                    $total_sales = $total_sale_price + $total_cant + $total_cashier;
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'reference' => $product->reference,
+                        'code' => $product->code,
+                        'description' => $product->description,
+                        'status_product' => $product->status_product,
+                        'purchase_price' => $product->purchase_price,
+                        'sale_price' => $product->sale_price,
+                        'image_product' => $product->image_product,
+                        'product_category_id' => $product->product_category_id,
+                        'created_at' => $product->created_at,
+                        'updated_at' => $product->updated_at,
+                        'orders_count' => $total_sales,
+                    ];
+                })->sortByDesc('orders_count')->values();
+            }
+            
         
         //return $products;
             ///}
@@ -215,10 +252,46 @@ class ProductController extends Controller
     {
         try {
             $data = $request->validate([
-                //'branch_id' => 'nullable',
+                'branch_id' => 'nullable',
                 'startDate' => 'nullable',
                 'endDate' => 'nullable'
             ]);
+            if ($data['branch_id'] != null) {
+               
+            $products = Product::with(['orders' => function ($query) use($data){
+                $query->selectRaw('SUM(cant) as total_sale_price')
+                    ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']); // Agrupar por el ID del producto en la tabla intermedia
+            },'cashiersales' => function ($query)  use($data){
+                $query->selectRaw('product_id, SUM(cant) as total_cashier')
+                    ->groupBy('product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
+            }])/*->whereHas('productStores', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+                })*/
+            ->get()
+            ->map(function ($product) {
+                $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                $total_cashier = $product->cashiersales->isEmpty() ? 0 : $product->cashiersales->first()->total_cashier;
+                
+                // Calcular el valor total de ventas y sumarle total_cant
+                $total_sales = $total_sale_price + $total_cashier;
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'reference' => $product->reference,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product,
+                    'product_category_id' => $product->product_category_id,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                    'orders_count' => $total_sales,
+                ];
+            })->sortByDesc('orders_count')->values();
+            }else {
+                
             $products = Product::with(['orders' => function ($query) use($data){
                 $query->selectRaw('SUM(cant) as total_sale_price')
                     ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']); // Agrupar por el ID del producto en la tabla intermedia
@@ -255,6 +328,7 @@ class ProductController extends Controller
                     'orders_count' => $total_sales,
                 ];
             })->sortByDesc('orders_count')->values();
+            }
            //if ($data['branch_id'] !=0) {
             /*Log::info('Es branch');
             /*$products = Product::withCount(['orders' => function ($query) use ($data){
@@ -283,35 +357,43 @@ class ProductController extends Controller
     public function product_stock(Request $request)
     {
         try {
-            /*$data = $request->validate([
+            $data = $request->validate([
+                'branch_id' => 'nullable|numeric'
+            ]);
+            /*Log::info("entra a buscar los stores de una branch");
+            return response()->json(['stores' => Store::whereHas('branches', function ($query) use ($data){
+                $query->where('branch_id', $data['branch_id']);
+            })->get()
+            $data = $request->validate([
                 'business_id' => 'required|numeric'
             ]);*/
            Log::info('Obtener los productos');
-           /*if ($data['branch_id'] !=0) {
-            $products = ProductStore::where('product_exit', '<', 'stock_depletion')->where('branch_id', $data['branch_id'])->with('store', 'product')->get()->map(function ($query){
+           if ($data['branch_id'] !=0) {
+            $products = ProductStore::whereColumn('product_exit', '<=', 'stock_depletion')->whereHas('store.branches', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })->get()->map(function ($query){
                 return [
                     'name' => $query->product->name,
-                    'stock' => $query->product_exit,
-                    'reference' =>$query->product->reference,
-                    'code' => $query->product->code,
-                    'store' => $query->store->address,
-                    'nameBranch' => $query->store->branches()->first()->value('name')
-                ];
-            });
-           }
-           else {*/
-            $products = ProductStore::whereRaw('product_exit < stock_depletion')->with('store', 'product')->get()->map(function ($query){
-                return [
-                    'name' => $query->product->name,
-                    'stock' => $query->product_exit,
+                    'product_exit' => $query->product_exit,
                     'stock_depletion' => $query->stock_depletion,
                     'reference' =>$query->product->reference,
                     'code' => $query->product->code,
-                    'store' => $query->store->address//,
-                    //'nameBranch' => $query->store->branches()->first()->value('name')
+                    'store' => $query->store->address
                 ];
             });
-           //}
+           }
+           else {
+            $products = ProductStore::whereColumn('product_exit', '<=', 'stock_depletion')->with('store', 'product')->get()->map(function ($query){
+                return [
+                    'name' => $query->product->name,
+                    'product_exit' => $query->product_exit,
+                    'stock_depletion' => $query->stock_depletion,
+                    'reference' =>$query->product->reference,
+                    'code' => $query->product->code,
+                    'store' => $query->store->address
+                ];
+            });
+           }
         
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
