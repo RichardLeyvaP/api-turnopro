@@ -386,44 +386,6 @@ class ProfessionalService
                 $professional->free = 'Colación';
                 $professional->position = 'COLACIÓN';
             }
-            $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
-                $query->where('professional_id', $professional->id);
-            })->orderByDesc('finished_at')->whereDate('data', Carbon::now())->first();
-            Log::info('Valor de end_time del professional '.$professional->name.':'.$professional->end_time);
-            if ($reservation != null && $professional->end_time == null) {
-                Log::info('end_time:'.$professional->end_time);
-                Log::info('1er if Profesional:'.$professional->name);
-                $professional->disponible = $reservation->finished_at->format('H:i:s');
-            }
-            else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
-                Log::info('end_time:'.$professional->end_time);
-                Log::info('2do if Profesional:'.$professional->name);
-                /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
-                // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
-                $endTime = Carbon::parse($professional->end_time);
-                $lastReservationTime = Carbon::parse($reservation->finished_at);
-
-                // Comparar y decidir el tiempo que se asignará a `disponible`
-                if ($lastReservationTime->gt($endTime)) {
-                    Log::info('Tiempo de la última reserva es mayor que end_time:');
-                    Log::info($lastReservationTime);
-                    $professional->disponible = $lastReservationTime->format('H:i:s');
-                } else {
-                    Log::info('Tiempo de end_time o no hay última reserva');
-                    $professional->disponible = $endTime->format('H:i:s');
-                }
-            }
-            else {
-                Log::info('3ro if Profesional:'.$professional->name);
-                $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
-                if ($record != null) {
-                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
-                }
-                else {
-                    $professional->disponible = Carbon::parse($startTime)->format('H:i:s');
-                }
-                
-            }
         }
         
 
@@ -442,8 +404,7 @@ class ProfessionalService
         return $returnedProfessionals;*/
         $returnedProfessionals = collect($returnedProfessionals)->sortBy([
             ['state', 'asc'],
-            ['start_time', 'asc'],
-            ['disponible', 'asc']
+            ['start_time', 'asc']
         ])->values();
 
         Log::info('Orden de los professionales Coordinador:'.$returnedProfessionals);
