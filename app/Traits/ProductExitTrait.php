@@ -52,7 +52,6 @@ trait ProductExitTrait
         if ($productstore->product_exit < $productstore->stock_depletion) {
             Log::info('Producto agotandose:', ['product' => $product, 'store' => $store, 'product_exit' => $productstore->product_exit, 'Professionals_Emails[]' => $professional,'branches[id]' => $branch]);
             // Puedes agregar aquí cualquier otra acción que necesites realizar
-            $professional = ['richardleyvap1991@gmail.com','yasmany891230@gmail.com'];
             foreach ($professional as $email) {
                 try {
                     $this->sendEmailService->emailStockDepletion($email, $product, $store, $branches, $productstore->product_exit);
