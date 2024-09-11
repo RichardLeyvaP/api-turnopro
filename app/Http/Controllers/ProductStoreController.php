@@ -532,6 +532,7 @@ class ProductStoreController extends Controller
         Log::info($request);
         try {
             $data = $request->validate([
+                'branch_id' => 'nullable|numeric',
                 'professional_id' => 'nullable|numeric',
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
@@ -542,7 +543,8 @@ class ProductStoreController extends Controller
             //descontar
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
-            $productstore = $store->products()->wherePivot('product_id', $product->id)->first();
+            $product = $store->products()->wherePivot('product_id', $product->id)->first();
+            $productstore = $product->pivot;
             if($productstore){
                 $existencia = $productstore->pivot['product_exit'] - $data['product_quantity'];
                 $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$existencia]);
@@ -558,54 +560,9 @@ class ProductStoreController extends Controller
             else
             {
                 $storeM->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity']]);
-                $productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first(); 
+                $productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first();
             }
-        /*$productstoreE = new ProductStore();
-            $productstoreM = new ProductStore();            
-            $movementprodct = new MovementProduct();
-            $productexist = Product::find($data['product_id']);
-            $storeArebajar = Store::find($data['store_id']);
-            $storeASumar = Store::find($data['store_idM']);
-            $productStoreArebajar = $storeArebajar->products()
-                ->wherePivot('product_id', $productexist->id)
-                ->wherePivot('branch_id', $data['branch_id'])
-                ->first();
-                Log::info('productStoreArebajar');
-                Log::info($productStoreArebajar);
-            if ($productStoreArebajar) {
-                Log::info('tiene valor productStoreArebajar');
-                $productstoreE = ProductStore::where('id', $productStoreArebajar->pivot->id)->first();
-                Log::info('$productstoreE productStoreArebajar');
-                Log::info($productstoreE);
-                $productstoreE->product_exit = $productstoreE->product_exit - $data['product_quantity'];
-                $productstoreE->product_quantity = $data['product_quantity'];
-                $productstoreE->save();
-            }
-            //sumar al nuevo store
-            $productStorestoreASumar = $storeASumar->products()
-                ->wherePivot('product_id', $productexist->id)
-                ->wherePivot('branch_id', $data['branch_idM'])
-                ->first();
-                Log::info('Producto A sumar productStorestoreASumar');
-                Log::info($productStorestoreASumar);
-            if ($productStorestoreASumar) {
-                Log::info('tiene valor productStorestoreASumar');
-                $productstoreM = ProductStore::where('id', $productStorestoreASumar->pivot->id)->first();
-                Log::info('$productstoreM productStorestoreASumar');
-                Log::info($productstoreM);
-                $productstoreM->product_exit = $productstoreM->product_exit + $data['product_quantity'];
-                $productstoreM->product_quantity = $data['product_quantity'];
-                $productstoreM->save();
-            } else {
-                Log::info('no existe ese producto en el almacen donde se va a recibir crear la relacion');
-                $storeASumar->products()->attach($productexist->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_idM']]);
-                Log::info('$productStorestoreASumar creado nuevo producto en el almacen');
-                $productStorestoreASumar = $storeASumar->products()
-                ->wherePivot('product_id', $productexist->id)
-                ->wherePivot('branch_id', $data['branch_idM'])
-                ->first();
-                Log::info($productStorestoreASumar);
-            }*/
+    
             //registro de movimiento de productos
             
             $movementprodct = new MovementProduct();
@@ -619,8 +576,12 @@ class ProductStoreController extends Controller
             $movementprodct->store_int_exit = $productstoreM->pivot['product_exit']+$data['product_quantity'];  
             $movementprodct->cant = $data['product_quantity'];
             $movementprodct->save();
+            if($request->has('branch_id')) {              
+                $this->actualizarProductExit($productstore, $data['branch_id']);
+            }else {
+                $this->actualizarProductExit($productstore, 0);
+            }
             //todo pendiente para revisar importante
-            $this->actualizarProductExit($product->id, $store->id);
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

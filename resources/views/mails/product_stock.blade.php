@@ -10,7 +10,9 @@
 <div style="margin-bottom: 20px;">
     <div style="text-align: left;">
         
-    <strong>Sucursal:</strong> {{ $branch['name'] }}<br>
+        @if(!empty($branch))
+        <strong>Sucursal:</strong> {{ $branch['name'] }}<br>
+    @endif
         <strong>Almacén:</strong> {{ $store['address'] }}<br>
         <strong>Fecha:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y') }}<br>
     </div>

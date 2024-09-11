@@ -77,11 +77,11 @@ class CashierSaleController extends Controller
             $cashierSale->percent_wint = $percent_wint * $validatedData['cant'];
             $cashierSale->save();
 
-            $productStore->product_quantity = 1;
+            $productStore->product_quantity = $validatedData['cant'];
                 $productStore->product_exit = $productStore->product_exit - $validatedData['cant'];
                 $productStore->save();
             //todo pendiente para revisar importante
-            $this->actualizarProductExit($productStore->product_id, $productStore->store_id);      
+            //$this->actualizarProductExit($productStore, $validatedData['branch_id']);      
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,

@@ -1149,7 +1149,7 @@ class TailController extends Controller
             $reservation = Reservation::where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
             })->whereHas('tail', function ($query) use ($data) {
-                $query->whereIn('attended', [0, 3]);
+                $query->whereIn('attended', [0, 3])->whereNot('aleatorie', 1);
             })->whereDate('data', Carbon::now())->orderBy('start_time')->first();
             if ($reservation != null) {
                 if ($data['place'] == 0) {
@@ -1162,6 +1162,7 @@ class TailController extends Controller
                             'client_id' => $reservation->car->clientProfessional->client_id
 
                         ];
+                        Log::info("Reasignar Cliente a barbero en segundo plano - place = 0");
                         $this->tailService->reasigned_client($dataReasigned);
                         $reservation->timeClock = now();
                         $reservation->save();
@@ -1193,7 +1194,8 @@ class TailController extends Controller
                     $reservation->save();
                     DB::commit();
                     return response()->json(0, 200);
-                } else { //si ya ha comenzado a contar el reloj de los tres minutos
+                } 
+                else { //si ya ha comenzado a contar el reloj de los tres minutos
                     $horaActual = now();
                     // Convertir las cadenas de tiempo a objetos Carbon
                     $currentTime = Carbon::parse($horaActual);
@@ -1212,6 +1214,7 @@ class TailController extends Controller
                                 'client_id' => $reservation->car->clientProfessional->client_id
 
                             ];
+                            Log::info("Reasignar Cliente a barbero en segundo plano - place = 1");
                             $this->tailService->reasigned_client($dataReasigned);
                             $reservation->timeClock = now();
                             $reservation->save();

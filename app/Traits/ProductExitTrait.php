@@ -17,44 +17,45 @@ trait ProductExitTrait
           $this->sendEmailService = $sendEmailService;
       }
 
-    public function actualizarProductExit($productId, $storeId)
+    public function actualizarProductExit($productstore, $branch)
     {
         try {
-        $product = Product::findOrFail($productId);
-        $store = Store::findOrFail($storeId);
+        $product = Product::findOrFail($productstore->product_id);
+        $store = Store::findOrFail($productstore->store_id);
 
         // Actualizar el campo product_exit utilizando la relación
         $productstoreexist = $store->products()->wherePivot('product_id', $product->id)->first()->pivot;
-        Log::info("llamando a actualizarProductExit ($productId, $storeId)");
+        Log::info("llamando a actualizarProductExit ($productstore)");
         Log::info($productstoreexist);
-        $branch = $store->branches()->value('branches.id');
-        $branches = Branch::find($branch);
-        $professional = Professional::whereHas('branches', function ($query) use ($branch) {
-            $query->where('branch_id', $branch);
-        })
-        ->whereHas('charge', function ($query) {
-            $query->Where('name', 'Encargado')
-                  ->orWhere('name', 'Administrador de Sucursal');
-        })
-        ->orWhereHas('charge', function ($query) {
-            $query->where('name', 'Administrador');
-        })
-        ->get()->pluck('email')->toArray();
-        /*$professional = Professional::whereHas('branches', function ($query) use ($branch){
-            $query->where('branch_id', [$branch]);
-          })->whereHas('charge', function ($query) {
-            $query->where('name', 'Administrador')
-                ->orWhere('name', 'Encargado')
-                ->orWhere('name', 'Administrador de Sucursal');
-        })/*->whereIn('charge_id', [3,4,5])*//*->get()->pluck('email')->toArray();*/
+        //$branch = $productstore->stores()->values('branch_id');
+        if ($branch == 0) {
+            $branches = [];
+            $professional = Professional::WhereHas('charge', function ($query) {
+                $query->where('name', 'Administrador');
+            })
+            ->get()->pluck('email')->toArray();
+        }else {
+            $branches = Branch::find($branch);
+            $professional = Professional::whereHas('branches', function ($query) use ($branch) {
+                $query->where('branch_id', $branch);
+            })
+            ->whereHas('charge', function ($query) {
+                $query->Where('name', 'Encargado')
+                      ->orWhere('name', 'Administrador de Sucursal');
+            })
+            ->orWhereHas('charge', function ($query) {
+                $query->where('name', 'Administrador');
+            })
+            ->get()->pluck('email')->toArray();
+        }
         // Verificar si el nuevo valor es menor que 5 y registrar un log
-        if ($productstoreexist->product_exit < $productstoreexist->stock_depletion) {
-            Log::info('Producto agotandose:', ['product' => $product, 'store' => $store, 'product_exit' => $productstoreexist->product_exit, 'Professionals_Emails[]' => $professional,'branches[id]' => $branch]);
+        if ($productstore->product_exit < $productstore->stock_depletion) {
+            Log::info('Producto agotandose:', ['product' => $product, 'store' => $store, 'product_exit' => $productstore->product_exit, 'Professionals_Emails[]' => $professional,'branches[id]' => $branch]);
             // Puedes agregar aquí cualquier otra acción que necesites realizar
             $professional = ['richardleyvap1991@gmail.com','yasmany891230@gmail.com'];
             foreach ($professional as $email) {
                 try {
-                    $this->sendEmailService->emailStockDepletion($email, $product, $store, $branches, $productstoreexist->product_exit);
+                    $this->sendEmailService->emailStockDepletion($email, $product, $store, $branches, $productstore->product_exit);
                 } catch (\Swift_TransportException $e) {
                     Log::error("Error al enviar correo a $email: " . $e->getMessage());
                 } catch (\Exception $e) {

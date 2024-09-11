@@ -874,7 +874,7 @@ class ReservationController extends Controller
                     $branch_id = $reservation->branch_id;
                     $reservations2 = $professional->reservations()
                     ->where('branch_id', $branch_id)
-                    ->whereIn('confirmation', [1, 4])
+                    ->where('confirmation', 4)
                     ->whereDate('data', Carbon::now())
                     ->whereHas('tail')
                     //->where('final_hour', '>=', $current_date->format('H:i'))

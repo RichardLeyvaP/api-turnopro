@@ -251,6 +251,7 @@ class ProfessionalService
     public function branch_professionals_service_tottem($branch_id, $services, $professional_id, $reservation)//Cambio 31-08-24
     {
         try{
+        Log::info('Entra a buscar los professionales el coordinador');
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
@@ -262,7 +263,7 @@ class ProfessionalService
         if (Carbon::now()->addMinutes($totalTiempo) >  Carbon::parse($closingTime)) {
             return $availableProfessionals = [];
         } else {
-            $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+            return $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
                 $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
             }, '=', count($services))
                 ->whereHas('charge', function ($query) {
@@ -288,43 +289,9 @@ class ProfessionalService
                     'branch_professional.arrival',
                     'branch_professional.living',
                     'branch_professional.numberRandom'
-                )->orderBy('branch_professional.numberRandom', 'asc')
-                ->orderBy('branch_professional.living', 'asc')
+                )->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
-
-                /*$returnedProfessionals = $professionals1->map(function($professional) use ($branch_id) {
-                    $reservation = Reservation::where('branch_id', $branch_id)
-                        ->where('confirmation', 2)
-                        ->whereHas('car.clientProfessional', function ($query) use ($professional) {
-                            $query->where('professional_id', $professional->id);
-                        })->orderByDesc('updated_at')
-                        ->whereDate('data', Carbon::now())
-                        ->first();
-                
-                    if ($reservation != null) {
-                        $professional->disponible = $reservation->updated_at->format('H:i');
-                    } else {
-                        $record = Record::where('professional_id', $professional->id)
-                            ->where('branch_id', $branch_id)
-                            ->whereDate('start_time', Carbon::now())
-                            ->orderByDesc('start_time')
-                            ->first();
-                
-                        $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
-                    }
-                
-                    return $professional;
-                });
-                
-                $returnedProfessionals = $returnedProfessionals->sortBy(function ($professional) {
-                    return [
-                        strtotime($professional->disponible),
-                        $professional->living,
-                        $professional->arrival
-                    ];
-                });
-            */
 
             $horaActual = $horaActual = Carbon::now();
             $tiempoReserva = $reservation->total_time;
@@ -397,7 +364,7 @@ class ProfessionalService
                     Log::info('Esta en colacion'.$professional->colacion_time);
                     $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                 if (Carbon::parse($professional->start_time) < $colacion_time){
-                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
+                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
                     ->whereDate('data', $current_date)
                     ->where('start_time', '>', $colacion_time->format('H:i'))
                     ->orderBy('start_time')
@@ -419,9 +386,48 @@ class ProfessionalService
                 $professional->free = 'Colación';
                 $professional->position = 'COLACIÓN';
             }
-        }
+            $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
+                $query->where('professional_id', $professional->id);
+            })->orderByDesc('finished_at')->whereDate('data', Carbon::now())->first();
+            Log::info('Valor de end_time del professional '.$professional->name.':'.$professional->end_time);
+            if ($reservation != null && $professional->end_time == null) {
+                Log::info('end_time:'.$professional->end_time);
+                Log::info('1er if Profesional:'.$professional->name);
+                $professional->disponible = $reservation->finished_at->format('H:i:s');
+            }
+            else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
+                Log::info('end_time:'.$professional->end_time);
+                Log::info('2do if Profesional:'.$professional->name);
+                /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
+                // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
+                $endTime = Carbon::parse($professional->end_time);
+                $lastReservationTime = Carbon::parse($reservation->finished_at);
 
-        unset($professional); // Romper la referencia
+                // Comparar y decidir el tiempo que se asignará a `disponible`
+                if ($lastReservationTime->gt($endTime)) {
+                    Log::info('Tiempo de la última reserva es mayor que end_time:');
+                    Log::info($lastReservationTime);
+                    $professional->disponible = $lastReservationTime->format('H:i:s');
+                } else {
+                    Log::info('Tiempo de end_time o no hay última reserva');
+                    $professional->disponible = $endTime->format('H:i:s');
+                }
+            }
+            else {
+                Log::info('3ro if Profesional:'.$professional->name);
+                $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
+                if ($record != null) {
+                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
+                }
+                else {
+                    $professional->disponible = Carbon::parse($startTime)->format('H:i:s');
+                }
+                
+            }
+        }
+        
+
+       /* unset($professional); // Romper la referencia
 
         // Ordenar por 'state' y luego por 'start_time'
         usort($returnedProfessionals, function ($a, $b) {
@@ -433,7 +439,14 @@ class ProfessionalService
             return strtotime($a->start_time) - strtotime($b->start_time);
         });
 
-        return $returnedProfessionals;
+        return $returnedProfessionals;*/
+        $returnedProfessionals = collect($returnedProfessionals)->sortBy([
+            ['state', 'asc'],
+            ['start_time', 'asc'],
+            ['disponible', 'asc']
+        ])->values();
+
+        Log::info('Orden de los professionales Coordinador:'.$returnedProfessionals);
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el Professionalservic(branch_professionals_service_tottem): " . $e->getMessage());
@@ -479,8 +492,7 @@ class ProfessionalService
                     'professionals.image_url',
                     'professionals.end_time',
                     'branch_professional.arrival',
-                    'branch_professional.living',
-                    'branch_professional.numberRandom'
+                    'branch_professional.living'
                 )->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
@@ -496,11 +508,11 @@ class ProfessionalService
             }
             $current_time = now()->format('H:i:s');
             foreach ($professionals1 as $professional) {
-                $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
+                $reservations = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
                     ->whereDate('data', $current_date)
-                    /*->whereHas('tail', function ($subquery) {
+                    ->whereHas('tail', function ($subquery) {
                         $subquery->where('aleatorie', '!=', 1);
-                    })*/
+                    })
                     ->get()
                     ->sortBy('start_time')
                     ->map(function ($query) use ($current_time, $professional) {
@@ -568,7 +580,7 @@ class ProfessionalService
                     Log::info('Esta en colacion'.$professional->colacion_time);
                     $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                 if (Carbon::parse($professional->start_time) < $colacion_time){
-                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
+                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', 4)
                     ->whereDate('data', $current_date)
                     ->where('start_time', '>', $colacion_time->format('H:i'))
                     ->orderBy('start_time')
@@ -617,7 +629,8 @@ class ProfessionalService
 
                 // Comparar y decidir el tiempo que se asignará a `disponible`
                 if ($lastReservationTime->gt($endTime)) {
-                    Log::info('Tiempo de la última reserva es mayor que end_time');
+                    Log::info('Tiempo de la última reserva es mayor que end_time:');
+                    Log::info($lastReservationTime);
                     $professional->disponible = $lastReservationTime->format('H:i:s');
                 } else {
                     Log::info('Tiempo de end_time o no hay última reserva');
@@ -645,6 +658,7 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
+        Log::info('Orden de los professionales:'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -1839,8 +1853,10 @@ class ProfessionalService
     public function professionals_state($branch_id, $reservation_id)//cambio 31-08-24
     {
         try{
+            $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $reservation = Reservation::find($reservation_id);
         $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
+        $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
         $branchService = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
         $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
         //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
@@ -1868,48 +1884,64 @@ class ProfessionalService
             'professionals.image_url',
             'branch_professional.arrival',
             'branch_professional.living',
-            'branch_professional.numberRandom'
-            )->orderBy('branch_professional.numberRandom', 'asc')
-            ->orderBy('branch_professional.living', 'asc')
+            )->orderBy('branch_professional.living', 'asc')
             ->orderBy('branch_professional.arrival', 'asc')
             ->get();
 
-            /*$returnedProfessionals = $professionals->map(function($professional) use ($branch_id) {
+            $returnedProfessionals = $professionals->map(function($professional) use ($branch_id, $startTime) {
                 $reservation = Reservation::where('branch_id', $branch_id)
                     ->where('confirmation', 2)
                     ->whereHas('car.clientProfessional', function ($query) use ($professional) {
                         $query->where('professional_id', $professional->id);
-                    })->orderByDesc('updated_at')
+                    })->orderByDesc('finished_at')
                     ->whereDate('data', Carbon::now())
                     ->first();
-            
-                if ($reservation != null) {
-                    $professional->disponible = $reservation->updated_at->format('H:i');
-                } else {
-                    $record = Record::where('professional_id', $professional->id)
-                        ->where('branch_id', $branch_id)
-                        ->whereDate('start_time', Carbon::now())
-                        ->orderByDesc('start_time')
-                        ->first();
-            
-                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
-                }
-            
+                    if ($reservation != null && $professional->end_time == null) {
+                        Log::info('end_time Reasigned:'.$professional->end_time);
+                        Log::info('1er if Profesional Reasigned:'.$professional->name);
+                        $professional->disponible = $reservation->finished_at->format('H:i:s');
+                    }
+                    else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
+                        Log::info('end_time Reasigned:'.$professional->end_time);
+                        Log::info('2do if Profesional Reasigned:'.$professional->name);
+                        /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
+                        // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
+                        $endTime = Carbon::parse($professional->end_time);
+                        $lastReservationTime = Carbon::parse($reservation->finished_at);
+        
+                        // Comparar y decidir el tiempo que se asignará a `disponible`
+                        if ($lastReservationTime->gt($endTime)) {
+                            Log::info('Tiempo de la última reserva es mayor que end_time Reasigned:');
+                            Log::info($lastReservationTime);
+                            $professional->disponible = $lastReservationTime->format('H:i:s');
+                        } else {
+                            Log::info('Tiempo de end_time o no hay última reserva Reasigned');
+                            $professional->disponible = $endTime->format('H:i:s');
+                        }
+                    }else {
+                        Log::info('3ro if Profesional Reasigned:'.$professional->name);
+                        $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
+                        if ($record != null) {
+                            $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
+                        }
+                        else {
+                            $professional->disponible = Carbon::parse($startTime)->format('H:i:s');
+                        }
+                        
+                    }            
                 return $professional;
             });
             
-            $returnedProfessionals = $returnedProfessionals->sortBy(function ($professional) {
-                return [
-                    strtotime($professional->disponible),
-                    $professional->living,
-                    $professional->arrival
-                ];
-            });*/
+            $returnedProfessionals = collect($returnedProfessionals)->sortBy([
+                ['disponible', 'asc'],
+                ['living', 'asc'],
+                ['arrival', 'asc']
+            ])->values();
 
         $professionalFree = [];
         // Convertir el campo telefono a string
         // Iterar sobre los profesionales
-        foreach ($professionals as $professional) {
+        foreach ($returnedProfessionals as $professional) {
             Log::info('Professional analizando');
             Log::info($professional);
             // Convertir el campo teléfono a string
@@ -1935,7 +1967,7 @@ class ProfessionalService
         
                 $attended = $professional->reservations()
                     ->where('branch_id', $reservation->branch_id)
-                    ->whereIn('confirmation', [1, 4])
+                    ->where('confirmation', 4)
                     ->whereDate('data', Carbon::now())
                     ->whereHas('tail', function ($subquery) {
                         $subquery->whereIn('attended', [1, 11, 111, 4, 5, 33]);
@@ -1947,16 +1979,10 @@ class ProfessionalService
                 } else {
                     $reservations = $professional->reservations()
                         ->where('branch_id', $reservation->branch_id)
-                        ->whereIn('confirmation', [1, 4])
+                        ->where('confirmation', 4)
                         ->whereDate('data', Carbon::now())
                         ->whereHas('tail', function ($subquery) {
                             $subquery->where('aleatorie', '!=', 1);
-                        })->where(function ($query) {
-                            $query->where('confirmation', '!=', 1)
-                                  ->orWhere(function ($subquery) {
-                                      $subquery->where('confirmation', 1)
-                                               ->whereRaw('ADDTIME(start_time, "00:20:00") > ?', [Carbon::now()->format('H:i:s')]);
-                                  });
                         })
                         ->orderBy('start_time')
                         ->get();

@@ -987,7 +987,7 @@ class TailService
 
             $reservations = $professional->reservations()
                 ->where('branch_id', $reservation->branch_id)
-                ->whereIn('confirmation', [1, 4])
+                ->whereIn('confirmation', 4)
                 ->whereHas('car.clientProfessional', function ($query) use ($data) {
                     $query->where('professional_id', $data['professional_id']);
                 })
@@ -1100,7 +1100,7 @@ class TailService
 
             $reservations = $professional->reservations()
                 ->where('branch_id', $reservation->branch_id)
-                ->whereIn('confirmation', [1, 4])
+                ->where('confirmation', 4)
                 ->whereDate('data', Carbon::now())
                 ->orderBy('start_time')
                 ->get();
