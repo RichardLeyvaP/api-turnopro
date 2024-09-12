@@ -284,8 +284,9 @@ class TailService
         $professional = Professional::find($professional_id);
         if ($professional->state == 1) {
             $this->verific_aleatorie($branch_id, $professional);
-        }
-      $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+        }        
+        Log::info('Llamando a la cola el profesional: '.$professional->name.' en el servivio TailService(tail_branch_professional)');
+            $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
             })
             ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {

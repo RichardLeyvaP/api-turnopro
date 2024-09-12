@@ -52,7 +52,7 @@ class AssistantController extends Controller
                 Log::info('Estado del Professional Llama a la cola de los aleatorios');        
                 $this->verific_aleatorie($branch_id, $professional);
             }
-            Log::info('Dada una sucursal y un professional devuelve la cola del día');
+            Log::info('Llamando a la cola el profesional: '.$professional->name.' en el metodo(professional_branch_notif_queque)');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1,4]);
             })
