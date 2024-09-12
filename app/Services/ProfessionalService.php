@@ -484,7 +484,7 @@ class ProfessionalService
                         Log::info($query);
                         $attended = (int) $query->tail->attended;
                         Log::info('El valor de attended es:'.$attended);
-                        if ($attended !== 0 && $attended !==3) {
+                        if (($attended !== 0 && $attended !==3) || $query->tail->aleatorie != 1) {
                             // El valor de attended es distinto de 0 y 3 esta atendiendo
                             Log::info('El valor de attended es distinto de 0 y 3.');
                             $professional->attended = 1;
