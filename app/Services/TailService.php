@@ -235,19 +235,8 @@ class TailService
             $this->verific_aleatorie($branch_id, $professional);
         }
       $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-        $now = Carbon::now(); // Hora actual
-        $query->where('branch_id', $branch_id)
-              ->whereIn('confirmation', [1, 4])
-              ->where(function ($query) use ($now) {
-                  // Si confirmation es 1, verificar la diferencia de tiempo
-                  $query->where('confirmation', '!=', 1)
-                        ->orWhere(function ($query) use ($now) {
-                            // Si confirmation es 1, devolver reservas donde el start_time no sea más de 20 minutos antes de la hora actual
-                            $query->where('confirmation', 1)
-                                  ->whereRaw('TIMESTAMPDIFF(MINUTE, reservations.start_time, ?) >= -20', [$now]);
-                        });
-              });
-        })
+                $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
+            })
             ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
                 $query->where('professional_id', $professional_id);
             })
@@ -297,19 +286,8 @@ class TailService
             $this->verific_aleatorie($branch_id, $professional);
         }
       $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-        $now = Carbon::now(); // Hora actual
-        $query->where('branch_id', $branch_id)
-              ->whereIn('confirmation', [1, 4])
-              ->where(function ($query) use ($now) {
-                  // Si confirmation es 1, verificar la diferencia de tiempo
-                  $query->where('confirmation', '!=', 1)
-                        ->orWhere(function ($query) use ($now) {
-                            // Si confirmation es 1, devolver reservas donde el start_time no sea más de 20 minutos antes de la hora actual
-                            $query->where('confirmation', 1)
-                                  ->whereRaw('TIMESTAMPDIFF(MINUTE, reservations.start_time, ?) >= -20', [$now]);
-                        });
-              });
-        })
+                $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
+            })
             ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
                 $query->where('professional_id', $professional_id);
             })
@@ -373,18 +351,7 @@ class TailService
         $professional = Professional::find($professional_id);
         $this->verific_aleatorie($branch_id, $professional);
         $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-            $now = Carbon::now(); // Hora actual
-            $query->where('branch_id', $branch_id)
-                  ->whereIn('confirmation', [1, 4])
-                  ->where(function ($query) use ($now) {
-                      // Si confirmation es 1, verificar la diferencia de tiempo
-                      $query->where('confirmation', '!=', 1)
-                            ->orWhere(function ($query) use ($now) {
-                                // Si confirmation es 1, devolver reservas donde el start_time no sea más de 20 minutos antes de la hora actual
-                                $query->where('confirmation', 1)
-                                      ->whereRaw('TIMESTAMPDIFF(MINUTE, reservations.start_time, ?) >= -20', [$now]);
-                            });
-                  });
+            $query->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4]);
         })
         ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
             $query->where('professional_id', $professional_id);
