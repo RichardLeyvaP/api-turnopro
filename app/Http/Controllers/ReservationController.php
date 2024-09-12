@@ -907,6 +907,8 @@ class ReservationController extends Controller
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
                                 log::info('Revisando este metodo -  Entrando al foreach-2:entre al if');
                                 $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                                $reservation->timeClock = now();
+                                $reservation->save();
                                 break;
                             }
                             else {    
