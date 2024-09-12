@@ -890,6 +890,8 @@ class ReservationController extends Controller
                          log::info('Revisando este metodo - if ($reservations2->isEmpty()) :'.$ct);
                         Log::info('No tiene reservas');
                         $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                        $reservation->timeClock = now();
+                        $reservation->save();
                     }
                     if ($reservations2->isNotEmpty()){
                         log::info('Revisando este metodo -  if ($reservations2->isNotEmpty()){ :'.$ct);
