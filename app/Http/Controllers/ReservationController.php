@@ -147,6 +147,8 @@ class ReservationController extends Controller
                 BranchProfessional::where('branch_id', $data['branch_id'])
                 ->update(['living' => NULL]);
                 $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+                Log::info('Professionales recalculando el orden para cliente:'.$data['name_client']);
+                Log::info($professionals);
                 if ($professionals) {
                     $data['professional_id'] = $professionals[0]['id'];
                     $data['start_time'] = $professionals[0]['start_time'];

@@ -8,6 +8,7 @@ use App\Models\Finance;
 use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BoxController extends Controller
@@ -34,7 +35,7 @@ class BoxController extends Controller
     public function store(Request $request)
     {
         try {
-
+            DB::beginTransaction();
             Log::info("Editar");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -60,6 +61,7 @@ class BoxController extends Controller
             $box->data = Carbon::now();
             $box->save();
             if($data['extraction'] != 0){
+                Log::info('Existencia despues de la extraccion:'.$box->existence);
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -110,9 +112,11 @@ class BoxController extends Controller
                 Log::info('$trace actualiza');
                 Log::info($trace);
             }
+            DB::commit();
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
+            DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al actualizar la caja'], 500);
         }
     }

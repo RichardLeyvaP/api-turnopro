@@ -770,7 +770,7 @@ class CarController extends Controller
                             'image_url' => $professional['image_url'],
                             'productName' => $product['name'],
                             'price' => intval($product['sale_price']),
-                            'cant' => $product['name'],
+                            'cant' => $cashierSale['cant'],
                             'image_product' => $product['image_product'],
                             'nameBranch' => $branch['name'],
                         ];

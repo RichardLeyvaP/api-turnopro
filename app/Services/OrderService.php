@@ -36,7 +36,7 @@ class OrderService {
                 $productstore->product_exit = $productstore->product_exit - $data['cant'];
                 $productstore->save();
                 //todo pendiente para revisar importante
-                $this->actualizarProductExit($productStore, $car->reservation->branch_id);            
+                $this->actualizarProductExit($productstore, $car->reservation->branch_id);            
                  $order = new Order();
                  $order->car_id = $data['car_id'];
                  $order->product_store_id = $data['product_id'];

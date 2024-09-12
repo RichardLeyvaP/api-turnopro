@@ -263,7 +263,7 @@ class ProfessionalService
         if (Carbon::now()->addMinutes($totalTiempo) >  Carbon::parse($closingTime)) {
             return $availableProfessionals = [];
         } else {
-            return $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
+            $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
                 $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
             }, '=', count($services))
                 ->whereHas('charge', function ($query) {
@@ -335,14 +335,14 @@ class ProfessionalService
 
         $returnedProfessionals = [];
 
-        foreach ($availableProfessionals as $professional) {
+        foreach ($professionals1 as $professional) {
             $time = strtotime($professional->start_time);
             if ($time + ($totalTiempo * 60) <= strtotime($closingTime)) {
                 // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
                 $returnedProfessionals[] = $professional;
             }
         }
-        foreach ($returnedProfessionals as $professional) {
+        foreach ($professionals1 as $professional) {
             $professional->charge_id = $professional->charge->name;
             $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
                 ->whereDate('data', Carbon::now())
@@ -408,6 +408,7 @@ class ProfessionalService
         ])->values();
 
         Log::info('Orden de los professionales Coordinador:'.$returnedProfessionals);
+        return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el Professionalservic(branch_professionals_service_tottem): " . $e->getMessage());
@@ -481,8 +482,21 @@ class ProfessionalService
                         // Comprobación de start_time y attended
                         Log::info('Resevaciones');
                         Log::info($query);
+                        $attended = (int) $query->tail->attended;
+                        Log::info('El valor de attended es:'.$attended);
+                        if ($attended !== 0 && $attended !==3) {
+                            // El valor de attended es distinto de 0 y 3 esta atendiendo
+                            Log::info('El valor de attended es distinto de 0 y 3.');
+                            $professional->attended = 1;
+                            $professional->finalHourAttended = $query->final_hour;
+                        } else {
+                            // El valor de attended es 0 o 3
+                            Log::info('El valor de attended es 0 o 3.');
+                            $professional->attended = 0;
+                            $professional->finalHourAttended = '';
+                        }
                         if ($query->confirmation == 4 && $query->from_home == 1) {
-                             Log::info('Msg-Este profesional no esta libre');
+                             Log::info('Msg-Este profesional no esta libre:'.$professional->name);
                             Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
                             Log::info('Professional id' . $professional->id);
                             Log::info('Tiempoo inicio de la reserva' . $query->start_time);
@@ -507,6 +521,8 @@ class ProfessionalService
                 $entrada = json_decode($reservations, true);
                 //return $entrada[0];
                 if ($reservations->isEmpty()) {
+                    $professional->attended = 0;
+                    $professional->finalHourAttended = '';
                     if (Carbon::now() < Carbon::parse($startTime)) {
                         $professional->start_time = Carbon::parse($startTime)->format('H:i');
                         $availableProfessionals[] = $professional;
@@ -541,7 +557,7 @@ class ProfessionalService
                     Log::info('Esta en colacion'.$professional->colacion_time);
                     $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                 if (Carbon::parse($professional->start_time) < $colacion_time){
-                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', 4)
+                    $reservs = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
                     ->whereDate('data', $current_date)
                     ->where('start_time', '>', $colacion_time->format('H:i'))
                     ->orderBy('start_time')
@@ -608,6 +624,18 @@ class ProfessionalService
                     $professional->disponible = Carbon::parse($startTime)->format('H:i:s');
                 }
                 
+            }
+            if ($professional->attended != 0) {
+                Log::info('El professional esta atendiendo:'.$professional->name);
+                $finalHourAttended = Carbon::parse($professional->finalHourAttended);
+                $disponible = Carbon::parse($professional->disponible);
+
+                if ($finalHourAttended->gt($disponible)) {
+                    // finalHourAttended es mayor (posterior) que disponible
+                    Log::info('La hora final del que esta atendiendo es mayor que la hora disponible.');
+                    // Aquí puedes agregar la lógica que necesites
+                    $professional->disponible = $finalHourAttended->format('H:i:s');
+                }
             }
         }
 

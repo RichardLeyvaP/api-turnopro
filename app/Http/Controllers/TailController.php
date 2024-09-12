@@ -895,6 +895,7 @@ class TailController extends Controller
                 'professional_id' => 'required|numeric'
             ]);
             Log::info("Reasignar Cliente a barbero Coordinador Cliente:".$data['client_id'].'-professional_id:'.$data['professional_id']);
+            Log::info("Reasignar Cliente a barbero en segundo plano - reasigned_clientOld");
             $this->tailService->reasigned_clientOld($data);
             /*$reservation = Reservation::where('id', $data['reservation_id'])->first();
             if ($reservation != null) {
@@ -940,6 +941,7 @@ class TailController extends Controller
                     Log::info('professional disponible primero id');
                     Log::info($firstProfessional->id);
                     $data['professional_id'] = $firstProfessional->id;
+                    Log::info("Reasignar Cliente a barbero en segundo plano - tailService.reasigned_client");
                     $this->tailService->reasigned_client($data);
                 }
                 //if ($reservation != null) {

@@ -62,7 +62,7 @@ class CashierSaleController extends Controller
 
             $branch = Branch::where('id', $validatedData['branch_id'])->first();
             
-            $productStore = ProductStore::where('id', $validatedData['product_store_id'])->first();
+            $productStore = ProductStore::find($validatedData['product_store_id']);
                 $product = $productStore->product()->first();
                 $sale_price = $product->sale_price;
                 $percent_wint = $sale_price - $product->purchase_price;
@@ -80,8 +80,9 @@ class CashierSaleController extends Controller
             $productStore->product_quantity = $validatedData['cant'];
                 $productStore->product_exit = $productStore->product_exit - $validatedData['cant'];
                 $productStore->save();
+                Log::info('ProductStore CashierController:', ['productStore' => $productStore]);
             //todo pendiente para revisar importante
-            //$this->actualizarProductExit($productStore, $validatedData['branch_id']);      
+            $this->actualizarProductExit($productStore, $validatedData['branch_id']);      
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -100,6 +101,7 @@ class CashierSaleController extends Controller
             return response()->json($cashierSale, 201);
         } catch (\Exception $e) {
             Log::error($e);
+            DB::rollback();
             return response()->json(['error' => 'Error al crear la venta de caja.'], 500);
         }
     }

@@ -54,7 +54,18 @@ class AssistantController extends Controller
             }
             Log::info('Dada una sucursal y un professional devuelve la cola del día');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
-                $query->where('branch_id', $branch_id)->whereIn('confirmation', 4);
+                $now = Carbon::now(); // Hora actual
+                $query->where('branch_id', $branch_id)
+                      ->whereIn('confirmation', [1, 4])
+                      ->where(function ($query) use ($now) {
+                          // Si confirmation es 1, verificar la diferencia de tiempo
+                          $query->where('confirmation', '!=', 1)
+                                ->orWhere(function ($query) use ($now) {
+                                    // Si confirmation es 1, devolver reservas donde el start_time no sea más de 20 minutos antes de la hora actual
+                                    $query->where('confirmation', 1)
+                                          ->whereRaw('TIMESTAMPDIFF(MINUTE, reservations.start_time, ?) >= -20', [$now]);
+                                });
+                      });
             })
             ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
                 $query->where('professional_id', $professional_id);

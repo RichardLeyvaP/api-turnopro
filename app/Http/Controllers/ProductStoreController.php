@@ -545,9 +545,12 @@ class ProductStoreController extends Controller
             $store = Store::find($data['store_id']);
             $product = $store->products()->wherePivot('product_id', $product->id)->first();
             $productstore = $product->pivot;
-            if($productstore){
-                $existencia = $productstore->pivot['product_exit'] - $data['product_quantity'];
+            Log::info('Relacion producto almacen:'.$productstore);
+            if($productstore != null){
+                $existencia = $productstore->product_exit - $data['product_quantity'];
                 $product->stores()->updateExistingPivot($store->id,['product_quantity'=>$data['product_quantity'],'product_exit'=>$existencia]);
+                $product = $store->products()->wherePivot('product_id', $product->id)->first();
+                $productstore = $product->pivot;
             }
             //aumentar
             $storeM = Store::find($data['store_idM']);
@@ -572,7 +575,7 @@ class ProductStoreController extends Controller
             $movementprodct->store_out_id = $data['store_id'];
             $movementprodct->branch_int_id = $data['professional_id'];
             $movementprodct->store_int_id = $data['store_idM'];
-            $movementprodct->store_out_exit = $productstore->pivot['product_exit']-$data['product_quantity'];
+            $movementprodct->store_out_exit = $productstore->product_exit-$data['product_quantity'];
             $movementprodct->store_int_exit = $productstoreM->pivot['product_exit']+$data['product_quantity'];  
             $movementprodct->cant = $data['product_quantity'];
             $movementprodct->save();
