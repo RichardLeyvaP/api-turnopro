@@ -161,32 +161,41 @@ class ReservationController extends Controller
                 $data['from_home'] = $request->from_home;
             } else {
                 $data['from_home'] = 1;
-                $intervals  = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
-                Log::info('horarios del barbero');
-                Log::info($intervals );
+                $intervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
+                Log::info('Horarios del barbero');
+                Log::info($intervals);
+                
                 // Convertir la hora a verificar en un objeto DateTime
-                $start_to_check = new DateTime($data['start_time']);
+                $start_to_check = Carbon::parse($data['start_time']);
                 $total_time = Service::whereIn('id', $servs)->sum('duration_service');
-                $start_time = Carbon::parse($data['start_time'])->toTimeString();
-                $final_hour = Carbon::parse($start_time)->addMinutes($total_time)->toTimeString();
-                Log::info('Hora de finalizacion');
-                Log::info($final_hour);
-                $end_to_check = new DateTime($final_hour);
-                // Convertir el array de intervalos a objetos DateTime para facilitar la comparación
+                $start_time = Carbon::parse($data['start_time']);
+                $final_hour = $start_time->copy()->addMinutes($total_time);
+                $end_to_check = $final_hour;
+
+                // Convertir los intervalos a objetos Carbon para facilitar la comparación
                 $intervals = array_map(function($interval) {
-                    return new DateTime($interval);
+                    return Carbon::parse($interval);
                 }, $intervals);
 
                 // Verificar si la hora a verificar está dentro de los intervalos
-                $is_in_interval_start = in_array($start_to_check, $intervals);
-                $is_in_interval_end = in_array($end_to_check, $intervals);
+                $is_in_interval_start = false;
+                $is_in_interval_end = false;
+
+                foreach ($intervals as $interval) {
+                    // Compara si los tiempos coinciden con el inicio o el final
+                    if ($interval->toTimeString() === $start_to_check->toTimeString()) {
+                        $is_in_interval_start = true;
+                    }
+                    if ($interval->toTimeString() === $end_to_check->toTimeString()) {
+                        $is_in_interval_end = true;
+                    }
+                }
 
                 // Verificar si algún intervalo cae entre la hora de inicio y finalización
                 $is_in_range = false;
-
                 foreach ($intervals as $interval) {
                     // Si el intervalo está entre el start_time y el final_hour
-                    if ($interval >= $start_to_check && $interval <= $end_to_check) {
+                    if ($interval->greaterThan($start_to_check) && $interval->lessThan($end_to_check)) {
                         $is_in_range = true;
                         break; // Salimos del bucle si encontramos un intervalo en el rango
                     }
@@ -194,9 +203,20 @@ class ReservationController extends Controller
 
                 // Resultado
                 if ($is_in_interval_start || $is_in_interval_end || $is_in_range) {
-                    DB::commit();
-                    return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
-                } 
+                    // Verificar si la hora de finalización coincide con la hora de inicio de una reserva existente
+                    $conflict = false;
+                    foreach ($intervals as $interval) {
+                        if ($start_to_check->lessThan($interval) && $end_to_check->greaterThanOrEqualTo($interval)) {
+                            $conflict = true;
+                            break;
+                        }
+                    }
+
+                    if (!$conflict) {
+                        DB::commit();
+                        return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
+                    }
+                }
                 
             }
             $id_client = 0;

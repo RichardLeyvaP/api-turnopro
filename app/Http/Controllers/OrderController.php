@@ -16,6 +16,7 @@ use App\Models\Reservation;
 use App\Services\OrderService;
 use App\Services\TraceService;
 use App\Traits\ProductExitTrait;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -589,8 +590,8 @@ class OrderController extends Controller
                 'id' => 'required|numeric',
                 'professional_id' => 'nullable'
             ]);
-            $order = Order::find($data['id']);
-            $car = Car::find($order->car_id);
+            $order = Order::findOrFail($data['id']);
+            $car = Car::findOrFail($order->car_id);
             //$client = $car->clientProfessional->client;
             //$professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $car->reservation->branch_id)->first();

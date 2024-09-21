@@ -86,6 +86,7 @@ Route::post('/register_client', [UserController::class, 'register_client']);
 Route::post('/register_professional', [UserController::class, 'register_professional']);
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/login-phone', [UserController::class, 'login_phone']); //para l APK
+Route::post('/login-phone-version', [UserController::class, 'login_phone_version']); //para l APK
 Route::get('/login-phone-get-branch', [UserController::class, 'login_phone_get_branch']);//login para la apk
 Route::get('/usuario', [UserController::class, 'index']);
 Route::get('qrCode', [UserController::class, 'qrCode']);

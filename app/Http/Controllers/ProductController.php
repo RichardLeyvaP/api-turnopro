@@ -128,13 +128,15 @@ class ProductController extends Controller
                 'branch_id' => 'nullable'
             ]);
             if ($data['branch_id'] != null) {
-                $products = Product::with(['orders' => function ($query) {
+                $products = Product::with(['orders' => function ($query) use ($data){
                     $query->selectRaw('SUM(cant) as total_sale_price')
-                        ->groupBy('product_store.product_id')->whereDate('data', Carbon::now()); // Agrupar por el ID del producto en la tabla intermedia
-                },'cashiersales' => function ($query) {
+                        ->groupBy('product_store.product_id')->whereDate('data', Carbon::now())->whereHas('productStore.store.branches', function ($query) use ($data){
+                            $query->where('branch_id', $data['branch_id']);
+                            }); // Agrupar por el ID del producto en la tabla intermedia
+                },'cashiersales' => function ($query) use ($data){
                     $query->selectRaw('product_id, SUM(cant) as total_cashier')
                         ->groupBy('product_id')
-                        ->whereDate('data', Carbon::now());
+                        ->whereDate('data', Carbon::now())->where('cashiersales.branch_id', $data['branch_id']);
                 }])/*->whereHas('productStores', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                     })*/
@@ -256,14 +258,16 @@ class ProductController extends Controller
                 'startDate' => 'nullable',
                 'endDate' => 'nullable'
             ]);
-            if ($data['branch_id'] != null) {
-               
+            if ($data['branch_id'] != 0) {
+               Log::info('Es sucursal');
             $products = Product::with(['orders' => function ($query) use($data){
                 $query->selectRaw('SUM(cant) as total_sale_price')
-                    ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']); // Agrupar por el ID del producto en la tabla intermedia
+                    ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->whereHas('productStore.store.branches', function ($query) use ($data){
+                        $query->where('branch_id', $data['branch_id']);
+                        }); // Agrupar por el ID del producto en la tabla intermedia
             },'cashiersales' => function ($query)  use($data){
                 $query->selectRaw('product_id, SUM(cant) as total_cashier')
-                    ->groupBy('product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
+                    ->groupBy('product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->where('cashiersales.branch_id', $data['branch_id']);
             }])/*->whereHas('productStores', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
                 })*/
@@ -291,7 +295,7 @@ class ProductController extends Controller
                 ];
             })->sortByDesc('orders_count')->values();
             }else {
-                
+                Log::info('Es Administrador');
             $products = Product::with(['orders' => function ($query) use($data){
                 $query->selectRaw('SUM(cant) as total_sale_price')
                     ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']); // Agrupar por el ID del producto en la tabla intermedia

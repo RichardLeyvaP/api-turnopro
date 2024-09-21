@@ -147,7 +147,7 @@ class BranchProfessionalController extends Controller
                 $query->whereIn('service_id', $services)->where('branch_id', $data['branch_id']);
             }, '=', count($services))->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->with('branches')->select('id', 'name', 'surname', 'second_surname', 'image_url')->get()->map(function ($professional) use ($data) {
+            })->with('branches')->select('id', 'name', 'surname', 'second_surname', 'image_url', 'state')->get()->map(function ($professional) use ($data) {
                 $pivot = $professional->branches()->where('branch_id', $data['branch_id'])->first();
 
                 if ($pivot != null) {
@@ -161,7 +161,8 @@ class BranchProfessionalController extends Controller
                     'surname' => $professional->surname,
                     'second_surname' => $professional->second_surname,
                     'image_url' => $professional->image_url . '?$' . Carbon::now(),
-                    'ponderation' => $ponderation
+                    'ponderation' => $ponderation,
+                    'state' => $professional->state,
                 ];
             })->sortBy('ponderation')->values();
 

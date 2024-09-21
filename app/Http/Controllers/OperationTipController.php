@@ -9,6 +9,7 @@ use App\Models\Finance;
 use App\Models\OperationTip;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
+use App\Models\Trace;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -372,10 +373,32 @@ class OperationTipController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
+            $cashier = Professional::where('id', $request->professional_id)->first();
+            $nameCashier = $cashier->name;
+            $branch = Branch::where('id', $data['branch_id'])->first();
+            $nameBranch = $branch->name;
+            $traces = Trace::where('branch', $nameBranch)
+                ->where('cashier', $nameCashier)
+                ->where('operation', 'Paga Carro')
+                ->get('details');
+                 // Array para almacenar los IDs de los carros
+                $carIds = [];
+                //$car_ids = [];
+
+                // Expresión regular para extraer los números después de 'Carro:'
+                $regex = '/Carro:\s*(\d+)/';
+
+                // Iterar sobre los detalles y extraer los IDs
+                foreach ($traces as $trace) {
+                    if (preg_match($regex, $trace->details, $matches)) {
+                        $carIds[] = (int) $matches[1]; // El ID del carro está en $matches[1]
+                    }
+                }
+                Log::info('$Id carros con propinas cajera', $carIds);
             //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
             $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])->where('pay', 1)->where('tip', '>', 0)->get()->map(function ($car) {
+            })->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])->where('pay', 1)->where('tip', '>', 0)->whereIn('id', $carIds)->get()->map(function ($car) {
                 //$ordersServices = count($car->orders->where('is_product', 0));
                 //$orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
                 //$tipProfessional = $car->tip * 0.80;

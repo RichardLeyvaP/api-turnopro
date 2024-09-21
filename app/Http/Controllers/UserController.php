@@ -440,12 +440,14 @@ class UserController extends Controller
 
     public function login_phone(Request $request)
     {
+        Log::info('Login por APK versión desactualizada');
         try {
             $validator = Validator::make($request->all(), [
                 'email' => 'required',
                 'password' => 'required'
             ]);
             if ($validator->fails()) {
+                Log::info('Login por APK versión desactualizada error en validacion de los datos');
                 return response()->json([
                     'msg' => $validator->errors()->all()
                 ], 400);
@@ -470,6 +472,7 @@ class UserController extends Controller
             //Log::info($user);
             if ($user) {
                     $professional = $user->professional;
+                    Log::info('Login por APK versión desactualizada Profesional: '.$professional->name.' id: '.$professional->id);
                     $business = Business::where('id', $professional->business_id)->get();
                     if ($professional->branches->isNotEmpty()) { // Check if branches exist
                         Log::info("Es professional");
@@ -520,6 +523,109 @@ class UserController extends Controller
                         'token' => $token,
                     ], 200, [], JSON_NUMERIC_CHECK);
             } else {
+                Log::info('Login por APK versión desactualizada usuario o contraseña incorrectos');
+                return response()->json([
+                    "msg" => "Usuario no logueado"
+                ], 404);
+            }
+        } catch (\Throwable $th) {
+            Log::info($th->getMessage());
+            return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
+        }
+    }
+
+    public function login_phone_version(Request $request)
+    {
+        try {
+            Log::info('Login por Apk version actualizada');
+            Log::info($request);
+            $validator = Validator::make($request->all(), [
+                'email' => 'required',
+                'password' => 'required',
+                'version' => 'sometimes'
+            ]);
+            if ($validator->fails()) {
+                Log::info('Login por Apk version actualizada error de validación de los datos');
+                return response()->json([
+                    'msg' => $validator->errors()->all()
+                ], 400);
+            }
+            $branch = [
+                'branch_id' => null,
+                'nameBranch' => null,
+                'useTechnical' => 0,
+                'business_id' => 0,
+                'nameBusiness' => ''
+            ];
+            $user = [];
+            Log::info("obtener el usuario");
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }    
+            // Intentar la autenticación con el nombre de usuario
+            elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }
+            //$user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
+            //Log::info($user);
+            if ($user) {
+                $professional = $user->professional;
+                if ($request->has('version')) {                    
+                Log::info('Login por APK versión:'.$request->version.' Profesional: '.$professional->name.' id: '.$professional->id);
+                }else {
+                    Log::info('Login por APK versión: No envío la versión Profesional: '.$professional->name.' id: '.$professional->id);
+                }
+                    $business = Business::where('id', $professional->business_id)->get();
+                    if ($professional->branches->isNotEmpty()) { // Check if branches exist
+                        Log::info("Es professional");
+                        $branch = $professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
+                            return [
+                                'branch_id' => $branch->id,
+                                'nameBranch' => $branch->name,
+                                'useTechnical' => $branch->useTechnical,
+                                'business_id' => $branch->business->id,
+                                'nameBusiness' => $branch->business->name
+                            ];
+                        })->values()->first();
+
+                        $charge = $professional->charge->name;
+                        if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
+                            //return $user->professional->branchRules->where('branch_id', $request->branch_id);
+                           $professionalRules = $professional->branchRules()
+                            ->where('branch_id', $request->branch_id)
+                            ->get()->map->pivot->where('data', Carbon::now()->toDateString());
+                            if ($professionalRules->isEmpty()) {
+                                $branchRules = Branch::find($request->branch_id);
+                            $professional = Professional::find($user->professional->id);
+                            Log::info($professionalRules);
+                                $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
+                                Log::info($branchRulesId);
+                                $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+                            }
+                        }//if del cargo
+                    }//if de la sucursal
+
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    Auth::user();     
+                    return response()->json([
+                        'id' => $user->id,
+                        'userName' => $user->name,
+                        'email' => $user->email,
+                        'business_id' => $business->value('id'),
+                        'nameBusiness' => $business->value('name'),
+                        'charge' => $user->professional ? $user->professional->charge->name : null,
+                        'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
+                        'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
+                        'professional_id' => $user->professional ? ($user->professional->id) : 0,
+                        'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,
+                        'client_id' => $user->client ? ($user->client->id) : 0,
+                        'branch_id' => $user->professional->branches ? $branch['branch_id'] : 0,
+                        'nameBranch' => $branch ? $branch['nameBranch'] : "",
+                        'useTechnical' => $branch ? $branch['useTechnical'] : 0,
+                        'token' => $token,
+                    ], 200, [], JSON_NUMERIC_CHECK);
+            } else {
+                Log::info('Login por Apk version actualizada Usuario o contraseña incorrectos');
                 return response()->json([
                     "msg" => "Usuario no registrado"
                 ], 404);
