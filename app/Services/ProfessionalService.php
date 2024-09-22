@@ -869,13 +869,13 @@ class ProfessionalService
         }
     }
 
-    public function professional_reservations_time($branch_id, $professional_id, $data)
+    public function professional_reservations_time($branch_id, $professional_id, $day)
     {
         try {
             $data = [
                 'branch_id' => $branch_id,
                 'professional_id' => $professional_id,
-                'data' => $data
+                'data' => $day
             ];
             $nombreDia = ucfirst(strtolower(Carbon::parse($data['data'])->locale('es_ES')->dayName));
             $horario = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->first();
@@ -926,7 +926,7 @@ class ProfessionalService
                         $startTime->addMinutes(10);
                     }
                     sort($reservations);
-                    return response()->json(['reservations' => $reservations], 200);
+                    return $reservations;
                 } else {
                     if ($professional->reservations->isNotEmpty()) 
                     {
