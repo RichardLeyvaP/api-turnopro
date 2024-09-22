@@ -694,7 +694,11 @@ class ProfessionalService
                 )->orderBy('branch_professional.living', 'asc')
                 ->orderBy('branch_professional.arrival', 'asc')
                 ->get();
-            $current_time = now()->format('H:i:s');
+                if ($professionals1->isEmpty()) {
+                    return $returnedProfessionals;
+                }
+                else {
+                    $current_time = now()->format('H:i:s');
             foreach ($professionals1 as $professional) {
                 $reservations = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
                     ->whereDate('data', $current_date)
@@ -851,6 +855,7 @@ class ProfessionalService
                     $returnedProfessionals[] = $professional;
                 }//end de si el start_time esta dentro del cierre de la sucursal
             } //for professional
+                }
         } //else
         //return $availableProfessionals;
         $returnedProfessionals = collect($returnedProfessionals)->sortBy([
