@@ -898,20 +898,19 @@ class ReservationController extends Controller
                     $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
                         $query->where('branch_id', $branch_id)->orderBy('created_at');
                     })->where('aleatorie', 1)->get();
-                if ($tails->isEmpty()) {                    
-                    $services = $this->verific_services($tails, $branch_id, $professional);
-                    if ($services == true) {
+                    if ($tails->isEmpty()) {    
                             $reservations2 = $professional->reservations()
                         ->where('branch_id', $branch_id)
                         ->where('confirmation', 4)
                         ->whereDate('data', Carbon::now())
-                        ->whereHas('tail')
+                        ->whereHas('tail', function ($query){
+                            $query->whereNot('aleatorie', 1);
+                        })
                         //->where('final_hour', '>=', $current_date->format('H:i'))
                         ->orderBy('start_time')
                         ->get();
                         
                         log::info('Revisando este metodo - $reservations2 :'.$ct);
-                        log::info( $reservations2 );
                         Log::info($reservations2);
                         if ($reservations2->isEmpty()) {
                             log::info('Revisando este metodo - if ($reservations2->isEmpty()) :'.$ct);
@@ -919,40 +918,40 @@ class ReservationController extends Controller
                             $cola = $reservation->tail()->create(['aleatorie' => 2]);
                             $reservation->timeClock = now();
                             $reservation->save();
+                            break;
+                        }else {
+                            log::info('Revisando este metodo - if (!$reservations2->isEmpty()) :'.$ct);
+                            $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                            break;
                         }
-                        if ($reservations2->isNotEmpty()){
-                            log::info('Revisando este metodo -  if ($reservations2->isNotEmpty()){ :'.$ct);
-                            Log::info('Tiene reservas');
-                            $nuevaHoraInicio = $current_date;
-                            $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
-                            log::info('Revisando este metodo -  Entrando al foreach-2:');
-                            foreach ($reservations2 as $reservation2) {
-                                
-                                log::info('Revisando este metodo -  if ($reservations2->isNotEmpty()){ :'.$ct);
-                                Log::info('Revisando reservas Aleatorio');
-                                $start_timeMin = $this->convertirHoraAMinutos($reservation2->start_time);
-                                $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
-                        
-                                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                                    log::info('Revisando este metodo -  Entrando al foreach-2:entre al if');
-                                    $cola = $reservation->tail()->create(['aleatorie' => 2]);
-                                    $reservation->timeClock = now();
-                                    $reservation->save();
-                                    break;
-                                }
-                                else {    
-                                    log::info('Revisando este metodo -  Entrando al foreach-2:estoy en el else');
-                                    $cola = $reservation->tail()->create(['aleatorie' => 1]);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }//ifaleatorie
+                }//iftailsempty
                 else {    
                     log::info('Revisando este metodo -  Entrando al foreach-2:estoy en el else no hay aleatorios');
-                    $cola = $reservation->tail()->create(['aleatorie' => 1]);
-                    break;
+                    $services = $this->verific_services($tails, $branch_id, $professional);
+                    if ($services == true) {
+                        $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                      }else {
+                        $reservations3 = $professional->reservations()
+                            ->where('branch_id', $branch_id)
+                            ->where('confirmation', 4)
+                            ->whereDate('data', Carbon::now())
+                            ->whereHas('tail', function ($query){
+                                $query->whereNot('aleatorie', 1);
+                            })
+                            ->orderBy('start_time')
+                            ->get();
+                            Log::info('Professional tiene reservaciones: '.$professional);
+                            Log::info('reservaciones: '.$reservations3);
+                            if ($reservations3->isEmpty()) {                                
+                                $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                                $reservation->timeClock = now();
+                                $reservation->save();
+                                break;
+                            }else {
+                                $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                                break;
+                            }
+                      }
                   }
                     
                 }else {
