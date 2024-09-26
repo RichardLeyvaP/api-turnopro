@@ -2091,7 +2091,7 @@ class ProfessionalService
             )->orderBy('branch_professional.living', 'asc')
             ->orderBy('branch_professional.arrival', 'asc')
             ->get();
-
+                        
             $returnedProfessionals = $professionals->map(function($professional) use ($branch_id, $startTime) {
                 $reservation = Reservation::where('branch_id', $branch_id)
                     ->where('confirmation', 2)
@@ -2150,7 +2150,9 @@ class ProfessionalService
             Log::info($professional);
             // Convertir el campo teléfono a string
             $professional->phone = (string) $professional->phone;
-        
+            $professionalCharge = Professional::where('id', $professional->id)->first();
+            $charge = $professionalCharge->charge->name;
+
             // Verificar la disponibilidad del profesional en su lugar de trabajo
             $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
                 ->whereDate('data', Carbon::now())
@@ -2167,7 +2169,7 @@ class ProfessionalService
         
             if ($workplaceProfessional) {
                 $professional->position = $workplaceProfessional->workplace->name;
-                $professional->charge_id = $professional->charge->name;
+                $professional->charge_id = $charge;
         
                 $attended = $professional->reservations()
                     ->where('branch_id', $reservation->branch_id)

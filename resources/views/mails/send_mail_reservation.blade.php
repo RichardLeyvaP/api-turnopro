@@ -7,7 +7,7 @@
 <body style="font-family: Arial, sans-serif;">
 
 <h2 style="color: #F18254;">Hola {{$client_name}} &#x1F44B;,</h2>
-
+@if ($data !== date('Y-m-d'))
 <p style="color: #333;">
     &#x1F64F; ¡Gracias por elegir Simplifies! has click en el botón de abajo para confirmar tu reserva.
 </p>
@@ -16,6 +16,7 @@
         CONFIRMACIÓN
     </button>
 </a>
+@endif
 <p style="color: #333;">
     &#x1F64F; Estamos encantados de confirmar tu reserva para el siguiente servicio:
 </p>
