@@ -2091,7 +2091,7 @@ class ProfessionalService
             )->orderBy('branch_professional.living', 'asc')
             ->orderBy('branch_professional.arrival', 'asc')
             ->get();
-                        
+
             $returnedProfessionals = $professionals->map(function($professional) use ($branch_id, $startTime) {
                 $reservation = Reservation::where('branch_id', $branch_id)
                     ->where('confirmation', 2)
@@ -2152,7 +2152,7 @@ class ProfessionalService
             $professional->phone = (string) $professional->phone;
             $professionalCharge = Professional::where('id', $professional->id)->first();
             $charge = $professionalCharge->charge->name;
-
+        
             // Verificar la disponibilidad del profesional en su lugar de trabajo
             $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
                 ->whereDate('data', Carbon::now())
@@ -2166,11 +2166,13 @@ class ProfessionalService
         
             $current_date = Carbon::now();
             $nuevaHoraInicio = Carbon::now();
-        
+       
             if ($workplaceProfessional) {
+                 Log::info('log 1)');
                 $professional->position = $workplaceProfessional->workplace->name;
+                Log::info($professional->position);
                 $professional->charge_id = $charge;
-        
+          Log::info($professional->charge_id);
                 $attended = $professional->reservations()
                     ->where('branch_id', $reservation->branch_id)
                     ->where('confirmation', 4)
@@ -2179,10 +2181,11 @@ class ProfessionalService
                         $subquery->whereIn('attended', [1, 11, 111, 4, 5, 33]);
                     })
                     ->get();
-        
+          Log::info('log 3)');
                 if ($attended->isNotEmpty()) {
                     Log::info('Está atendiendo');
                 } else {
+                      Log::info('log 4)');
                     $reservations = $professional->reservations()
                         ->where('branch_id', $reservation->branch_id)
                         ->where('confirmation', 4)
@@ -2192,11 +2195,12 @@ class ProfessionalService
                         })
                         ->orderBy('start_time')
                         ->get();
-        
+          Log::info('log 5)');
                     if ($reservations->isEmpty()) {
                         Log::info('No tiene reservas, lo agrego como libre');
                         $professionalFree[] = $professional;
                     } else {
+                          Log::info('log 6)');
                         foreach ($reservations as $reservation1) {
                             // Comprobación de start_time y attended
                             Log::info('Reservaciones');
@@ -2212,11 +2216,12 @@ class ProfessionalService
                                 break;
                             }
                         }
+                          Log::info('log 7)');
                     }
                 }
             }
         }
-
+  Log::info('log 8)');
         return $professionalFree;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada

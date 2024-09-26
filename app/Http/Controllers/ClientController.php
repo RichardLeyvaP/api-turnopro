@@ -659,19 +659,7 @@ class ClientController extends Controller
                 'email' => 'required'
             ]);
             Log::info($data['email']);
-            $input = $request->email;
-
-        // Verificar si es un número de teléfono (solo dígitos y opcionalmente con '+')
-        if (preg_match('/^\+?\d+$/', $input)) {
-            // Si es un número y no comienza con +56, agregarlo
-            if (!str_starts_with($input, '56')) {
-                $input = '56' . ltrim($input, '+');
-                $data['email'] = $input;
-            }
-        }
-
-        Log::info('Valor de entrada modificado: ' . $input);
-            $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$data['email'])->get();
+            $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$request->email)->get();
             Log::info('Clientes encontrados');
             Log::info($clients);
             return response()->json(['client' => $clients], 200, [], JSON_NUMERIC_CHECK);

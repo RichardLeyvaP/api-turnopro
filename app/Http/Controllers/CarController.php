@@ -624,7 +624,83 @@ class CarController extends Controller
         }
     }
 
-    public function branch_cars(Request $request)
+
+
+  public function branch_cars(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            Log::info("Esta es request");
+            Log::info($request);
+            Log::info("Entra a buscar los carros");
+            $branch = Branch::where('id', $data['branch_id'])->first();
+            Log::info("Esta es la sucursal");
+            Log::info($branch);
+            $cars = Car::whereHas('reservation', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->whereIn('confirmation', [2,4]);
+            })->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->get()->map(function ($car) use ($data) {
+                $client = $car->clientProfessional->client;
+                $professional = $car->clientProfessional->professional;
+                $products = $car->orders->where('is_product', 1)->sum('price');
+                $services = $car->orders->where('is_product', 0)->sum('price');
+                $tail = $car->reservation->tail;
+                if ($tail == null) {
+                    $state = 0;
+                } else {
+                    $attended = $car->reservation->tail->attended;
+                    if ($attended == 0 || $attended == 3) {
+                        $state = 3; //En cola
+                    } elseif ($attended == 2) {
+                        $state = 1; // Atendido
+                    } else {
+                        $state = 2; // Atendiendose 
+                    }
+                }
+                /*if ($tail->aleatorie == 1) {
+                    $name = '';
+                    $image_url = 'professionals/default_profile.jpg';
+                }
+                else{*/
+                    $name = $professional->name;
+                    $image_url = $professional->image_url;
+                //}
+                return [
+                    'id' => $car->id,
+                    'client_professional_id' => $car->client_professional_id,
+                    'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
+                    'tip' => $car->tip,
+                    'pay' => (int)$car->pay,
+                    'active' => $car->active,
+                    'product' => $products,
+                    'service' => $services,
+                    'technical_assistance' => $car->technical_assistance * 5000,
+                    'clientName' => $client->name,
+                    'phone' => $client->phone,
+                    'professionalName' => $name,
+                    'client_image' => $client->client_image,
+                    'professional_id' => $professional->id,
+                    'image_url' => $image_url,
+                    'payment' => $car->payment,
+                    'state' => (int)$state,
+                    'updated_at' => $car->reservation->tail->updated_at ?? '2024-09-13 10:10:00' 
+
+                ];
+                //}
+            })->sortBy('updated_at')->sortBy('state')->values();
+            $box = Box::with('boxClose')->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
+            $payments = Payment::whereDate('created_at', Carbon::now())->where('branch_id', $data['branch_id'])->get();
+            $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->get();
+            return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
+        }
+    }
+    
+    
+    public function branch_cars2(Request $request)
     {
         try {
             $data = $request->validate([
