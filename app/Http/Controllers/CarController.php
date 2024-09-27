@@ -462,71 +462,147 @@ class CarController extends Controller
             $gasto = 0;
             $ingresoA = 0;
             $gastoA = 0;
+            $utilidadServices = 0;
+            $utilidadServicesA = 0;
             // Obtener la fecha de finalización del mes anterior
             $final_mes_anterior = Carbon::now()->subMonth()->endOfMonth();
             if ($data['branch_id'] != 0) {
                 Log::info("branch");
-                
-                $finances = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
-
-                $ingreso = $finances->where('operation', 'Ingreso')->sum('amount');
-                $gasto = $finances->where('operation', 'Gasto')->sum('amount');
                 $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 })->where('pay', 1);
-                $cashierSale = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
-                $cashierSaleAmount = $cashierSale->sum('price');
-                $carsDetail = $cars->get()->map(function ($car) use ($gasto, $ingreso){
+                $carIds = $cars->pluck('id');
+
+                ///Nuevo
+                $products = Product::with([
+                    'orders' => function ($query) use ($carIds) {
+                        $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereIn('car_id', $carIds)
+                            ->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                            ->groupBy('product_id')
+                            ->where('cashiersales.branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                })->map(function ($product) {
+                    $totalOrders = $product->orders->sum('total_cant');
+                    $totalSales = $product->cashiersales->sum('total_sales'); // Cambio aquí
+                    $utilidadOrders = $product->orders->sum('utilidadOrder');
+                    $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $totalPriceOrders = $product->orders->sum('total_price');
+                    $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'total_quantity' => $totalOrders + $totalSales,
+                        'utilidad' => $utilidadOrders + $utilidadSales,
+                        'price' => $totalPriceOrders + $totalPriceSales,
+                        'sales' => $totalPriceSales
+                    ];
+                })->sortByDesc('total_quantity')->values();
+                $totalUtilidadProducts = $products->sum('utilidad');
+                $totalPriceProducts = $products->sum('price');
+                $productSales = $products->sum('sales');
+                ///endNuevo
+                //$cashierSale = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
+                //$cashierSaleAmount = $cashierSale->sum('price');
+                $carsDetail = $cars->get()->map(function ($car){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
+                    $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                    $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
                     return [
                         'productsAmount' => $products,
                         'servicesAmount' => $services,
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->technical_assistance * 5000,
+                        'utilidadService' => $utilidadServices
                     ];
                 });
+                
                 $resultDetails[] = [
-                    'productsAmount' => round(($carsDetail->sum('productsAmount') + $cashierSaleAmount), 2),
+                    'productsAmount' => round($totalPriceProducts, 2),
                     'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetail->sum('earnings'), 2),
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
-                    'total' => round($carsDetail->sum('total') + $cashierSaleAmount, 2),
-                    'utilidad' => round($ingreso-$gasto, 2),
+                    'total' => round($carsDetail->sum('total') +$productSales, 2),
+                    'utilidad' => round($carsDetail->sum('utilidadService')+$totalUtilidadProducts+($carsDetail->sum('tip') * 0.10), 2),
                     'type' => false
                 ];
-                $financesA = Finance::Where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
-    
-                $ingresoA = $financesA->where('operation', 'Ingreso')->sum('amount');
-                $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');
                 $carsAnt = Car::whereHas('reservation', function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
-                $cashierSaleA = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->where('pay', 1);
-                $cashierSaleAmountA = $cashierSaleA->sum('price');
-                $carsDetailAnt = $carsAnt->get()->map(function ($car) use ($gastoA, $ingresoA){
+
+                $carIdsAnt = $carsAnt->pluck('id');
+                ///Nuevo
+                $productsAnt = Product::with([
+                    'orders' => function ($query) use ($carIdsAnt) {
+                        $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereIn('car_id', $carIdsAnt)
+                            ->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
+                        $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                            ->groupBy('product_id')
+                            ->where('cashiersales.branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $inicio_mes_anterior)
+                            ->whereDate('data', '<=', $final_mes_anterior);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                })->map(function ($product) {
+                    $totalOrders = $product->orders->sum('total_cant');
+                    $totalSales = $product->cashiersales->sum('total_sales'); // Cambio aquí
+                    $utilidadOrders = $product->orders->sum('utilidadOrder');
+                    $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $totalPriceOrders = $product->orders->sum('total_price');
+                    $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'total_quantity' => $totalOrders + $totalSales,
+                        'utilidad' => $utilidadOrders + $utilidadSales,
+                        'price' => $totalPriceOrders + $totalPriceSales,
+                        'sales' => $totalPriceSales
+                    ];
+                })->sortByDesc('total_quantity')->values();
+                $totalUtilidadProductsAnt = $productsAnt->sum('utilidad');
+                $totalPriceProductsAnt = $productsAnt->sum('price');
+                $productSalesAnt = $productsAnt->sum('sales');
+                ///endNuevo
+                $carsDetailAnt = $carsAnt->get()->map(function ($car){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
+                    $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                    $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
                     return [
                         'productsAmount' => $products,
                         'servicesAmount' => $services,
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->technical_assistance * 5000,
+                        'utilidadService' => $utilidadServices
                     ];
                 });
                 $resultDetailsAnt[] = [
-                    'productsAmount' => round(($carsDetailAnt->sum('productsAmount') + $cashierSaleAmountA), 2),
+                    'productsAmount' => round($totalPriceProductsAnt, 2),
                     'servicesAmount' => round($carsDetailAnt->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetailAnt->sum('earnings'), 2),
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
-                    'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA, 2),
-                    'utilidad' => round($ingresoA-$gastoA, 2),
+                    'total' => round($carsDetailAnt->sum('total') + $productSalesAnt, 2),
+                    'utilidad' => round($carsDetailAnt->sum('utilidadService')+$totalUtilidadProductsAnt+($carsDetailAnt->sum('tip') * 0.10), 2),
                     'type' => false
                 ];
                 $cars = $resultDetails[0]['total'];
@@ -536,81 +612,180 @@ class CarController extends Controller
             } else {
                 Log::info("businesss");
     
-            $financesA = Finance::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
+            /*$financesA = Finance::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->get();
 
                 $ingresoA = $financesA->where('operation', 'Ingreso')->sum('amount');
-                $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');
+                $gastoA = $financesA->where('operation', 'Gasto')->sum('amount');*/
                 $carsAnt = Car::whereHas('reservations', function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
                     $query->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 })->where('pay', 1);
-                $cashierSaleA = CashierSale::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->where('pay', 1);
+                $carIdsAnt = $carsAnt->pluck('id');
+                //Nuevo Anterior
+                $productsAnt = Product::with([
+                    'orders' => function ($query) use ($carIdsAnt) {
+                        $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereIn('car_id', $carIdsAnt)
+                            ->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
+                        $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                            ->groupBy('product_id')
+                            ->whereDate('data', '>=', $inicio_mes_anterior)
+                            ->whereDate('data', '<=', $final_mes_anterior);
+                    },
+                    'productsales' => function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
+                        $query->selectRaw('product_id, SUM(price) as total_price_sales')
+                            ->groupBy('product_id')
+                            ->whereDate('data', '>=', $inicio_mes_anterior)
+                            ->whereDate('data', '<=', $final_mes_anterior);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->productsales->isEmpty(); // Filtramos si también tiene ventas en productsales
+                })->map(function ($product) {
+                    $totalOrders = $product->orders->sum('total_cant');
+                    $totalSales = $product->cashiersales->sum('total_sales');
+                    $utilidadOrders = $product->orders->sum('utilidadOrder');
+                    $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $totalPriceOrders = $product->orders->sum('total_price');
+                    $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    $productSalePrice = $product->productsales->sum('total_price_sales'); // Sumamos las ventas de productsales
+                
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'total_quantity' => $totalOrders + $totalSales, // Sumas las cantidades de orders y sales
+                        'utilidad' => $utilidadOrders + $utilidadSales,
+                        'price' => $totalPriceOrders + $totalPriceSales + $productSalePrice, // Sumas todos los precios, incluidos los de productsales
+                        'sales' => $totalPriceSales + $productSalePrice // Sumas también las ventas de productsales
+                    ];
+                })->sortByDesc('total_quantity')->values();
+                
+                // Totales
+                $totalUtilidadProductsAnt = $productsAnt->sum('utilidad');
+                $totalPriceProductsAnt = $productsAnt->sum('price');
+                $productSalesAnt = $productsAnt->sum('sales');
+                //endNuevo Anterior
+                /*$cashierSaleA = CashierSale::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior)->where('pay', 1);
                 $productSaleA = ProductSale::whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
                 $cashierSaleAmountA = $cashierSaleA->sum('price');
-                $productSaleAmountA = $productSaleA->sum('price');
+                $productSaleAmountA = $productSaleA->sum('price');*/
                 $couseStudentA = CourseStudent::whereHas('course', function ($query) use ($inicio_mes_anterior){
                     $query->whereDate('startDate', '>=', $inicio_mes_anterior);
                 })->where('payment_status', 1);
                 $amountCourseA = $couseStudentA->sum('total_payment');
-                $carsDetailAnt = $carsAnt->get()->map(function ($car)  use ($gastoA, $ingresoA){
+                $carsDetailAnt = $carsAnt->get()->map(function ($car){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
+                    $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                    $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
                     return [
                         'productsAmount' => $products,
                         'servicesAmount' => $services,
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->technical_assistance * 5000,
+                        'utilidadService' => $utilidadServices
                     ];
                 });
                 $resultDetailsAnt[] = [
-                    'productsAmount' => round(($carsDetailAnt->sum('productsAmount') + $cashierSaleAmountA + $productSaleAmountA), 2),
+                    'productsAmount' => round($totalPriceProductsAnt, 2),
                     'servicesAmount' => round($carsDetailAnt->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetailAnt->sum('earnings'), 2),
                     'academia' => round($amountCourseA, 2),
                     'technical_assistance' => round($carsDetailAnt->sum('technical_assistance'), 2),
                     'tip' => round($carsDetailAnt->sum('tip'), 2),
-                    'total' => round($carsDetailAnt->sum('total') + $cashierSaleAmountA + $productSaleAmountA + $amountCourseA, 2),
-                    'utilidad' => round($ingresoA-$gastoA, 2),
+                    'total' => round($carsDetailAnt->sum('total') + $productSalesAnt + $amountCourseA, 2),
+                    'utilidad' => round($carsDetailAnt->sum('utilidadService')+$totalUtilidadProductsAnt+($carsDetailAnt->sum('tip') * 0.10) + $amountCourseA, 2),
                     'type' => true
                 ];
-                $finances = Finance::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
+                /*$finances = Finance::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->get();
 
                 $ingreso = $finances->where('operation', 'Ingreso')->sum('amount');
-                $gasto = $finances->where('operation', 'Gasto')->sum('amount');
+                $gasto = $finances->where('operation', 'Gasto')->sum('amount');*/
                 $cars = Car::whereHas('reservations', function ($query) use ($startOfMonth, $endOfMonth) {
                     $query->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
                 })->where('pay', 1);
+                $carIds = $cars->pluck('id');
+                //Nuevo
+                $products = Product::with([
+                    'orders' => function ($query) use ($carIds) {
+                        $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereIn('car_id', $carIds)
+                            ->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                            ->groupBy('product_id')
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth);
+                    },
+                    'productsales' => function ($query) use ($startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(price) as total_price_sales')
+                            ->groupBy('product_id')
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->productsales->isEmpty(); // Filtramos si también tiene ventas en productsales
+                })->map(function ($product) {
+                    $totalOrders = $product->orders->sum('total_cant');
+                    $totalSales = $product->cashiersales->sum('total_sales');
+                    $utilidadOrders = $product->orders->sum('utilidadOrder');
+                    $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $totalPriceOrders = $product->orders->sum('total_price');
+                    $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    $productSalePrice = $product->productsales->sum('total_price_sales'); // Sumamos las ventas de productsales
                 
-                $cashierSale = CashierSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
-                $cashierSaleAmount = $cashierSale->sum('price');
-                $productSale = ProductSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
-                $productSaleAmount = $productSale->sum('price');
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'total_quantity' => $totalOrders + $totalSales, // Sumas las cantidades de orders y sales
+                        'utilidad' => $utilidadOrders + $utilidadSales,
+                        'price' => $totalPriceOrders + $totalPriceSales + $productSalePrice, // Sumas todos los precios, incluidos los de productsales
+                        'sales' => $totalPriceSales + $productSalePrice // Sumas también las ventas de productsales
+                    ];
+                })->sortByDesc('total_quantity')->values();
+                
+                // Totales
+                $totalUtilidadProducts = $products->sum('utilidad');
+                $totalPriceProducts = $products->sum('price');
+                $productSales = $products->sum('sales');
+                //endNuevo
+               // $cashierSale = CashierSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth)->where('pay', 1);
+                //$cashierSaleAmount = $cashierSale->sum('price');
+                //$productSale = ProductSale::whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
+                //$productSaleAmount = $productSale->sum('price');
                 $couseStudent = CourseStudent::whereHas('course', function ($query) use ($startOfMonth){
                     $query->whereDate('startDate', '>=', $startOfMonth);
                 })->where('payment_status', 1);
                 $amountCourse = $couseStudent->sum('total_payment');
-                $carsDetail = $cars->get()->map(function ($car)  use ($gasto, $ingreso){
+                $carsDetail = $cars->get()->map(function ($car){
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
+                    $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                    $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
                     return [
                         'productsAmount' => $products,
                         'servicesAmount' => $services,
                         'earnings' => $car->amount,
                         'technical_assistance' => $car->technical_assistance * 5000,
                         'tip' => $car->tip,
-                        'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
+                        'total' => $car->amount + $car->technical_assistance * 5000,
+                        'utilidadService' => $utilidadServices
                     ];
                 });
                 $resultDetails[] = [
-                    'productsAmount' => round(($carsDetail->sum('productsAmount') + $cashierSaleAmount + $productSaleAmount), 2),
+                    'productsAmount' => round($totalPriceProducts, 2),
                     'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
                     'earnings' => round($carsDetail->sum('earnings'), 2),
                     'academia' => round($amountCourse, 2),
                     'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
                     'tip' => round($carsDetail->sum('tip'), 2),
-                    'total' => round($carsDetail->sum('total') + $cashierSaleAmount + $productSaleAmount + $amountCourse, 2),
-                    'utilidad' => round($ingreso-$gasto, 2),
+                    'total' => round($carsDetail->sum('total') + $productSales + $amountCourse, 2),
+                    'utilidad' => round($carsDetail->sum('utilidadService')+$totalUtilidadProducts+($carsDetail->sum('tip') * 0.10) + $amountCourse, 2),
                     'type' => true
                 ];
                 $cars = $resultDetails[0]['total'];
