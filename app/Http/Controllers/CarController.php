@@ -122,19 +122,31 @@ class CarController extends Controller
             if ($data['branch_id'] != 0) {
                 Log::info("branch");
 
-                $ordersAct = Order::whereHas('car.reservation', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+                $ordersAct = Order::whereHas('car', function ($query) use ($data) {  // Cambiado a car directamente
+                    $query->whereHas('reservation', function ($query) use ($data) {
+                        $query->whereDate('data', Carbon::now())
+                              ->where('branch_id', $data['branch_id']);
+                    })
+                    ->where('pay', 1);  // Condición para pay en cars
                 })->get();
-                $ordersAnt = Order::whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
-                    $query->where('branch_id', $data['branch_id'])->whereDate('data', $fechaFormateada);
+                $ordersAnt = Order::whereHas('car', function ($query) use ($data, $fechaFormateada) {  // Cambiado a car directamente
+                    $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
+                        $query->whereDate('data', $fechaFormateada)
+                              ->where('branch_id', $data['branch_id']);
+                    })
+                    ->where('pay', 1);  // Condición para pay en cars
                 })->get();
 
                 $products = Product::with(['orders' => function ($query) use ($data) {
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', Carbon::now())
-                            ->whereHas('car.reservation', function ($query) use ($data) {
-                                $query->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id']);
+                            ->whereHas('car', function ($query) use ($data) {  // Cambiado a car directamente
+                                $query->whereHas('reservation', function ($query) use ($data) {
+                                    $query->whereDate('data', Carbon::now())
+                                          ->where('branch_id', $data['branch_id']);
+                                })
+                                ->where('pay', 1);  // Condición para pay en cars
                             })
                             ->where('is_product', 1);
                     },
@@ -142,7 +154,8 @@ class CarController extends Controller
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
                             ->groupBy('product_id')
                             ->where('cashiersales.branch_id', $data['branch_id'])
-                            ->whereDate('data', Carbon::now());
+                            ->whereDate('data', Carbon::now())
+                            ->where('pay', 1);
                     }
                 ])->get()->filter(function ($product) {
                     return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
@@ -160,8 +173,12 @@ class CarController extends Controller
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', $fechaFormateada)
-                            ->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
-                                $query->whereDate('data', $fechaFormateada)->where('branch_id', $data['branch_id']);
+                            ->whereHas('car', function ($query) use ($data, $fechaFormateada) {  // Cambiado a car directamente
+                                $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
+                                    $query->whereDate('data', $fechaFormateada)
+                                          ->where('branch_id', $data['branch_id']);
+                                })
+                                ->where('pay', 1);  // Condición para pay en cars
                             })
                             ->where('is_product', 1);
                     },
@@ -169,7 +186,8 @@ class CarController extends Controller
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
                             ->groupBy('product_id')
                             ->where('cashiersales.branch_id', $data['branch_id'])
-                            ->whereDate('data', $fechaFormateada);
+                            ->whereDate('data', $fechaFormateada)
+                            ->where('pay', 1);
                     }])->get()->filter(function ($product) {
                         return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
                     })->values()->sortByDesc(function ($product) {
@@ -192,16 +210,24 @@ class CarController extends Controller
                 //Servicios
                 $services = Service::has('orders')
                     ->withCount(['orders' => function ($query) use ($data) {
-                        $query->whereHas('car.reservation', function ($query) use ($data) {
-                            $query->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id']);
+                        $query->whereHas('car', function ($query) use ($data) {  // Cambiado a car directamente
+                            $query->whereHas('reservation', function ($query) use ($data) {
+                                $query->whereDate('data', Carbon::now())
+                                      ->where('branch_id', $data['branch_id']);
+                            })
+                            ->where('pay', 1);  // Condición para pay en cars
                         })->where('is_product', 0);
                     }])->orderByDesc('orders_count')->get();
                 //$mostSoldService = $services->first();
 
                 $servicesAnt = Service::has('orders')
                     ->withCount(['orders' => function ($query) use ($data, $fechaFormateada) {
-                        $query->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
-                            $query->whereDate('data', $fechaFormateada)->where('branch_id', $data['branch_id']);
+                        $query->whereHas('car', function ($query) use ($data, $fechaFormateada) {  // Cambiado a car directamente
+                            $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
+                                $query->whereDate('data', $fechaFormateada)
+                                      ->where('branch_id', $data['branch_id']);
+                            })
+                            ->where('pay', 1);  // Condición para pay en cars
                         })->where('is_product', 0);
                     }])
                     ->orderByDesc('orders_count')
@@ -222,25 +248,35 @@ class CarController extends Controller
                 return response()->json(['product' => $resultPproduct, 'service' => $resultService], 200);
             } else {
                 Log::info("No branch");
-                $ordersAct = Order::whereHas('car.reservation', function ($query) use ($data) {
-                    $query->whereDate('data', Carbon::now());
+                $ordersAct = Order::whereHas('car', function ($query){  // Cambiado a car directamente
+                    $query->whereHas('reservation', function ($query){
+                        $query->whereDate('data', Carbon::now());
+                    })
+                    ->where('pay', 1);  // Condición para pay en cars
                 })->get();
-                $ordersAnt = Order::whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
-                    $query->whereDate('data', $fechaFormateada);
+                $ordersAnt = Order::whereHas('car', function ($query) use ($fechaFormateada) {  // Cambiado a car directamente
+                    $query->whereHas('reservation', function ($query) use ($fechaFormateada) {
+                        $query->whereDate('data', $fechaFormateada);
+                    })
+                    ->where('pay', 1);  // Condición para pay en cars
                 })->get();
                 $products = Product::with(['orders' => function ($query) use ($data) {
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', Carbon::now())
-                            ->whereHas('car.reservation', function ($query) use ($data) {
-                                $query->whereDate('data', Carbon::now())/*->where('branch_id', $data['branch_id'])*/;
+                            ->whereHas('car', function ($query) use ($data) {  // Cambiado a car directamente
+                                $query->whereHas('reservation', function ($query) use ($data) {
+                                    $query->whereDate('data', Carbon::now());
+                                })
+                                ->where('pay', 1);  // Condición para pay en cars
                             })
-                            ->where('is_product', 1);
+                            ->where('is_product', 1);                            
                     },
                     'cashiersales' => function ($query){
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
                             ->groupBy('product_id')
-                            ->whereDate('data', Carbon::now());
+                            ->whereDate('data', Carbon::now())
+                            ->where('pay', 1);
                     }
                 ])->get()->filter(function ($product) {
                     return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
@@ -258,15 +294,19 @@ class CarController extends Controller
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', $fechaFormateada)
-                            ->whereHas('car.reservation', function ($query) use ($fechaFormateada) {
-                                $query->whereDate('data', $fechaFormateada)/*->where('branch_id', $data['branch_id'])*/;
+                            ->whereHas('car', function ($query) use ($fechaFormateada) {  // Cambiado a car directamente
+                                $query->whereHas('reservation', function ($query) use ($fechaFormateada) {
+                                    $query->whereDate('data', $fechaFormateada);
+                                })
+                                ->where('pay', 1);  // Condición para pay en cars
                             })
                             ->where('is_product', 1);
                     },
                     'cashiersales' => function ($query) use ($fechaFormateada) {
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
                             ->groupBy('product_id')
-                            ->whereDate('data', $fechaFormateada);
+                            ->whereDate('data', $fechaFormateada)
+                            ->where('pay', 1);
                     }])->get()->filter(function ($product) {
                         return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
                     })->values()->sortByDesc(function ($product) {
@@ -288,17 +328,24 @@ class CarController extends Controller
                     ];
                 //Servicios
                 $services = Service::has('orders')
-                    ->withCount(['orders' => function ($query) use ($data) {
-                        $query->whereHas('car.reservation', function ($query) use ($data) {
-                            $query->whereDate('data', Carbon::now())/*->where('branch_id', $data['branch_id'])*/;
-                        })->where('is_product', 0);
+                    ->withCount(['orders' => function ($query){
+                        $query->whereHas('car', function ($query){  // Cambiado a car directamente
+                            $query->whereHas('reservation', function ($query){
+                                $query->whereDate('data', Carbon::now());
+                            })
+                            ->where('pay', 1);  // Condición para pay en cars
+                        })
+                        ->where('is_product', 0);
                     }])->orderByDesc('orders_count')->get();
                 //$mostSoldService = $services->first();
 
                 $servicesAnt = Service::has('orders')
-                    ->withCount(['orders' => function ($query) use ($data, $fechaFormateada) {
-                        $query->whereHas('car.reservation', function ($query) use ($data, $fechaFormateada) {
-                            $query->whereDate('data', $fechaFormateada);
+                    ->withCount(['orders' => function ($query) use ($fechaFormateada) {
+                        $query->whereHas('car', function ($query) use ($fechaFormateada) {  // Cambiado a car directamente
+                            $query->whereHas('reservation', function ($query) use ($fechaFormateada) {
+                                $query->whereDate('data', $fechaFormateada);
+                            })
+                            ->where('pay', 1);  // Condición para pay en cars
                         })->where('is_product', 0);
                     }])
                     ->orderByDesc('orders_count')
