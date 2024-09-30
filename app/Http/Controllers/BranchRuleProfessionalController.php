@@ -140,15 +140,17 @@ class BranchRuleProfessionalController extends Controller
             $i = 0;
             $professional = Professional::find($data['professional_id']);
             $branchrules = BranchRule::where('branch_id', $data['branch_id'])->get();
-            foreach ($branchrules as $branchrule) {
-                $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule, $data){
-                    $query->whereDate('data', $data['data'])->where('branch_rule_id', $branchrule->id);
-                })->exists();
-                if (!$existencia) {
-                    $professional->branchRules()->attach($branchrule->id,['data'=>$data['data'], 'estado'=>3]);
+            if ($professional->state == 1 || $professional->state == 2) {
+                foreach ($branchrules as $branchrule) {
+                    $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule, $data){
+                        $query->whereDate('data', $data['data'])->where('branch_rule_id', $branchrule->id);
+                    })->where('id', $data['professional_id'])->exists();
+                    if (!$existencia) {
+                        $professional->branchRules()->attach($branchrule->id,['data'=>$data['data'], 'estado'=>3]);
+                    }
                 }
             }
-           
+                      
             $branchRuleProfessionals = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data){
                 $query->where('branch_id', $data['branch_id']);
             })->where('professional_id', $data['professional_id'])->whereDate('data', $data['data'])->get()->map(function ($branchRuleProfessional){
@@ -162,7 +164,7 @@ class BranchRuleProfessionalController extends Controller
             });
             return response()->json(['rules' => $branchRuleProfessionals], 200, [], JSON_NUMERIC_CHECK);            
             } catch (\Throwable $th) {  
-            Log::error($th);
+            Log::error($th->getMessage());
         return response()->json(['msg' => $th->getMessage()."Error al mostrar el estado de las rules de un  professional"], 500);
         }
     }

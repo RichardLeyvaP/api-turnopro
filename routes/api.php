@@ -332,7 +332,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::post('/box-close-new', [BoxCloseController::class, 'box_close_new']);//para pagar ejecutar cierre de caja para agregar retenciones
     Route::get('/closebox', [BoxCloseController::class, 'index']);
     Route::get('/closebox-show', [BoxCloseController::class, 'show']);
-    Route::get('/closebox-show', [BoxCloseController::class, 'show']);
+    Route::get('/bono-service', [BoxCloseController::class, 'BonoService']);
     Route::get('/bonus-show', [BoxCloseController::class, 'bonus']);
     Route::post('/bonu-payment', [BoxCloseController::class, 'bonu_payment']);
     Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);

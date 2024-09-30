@@ -70,7 +70,7 @@ class ProfessionalController extends Controller
             ]);
             $now = Carbon::now();
             if (auth()->user()->professional->charge->name == 'Administrador') {
-                $professionals = Professional::whereHas('branches', function ($query) use ($data) {
+                $professionals = Professional::whereDoesntHave('branches')->orWhereHas('branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })
                 ->orWhereHas('charge', function ($query) {
@@ -97,7 +97,9 @@ class ProfessionalController extends Controller
                     ];
                 });
             }else {
-                $professionals = Professional::whereHas('branches', function ($query) use ($data){
+                $professionals = Professional::whereHas('charge', function ($query) {
+                    $query->where('name',  '!=','Administrador');
+                })->whereDoesntHave('branches')->orWhereHas('branches', function ($query) use ($data){
                     $query->where('branch_id', $data['branch_id']);
                 })->with('user', 'charge')->get()->map(function ($professional) use ($now) {
                     return [
@@ -873,12 +875,13 @@ class ProfessionalController extends Controller
                     File::delete($destination);
                 }
             }
-            $user = User::find($professional->user_id);
-            if ($user) {
+            //$user = User::find($professional->user_id);
+            $client = Client::where('user_id', $professional->user_id)->first();
+            if ($client) {
                 Professional::destroy($professionals_data['id']);
             } else {
                 Professional::destroy($professionals_data['id']);
-                User::destroy($user->id);
+                User::destroy($professional->user_id);
             }
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {

@@ -266,7 +266,7 @@ class BoxCloseController extends Controller
                 // Calcular la suma de los montos
                 //$totalAmount = $subquery->sum('amount');
                 $difference = $totalBonus - $totalAmount;
-                Log::info('Diferencia de bono ierre de caja'.$difference);
+                Log::info('Diferencia de bono cierre de caja'.$difference);
                   // Ajustar la existencia de $box según la diferencia
                     // Si la diferencia es positiva, se resta de box->existence
                     // Si es negativa, se suma a box->existence
@@ -317,7 +317,7 @@ class BoxCloseController extends Controller
             Log::info('Bonos');
             Log::info($totalBonus);
             Log::info("Generar PDF");
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus]);
+            /*$pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             $this->sendEmailService->emailBoxClosure('yasmany891230@gmail.com', $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $cars->sum('tip'), $products, $services, $payments->sum('cash'), $payments->sum('creditCard'), $payments->sum('debit'), $payments->sum('transfer'), $payments->sum('other'), $total, $payments->sum('cardGif'), $totalBonus);
             /*$emails = Professional::whereHas('charge', function ($query)  use ($branch) {
@@ -571,7 +571,7 @@ class BoxCloseController extends Controller
                 if ($retention == null) {
                     $retention = new Retention();
                 }                                
-                //if($retentionP){
+                /*//if($retentionP){
                     Log::info('Entra a retencion bono de convivencias'.$professional->name);
                     $retention->branch_id = $data['branch_id'];
                     $retention->professional_id = $professional->id;
@@ -579,7 +579,7 @@ class BoxCloseController extends Controller
                     $retention->retention = $data['retention'];
                     $retention->type = 'BonoConvivencia';
                     $retention->save();
-                //}
+                //}*/
                 
 
                 // Ejemplo de una acción, como actualizar un campo
@@ -1002,5 +1002,23 @@ class BoxCloseController extends Controller
     public function destroy(BoxClose $closeBox)
     {
         //
+    }
+
+    public function BonoService()
+    {
+        $payments = ProfessionalPayment::where('type', 'Bono servicios')->get();
+        foreach ($payments as $payment) {
+            $professional = Professional::find($payment->professional_id);
+            $profesionalbonus = BranchProfessional::where('professional_id', $payment->professional_id)->where('branch_id', $payment->branch_id)->first();
+            $retentionBonus = ($profesionalbonus->mountpay * $professional->retention) / 100;
+            Log::info('Retencion de bono de Servicio: '.$retentionBonus.' Profesional: '.$professional->name.' Sucursal: '.$profesionalbonus->branch->name);
+            $retention = new Retention();
+            $retention->branch_id = $payment->branch_id;
+            $retention->professional_id = $payment->professional_id;
+            $retention->data = $payment->date;
+            $retention->retention = round($retentionBonus, 2);
+            $retention->type = 'BonoService';
+            $retention->save();
+        }
     }
 }
