@@ -27,10 +27,7 @@ trait ProductExitTrait
             $store = Store::findOrFail($productstore->store_id);
 
         // Actualizar el campo product_exit utilizando la relación
-        //$productstoreexist = $store->products()->wherePivot('product_id', $product->id)->first()->pivot;
         Log::info("llamando a actualizarProductExit");
-        //Log::info($productstoreexist);
-        //$branch = $productstore->stores()->values('branch_id');
         if ($branch == 0) {
             $branches = [];
             $professional = Professional::WhereHas('charge', function ($query) {
@@ -60,7 +57,6 @@ trait ProductExitTrait
             Log::info('Producto agotandose Almacen :', ['store' => $store]);
             Log::info('Producto agotandose Branches :', ['branch' => $branches]);
             // Puedes agregar aquí cualquier otra acción que necesites realizar
-            $professional = ['yasmaasASasny891230@gmail.com'];
             foreach ($professional as $email) {
                 try {
                     $sendEmailService->emailStockDepletion($email, $product, $store, $branches, $productstore->product_exit);
