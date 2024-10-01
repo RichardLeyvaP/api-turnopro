@@ -249,6 +249,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::get('/business-show', [BusinessController::class, 'show']);
     Route::post('/business', [BusinessController::class, 'store']);
     Route::put('/business', [BusinessController::class, 'update']);
+    Route::post('/business-update', [BusinessController::class, 'update_post']);
     Route::post('/business-destroy', [BusinessController::class, 'destroy']);
     Route::get('/business-winner', [BusinessController::class, 'business_winner']);//Ganancias por negocioscompany_close_car
 
@@ -770,6 +771,7 @@ Route::get('/branch-professionals-barber', [BranchProfessionalController::class,
 Route::get('/survey', [SurveyController::class, 'index']);
 
 Route::get('/branch', [BranchController::class, 'index']);
+Route::get('/branch-prueba', [BranchController::class, 'index_prueba']);
 
 Route::put('/notification-state3', [NotificationController::class, 'update_state3']);//dado un professional y una sucursal cambiar el estado de las notificaciones de 3 a 1
 
@@ -787,7 +789,7 @@ Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) 
     $response->header("Content-Type", $type);
 
     return $response;
-})->where(['folder' => 'professionals|clients|comments|products|services|branches|image|pdfs|licenc|enrollments|students|comments|image', 'filename' => '.*']);
+})->where(['folder' => 'business|professionals|clients|comments|products|services|branches|image|pdfs|licenc|enrollments|students|comments|image', 'filename' => '.*']);
 
 
 
