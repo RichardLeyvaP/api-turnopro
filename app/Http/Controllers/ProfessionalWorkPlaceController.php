@@ -69,6 +69,9 @@ class ProfessionalWorkPlaceController extends Controller
                 $branchProfessional->save();
 
             }
+            if ($professional->state == 0 && $professional->start_time != NULL) {
+                $professional->end_time = Carbon::now();
+            }
             $professional->state = 1;
             $professional->save();
             $workplace = Workplace::find($data['workplace_id']);

@@ -810,7 +810,7 @@ class ProfessionalService
                     Log::info('1er if Profesional:'.$professional->name);
                     $professional->disponible = $reservation->finished_at->format('H:i:s');
                 }
-                else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && $reservation) {
+                else if ($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && $reservation) {
                     Log::info('end_time:'.$professional->end_time);
                     Log::info('2do if Profesional:'.$professional->name);
                     /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
@@ -827,6 +827,11 @@ class ProfessionalService
                         Log::info('Tiempo de end_time o no hay última reserva');
                         $professional->disponible = $endTime->format('H:i:s');
                     }
+                }else if($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && !$reservation){
+                    Log::info('end_time:'.$professional->end_time);
+                    Log::info('5do if Profesional:'.$professional->name);
+                    $endTime = Carbon::parse($professional->end_time);
+                        $professional->disponible = $endTime->format('H:i:s');
                 }
                 else {
                     Log::info('3ro if Profesional:'.$professional->name);

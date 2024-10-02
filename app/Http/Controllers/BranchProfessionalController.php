@@ -436,6 +436,7 @@ class BranchProfessionalController extends Controller
                     $notification->type = $data['type'];                     
                     $notification->save();
                 }else {
+                    $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->branch_id = $data['branch_id'];

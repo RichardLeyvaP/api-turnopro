@@ -914,7 +914,11 @@ class CarController extends Controller
             $box = Box::with('boxClose')->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
             $payments = Payment::whereDate('created_at', Carbon::now())->where('branch_id', $data['branch_id'])->get();
             $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->get();
-            return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales], 200, [], JSON_NUMERIC_CHECK);
+            $bonus = ProfessionalPayment::where('branch_id', $data['branch_id'])
+                    ->whereDate('date', Carbon::now())
+                    ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
+                    ->get()->sum('amount');
+            return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales, 'bonusPay' => $bonus], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
@@ -988,7 +992,13 @@ class CarController extends Controller
             $box = Box::with('boxClose')->whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
             $payments = Payment::whereDate('created_at', Carbon::now())->where('branch_id', $data['branch_id'])->get();
             $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->get();
-            return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales], 200, [], JSON_NUMERIC_CHECK);
+            $bonus = ProfessionalPayment::where('branch_id', $data['branch_id'])
+            ->whereDate('date', Carbon::now())
+            ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
+            ->get()->sum('amount');
+            Log::info('Bonos pagados');
+            Log::info($bonus);
+            return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales, 'bonusPay' => $bonus], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);

@@ -7,7 +7,9 @@ use App\Models\Professional;
 use App\Services\BusinessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class BusinessController extends Controller
 {
@@ -50,6 +52,7 @@ class BusinessController extends Controller
 
             // Agregar las branches al resultado
             foreach ($branches as $branch) {
+                if ($branch->id !=20) {                   
                 $resultArray[] = [
                     'id' => $branch->id,
                     'icon'=> "mdi-store",
@@ -63,6 +66,7 @@ class BusinessController extends Controller
                     'business_id' => $branch->business_id,
                     'type' => 'Branch'
                 ];
+                }
             }
 
             // Agregar las enrollments al resultado
@@ -122,18 +126,38 @@ class BusinessController extends Controller
                 'name' => 'required|max:50',
                 'address' => 'required|max:50',
                 'professional_id' => 'required|numeric',
+                'api_url' => 'nullable',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
             ]);
-
+            $codigo = 0;
+            do {
+                // Genera un código alfanumérico aleatorio
+                $codigo = Str::random(7);
+        
+                // Verifica si el código ya existe en la base de datos
+            } while (Business::where('code', $codigo)->exists());
             $business = new Business();
             $business->name = $business_data['name'];
             $business->address = $business_data['address'];
             $business->professional_id = $business_data['professional_id'];
+            $business->start_date = $business_data['start_date'];
+            $business->end_date = $business_data['end_date'];
+            $business->api_url = $business_data['api_url'];
+            $business->code = $codigo;
             $business->save();
-
+            Log::info('Negocio');
+            Log::info($business);
+            $filename = "business/default.jpg"; 
+            if ($request->hasFile('image_url')) {
+               $filename = $request->file('image_url')->storeAs('business',$business->id.'.'.$request->file('image_url')->extension(),'public');
+            }
+            $business->image_url = $filename;
+            $business->save();
             return response()->json(['msg' => 'Negocio insertado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al insertar la professionala'], 500);
+            return response()->json(['msg' => 'Error al insertar El negocio'], 500);
         }
     }
 
@@ -161,12 +185,67 @@ class BusinessController extends Controller
         }
     }
 
+    public function update_post(Request $request)
+    {
+        try {
+
+            $business_data = $request->validate([
+                'id' => 'required|numeric',
+                'name' => 'required|max:50',
+                'address' => 'required|max:50',
+                'professional_id' => 'required|numeric',
+                'api_url' => 'nullable',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
+            ]);
+            $codigo = 0;
+            $business = Business::find($business_data['id']);
+            if ($request->hasFile('image_url')) {
+                if($business->image_url != 'business/default.jpg'){
+                $destination = public_path("storage\\" . $business->image_url);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }              
+                    $business->image_url = $request->file('image_url')->storeAs('business',$business->id.'.'.$request->file('image_url')->extension(),'public');
+                }
+            }
+            if ($business->code == NULL) {
+                do {
+                    // Genera un código alfanumérico aleatorio
+                    $codigo = Str::random(7);
+            
+                    // Verifica si el código ya existe en la base de datos
+                } while (Business::where('code', $codigo)->exists());
+               $business->code = $codigo;
+            }
+            $business->name = $business_data['name'];
+            $business->address = $business_data['address'];
+            $business->professional_id = $business_data['professional_id'];
+            $business->start_date = $business_data['start_date'];
+            $business->end_date = $business_data['end_date'];
+            $business->api_url = $business_data['api_url'];
+            $business->save();
+
+            return response()->json(['msg' => 'Negocio actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => 'Error al actualizar el negocio'], 500);
+        }
+    }
+
     public function destroy(Request $request)
     {
         try {
             $business_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
+            $business = Business::find($business_data['id']);
+            if ($business->image_url != "business/default.jpg") {
+                $destination=public_path("storage\\".$business->image_url);
+                    if (File::exists($destination)) {
+                        File::delete($destination);
+                    }
+                }
             Business::destroy($business_data['id']);
 
             return response()->json(['msg' => 'Negocio eliminado correctamente'], 200);

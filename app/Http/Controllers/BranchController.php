@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Car;
 use App\Models\Comment;
 use App\Models\Product;
+use App\Models\Trace;
 use App\Services\BranchService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -251,6 +252,9 @@ class BranchController extends Controller
                 }
                 }
                 $branch->image_data = $request->file('image_data')->storeAs('branches', $branch->id . '.' . $request->file('image_data')->extension(), 'public');
+            }
+            if ($branch_data['name'] != $branch->name) {                
+                Trace::where('branch', $branch->name)->update(['branch' => $branch_data['name']]);
             }
             $branch->name = $branch_data['name'];
             $branch->phone = $branch_data['phone'];

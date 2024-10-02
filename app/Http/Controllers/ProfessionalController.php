@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Professional;
+use App\Models\ProfessionalWorkPlace;
 use App\Models\Reservation;
 use App\Models\Schedule;
 use App\Models\Service;
@@ -205,7 +206,7 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function show_apk(Request $request)
+    public function show_apk1(Request $request)
     {
         try {
             $professionals_data = $request->validate([
@@ -214,6 +215,46 @@ class ProfessionalController extends Controller
             $professional = Professional::where('id', $professionals_data['id'])->first();
             if ($professional !== null)
                 return $professional->state;
+            else
+                return -1;
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+        }
+    }
+
+    public function show_apk(Request $request)
+    {
+        try {
+            $professionals_data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+            $professional = Professional::where('id', $professionals_data['id'])->first();
+            $today = Carbon::now()->toDateString(); // Obtiene la fecha actual
+            $branch_id = 0;
+            $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
+                ->whereDate('data', $today)
+                ->where('state', 1)->orderByDesc('data')->first();
+                if ($workplaceProfessional != null) {
+                    $branch_id = $workplaceProfessional->workplace->branch_id;
+                }
+            if ($professional !== null){
+                if ($professional->state == 1 && $branch_id !=0) {
+                    $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 4)->whereHas('car.clientProfessional', function ($query) use ($professionals_data) {
+                        $query->where('professional_id', $professionals_data['id']);
+                    })->whereHas('tail', function ($query) use ($professionals_data) {
+                        $query->where('attended', 3)->whereNot('aleatorie', 1);
+                    })->whereDate('data', Carbon::now())->orderBy('start_time')->first();
+                    if ($reservation != null) {
+                        return 3;
+                    }
+                    else {
+                        return $professional->state;
+                    }
+                }else {
+                    return $professional->state;
+                }
+            }
             else
                 return -1;
         } catch (\Throwable $th) {
