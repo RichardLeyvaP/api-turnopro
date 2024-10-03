@@ -2117,7 +2117,15 @@ class CarController extends Controller
             $branch->notifications()->save($notification);
             //}
             //}
-            $car->delete();
+            $reservation = Reservation::where('car_id', $car->id)->first();
+            $professional = Professional::find($data['professional_id']);
+            if ($professional) {
+                $reservation->cause = 'Reservación eliminada desde la caja por: '.$professional->name;
+            }else {
+                $reservation->cause = 'Reservación eliminada desde la caja';
+            }
+            $reservation->save();
+            $reservation->delete();
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {

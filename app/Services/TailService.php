@@ -1061,8 +1061,9 @@ class TailService
                 //}else {
                     //$tail->aleatorie = 1;
                 //}
-                $tail->save();
             }
+                $tail->attended = 0;
+                $tail->save();
 
             $this->reassignServices($servicesOrders, $service_professionals);
                 $notification = new Notification();
@@ -1088,12 +1089,15 @@ class TailService
             Log::info("Reasignar Cliente");
 
             $client = Client::findOrFail($data['client_id']);
+            Log::info('Cliente a reasignar');
             Log::info($client);
 
             $professional = Professional::findOrFail($data['professional_id']);
+            Log::info('Profesional la que va a reasignar');
             Log::info($professional);
 
             $reservation = Reservation::findOrFail($data['reservation_id']);
+            Log::info('Resevacion de la reasignacion');
             Log::info($reservation);
 
             $horaActual = Carbon::now();
@@ -1107,15 +1111,16 @@ class TailService
                 ->get();
 
             if ($reservations->isEmpty()) {
-                Log::info('No tiene reservas reasigned coordinador');
+                Log::info('No tiene reservas reasigned segundo plano');
                 $this->actualizarReserva($reservation, $horaActual, $tiempoReserva);
             } else {
-                Log::info('Tiene reservas reasigned coordinador');
+                Log::info('Tiene reservas reasigned segundo plano');
                 $nuevaHoraInicio = $this->encontrarIntervaloLibre($reservations, $horaActual, $tiempoReserva);
                 $this->actualizarReserva($reservation, $nuevaHoraInicio, $tiempoReserva);
             }
 
             $car = Car::findOrFail($reservation->car_id);
+            Log::info('Carro de la reasignacion');
             Log::info($car);
 
             $servicesOrders = Order::where('car_id', $car->id)->where('is_product', 0)->distinct('id')->get();
@@ -1138,10 +1143,25 @@ class TailService
             Log::info($client_professional_id);
 
             $tail = $reservation->tail;
+            if ($tail->attended == 3) {
+                $ProfessOld = $car->clientProfessional->professional_id;
+                $tempProfessional = Professional::where('id', $ProfessOld)->first();                
+                Log::info('Cliente Reasignado por el sistema al estar en solicitud de rechazo del professional');
+                Log::info($tempProfessional->name);
+                $notification = new Notification();
+                $notification->professional_id = $tempProfessional->id;
+                $notification->branch_id = $reservation->branch_id;
+                $notification->tittle = 'Aceptada Eliminación de Cliente';
+                $notification->description = 'El cliente fue reasignado por el sistema';
+                $notification->type = 'Barbero';
+                $notification->state = 3;
+                $notification->save();
+            }
             if ($tail && $tail->aleatorie != 0) {
                 $tail->aleatorie = 2;
-                $tail->save();
             }
+            $tail->attended = 0;
+            $tail->save();            
 
             $car->client_professional_id = $client_professional_id;
             $car->save();
@@ -1507,7 +1527,7 @@ class TailService
         }
     }
 
-    private function reassignServices($servicesOrders, $service_professionals)
+    private function reassignServicesOld($servicesOrders, $service_professionals)
     {
         try{
          $serviceProfessionalMap = $service_professionals->unique('branch_service_id')->keyBy(function ($item) {
@@ -1533,9 +1553,54 @@ class TailService
                 $service->delete();
             }
         }
-    } catch (\Throwable $th) {
-        throw new \RuntimeException("Error al ejecutar el TailService(reassignServices): " . $th->getMessage());
+        } catch (\Throwable $th) {
+            throw new \RuntimeException("Error al ejecutar el TailService(reassignServices): " . $th->getMessage());
+        }
     }
+
+    private function reassignServices($servicesOrders, $service_professionals)
+    {
+        Log::info('Entra a reasignar Servicios al profesional');
+        Log::info('Entra a reasignar Servicios al profesional');
+        try{
+         $serviceProfessionalMap = $service_professionals->unique('branch_service_id')->keyBy(function ($item) {
+            return $item->branchService->service->id;
+        });
+
+        foreach ($servicesOrders as $service) {
+            $serv = $service->branchServiceProfessional->branchService->service;
+            $serviceProfessional = $serviceProfessionalMap->get($serv->id);
+            Log::info('Carro de las ordenes');
+            Log::info($serv->name);
+            if ($serviceProfessional) {
+                Log::info('Servicio a Reasignar');
+                Log::info($service->car_id);
+                $percent = $serviceProfessional->percent ?? 0;
+                // Verifica si ya existe una orden para evitar duplicados
+                $existingOrder = Order::where('car_id', $service->car_id)
+                    ->where('branch_service_professional_id', $serviceProfessional->id)
+                    ->first();
+                
+                if (!$existingOrder) {
+                    $order = new Order();
+                    $order->car_id = $service->car_id;
+                    $order->product_store_id = null;
+                    $order->branch_service_professional_id = $serviceProfessional->id;
+                    $order->data = $service->data;
+                    $order->is_product = false;
+                    $order->percent_win = $percent ? $serv->price_service * $percent / 100 : $serv->price_service;
+                    $order->price = $serv->price_service;
+                    $order->request_delete = false;
+                    $order->save();
+
+                    // Elimina el servicio de la orden solo después de guardar correctamente
+                    $service->delete();
+                }
+            }
+        }
+        } catch (\Throwable $th) {
+            throw new \RuntimeException("Error al ejecutar el TailService(reassignServices): " . $th->getMessage());
+        }
     }
 
 

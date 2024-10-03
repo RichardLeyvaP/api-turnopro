@@ -611,6 +611,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::post('/storeByType', [BranchRuleProfessionalController::class, 'storeByType']);//registrar convivencia x el tipo de rule
     Route::post('/storeByType-time', [BranchRuleProfessionalController::class, 'storeByType_time']);//registrar convivencia x el tipo de rule
     Route::get('/rules_professional', [BranchRuleProfessionalController::class, 'rules_professional']);//ver el estado de las rules de un professional en una branch de una fecha dada o del dia actual
+    Route::get('/branch-rule-professional-periodo', [BranchRuleProfessionalController::class, 'branch_rule_professional_periodo']);//Devolver la cantidad de veces que estuvo de estado cada regla
 
     //ProfessionalWorkPlace
     Route::get('/professionalworkplace', [ProfessionalWorkPlaceController::class, 'index']);

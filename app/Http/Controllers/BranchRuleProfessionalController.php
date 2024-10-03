@@ -9,6 +9,7 @@ use App\Models\Professional;
 use App\Models\Rule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BranchRuleProfessionalController extends Controller
@@ -185,6 +186,44 @@ class BranchRuleProfessionalController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => 'Error al actualizar estado del cumplimiento de rule del professional'], 500);
+        }
+    }
+
+    //obtener la cantidad de estado por convivencias
+    public function branch_rule_professional_periodo(Request $request)
+    {
+
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date',
+            ]);
+            $results = [];
+            $results = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data) {
+                // Filtramos por la sucursal
+                $query->where('branch_id', $data['branch_id']);
+            })
+            ->where('professional_id', $data['professional_id']) // Filtramos por el profesional
+            ->whereDate('data', '>=', $data['startDate']) // Filtramos por fecha mayor o igual al inicio
+            ->whereDate('data', '<=', $data['endDate']) // Filtramos por fecha menor o igual al fin
+            ->join('branch_rule', 'branch_rule_professional.branch_rule_id', '=', 'branch_rule.id')
+            ->join('rules', 'branch_rule.rule_id', '=', 'rules.id')
+            ->select(
+                'rules.name as rule_name',
+                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 0 THEN 1 ELSE 0 END) as estado_0'),
+                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 1 THEN 1 ELSE 0 END) as estado_1'),
+                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 3 THEN 1 ELSE 0 END) as estado_3')
+            )
+            ->groupBy('rules.name') // Agrupamos por el nombre de la regla
+            ->get();
+
+
+            return response()->json($results, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
 
