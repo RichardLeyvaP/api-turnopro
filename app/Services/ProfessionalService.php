@@ -6,9 +6,11 @@ use App\Models\BranchServiceProfessional;
 use App\Models\Car;
 use App\Models\Order;
 use App\Models\Professional;
+use App\Models\ProfessionalPayment;
 use App\Models\ProfessionalWorkPlace;
 use App\Models\Record;
 use App\Models\Reservation;
+use App\Models\Retention;
 use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\Vacation;
@@ -827,7 +829,8 @@ class ProfessionalService
                         Log::info('Tiempo de end_time o no hay última reserva');
                         $professional->disponible = $endTime->format('H:i:s');
                     }
-                }else if($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && !$reservation){
+                }
+                else if($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && !$reservation){
                     Log::info('end_time:'.$professional->end_time);
                     Log::info('5do if Profesional:'.$professional->name);
                     $endTime = Carbon::parse($professional->end_time);
@@ -866,6 +869,7 @@ class ProfessionalService
         $returnedProfessionals = collect($returnedProfessionals)->sortBy([
             ['state', 'asc'],
             ['start_time', 'asc'],
+            ['attended', 'asc'],    // Si 'start_time' coincide, ordena por 'attended'
             ['disponible', 'asc'],
             ['living', 'asc'],
             ['arrival', 'asc']
@@ -878,6 +882,38 @@ class ProfessionalService
             throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
         }
     }
+    
+    
+    /**
+     * Método para calcular la hora disponible de un profesional considerando colación, reservas, y tiempo de cierre.
+     */
+    private function calcularDisponibilidad($professional, $totalTiempo, $reservations, $startTime, $closingTime, $current_time)
+    {
+        // Aquí puedes añadir la lógica de cálculo de disponibilidad basado en colación, reservas, etc.
+        // Si el profesional tiene colación o está ocupado, calcular su próxima disponibilidad.
+        
+        // Ejemplo simplificado de cómo calcularlo:
+        if ($professional->state == 2 && $professional->colacion_time) {
+            $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
+            if (Carbon::parse($current_time) < $colacion_time) {
+                return $colacion_time->format('H:i');
+            }
+        }
+
+        // Si tiene reservas activas, calcular su disponibilidad basado en el tiempo de la última reserva.
+        if ($reservations->isNotEmpty()) {
+            $lastReservation = $reservations->last();
+            $endReservation = Carbon::parse($lastReservation->final_hour);
+            if ($endReservation->addMinutes($totalTiempo)->format('H:i:s') <= $closingTime) {
+                return $endReservation->format('H:i');
+            }
+        }
+
+        // Si no hay restricciones, devolver el tiempo de inicio del turno o el actual.
+        return max(Carbon::parse($startTime)->format('H:i'), $current_time);
+    }
+    
+    
 
     public function professional_reservations_time($branch_id, $professional_id, $day)
     {
@@ -1821,7 +1857,7 @@ class ProfessionalService
         return $result;
     }
 
-    public function professionals_ganancias_branch_date($data)
+    public function professionals_ganancias_branch_date_ANTERIOR($data)
     {
         Log::info('Obtener los cars');
         if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
@@ -1901,8 +1937,141 @@ class ProfessionalService
             return $result = [];
         }
     }
+    
+     public function professionals_ganancias_branch_date($data)
+    {
+        Log::info('Obtener los cars');
+        $fecha = Carbon::now();
+        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $cars = Car::whereHas('reservation', function ($query) use ($data, $fecha) {
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', $fecha);
+            })->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })->where('pay', 1)->get();
+            $carIds = $cars->pluck('id');
+            $services = 0;
+            $products = 0;
+            $totalClients = 0;
+            //foreach ($cars as $car) {
+            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
+            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
+            $services = $orderServ->count();
+            //$services = $services + count($car->orders->where('is_product', 0));
+            //$products = $products + count($car->orders->where('is_product', 1));
+            $products = $orderProd->sum('cant');
+            //}
+            $ServiceEspecial = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
+                $query->where('type_service', 'Especial');
+            })->get();
+            $ServiceRegular = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
+                $query->where('type_service', 'Regular');
+            })->get();
+            $totalClients = $cars->count();
+            $amountGenral = $cars->sum('amount');
+            /*$winProfessional =$cars->sum(function ($car){
+            return $car->orders->sum('percent_win');
+        });*/
+        $totalPrice = 0;
+        $totalPercentWin = 0;
+        foreach ($ServiceEspecial as $order) {
+            if ($order->meta == 1) {
+                $totalPrice += $order->price;
+            } elseif ($order->meta == 0) {
+                $totalPercentWin += $order->percent_win;
+            }
+        }
+        /*$totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
+            $winProfessional = $orderServ->sum('percent_win');
+            $retentionPorcent = $professional->retention ? $professional->retention : 0;
+            $winTips = intval($cars->sum('tip') * 0.80);
+            return $result = [
+                'Clientes Atendidos' => $totalClients,
+                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
+                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
+                'Productos Vendidos' => $products,
+                'Cantidad de Servicios' => $services,
+                'Servicios Regulares' => $ServiceRegular->count(),
+                'Servicios Especiales' => $ServiceEspecial->count(),
+                'Monto Servicios Especial' => $totalAmount,
+                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+                'Propina 80%' => number_format(round($winTips, 2), 2),
+                'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+                'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
+                'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
+                'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
+            ];*/
+            $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
+            //$winProfessional = $orderServ->sum('percent_win');
+            $retentionPorcent = $professional->retention ? $professional->retention : 0;
+            $winTips = intval($cars->sum('tip') * 0.80);
+            $payments = ProfessionalPayment::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $professional->id)
+                ->whereDate('date', $fecha)
+                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
+                ->get();
+                $convivencia = 0;
+                $service = 0;
+                $bonos = 0;
+                foreach ($payments as $payment) {
+                    if ($payment->type == 'Bono convivencias') {
+                            $convivencia += $payment->amount;
+                        } 
+                    if($payment->type == 'Bono servicios'){
+                        $service += $payment->amount;
+                    }
+                    $bonos += $payment->amount;
+                }
+                $totalRetention = Retention::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $professional->id)->whereDate('data', $fecha)->sum('retention');
+                $winProfessional = $cars->sum(function ($car) {
+                    return $car->orders->sum(function ($order) {
+                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                    });
+                });
+                $retentionProfess = $retentionPorcent ? $winProfessional * $retentionPorcent / 100 : $winProfessional;
+                $amountConvivencia = $winProfessional - $retentionProfess;
+                $amountService = $amountConvivencia - $convivencia;
+            return $result = [
+                'Clientes Atendidos' => $totalClients,
+                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
+                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
+                'Productos Vendidos' => $products,
+                'Cantidad de Servicios' => $services,
+                // 'Servicios Regulares' => $ServiceRegular->count(),
+                // 'Servicios Especiales' => $ServiceEspecial->count(),
+                // 'Monto Servicios Especial' => $totalAmount,
+                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+                'Propina 80%' => number_format(round($winTips, 2), 2),
+                'Total Servicios' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+                'Retención' => $totalRetention ? number_format(round($totalRetention, 2), 2) : (number_format(round($retentionProfess, 2), 2)), //monto generado percent_win % calculando la retención
+                'Gan.Serv C/Convivencias' => number_format(round($amountConvivencia, 2), 2),
+                'Gan.Serv S/Convivencias' => number_format(round($amountService, 2), 2),
+                'Bonos' => number_format(round($bonos, 2), 2),
+                'Total' => number_format(round($amountService + $winTips + $bonos, 2), 2), //ganancia barbero - retencion + propinas 80%
+            ];
+        }
+        if ($data['charge'] == 'Tecnico') {
+            $cars = Car::with('reservation')
+                ->where('pay', 1)
+                ->where('tecnico_id', $data['professional_id'])
+                ->whereHas('reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
+                })
+                ->get();
+            $amountGenral = $cars->sum('technical_assistance') * 5000;
+            return $result = [
+                'Clientes Atendidos' => $cars->sum('technical_assistance'),
+                'Monto Generado' => number_format(round($amountGenral, 2), 2)
+            ];
+        } else {
+            return $result = [];
+        }
+    }
+    
+    
 
-    public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
+    public function professionals_ganancias_branch_Periodo_ANTERIOR($data, $startDate, $endDate)
     {
         Log::info('Obtener los cars');
         if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
@@ -1982,8 +2151,118 @@ class ProfessionalService
             return $result = [];
         }
     }
+    
+     public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
+    {
+        Log::info('Obtener los cars');
+        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $cars = Car::whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
+                $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
+            })->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })->where('pay', 1)->get();
+            $carIds = $cars->pluck('id');
+            $services = 0;
+            $products = 0;
+            $totalClients = 0;
+            //foreach ($cars as $car) {
+            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
+            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
+            $services = $orderServ->count();
+            //$services = $services + count($car->orders->where('is_product', 0));
+            //$products = $products + count($car->orders->where('is_product', 1));
+            $products = $orderProd->sum('cant');
+            //}
+            $ServiceEspecial = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
+                $query->where('type_service', 'Especial');
+            })->get();
+            $ServiceRegular = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
+                $query->where('type_service', 'Regular');
+            })->get();
+            $totalClients = $cars->count();
+            $amountGenral = $cars->sum('amount');
+            /*$winProfessional =$cars->sum(function ($car){
+            return $car->orders->sum('percent_win');
+        });*/
+        $totalPrice = 0;
+        $totalPercentWin = 0;
+        foreach ($ServiceEspecial as $order) {
+            if ($order->meta == 1) {
+                $totalPrice += $order->price;
+            } elseif ($order->meta == 0) {
+                $totalPercentWin += $order->percent_win;
+            }
+        }
+        $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
+            //$winProfessional = $orderServ->sum('percent_win');
+            $retentionPorcent = $professional->retention ? $professional->retention : 0;
+            $winTips = intval($cars->sum('tip') * 0.80);
+            $payments = ProfessionalPayment::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $professional->id)
+                ->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
+                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
+                ->get();
+                $convivencia = 0;
+                $service = 0;
+                $bonos = 0;
+                foreach ($payments as $payment) {
+                    if ($payment->type == 'Bono convivencias') {
+                            $convivencia += $payment->amount;
+                        } 
+                    if($payment->type == 'Bono servicios'){
+                        $service += $payment->amount;
+                    }
+                    $bonos += $payment->amount;
+                }
+                $totalRetention = Retention::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $professional->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
+                $winProfessional = $cars->sum(function ($car) {
+                    return $car->orders->sum(function ($order) {
+                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                    });
+                });
+                $retentionProfess = $retentionPorcent ? $winProfessional * $retentionPorcent / 100 : $winProfessional;
+                $amountConvivencia = $winProfessional - $retentionProfess;
+                $amountService = $amountConvivencia - $convivencia;
+            return $result = [
+                'Clientes Atendidos' => $totalClients,
+                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
+                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
+                'Productos Vendidos' => $products,
+                'Cantidad de Servicios' => $services,
+                // 'Servicios Regulares' => $ServiceRegular->count(),
+                // 'Servicios Especiales' => $ServiceEspecial->count(),
+                // 'Monto Servicios Especial' => $totalAmount,
+                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+                'Propina 80%' => number_format(round($winTips, 2), 2),
+                'Total Servicios' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+                'Retención' => $totalRetention ? number_format(round($totalRetention, 2), 2) : (number_format(round($retentionProfess, 2), 2)), //monto generado percent_win % calculando la retención
+                'Gan.Serv C/Convivencias' => number_format(round($amountConvivencia, 2), 2),
+                'Gan.Serv S/Convivencias' => number_format(round($amountService, 2), 2),
+                'Bonos' => number_format(round($bonos, 2), 2),
+                'Total' => number_format(round($amountService + $winTips + $bonos, 2), 2), //ganancia barbero - retencion + propinas 80%
+            ];
+        }
+        if ($data['charge'] == 'Tecnico') {
+            $cars = Car::with('reservation')
+                ->where('pay', 1)
+                ->where('tecnico_id', $data['professional_id'])
+                ->whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
+                    $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
+                })
+                ->get();
+            $amountGenral = $cars->sum('technical_assistance') * 5000;
+            return $result = [
+                'Clientes Atendidos' => $cars->sum('technical_assistance'),
+                'Monto Generado' => number_format(round($amountGenral, 2), 2)
+            ];
+        } else {
+            return $result = [];
+        }
+    }
 
-    public function professionals_ganancias_branch_month($data, $mes, $year)
+    public function professionals_ganancias_branch_month_ANTERIOR($data, $mes, $year)
     {
         Log::info('Obtener los cars');
         if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
@@ -2044,6 +2323,136 @@ class ProfessionalService
                 'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
                 'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
                 'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
+            ];
+        }
+        if ($data['charge'] == 'Tecnico') {
+            $cars = Car::with('reservation')
+                ->where('pay', 1)
+                ->where('tecnico_id', $data['professional_id'])
+                ->whereHas('reservation', function ($query) use ($data, $mes, $year) {
+                    $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
+                })
+                ->get();
+            $amountGenral = $cars->sum('technical_assistance') * 5000;
+            return $result = [
+                'Clientes Atendidos' => $cars->sum('technical_assistance'),
+                'Monto Generado' => number_format(round($amountGenral, 2), 2)
+            ];
+        } else {
+            return $result = [];
+        }
+    }
+    
+       public function professionals_ganancias_branch_month($data, $mes, $year)
+    {
+        Log::info('Obtener los cars');
+        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $cars = Car::whereHas('reservation', function ($query) use ($data, $mes, $year) {
+                $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
+            })->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })->where('pay', 1)->get();
+            $carIds = $cars->pluck('id');
+            $services = 0;
+            $products = 0;
+            $totalClients = 0;
+            //foreach ($cars as $car) {
+            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
+            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
+            $services = $orderServ->count();
+            //$services = $services + count($car->orders->where('is_product', 0));
+            //$products = $products + count($car->orders->where('is_product', 1));
+            $products = $orderProd->sum('cant');
+            //}
+            $ServiceEspecial = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
+                $query->where('type_service', 'Especial');
+            })->get();
+            $ServiceRegular = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
+                $query->where('type_service', 'Regular');
+            })->get();
+            $totalClients = $cars->count();
+            $amountGenral = $cars->sum('amount');
+            /*$winProfessional =$cars->sum(function ($car){
+                return $car->orders->sum('percent_win');
+            });*/
+            $totalPrice = 0;
+        $totalPercentWin = 0;
+        foreach ($ServiceEspecial as $order) {
+            if ($order->meta == 1) {
+                $totalPrice += $order->price;
+            } elseif ($order->meta == 0) {
+                $totalPercentWin += $order->percent_win;
+            }
+        }
+        /*$totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
+            $winProfessional = $orderServ->sum('percent_win');
+            $retentionPorcent = $professional->retention ? $professional->retention : 0;
+            $winTips = intval($cars->sum('tip') * 0.80);
+            return $result = [
+                'Clientes Atendidos' => $totalClients,
+                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
+                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
+                'Productos Vendidos' => $products,
+                'Cantidad de Servicios' => $services,
+                'Servicios Regulares' => $ServiceRegular->count(),
+                'Servicios Especiales' => $ServiceEspecial->count(),
+                'Monto Servicios Especial' => $totalAmount,
+                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+                'Propina 80%' => number_format(round($winTips, 2), 2),
+                'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+                'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
+                'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
+                'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
+            ];*/
+            $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
+            //$winProfessional = $orderServ->sum('percent_win');
+            $retentionPorcent = $professional->retention ? $professional->retention : 0;
+            $winTips = intval($cars->sum('tip') * 0.80);
+            $payments = ProfessionalPayment::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $professional->id)
+                ->whereMonth('date', $mes)->whereYear('date', $year)
+                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
+                ->get();
+                $convivencia = 0;
+                $service = 0;
+                $bonos = 0;
+                foreach ($payments as $payment) {
+                    if ($payment->type == 'Bono convivencias') {
+                            $convivencia += $payment->amount;
+                        } 
+                    if($payment->type == 'Bono servicios'){
+                        $service += $payment->amount;
+                    }
+                    $bonos += $payment->amount;
+                }
+                $totalRetention = Retention::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $professional->id)->whereMonth('data', $mes)->whereYear('data', $year)->sum('retention');
+                $winProfessional = $cars->sum(function ($car) {
+                    return $car->orders->sum(function ($order) {
+                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                    });
+                });
+                $retentionProfess = $retentionPorcent ? $winProfessional * $retentionPorcent / 100 : $winProfessional;
+                $amountConvivencia = $winProfessional - $retentionProfess;
+                $amountService = $amountConvivencia - $convivencia;
+            return $result = [
+                'Clientes Atendidos' => $totalClients,
+                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
+                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
+                'Productos Vendidos' => $products,
+                'Cantidad de Servicios' => $services,
+                // 'Servicios Regulares' => $ServiceRegular->count(),
+                // 'Servicios Especiales' => $ServiceEspecial->count(),
+                // 'Monto Servicios Especial' => $totalAmount,
+                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
+                'Propina 80%' => number_format(round($winTips, 2), 2),
+                'Total Servicios' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
+                'Retención' => $totalRetention ? number_format(round($totalRetention, 2), 2) : (number_format(round($retentionProfess, 2), 2)), //monto generado percent_win % calculando la retención
+                'Gan.Serv C/Convivencias' => number_format(round($amountConvivencia, 2), 2),
+                'Gan.Serv S/Convivencias' => number_format(round($amountService, 2), 2),
+                'Bonos' => number_format(round($bonos, 2), 2),
+                'Total' => number_format(round($amountService + $winTips + $bonos, 2), 2), //ganancia barbero - retencion + propinas 80%
             ];
         }
         if ($data['charge'] == 'Tecnico') {
@@ -2388,4 +2797,175 @@ class ProfessionalService
             throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state_tottem): " . $e->getMessage());
         }
     }
+    
+    
+    //
+    //
+    //
+    //
+    //METODOS NUEVOS
+    
+    public function professionals_state1($branch_id, $reservation_id)//cambio 31-08-24
+    {
+        try{
+            $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
+        $reservation = Reservation::find($reservation_id);
+        $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
+        $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
+        $branchService = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
+        $total_timeMin = $this->convertirHoraAMinutos($reservation->total_time);
+        //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
+        $currentTime = Carbon::now();
+
+        $professionals = $this->getAvailableProfessionals($branch_id, $branchService);
+        $professionalsFree = $this->getFreeProfessionals($professionals, $branch_id, $total_timeMin);
+
+            return $this->getReturnedProfessionals($professionalsFree, $branch_id, $startTime);
+
+                   } catch (Exception $e) {
+                    // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+                    throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state): " . $e->getMessage());
+                }
+    }
+	
+	private function getAvailableProfessionals($branch_id, $branchService)
+	{
+		return Professional::whereHas('branches', function ($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id)->where('arrival', '!=', NULL);
+        })->whereHas('branchServiceProfessionals', function ($query) use ($branchService) {
+            $query->whereIn('branch_service_id', $branchService);
+        }, '=', count($branchService))->whereHas('charge', function ($query) {
+            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+        })->where('state', 1)->join('branch_professional', function ($join) use ($branch_id) {
+            $join->on('professionals.id', '=', 'branch_professional.professional_id')
+                ->where('branch_professional.branch_id', '=', $branch_id)
+                ->where('branch_professional.arrival', '!=', NULL);
+        })->select(
+            'professionals.id',
+            'professionals.name',
+            'professionals.state',
+            'professionals.image_url',
+            'branch_professional.arrival',
+            'branch_professional.living',
+            )->orderBy('branch_professional.living', 'asc')
+            ->orderBy('branch_professional.arrival', 'asc')
+            ->get();		
+	}
+	
+	private function getFreeProfessionals($professionals, $branch_id, $total_timeMin)
+	{
+		 $professionalFree = [];
+        // Convertir el campo telefono a string
+        // Iterar sobre los profesionales
+        $nuevaHoraInicio = Carbon::now();
+        foreach ($professionals as $professional) {
+            $professionalCharge = Professional::where('id', $professional->id)->first();
+            $charge = $professionalCharge->charge->name;
+            $professional->charge_id = $charge;
+            Log::info('Professional analizando');
+            Log::info($professional);        
+          Log::info($professional->charge_id);
+                $attended = $professional->reservations()
+                    ->where('branch_id', $branch_id)
+                    ->where('confirmation', 4)
+                    ->whereDate('data', Carbon::now())
+                    ->whereHas('tail', function ($subquery) {
+                        $subquery->whereIn('attended', [1, 11, 111, 4, 5, 33]);
+                    })
+                    ->get();
+                if ($attended->isNotEmpty()) {
+                    Log::info('Está atendiendo');
+                } else {
+                      Log::info('log 4)');
+                    $reservations = $professional->reservations()
+                        ->where('branch_id', $branch_id)
+                        ->where('confirmation', 4)
+                        ->whereDate('data', Carbon::now())
+                        ->whereHas('tail', function ($subquery) {
+                            $subquery->where('aleatorie', '!=', 1);
+                        })
+                        ->orderBy('start_time')
+                        ->get();
+                    if ($reservations->isEmpty()) {
+                        Log::info('No tiene reservas, lo agrego como libre');
+                        $professionalFree[] = $professional;
+                    } else {
+                          Log::info('log 6)');
+                        foreach ($reservations as $reservation1) {
+                            // Comprobación de start_time y attended
+                            Log::info('Reservaciones');
+                            Log::info($reservation1);
+                            $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
+                            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
+        
+                            if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
+                                Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
+                                $professionalFree[] = $professional;
+                                break;
+                            }else{
+                                break;
+                            }
+                        }
+                    }
+                }
+        }
+                return $professionalFree;
+		
+	}
+	
+	
+	private function getReturnedProfessionals($professionals, $branch_id, $startTime)
+	{
+		$returnedProfessionals = collect($professionals)->map(function($professional) use ($branch_id, $startTime) {
+                $reservation = Reservation::where('branch_id', $branch_id)
+                    ->where('confirmation', 2)
+                    ->whereHas('car.clientProfessional', function ($query) use ($professional) {
+                        $query->where('professional_id', $professional->id);
+                    })->orderByDesc('finished_at')
+                    ->whereDate('data', Carbon::now())
+                    ->first();
+                    if ($reservation != null && $professional->end_time == null) {
+                        Log::info('end_time Reasigned:'.$professional->end_time);
+                        Log::info('1er if Profesional Reasigned:'.$professional->name);
+                        $professional->disponible = $reservation->finished_at->format('H:i:s');
+                    }
+                    else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
+                        Log::info('end_time Reasigned:'.$professional->end_time);
+                        Log::info('2do if Profesional Reasigned:'.$professional->name);
+                        /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
+                        // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
+                        $endTime = Carbon::parse($professional->end_time);
+                        $lastReservationTime = Carbon::parse($reservation->finished_at);
+        
+                        // Comparar y decidir el tiempo que se asignará a `disponible`
+                        if ($lastReservationTime->gt($endTime)) {
+                            Log::info('Tiempo de la última reserva es mayor que end_time Reasigned:');
+                            Log::info($lastReservationTime);
+                            $professional->disponible = $lastReservationTime->format('H:i:s');
+                        } else {
+                            Log::info('Tiempo de end_time o no hay última reserva Reasigned');
+                            $professional->disponible = $endTime->format('H:i:s');
+                        }
+                    }else {
+                        Log::info('3ro if Profesional Reasigned:'.$professional->name);
+                        $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
+                        if ($record != null) {
+                            $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
+                        }
+                        else {
+                            $professional->disponible = Carbon::parse($startTime)->format('H:i:s');
+                        }
+                        
+                    }            
+                return $professional;
+            });
+            
+            return $returnedProfessionals->sortBy([
+                ['disponible', 'asc'],
+                ['living', 'asc'],
+                ['arrival', 'asc']
+            ])->values();
+	}
+	
+
 }

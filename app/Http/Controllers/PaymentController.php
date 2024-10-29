@@ -15,6 +15,7 @@ use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -52,7 +53,7 @@ class PaymentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update_ANTERIOR(Request $request)
     {
         try {
 
@@ -224,6 +225,190 @@ class PaymentController extends Controller
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error al realizar el pago'], 500);
+        }
+    }
+    
+      public function update(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            Log::info("Pagar Carro");
+            $data = $request->validate([
+                'car_id' => 'required|numeric',
+                'cash' => 'nullable|numeric',
+                'creditCard' => 'nullable|numeric',
+                'debit' => 'nullable|numeric',
+                'transfer' => 'nullable|numeric',
+                'other' => 'nullable|numeric',
+                'tip' => 'nullable|numeric',
+                'cardGift' => 'nullable|numeric',
+                'code' => 'nullable',
+                'tipByCash' => 'nullable'
+            ]);         
+            Log::info($data);
+            $control = 0;
+            $car = Car::find($data['car_id']);            
+           $branch = Branch::where('id', $request->branch_id)->first();
+            $payment = Payment::where('car_id', $data['car_id'])->first();
+            if ($payment) {
+                if ($payment->cash) {
+                    $box = Box::where('branch_id', $request->branch_id)->whereDate('data', Carbon::now())->first();
+                        $box->existence = $box->existence - $payment->cash;
+                        $box->save();
+                }
+            }else {
+                $payment = new Payment();
+            }
+            // Lógica basada en el valor de $data['tipByCash']
+            switch ($data['tipByCash']) {
+                case 'Efectivo':
+                    $data['cash'] += $data['tip'];
+                    break;
+                
+                case 'Débito':
+                    $data['debit'] += $data['tip'];
+                    break;
+                
+                case 'Transferencia':
+                    $data['transfer'] += $data['tip'];
+                    break;
+                
+                case 'Tarjeta de regalo':
+                    $data['cardGift'] += $data['tip'];
+                    break;
+                
+                case 'Tarjeta de Crédito':
+                    $data['creditCard'] += $data['tip'];
+                    break;
+
+                case 'Otro Método':
+                    $data['other'] += $data['tip'];
+                    break;
+            }
+            Log::info($data['cardGift']);
+            if ($data['cardGift'] != 0) {
+                Log::info($data['code']);
+                $cardGiftUser = CardGiftUser::where('code',$data['code'])->first();
+                Log::info('tarjeta asignada');
+                Log::info($cardGiftUser);
+                Log::info('carro');
+                Log::info($car->id);
+                Log::info("ver si es cero al pagar");
+                Log::info($cardGiftUser->exist - $data['cardGift']);
+                if($cardGiftUser->exist - $data['cardGift'] <= 0){
+                    $cardGiftUser->state = "Redimida";
+                }
+                $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
+                $cardGiftUser->save();
+            }
+            //Log::info($cardGiftUser);
+            $payment->car_id = $car->id;
+            $payment->cash = $data['cash'];
+            $payment->creditCard = $data['creditCard'];
+            $payment->debit = $data['debit'];
+            $payment->transfer = $data['transfer'];
+            $payment->other = $data['other'];
+            $payment->cardGif = $data['cardGift'];
+            $payment->branch_id = $request->branch_id;
+            $payment->save();
+
+            $finance = Finance::orderBy('control', 'desc')->first();
+            if ($finance !== null) {
+                $control = $finance->control + 1;
+            } else {
+                $control = 1;
+            }
+            $client = $car->clientProfessional->client->name;
+            $winProducts = Order::where('car_id', $data['car_id'])->where('is_product', 1)->sum('price');
+            $services = Order::where('car_id', $data['car_id'])->where('is_product', 0)->get();
+            $winServices = $services->sum('price');
+            if($car->technical_assistance){
+                $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $car->technical_assistance * 5000;
+                            $finance->comment = 'Ingreso por pago de servicios del técnico a cliente ' . $client;
+                            $finance->branch_id = $request->branch_id;
+                            $finance->type = 'Sucursal';
+                            $finance->revenue_id = 8;
+                            $finance->data = Carbon::now();
+                            $finance->file = '';
+                            $finance->save();
+            }
+            if($winProducts){
+                $finance = new Finance();
+                            $finance->control = $control++;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $winProducts;
+                            $finance->comment = 'Ingreso venta de productos a cliente ' . $client;
+                            $finance->branch_id = $request->branch_id;
+                            $finance->type = 'Sucursal';
+                            $finance->revenue_id = 7;
+                            $finance->data = Carbon::now();
+                            $finance->file = '';
+                            $finance->save();
+            }
+            if($winServices){
+                //Servicios
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $winServices;
+                $finance->comment = 'Ingreso por pago de servicios de cliente ' . $client;
+                $finance->branch_id = $request->branch_id;
+                $finance->type = 'Sucursal';
+                $finance->revenue_id = 8;
+                $finance->data = Carbon::now();
+                $finance->file = '';
+                $finance->save();
+            }
+            if($data['tip']){
+                //Servicios
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $data['tip'];
+                $finance->comment = 'Ingreso por pago de propina de cliente ' . $client.' ['.$data['tipByCash'].']';
+                $finance->branch_id = $request->branch_id;
+                $finance->type = 'Sucursal';
+                $finance->revenue_id = 8;
+                $finance->data = Carbon::now();
+                $finance->file = '';
+                $finance->save();
+            }
+            $car->pay = 1;
+            $car->active = 0;
+            $car->tip = $data['tip'];
+            $car->save();
+            Log::info('Actualizar Cajda de la sucursal');
+            Log::info($request->branch_id);
+            $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
+            Log::info($car->id);
+            if (!$box) {                
+                $box = new Box();
+                $box->existence = $data['cash'];    
+                $box->data = Carbon::now();         
+                $box->branch_id = $branch->id;
+            }else{                
+                $box->existence = $box->existence + $data['cash'];
+            }
+            $box->save();
+            $trace = [
+                'branch' => $branch->name,
+                'cashier' => $request->nameProfessional,
+                'client' => $car->clientProfessional->client->name,
+                'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift'],
+                'operation' => 'Paga Carro',
+                'details' => 'Carro: '.$car->id,
+                'description' => $car->clientProfessional->professional->name,
+            ];
+            $this->traceService->store($trace);
+            DB::commit();
+            return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th->getMessage());
+            DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al realizar el pago'], 500);
         }
     }

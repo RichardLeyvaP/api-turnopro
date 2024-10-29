@@ -279,8 +279,8 @@ class ProfessionalPaymentController extends Controller
                                           ->get()->map(function ($query){
                                             return [
                                                 'id' => $query->id,
-                                                'branch_id ' => $query->branch_id,
-                                                'professional_id' => $query->professional_id,
+                                                'branch_id ' => strval($query->branch_id),
+                                                'professional_id' => strval($query->professional_id),
                                                 'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                                                 'type' => $query->type,
                                                 'amount' => $query->amount,

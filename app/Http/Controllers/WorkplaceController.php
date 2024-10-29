@@ -195,8 +195,27 @@ class WorkplaceController extends Controller
         }
     }
 
-    public function resetWorkplaces()
+    public function resetWorkplaces_ANTERIOR()
     {
+        try{
+        Workplace::query()->update(['busy' => 0, 'select' => 0]);
+
+        return response()->json(['msg' => 'Puestos de Trabajo actualizados correctamente'], 200);
+    } catch (\Throwable $th) {
+        Log::info($th);
+        return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+    }
+    }
+    
+     public function resetWorkplaces(Request $request)
+    {
+        $codigo = $request->query('codigo'); 
+
+        
+
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
         try{
         Workplace::query()->update(['busy' => 0, 'select' => 0]);
 

@@ -31,7 +31,7 @@
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($box['cashFound'], 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Existencia</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo en caja:</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($box['existence'], 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">

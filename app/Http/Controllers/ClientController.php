@@ -47,7 +47,41 @@ class ClientController extends Controller
         }
     }
 
-    public function client_branch(Request $request)
+    public function client_branch_ANTERIOR(Request $request)
+    {
+        try {
+
+           $data = $request->validate([
+                'branch_id' => 'nullable|numeric'
+            ]);
+
+            Log::info("entra a cliente");
+            Log::info("Sucursal ".$data['branch_id']);
+            $now = Carbon::now();
+            $dates = [];
+                $clients = Client::with('user')->whereDoesntHave('clientProfessionals.cars.reservation')->orWhereHas('clientProfessionals.cars.reservation', function ($query) use ($data) {
+                    $query->where('branch_id', $data['branch_id']);
+                })->get()->unique('id');
+                $dates = $clients->map(function ($client) use ($now){
+                    return [
+                        'id' => $client->id,
+                        'name' => $client->name,
+                        'email' => $client->email,
+                        'phone' => $client->phone,
+                        'client_image' => $client->client_image.'?$'.$now,
+                        'user_id' => $client->user_id
+                    ];
+                });
+                        
+            return response()->json(['clients' => $dates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            return response()->json(['msg' => "Error al mostrar los clientes"], 500);
+        }
+    }
+    
+      public function client_branch(Request $request)
     {
         try {
 
@@ -56,12 +90,17 @@ class ClientController extends Controller
             ]);
 
             Log::info("entra a cliente");
-            Log::info("Sucursal ".$data['branch_id']);
+            Log::info("Sucursal");
+            Log::info($data['branch_id']);
             $now = Carbon::now();
             $dates = [];
-                $clients = Client::with('user')->whereHas('clientProfessionals.cars.reservation', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->get()->unique('id');
+                $clients = Client::with('user')->whereHas('professionals.branches', function($query) use ($data) {
+                    // Clientes que tienen relaci¨®n con la sucursal espec¨ªfica
+                    $query->where('branches.id', $data['branch_id']);
+                })
+                ->orWhereDoesntHave('professionals.branches') // Clientes sin relaci¨®n con ninguna sucursal
+                ->distinct()
+                ->get()->unique('id');
                 $dates = $clients->map(function ($client) use ($now){
                     return [
                         'id' => $client->id,
@@ -652,6 +691,24 @@ class ClientController extends Controller
 
 
 
+    public function client_email_phoneAnteriorrrr(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'email' => 'required'
+            ]);
+            Log::info($data['email']);
+            $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$request->email)->get();
+            Log::info('Clientes encontrados');
+            Log::info($clients);
+            return response()->json(['client' => $clients], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
+        }
+    }
+
+
     public function client_email_phone(Request $request)
     {
         try {
@@ -661,9 +718,9 @@ class ClientController extends Controller
             Log::info($data['email']);
             $input = $request->email;
 
-            // Verificar si es un nÃºmero de telÃ©fono (solo dÃ­gitos y opcionalmente con '+')
+            // Verificar si es un n¨²mero de tel¨¦fono (solo d¨ªgitos y opcionalmente con '+')
             if (preg_match('/^\+?\d+$/', $input)) {
-                // Si es un nÃºmero y no comienza con +56, agregarlo
+                // Si es un n¨²mero y no comienza con +56, agregarlo
                 if (!str_starts_with($input, '56')) {
                     $input = '56' . ltrim($input, '+');
                     $data['email'] = $input;
@@ -680,6 +737,7 @@ class ClientController extends Controller
             return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
         }
     }
+
 
     public function client_email(Request $request)
     {

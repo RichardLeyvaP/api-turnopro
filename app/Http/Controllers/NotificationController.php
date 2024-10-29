@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\BranchProfessional;
+use App\Models\BranchRuleProfessional;
+use App\Models\BranchRule;
 use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
@@ -25,7 +27,7 @@ class NotificationController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store_ANTERIOR(Request $request)
     {
         Log::info('Entra a registrar las notificaciones');
         try {
@@ -91,6 +93,229 @@ class NotificationController extends Controller
                     }
                 }
             } else {
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->tittle = $data['tittle'];
+                $notification->description = $data['description'];
+                $notification->type = $data['type'];
+                $branch->notifications()->save($notification);
+            }
+            /*$professional = Professional::find($data['professional_id']);
+            $branch = Branch::find($data['branch_id']);
+            $notification = new Notification();
+            $notification->professional_id = $professional->id;
+            $notification->tittle = $data['tittle'];
+            $notification->description = $data['description'];
+            $notification->type = $data['type'];
+            $branch->notifications()->save($notification);*/
+
+            return response()->json(['msg' => 'Notifications creada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Notificacion creada correctamente"], 500);
+        }
+    }
+    
+      public function store_MAL_ANTE(Request $request)
+    {
+        Log::info('Entra a registrar las notificaciones');
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
+                'tittle' => 'required|string',
+                'description' => 'required|string',
+                'type' => 'required|string',
+            ]);
+            $stateApk = "";
+            $branch = Branch::find($data['branch_id']);
+            if ($data['type'] == 'Ambos') {
+                if ($request->has('stateApk')) {
+                    $stateApk = $request->stateApk;
+                }
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $data['branch_id'])
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                if (!$encargados->isEmpty()) {
+                    foreach ($encargados as $encargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $encargado;
+                        $notification->tittle = $data['tittle'];
+                        $notification->description = $data['description'];
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = $stateApk;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$coordinadors->isEmpty()) {
+                    foreach ($coordinadors as $coordinador) {
+                        $notification = new Notification();
+                        $notification->professional_id = $coordinador;
+                        $notification->tittle = $data['tittle'];
+                        $notification->description = $data['description'];
+                        $notification->type = 'Coordinador';
+                        $notification->stateApk = $stateApk;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$barberoEncargados->isEmpty()) {
+                    foreach ($barberoEncargados as $barberoEncargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $barberoEncargado;
+                        $notification->tittle = $data['tittle'];
+                        $notification->description = $data['description'];
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = $stateApk;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+            } 
+            elseif ($data['type'] == 'Barbero'){
+                $branchrule = BranchRule::whereHas('rule', function ($query) {
+                    $query->where('type', 'Tiempo');
+                })
+                ->where('branch_id', $data['branch_id'])
+                ->first();
+
+            $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
+                ->where('branch_rule_id', $branchrule->id)
+                ->where('professional_id', $data['professional_id'])
+                ->first();
+            }
+            if ($existencia && $existencia->estado != 0) {
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->tittle = $data['tittle'];
+                $notification->description = $data['description'];
+                $notification->type = $data['type'];
+                $branch->notifications()->save($notification);
+            }
+            else {
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->tittle = $data['tittle'];
+                $notification->description = $data['description'];
+                $notification->type = $data['type'];
+                $branch->notifications()->save($notification);
+            }
+            /*$professional = Professional::find($data['professional_id']);
+            $branch = Branch::find($data['branch_id']);
+            $notification = new Notification();
+            $notification->professional_id = $professional->id;
+            $notification->tittle = $data['tittle'];
+            $notification->description = $data['description'];
+            $notification->type = $data['type'];
+            $branch->notifications()->save($notification);*/
+
+            return response()->json(['msg' => 'Notifications creada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Notificacion creada correctamente"], 500);
+        }
+    }
+    
+      public function store(Request $request)
+    {
+        Log::info('Entra a registrar las notificaciones');
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
+                'tittle' => 'required|string',
+                'description' => 'required|string',
+                'type' => 'required|string',
+            ]);
+            $stateApk = "";
+            $branch = Branch::find($data['branch_id']);
+            if ($data['type'] == 'Ambos') {
+                if ($request->has('stateApk')) {
+                    $stateApk = $request->stateApk;
+                }
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $data['branch_id'])
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                if (!$encargados->isEmpty()) {
+                    foreach ($encargados as $encargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $encargado;
+                        $notification->tittle = $data['tittle'];
+                        $notification->description = $data['description'];
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = $stateApk;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$coordinadors->isEmpty()) {
+                    foreach ($coordinadors as $coordinador) {
+                        $notification = new Notification();
+                        $notification->professional_id = $coordinador;
+                        $notification->tittle = $data['tittle'];
+                        $notification->description = $data['description'];
+                        $notification->type = 'Coordinador';
+                        $notification->stateApk = $stateApk;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$barberoEncargados->isEmpty()) {
+                    foreach ($barberoEncargados as $barberoEncargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $barberoEncargado;
+                        $notification->tittle = $data['tittle'];
+                        $notification->description = $data['description'];
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = $stateApk;
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                return response()->json(['msg' => 'Notifications creada correctamente'], 200);
+            } 
+            elseif ($data['type'] == 'Barbero'){
+                $branchrule = BranchRule::whereHas('rule', function ($query) {
+                    $query->where('type', 'Tiempo');
+                })
+                ->where('branch_id', $data['branch_id'])
+                ->first();
+
+            $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
+                ->where('branch_rule_id', $branchrule->id)
+                ->where('professional_id', $data['professional_id'])
+                ->first();
+            
+                if ($existencia && $existencia->estado != 0) {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->tittle = $data['tittle'];
+                    $notification->description = $data['description'];
+                    $notification->type = $data['type'];
+                    $branch->notifications()->save($notification);
+                }
+                return response()->json(['msg' => 'Notifications creada correctamente'], 200);
+            }
+            else {
                 $notification = new Notification();
                 $notification->professional_id = $data['professional_id'];
                 $notification->tittle = $data['tittle'];
@@ -248,7 +473,7 @@ class NotificationController extends Controller
         }
     }
 
-    public function notification_truncate()
+    public function notification_truncate_ANTERIOR()
     {
         try {
 
@@ -260,8 +485,29 @@ class NotificationController extends Controller
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
+    
+    
+    public function notification_truncate(Request $request)
+    {
+        $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
 
-    public function professional_show(Request $request)
+        // Log para verificar el valor de código
+
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
+        try {
+
+            Log::info("Mandar a eliminar las notificaciones");
+            Notification::truncate();
+            return response()->json(['msg' => "Notificaciones eliminadas correctamente"], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error interno del sistema"], 500);
+        }
+    }
+
+    public function professional_show_ANTERIOR(Request $request)
     {
         Log::info('Dada una sucursal y un professional devuelve las notificaciones');
         try {
@@ -437,6 +683,221 @@ class NotificationController extends Controller
                     $notifications1 = $branch->notifications()
                         ->where('professional_id', $data['professional_id'])
                         ->whereDate('created_at', Carbon::now())
+                        ->whereNot('state', 1)
+                        ->where(function ($query) use ($frase, $frase1) {
+                            $query->where('tittle', 'like', '%' . $frase . '%')
+                                ->orWhere('tittle', 'like', '%' . $frase1 . '%');
+                        })
+                        ->latest('created_at') // Ordena por 'created_at' en orden descendente
+                        ->first(); // Obtiene el primer registro en el orden especificado
+
+                    if ($notifications1 != null) {
+                        $notifications = [
+                            [
+                                'id' => $notifications1->id,
+                                'professional_id' => $notifications1->professional_id,
+                                'branch_id' => $notifications1->branch_id,
+                                'tittle' => $notifications1->tittle,
+                                'description' => $notifications1->description,
+                                'state' => $notifications1->state,
+                                'type' => $notifications1->type,
+                                'created_at' => Carbon::parse($notifications1->created_at)->format('Y-m-d h:i A'),
+                                'updated_at' => Carbon::parse($notifications1->updated_at)->format('Y-m-d h:i A')
+                            ]
+                        ];
+                        //$notifications1->state = 1;
+                        //$notifications1->save();
+                    }
+                }
+            }
+            return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
+        }
+    }
+    
+    public function professional_show(Request $request)
+    {
+        Log::info('Dada una sucursal y un professional devuelve las notificaciones');
+        try {
+            $data = $request->validate([
+                'professional_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
+            ]);
+            $notifications = [];
+            $now = Carbon::now();
+            $branch = Branch::find($data['branch_id']);
+            $professional = Professional::find($data['professional_id']);
+            $record = $professional->records()->whereDate('start_time', now())->first();
+            if ($record) {
+                $startTime = $record->start_time;
+
+                if ($professional->state != 0 && $professional->state != 2) {
+                    if ($professional->charge->name == "Tecnico") {
+                        $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', $now)->where('state', 1)->orderByDesc('created_at')->first();
+                        Log::info('Workplaces');
+                        Log::info($workplace);
+                        if ($workplace) {
+                            $places = json_decode($workplace->places, true);
+                            $professionals = ProfessionalWorkPlace::whereHas('workplace', function ($query) use ($places) {
+                                $query->whereIn('id', $places)->where('select', 1);
+                            })->where('state', 1)->whereDate('data', $now)->orderByDesc('created_at')->get()->pluck('professional_id');
+                            $notifications1 = $branch->notifications()
+                                ->whereIn('professional_id', $professionals)
+                                ->whereDate('created_at', $now)
+                                ->where('type', 'Tecnico')
+                                ->where('state', '!=', 1)
+                                ->where('created_at', '>', $startTime)
+                                ->orderByDesc('created_at')
+                                ->get();
+                            Log::info('Notificaciones');
+                            Log::info($notifications1);
+                            foreach ($notifications1  as $query) {
+                                $query->professional_id = $data['professional_id'];
+                                $query->save();
+                                $notifications[] = [
+                                    'id' => $query->id,
+                                    'professional_id' => $query->professional_id,
+                                    'branch_id' => $query->branch_id,
+                                    'tittle' => $query->tittle,
+                                    'description' => $query->description,
+                                    'state' => $query->state,
+                                    'type' => $query->type,
+                                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
+                                ];
+                            }
+                        } else {
+                            $notifications = [];
+                        }
+                    } else {
+                        $notifications = $branch->notifications()
+                            ->where('professional_id', $professional->id)
+                            ->whereDate('created_at', $now)
+                            ->where('created_at', '>', $startTime)
+                            ->where('state', '!=', 1)
+                            ->get()
+                            ->map(function ($query) {
+                                return [
+                                    'id' => $query->id,
+                                    'professional_id' => $query->professional_id,
+                                    'branch_id' => $query->branch_id,
+                                    'tittle' => $query->tittle,
+                                    'description' => $query->description,
+                                    'state' => $query->state,
+                                    'type' => $query->type,
+                                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
+                                ];
+                            })
+                            ->sortByDesc(function ($notification) {
+                                return $notification['created_at'];
+                            })
+                            ->values();
+                    } //end else sino
+                } elseif ($professional->state == 0 || $professional->state == 2) {
+                    $frase = 'Aceptada su solicitud de Salida';
+                    $frase1 = 'Aceptada su solicitud de Colación';
+                    $notifications1 = $branch->notifications()
+                        ->where('professional_id', $data['professional_id'])
+                        ->whereDate('created_at', $now)
+                        ->where('state', '!=', 1)
+                        ->where('created_at', '>', $startTime)
+                        ->where(function ($query) use ($frase, $frase1) {
+                            $query->where('tittle', 'like', '%' . $frase . '%')
+                                ->orWhere('tittle', 'like', '%' . $frase1 . '%');
+                        })
+                        ->latest('created_at') // Ordena por 'created_at' en orden descendente
+                        ->first(); // Obtiene el primer registro en el orden especificado
+
+                    if ($notifications1 != null) {
+                        $notifications = [
+                            [
+                                'id' => $notifications1->id,
+                                'professional_id' => $notifications1->professional_id,
+                                'branch_id' => $notifications1->branch_id,
+                                'tittle' => $notifications1->tittle,
+                                'description' => $notifications1->description,
+                                'state' => $notifications1->state,
+                                'type' => $notifications1->type,
+                                'created_at' => Carbon::parse($notifications1->created_at)->format('Y-m-d h:i A'),
+                                'updated_at' => Carbon::parse($notifications1->updated_at)->format('Y-m-d h:i A')
+                            ]
+                        ];
+                        //$notifications1->state = 1;
+                        //$notifications1->save();
+                    }
+                }
+            } //if record
+            else {
+                if ($professional->state != 0 && $professional->state != 2) {
+                    if ($professional->charge->name == "Tecnico") {
+                        $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', $now)->where('state', 1)->orderByDesc('created_at')->first();
+                        Log::info('Workplaces');
+                        Log::info($workplace);
+                        if ($workplace) {
+                            $places = json_decode($workplace->places, true);
+                            $professionals = ProfessionalWorkPlace::whereHas('workplace', function ($query) use ($places) {
+                                $query->whereIn('id', $places)->where('select', 1);
+                            })->where('state', 1)->whereDate('data', $now)->orderByDesc('created_at')->get()->pluck('professional_id');
+                            $notifications1 = $branch->notifications()
+                                ->whereIn('professional_id', $professionals)
+                                ->whereDate('created_at', $now)
+                                ->where('type', 'Tecnico')
+                                ->where('state', '!=', 1)
+                                ->orderByDesc('created_at')
+                                ->get();
+                            Log::info('Notificaciones');
+                            Log::info($notifications1);
+                            foreach ($notifications1  as $query) {
+                                $query->professional_id = $data['professional_id'];
+                                $query->save();
+                                $notifications[] = [
+                                    'id' => $query->id,
+                                    'professional_id' => $query->professional_id,
+                                    'branch_id' => $query->branch_id,
+                                    'tittle' => $query->tittle,
+                                    'description' => $query->description,
+                                    'state' => $query->state,
+                                    'type' => $query->type,
+                                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
+                                ];
+                            }
+                        } else {
+                            $notifications = [];
+                        }
+                    } else {
+                        $notifications = $branch->notifications()
+                            ->where('professional_id', $professional->id)
+                            ->whereDate('created_at', $now)
+                            ->where('state', '!=', 1)
+                            ->get()
+                            ->map(function ($query) {
+                                return [
+                                    'id' => $query->id,
+                                    'professional_id' => $query->professional_id,
+                                    'branch_id' => $query->branch_id,
+                                    'tittle' => $query->tittle,
+                                    'description' => $query->description,
+                                    'state' => $query->state,
+                                    'type' => $query->type,
+                                    'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
+                                    'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
+                                ];
+                            })
+                            ->sortByDesc(function ($notification) {
+                                return $notification['created_at'];
+                            })
+                            ->values();
+                    } //end else sino
+                } elseif ($professional->state == 0 || $professional->state == 2) {
+                    $frase = 'Aceptada su solicitud de Salida';
+                    $frase1 = 'Aceptada su solicitud de Colación';
+                    $notifications1 = $branch->notifications()
+                        ->where('professional_id', $data['professional_id'])
+                        ->whereDate('created_at', $now)
                         ->whereNot('state', 1)
                         ->where(function ($query) use ($frase, $frase1) {
                             $query->where('tittle', 'like', '%' . $frase . '%')

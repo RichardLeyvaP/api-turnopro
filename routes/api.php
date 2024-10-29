@@ -68,6 +68,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 //agregando el import de websocket
 use App\Http\Controllers\TestingEventController;
+use App\Models\Branch;
+use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -609,6 +612,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::put('/branchruleprofessional', [BranchRuleProfessionalController::class, 'update']);
     Route::post('/branchruleprofessional-destroy', [BranchRuleProfessionalController::class, 'destroy']);
     Route::post('/storeByType', [BranchRuleProfessionalController::class, 'storeByType']);//registrar convivencia x el tipo de rule
+    Route::post('/storeByTypeId', [BranchRuleProfessionalController::class, 'storeByTypeId']);//registrar convivencia x el id de rule
     Route::post('/storeByType-time', [BranchRuleProfessionalController::class, 'storeByType_time']);//registrar convivencia x el tipo de rule
     Route::get('/rules_professional', [BranchRuleProfessionalController::class, 'rules_professional']);//ver el estado de las rules de un professional en una branch de una fecha dada o del dia actual
     Route::get('/branch-rule-professional-periodo', [BranchRuleProfessionalController::class, 'branch_rule_professional_periodo']);//Devolver la cantidad de veces que estuvo de estado cada regla
@@ -727,7 +731,7 @@ Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate'
 
 Route::get('/closebox-month', [BoxCloseController::class, 'box_close_month']);//para tarea progradad enviar el cierre de caja
 
-Route::get('/reservation_tail', [ReservationController::class, 'reservation_tail']);
+Route::get('/reservation_tail_task', [ReservationController::class, 'reservation_tail_task']);
 
 Route::get('/reservation-send-mail', [ReservationController::class, 'reservation_send_mail']);//para enviar correos a las reservas de 1 dia en adelante comunicando que debn confirmar en 24hr
     
@@ -791,6 +795,8 @@ Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) 
 
     return $response;
 })->where(['folder' => 'business|professionals|clients|comments|products|services|branches|image|pdfs|licenc|enrollments|students|comments|image', 'filename' => '.*']);
+
+Route::get('/test-box-close', [BoxCloseController::class, 'box_close_automatic']);
 
 
 

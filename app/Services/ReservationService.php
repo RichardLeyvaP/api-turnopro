@@ -100,7 +100,8 @@ class ReservationService
             $code = 'SELECT'/*.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT)*/;
             }
             else{
-                $reservationsDay = Reservation::whereHas('car', function ($query){
+                // $reservationsDay = Reservation::whereHas('car', function ($query){
+                 $reservationsDay = Reservation::withTrashed()->whereHas('car', function ($query){
                     $query->where('select_professional', 0);
                 })->whereDate('data', Carbon::now())->where('from_home', 0)->where('branch_id', $data['branch_id'])->get();   
             $code = 'TA'.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT);
@@ -111,15 +112,21 @@ class ReservationService
             $code = 'RE'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
             //$code = 'RESERVA';
         }
-        $confirmation = 0;
+        // $confirmation = 0;
+        // if ($fechaCarbon->isToday()) {
+        //     if ($data['from_home'] == 0) {
+        //         $confirmation = 4;
+        //     } elseif ($data['from_home'] == 1) {
+        //         $confirmation = 1;
+        //     }
+        // } else {
+        //     $confirmation = 0;
+        // }
+         $confirmation = 1;
         if ($fechaCarbon->isToday()) {
             if ($data['from_home'] == 0) {
                 $confirmation = 4;
-            } elseif ($data['from_home'] == 1) {
-                $confirmation = 1;
             }
-        } else {
-            $confirmation = 0;
         }
         $reservation = new Reservation();    
         $start_time = Carbon::parse($data['start_time'])->toTimeString();
@@ -133,7 +140,7 @@ class ReservationService
         $reservation->confirmation = $confirmation;
         $reservation->code = $code;
         $reservation->save();
-        Log::info('Crea la reservación');
+        Log::info('Crea la reservacion');
         DB::commit();
         Log::info($reservation);
         return $reservation;

@@ -25,6 +25,16 @@ class BranchController extends Controller
         $this->branchService = $branchService;
     }
 
+    public function index_ANTERIOR()
+    {
+        try {
+            return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
+        }
+    }
+    
     public function index()
     {
         try {
@@ -34,8 +44,7 @@ class BranchController extends Controller
             return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
         }
     }
-
-    public function index_prueba()
+        public function index_prueba()
     {
         try {
             return response()->json(['branches' => Branch::with(['business', 'businessType'])->get()], 200);
@@ -226,7 +235,51 @@ class BranchController extends Controller
         }
     }
 
-    public function update(Request $request)
+    public function update_ANTERIOR(Request $request)
+    {
+        try {
+
+            Log::info("Editar");
+            Log::info($request);
+            $branch_data = $request->validate([
+                'id' => 'required|numeric',
+                'name' => 'required|max:50',
+                'phone' => 'required',
+                'address' => 'required|max:50',
+                'business_id' => 'required|numeric',
+                'business_type_id' => 'required|numeric',
+                'useTechnical' => 'required|numeric',
+                'location' => 'nullable'
+            ]);
+            Log::info($branch_data);
+            $branch = Branch::find($branch_data['id']);
+            if ($request->hasFile('image_data')) {
+                if($branch->image_data != 'branches/default.jpg'){
+                $destination = public_path("storage\\" . $branch->image_data);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }
+                }
+                $branch->image_data = $request->file('image_data')->storeAs('branches', $branch->id . '.' . $request->file('image_data')->extension(), 'public');
+            }
+            $branch->name = $branch_data['name'];
+            $branch->phone = $branch_data['phone'];
+            $branch->address = $branch_data['address'];
+            $branch->business_id = $branch_data['business_id'];
+            $branch->business_type_id = $branch_data['business_type_id'];
+            $branch->useTechnical = $branch_data['useTechnical'];
+            $branch->location = $branch_data['location'];
+            $branch->save();
+
+            return response()->json(['msg' => 'Sucursal actualizada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
+        }
+    }
+    
+    
+     public function update(Request $request)
     {
         try {
 

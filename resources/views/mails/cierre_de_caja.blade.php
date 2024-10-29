@@ -79,7 +79,7 @@
         </tr>
         <tr>
             <td><strong>Fondo Inicio del día:</strong> {{ number_format(round($boxCashFound, 2), 2) }}</td>
-            <td><strong>Existencia:</strong> {{ number_format(round($boxExistence, 2), 2) }}</td>
+            <td><strong>Efectivo en caja:</strong> {{ number_format(round($boxExistence, 2), 2) }}</td>
             <td><strong>Extracción:</strong> {{ number_format(round($boxExtraction, 2), 2) }}</td>
         </tr>
         <tr class="section-header">
@@ -101,7 +101,7 @@
             <td colspan="3"><strong>Formas de pago</strong></td>
         </tr>
         <tr>
-            <td><strong>Efectivo en caja:</strong> {{ number_format(round($totalCash, 2), 2) }}</td>
+            <td><strong>Efectivo:</strong> {{ number_format(round($totalCash, 2), 2) }}</td>
             <td><strong>Tarjeta de Créditos:</strong> {{ number_format(round($totalCreditCard, 2), 2) }}</td>
             <td><strong>Débito:</strong> {{ number_format(round($totalDebit, 2), 2) }}</td>
         </tr>

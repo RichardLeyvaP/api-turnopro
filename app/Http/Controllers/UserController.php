@@ -636,7 +636,7 @@ class UserController extends Controller
         }
     }
 
-    public function login(Request $request)
+    public function login_ANTERIOR(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -728,7 +728,7 @@ class UserController extends Controller
         }
     }
 
-    /*public function login(Request $request)
+    public function login(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -745,15 +745,27 @@ class UserController extends Controller
                 'nameBranch' => null,
                 'useTechnical' => 0,
                 'business_id' => 0,
-                'nameBusiness' => ''
+                'nameBusiness' => '',
+                'imageBusiness' => ''
             ];
+            $user = [];
             Log::info("obtener el usuario");
-            $user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }    
+            // Intentar la autenticación con el nombre de usuario
+            elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+            }
             Log::info($user);
-            if (isset($user->id)) {
-                if (Hash::check($request->password, $user->password)) {
+            if ($user) {
                     Log::info("Pass correct");
+                    Log::info($user->professional->business_id);
                     $business = Business::where('professional_id', $user->professional->id)->first();
+                    if ($business == null && $user->professional->charge->name == 'Administrador') {
+                        Log::info("No es dueño del negocio");
+                        $business = Business::where('id', $user->professional->business_id)->first();
+                    }
                     Log::info($business);
 
                     if ($user->professional->branches->where('id', $request->branch_id)->isNotEmpty()) { // Check if branches exist
@@ -766,15 +778,19 @@ class UserController extends Controller
                                 'nameBranch' => $branch->name,
                                 'useTechnical' => $branch->useTechnical,
                                 'business_id' => $branch->business->id,
-                                'nameBusiness' => $branch->business->name
+                                'nameBusiness' => $branch->business->name,
+                                'imageBusiness' => $branch->business->image_url,
+                                //'imageBusiness' => $branch ? $branch->image_data : $branch->business->image_url
                             ];
                         })->values()->first();}
                     }
-                    
+                         
+                    $professional = $user->professional;
+                    $professional->state = 1;
+                    $professional->save();
                 
                     $token = $user->createToken('auth_token')->plainTextToken;
-                    Auth::user();                  
-            
+                    Auth::user();             
                     //return $branch;
                     return response()->json([
                         'id' => $user->id,
@@ -782,6 +798,7 @@ class UserController extends Controller
                         'email' => $user->email,
                         'business_id' => $business ? $business->id : $branch['business_id'],
                         'nameBusiness' => $business ? $business->name : $branch['nameBusiness'],
+                        'imageBusiness' => $business ? $business->image_url : $branch['imageBusiness'],
                         'charge' => $user->professional ? $user->professional->charge->name : null,
                         'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
                         'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
@@ -796,11 +813,6 @@ class UserController extends Controller
                             return $query->name . ', ' . $query->module;
                         })->values()->all() : [],
                     ], 200, [], JSON_NUMERIC_CHECK);
-                } else {
-                    return response()->json([
-                        "msg" => "Contraseña incorrecta"
-                    ], 401);
-                }
             } else {
                 return response()->json([
                     "msg" => "Usuario no registrado"
@@ -810,7 +822,7 @@ class UserController extends Controller
             Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
-    }*/
+    }
 
     public function userProfile()
     {

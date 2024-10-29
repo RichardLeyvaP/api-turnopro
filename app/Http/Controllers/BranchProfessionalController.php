@@ -202,12 +202,9 @@ class BranchProfessionalController extends Controller
            
                 // Si hay días libres, convertirlos y agregarlos al array de vacaciones del profesional
                 if (!empty($diasSemana)) {
-                    Log::info('Professional'.$professional1['id']);
-                                       Log::info('días libres array');
-                                       Log::info($diasSemana );
+                    
                     $fechasDiasLibres = $this->obtenerFechasDiasSemana($diasSemana);
-                    Log::info('fechas Dias Libres antes del for');
-                    Log::info($fechasDiasLibres);
+                   
                     if (!empty($fechasDiasLibres)) {
                         /*Log::info('fechas Dias Libres');
                         Log::info($fechasDiasLibres );*/

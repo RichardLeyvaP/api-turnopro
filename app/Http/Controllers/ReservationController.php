@@ -354,6 +354,7 @@ class ReservationController extends Controller
                     'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
                     'code_reserva' => $code
                 ];
+   Log::info("OKOKOK");
 
                 Log::info($data);
                 SendEmailJob::dispatch($data);
@@ -361,6 +362,7 @@ class ReservationController extends Controller
                 DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {
+            Log::error($e);
             DB::rollback();
             return response()->json(['msg' => 'La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico '], 422);
         } catch (\Throwable $th) {
@@ -861,6 +863,124 @@ class ReservationController extends Controller
 
     public function reservation_tail()
     {
+        log::info('registrar las reservaciones del dia en la cola');
+        try {
+            $reservations = Reservation::whereDate('data', Carbon::today())
+                ->whereDoesntHave('tail')
+                ->orderBy('start_time')->get();
+                $current_date = Carbon::now();
+                $ct = 0;
+                $fechaHoy = Carbon::today();
+            // Obtener la fecha formateada como 'YYYY-MM-DD'
+                $fechaFormateada = $fechaHoy->toDateString();
+                Log::info($fechaFormateada);
+            foreach ($reservations as $reservation) {
+                // Si la reserva es del día actual y no está confirmada (confirmation = 0)
+                if ($reservation->confirmation == 0 && $reservation->data == $fechaFormateada) {
+                    log::info('Eliminando reserva no confirmada: ' . $reservation->id);
+                    
+                    // Actualiza el campo cause antes de eliminar la reserva
+                    $reservation->cause = 'No confirmo la reserva';
+                    $reservation->save();
+                    
+                    // Soft delete de la reserva
+                    $reservation->delete();
+                    
+                    // Continua con la siguiente reserva
+                    continue;
+                }
+                log::info('Revisando este metodo - foreach:'.$ct);
+                if ($reservation->car->select_professional == 0) {
+                    log::info('Revisando este metodo - select_professional == 0:'.$ct);
+                    $professional_id = $reservation->car->clientProfessional->professional_id;
+                    log::info('Revisando este metodo - $professional_id :'.$professional_id);
+                    $professional = Professional::find($professional_id);
+                    log::info('Revisando este metodo - $professional :'.$professional);
+                    $branch_id = $reservation->branch_id;
+                    $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+                        $query->where('branch_id', $branch_id)->orderBy('created_at');
+                    })->where('aleatorie', 1)->get();
+                    if ($tails->isEmpty()) {    
+                            $reservations2 = $professional->reservations()
+                        ->where('branch_id', $branch_id)
+                        ->where('confirmation', 4)
+                        ->whereDate('data', Carbon::now())
+                        ->whereHas('tail', function ($query){
+                            $query->whereNot('aleatorie', 1);
+                        })
+                        //->where('final_hour', '>=', $current_date->format('H:i'))
+                        ->orderBy('start_time')
+                        ->get();
+                        
+                        log::info('Revisando este metodo - $reservations2 :'.$ct);
+                        Log::info($reservations2);
+                        if ($reservations2->isEmpty()) {
+                            log::info('Revisando este metodo - if ($reservations2->isEmpty()) :'.$ct);
+                            Log::info('No tiene reservas');
+                            $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                            $reservation->timeClock = now();
+                            $reservation->save();
+                            break;
+                        }else {
+                            log::info('Revisando este metodo - if (!$reservations2->isEmpty()) :'.$ct);
+                            $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                            break;
+                        }
+                }//iftailsempty
+                else {    
+                    log::info('Revisando este metodo -  Entrando al foreach-2:estoy en el else no hay aleatorios');
+                    $services = $this->verific_services($tails, $branch_id, $professional);
+                    if ($services == true) {
+                        $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                      }else {
+                        $reservations3 = $professional->reservations()
+                            ->where('branch_id', $branch_id)
+                            ->where('confirmation', 4)
+                            ->whereDate('data', Carbon::now())
+                            ->whereHas('tail', function ($query){
+                                $query->whereNot('aleatorie', 1);
+                            })
+                            ->orderBy('start_time')
+                            ->get();
+                            Log::info('Professional tiene reservaciones: '.$professional);
+                            Log::info('reservaciones: '.$reservations3);
+                            if ($reservations3->isEmpty()) {                                
+                                $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                                $reservation->timeClock = now();
+                                $reservation->save();
+                                break;
+                            }else {
+                                $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                                break;
+                            }
+                      }
+                  }
+                    
+                }else {
+                    log::info('Revisando este metodo -  Estoy en el else creando la cola');
+                    $cola = $reservation->tail()->create();
+                }
+                $ct++;
+            }
+          
+          
+            return response()->json(['msg' => 'Cola creada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
+        }
+    }
+    
+      public function reservation_tail_task(Request $request)
+    {
+        $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
+
+        // Log para verificar el valor de código
+
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            Log::info("Código no coincide");
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
         log::info('registrar las reservaciones del dia en la cola');
         try {
             $reservations = Reservation::whereDate('data', Carbon::today())

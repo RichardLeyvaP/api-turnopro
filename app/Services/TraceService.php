@@ -1,13 +1,15 @@
 <?php
 
 namespace App\Services;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Trace;
 use Illuminate\Support\Carbon;
 
 class TraceService {
     public function store($data){
-        $trace = new Trace();
+        try{
+             $trace = new Trace();
         $trace->branch = $data['branch'];
         $trace->client = $data['client'];
         $trace->amount = $data['amount'];
@@ -19,5 +21,13 @@ class TraceService {
         $trace->save();
 
         return $trace;
+        }
+        catch (\Throwable $th) {
+            Log::error($th);
+            
+        }
+            
+        
+       
     }
 }

@@ -7,16 +7,16 @@
 </head>
 <body style="font-family: Arial, sans-serif;">
 
-<h2 style="color: #F18254;">Asunto: Recordatorio de tu cita en {{$branch_name}} &#x1F44B;,</h2><br>
+<h2 style="color: #F18254;">Recordatorio de tu cita en {{$branch_name}} &#x1F44B;,</h2><br>
 <h2 style="color: #F18254;">Estimado/a {{$client_name}} &#x1F44B;,</h2>
 
 <p style="color: #333;">
     &#x1F64F; ¡Esperamos que estés teniendo un excelente día!
 </p>
-<img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">
+<!--<img src="{{$logoUrl}}" alt="Descripción de la imagen" style="height: 300px; width: 300px;">-->
 
 <p style="color: #333;">
-    &#x1F64F; Queremos recordarte que tienes una cita programada en {{$branch_name}} mañana. Aquí están los detalles de tu reserva:
+    &#x1F64F; Queremos recordarte que tienes una cita programada en {{$branch_name}} para mañana ya confirmada. Aquí están los detalles de tu reserva:
 </p>
 
 <ul>
@@ -41,19 +41,20 @@ Puede llegar 10 minutos antes o despues de la hora indicada y debe anunciarse en
     Recuerda anunciar tu llegada en nuestra sucursal.
 </p>
 
-<p style="color: #555;">
-    &#x1F917; Por favor, has click en los botones de abajo para confirmar o cancelar tu reserva.
+<p style="color: #555;">    	
+    &#x1f625; Por favor, has click en el botón de abajo si deseas cancelar tu reserva.
 </p>
 
-<!-- Botón de Confirmación -->
+<!-- Botón de Confirmación 
 <a href="https://api2.simplifies.cl/api/update-confirmation?id={{$id_reservation}}&confirmation=1" style="text-decoration: none;">
     <button style="background-color: #4470F3; color: #FFFFFF; border: none; border-radius: 6px; padding: 12px 24px; font-size: 16px;">
         CONFIRMACIÓN
     </button>
-</a>
+</a>-->
+<!-- Botón de Cancelación -->
 <a href="https://api2.simplifies.cl/api/update-confirmation?id={{$id_reservation}}&confirmation=3" style="text-decoration: none;">
     <button style="background-color: #F34444; color: #FFFFFF; border: none; border-radius: 6px; padding: 12px 24px; font-size: 16px;">
-        CANCELAR
+        CANCELAR RESERVA
     </button>
 </a>
 

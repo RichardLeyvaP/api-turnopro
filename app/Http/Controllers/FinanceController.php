@@ -31,7 +31,7 @@ class FinanceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store_ANTERIOR(Request $request)
     {
         Log::info("Guardar Producto");
         Log::info($request);
@@ -85,7 +85,8 @@ class FinanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request)
+    
+     public function show_ANTERIOR(Request $request)
     {
         try {
             Log::info("Entra a buscar las finanzas de una branch");
@@ -155,14 +156,20 @@ class FinanceController extends Controller
                                 $comment = 'GastoServicio '.$query->comment;
                             }
                         }
+                       // Asigna el amount dependiendo de si es un gasto o un ingreso
+                       $amount = $query->amount; // Monto total
+                        
+                       // Asigna el monto según el tipo, incluso si ambos son nulos
+                       $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                       $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                           'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => $comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -171,10 +178,17 @@ class FinanceController extends Controller
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
                             'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
-                            'typeDetail' => $typeDetail
-                        ];
-                    });
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
+
+                                                    'typeDetail' => $typeDetail
+                                                ];
+                                            });
                 }
                 if ($data['type'] == 'Sucursal'){
                     $finances = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
@@ -232,37 +246,55 @@ class FinanceController extends Controller
                                 $comment = 'GastoServicio '.$query->comment;
                             }
                         }
-                        return [
-                            'id' => $query->id,
-                            'data' => $query->data,
-                            'control' => $query->control,
-                            'operation' => $query->operation,
-                            'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
-                            'comment' => $comment,
-                            'file' => $query->file,
-                            'branch_id' => $query->branch_id,
-                            'business_id' => $query->business_id,
-                            'enrollment_id' => $query->enrollment_id,
-                            'expense_id' => $query->expense_id,
-                            'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                        // Asigna el amount dependiendo de si es un gasto o un ingreso
+                        $amount = $query->amount; // Monto total
+                        
+                        // Asigna el monto según el tipo, incluso si ambos son nulos
+                        $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                        $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
+                       return [
+                           'id' => $query->id,
+                           'data' => $query->data,
+                           'control' => $query->control,
+                           'operation' => $query->operation,
+                           'amount' => $query->amount,
+                           'expense' => $amountExpense, // Asigna según el tipo
+                           'revenue' => $amountRevenue, // Asigna según el tipo
+                           'comment' => $comment,
+                           'file' => $query->file,
+                           'branch_id' => $query->branch_id,
+                           'business_id' => $query->business_id,
+                           'enrollment_id' => $query->enrollment_id,
+                           'expense_id' => $query->expense_id,
+                           'revenue_id' => $query->revenue_id,
+                           'type' => $query->type,
+                           'nameDetalle' => $query->expense 
+                           ? $query->expense->name 
+                           : ($query->revenue 
+                               ? $query->revenue->name 
+                               : ($query->type == 'Ingreso' 
+                                   ? '[MANTENEDOR ELIMINADO]' 
+                                   : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => $typeDetail
                         ];
                     });
                 }
                 if ($data['type'] == 'Academia'){
                     $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                          // Asigna el amount dependiendo de si es un gasto o un ingreso
+                        $amount = $query->amount; // Monto total
+                        
+                        // Asigna el monto según el tipo, incluso si ambos son nulos
+                        $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                        $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                            'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => 'HH '.$query->comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -270,22 +302,34 @@ class FinanceController extends Controller
                             'enrollment_id' => $query->enrollment_id,
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => '',
                         ];
                     });
                 }
                 if ($data['type'] == 'Todas'){
                     $finances = Finance::with(['expense', 'revenue'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->orderByDesc('id')->get()->map(function ($query) {
+                        // Asigna el amount dependiendo de si es un gasto o un ingreso
+                        $amount = $query->amount; // Monto total
+                        
+                        // Asigna el monto según el tipo, incluso si ambos son nulos
+                        $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                        $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                            'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => 'HH '.$query->comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -293,8 +337,14 @@ class FinanceController extends Controller
                             'enrollment_id' => $query->enrollment_id,
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => ''
                         ];
                     })->sortByDesc('data')->values();
@@ -356,14 +406,20 @@ class FinanceController extends Controller
                                 $comment = 'GastoServicio '.$query->comment;
                             }
                         }
+                        // Asigna el amount dependiendo de si es un gasto o un ingreso
+                        $amount = $query->amount; // Monto total
+                        
+                        // Asigna el monto según el tipo, incluso si ambos son nulos
+                        $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                        $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                            'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => $comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -371,8 +427,14 @@ class FinanceController extends Controller
                             'enrollment_id' => $query->enrollment_id,
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => $typeDetail
                         ];
                     });
@@ -437,14 +499,20 @@ class FinanceController extends Controller
                             $typeDetail = 'Gasto Producto';
                             $comment = 'GastoProducto '.$query->comment;
                         }
+                         // Asigna el amount dependiendo de si es un gasto o un ingreso
+                         $amount = $query->amount; // Monto total
+                        
+                         // Asigna el monto según el tipo, incluso si ambos son nulos
+                         $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                         $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                            'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => $comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -452,22 +520,34 @@ class FinanceController extends Controller
                             'enrollment_id' => $query->enrollment_id,
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => $typeDetail
                         ];
                     });
                 }
                 if ($data['type'] == 'Academia'){
                     $finances = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get()->map(function ($query) {
+                       // Asigna el amount dependiendo de si es un gasto o un ingreso
+                       $amount = $query->amount; // Monto total
+                        
+                       // Asigna el monto según el tipo, incluso si ambos son nulos
+                       $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                       $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                            'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => 'HH '.$query->comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -475,22 +555,34 @@ class FinanceController extends Controller
                             'enrollment_id' => $query->enrollment_id,
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => '',
                         ];
                     });
                 }
                 if ($data['type'] == 'Todas'){
                     $finances = Finance::with(['expense', 'revenue'])->whereYear('data', $data['year'])->orderByDesc('id')->get()->map(function ($query) {
+                        // Asigna el amount dependiendo de si es un gasto o un ingreso
+                        $amount = $query->amount; // Monto total
+                        
+                        // Asigna el monto según el tipo, incluso si ambos son nulos
+                        $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                        $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
                         return [
                             'id' => $query->id,
                             'data' => $query->data,
                             'control' => $query->control,
                             'operation' => $query->operation,
                             'amount' => $query->amount,
-                            'expense' => $query->expense ? $query->amount : '',
-                            'revenue' => $query->revenue ? $query->amount : '',
+                            'expense' => $amountExpense, // Asigna según el tipo
+                           'revenue' => $amountRevenue, // Asigna según el tipo
                             'comment' => 'HH '.$query->comment,
                             'file' => $query->file,
                             'branch_id' => $query->branch_id,
@@ -498,8 +590,14 @@ class FinanceController extends Controller
                             'enrollment_id' => $query->enrollment_id,
                             'expense_id' => $query->expense_id,
                             'revenue_id' => $query->revenue_id,
-                            'type' => $query->type,
-                            'nameDetalle' => $query->expense ? $query->expense->name : $query->revenue->name,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
                             'typeDetail' => ''
                         ];
                     })->sortByDesc('data')->values();
@@ -513,6 +611,299 @@ class FinanceController extends Controller
             return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
         }
     }
+    
+    ///////////////////////////////////////////////////////////////////
+        public function store(Request $request)
+    {
+        Log::info("Guardar Producto");
+        Log::info($request);
+        try {
+            $data = $request->validate([
+                'control' => 'required|numeric',
+                'operation' => 'required|string',
+                'amount' => 'required|numeric',
+                'comment' => 'nullable|string',
+                'branch_id' => 'nullable',
+                'business_id' => 'nullable',
+                'type' => 'required|string',
+                'enrollment_id' => 'nullable',
+                'expense_id' => 'nullable',
+                'revenue_id' => 'nullable',
+                'data' => 'required|date',
+
+            ]);
+            //Log::info($data);
+            $control = 0;
+            //Log::info($request->file('file'));
+            if ($request->hasFile('file')) {
+
+                $filename = $data['operation'] . '-' . $data['data'] . '.'.$data['control'] . $request->file('file')->extension();
+                $data['file'] = $request->file('file')->storeAs('finances', $filename, 'public');
+            } else {
+                $data['file'] = '';
+            }
+            Log::info($data);
+            $financeControl = Finance::orderBy('control', 'desc')->first();
+            if ($financeControl !== null) {
+                $control = $financeControl->control + 1;
+            } else {
+                $control = 1;
+            }
+            $finance = new Finance();
+
+            $finance->control = $control;
+            $finance->operation = $data['operation'];
+            $finance->amount = $data['amount'];
+            $finance->comment = $data['comment'];
+            $finance->branch_id = $data['branch_id'];
+            $finance->business_id = $data['business_id'];
+            $finance->enrollment_id = $data['enrollment_id'];
+            $finance->type = $data['type'];
+            $finance->expense_id = $data['expense_id'];
+            $finance->revenue_id = $data['revenue_id'];
+            $finance->data = $data['data'];
+            $finance->file = $data['file'];
+            $finance->save();
+            return response()->json(['msg' => 'Operacion insertado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric',
+                'control' => 'required|numeric',
+                'operation' => 'required|string',
+                'amount' => 'required|numeric',
+                'comment' => 'nullable|string',
+                'branch_id' => 'nullable',
+                'business_id' => 'nullable',
+                'type' => 'required|string',
+                'enrollment_id' => 'nullable',
+                'expense_id' => 'nullable',
+                'revenue_id' => 'nullable',
+                'data' => 'required|date'
+            ]);
+            //Log::info($data);
+            $finance = Finance::find($data['id']);
+
+            if ($request->hasFile('file')) {
+                $destination = public_path("storage\\" . $finance->file);
+                if (File::exists($destination)) {
+                    File::delete($destination);
+                }
+                $filename = $finance->operation . '-' . $finance->data . '.' . $request->file('file')->extension();
+                $finance->file = $request->file('file')->storeAs('finances', $filename, 'public');
+            }
+            $finance->control = $data['control'];
+            $finance->operation = $data['operation'];
+            $finance->amount = $data['amount'];
+            $finance->comment = $data['comment'];
+            $finance->expense_id = $data['expense_id'];
+            $finance->revenue_id = $data['revenue_id'];
+            $finance->data = $data['data'];
+            $finance->save();
+            return response()->json(['msg' => 'Operación editada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
+        }
+    }
+
+    public function show(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar las finanzas de una branch");
+            $data = $request->validate([
+                'branch_id' => 'nullable|numeric',
+                'business_id' => 'nullable',
+                'type' => 'required|string',
+                'enrollment_id' => 'nullable',
+                'year' => 'nullable'
+            ]);
+            //str_contains($expenseName, $phrase)            
+            $comment = '';
+            $finances = [];
+            if($request->mounth){
+                if($data['type'] == 'Negocio'){
+                    $financeData = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get();
+                    $finances = $this->mapAmountDetails($financeData);
+                }
+                if ($data['type'] == 'Sucursal'){
+                    $financeData = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get();
+                    $finances = $this->mapFinances($financeData);
+                }
+                if ($data['type'] == 'Academia'){
+                    $financesData = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->with(['expense', 'revenue'])->orderByDesc('id')->get();
+                    $finances = $this->mapAmountDetails($financesData);
+                }
+                if ($data['type'] == 'Todas'){
+                    $financesData = Finance::with(['expense', 'revenue'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->orderByDesc('id')->get();
+                    $finances = $this->mapAmountDetails($financesData);
+                }
+            }else{
+                if($data['type'] == 'Negocio'){
+                    $financeData = Finance::where('business_id', $data['business_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get();
+                    $finances = $this->mapAmountDetails($financeData);
+                }
+                if ($data['type'] == 'Sucursal'){
+                    $financeData = Finance::where('branch_id', $data['branch_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get();
+                    $finances = $this->mapFinances($financeData);
+                }
+                if ($data['type'] == 'Academia'){
+                    $financesData = Finance::where('enrollment_id', $data['enrollment_id'])->where('type', $data['type'])->whereYear('data', $data['year'])->with(['expense', 'revenue'])->orderByDesc('id')->get();
+                    $finances = $this->mapAmountDetails($financesData);
+                }
+                if ($data['type'] == 'Todas'){
+                    $financesData = Finance::with(['expense', 'revenue'])->whereYear('data', $data['year'])->orderByDesc('id')->get();
+                    $finances = $this->mapAmountDetails($financesData);
+                }
+            }          
+            
+            return response()->json(['finances' => $finances], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
+        }
+    }
+
+    public function mapAmountDetails($finances)
+    {
+        return $finances->map(function ($query) {
+                        // Asigna el amount dependiendo de si es un gasto o un ingreso
+                        $amount = $query->amount; // Monto total
+                        
+                        // Asigna el monto según el tipo, incluso si ambos son nulos
+                        $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                        $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
+                        return [
+                            'id' => $query->id,
+                            'data' => $query->data,
+                            'control' => $query->control,
+                            'operation' => $query->operation,
+                            'amount' => $query->amount,
+                            'expense' => $amountExpense, // Asigna según el tipo
+                           'revenue' => $amountRevenue, // Asigna según el tipo
+                            'comment' => 'HH '.$query->comment,
+                            'file' => $query->file,
+                            'branch_id' => $query->branch_id,
+                            'business_id' => $query->business_id,
+                            'enrollment_id' => $query->enrollment_id,
+                            'expense_id' => $query->expense_id,
+                            'revenue_id' => $query->revenue_id,
+                            'type' => $query->type,                            
+                            'nameDetalle' => $query->expense 
+                            ? $query->expense->name 
+                            : ($query->revenue 
+                                ? $query->revenue->name 
+                                : ($query->type == 'Ingreso' 
+                                    ? '[MANTENEDOR ELIMINADO]' 
+                                    : '[MANTENEDOR ELIMINADO]')),
+                            'typeDetail' => ''
+                        ];
+                    })->sortByDesc('data')->values();
+    }
+
+     // Supongamos que esto está en tu modelo Finance o en el controlador correspondiente
+     public function mapFinances($finances)
+     {
+         return $finances->map(function ($query) {
+             $typeDetail = '';
+                         $comment = 'HH '.$query->comment;
+                         if($query->revenue){
+                             if($query->revenue->name == 'Ingreso venta de productos en la caja'){
+                                 $typeDetail = 'Ingreso Producto';
+                                 $comment = 'IngresoProducto '.$query->comment;
+                             }
+                             if($query->revenue->name == 'Ingresos por porciento de propinas'){
+                                 $typeDetail = 'Ingreso Propina';
+                                 $comment = 'IngresoServicio '.$query->comment;
+                             }
+                             if($query->revenue->name == 'Ingresos por pago de servicios'){
+                                 $typeDetail = 'Ingreso Servicio';
+                                 $comment = 'IngresoServicio '.$query->comment;
+                             }
+                         }
+                         if($query->expense){
+                             if($query->expense->name == 'Compra de productos'){
+                                 $typeDetail = 'Gasto Producto';
+                                 $comment = 'GastoProducto '.$query->comment;
+                             }
+                             if($query->expense->name == 'Productos'){
+                                 $typeDetail = 'Gasto Producto';
+                                 $comment = 'GastoProducto '.$query->comment;
+                             }
+                             if($query->expense->name == 'Pago a profesionales'){
+                                 $typeDetail = 'Gasto Servicio';
+                                 $comment = 'GastoServicio '.$query->comment;
+                             }
+                         }
+                         if(str_contains($query->comment, 'Gasto por pago de bono de convivencias')){
+                             $typeDetail = 'Gasto Servicio';
+                             $comment = 'GastoServicio '.$query->comment;
+                         }
+                         if(str_contains($query->comment, 'Ingreso por venta de productos a cliente')){
+                             $typeDetail = 'Ingreso Producto';
+                             $comment = 'IngresoProducto '.$query->comment;
+                         }
+                         if(str_contains($query->comment, 'Ingreso venta de producto en la caja')){
+                             $typeDetail = 'Ingreso Producto';
+                             $comment = 'IngresoProducto '.$query->comment;
+                         }
+                         if(str_contains($query->comment, 'Gasto por pago de bono de servicios')){
+                             $typeDetail = 'Gasto Servicio';
+                             $comment = 'GastoServicio '.$query->comment;
+                         }
+                         if(str_contains($query->comment, 'Gasto por pago de bono de productos')){
+                             $typeDetail = 'Gasto Producto';
+                             $comment = 'GastoProducto '.$query->comment;
+                         }
+                         if(str_contains($query->comment, 'Gasto por pago de 10% de propinas')){
+                             $typeDetail = 'Gasto Propina';
+                             $comment = 'GastoServicio '.$query->comment;
+                         }
+                         if(str_contains($query->comment, 'Gasto por pago a cajero (a)')){
+                             $typeDetail = 'Gasto Producto';
+                             $comment = 'GastoProducto '.$query->comment;
+                         }
+                          // Asigna el amount dependiendo de si es un gasto o un ingreso
+                          $amount = $query->amount; // Monto total
+                         
+                          // Asigna el monto según el tipo, incluso si ambos son nulos
+                          $amountExpense = ($query->operation == 'Gasto') ? $amount : 0; // Monto para gastos
+                          $amountRevenue = ($query->operation == 'Ingreso') ? $amount : 0; // Monto para ingresos
+                         return [
+                             'id' => $query->id,
+                             'data' => $query->data,
+                             'control' => $query->control,
+                             'operation' => $query->operation,
+                             'amount' => $query->amount,
+                             'expense' => $amountExpense, // Asigna según el tipo
+                             'revenue' => $amountRevenue, // Asigna según el tipo
+                             'comment' => $comment,
+                             'file' => $query->file,
+                             'branch_id' => $query->branch_id,
+                             'business_id' => $query->business_id,
+                             'enrollment_id' => $query->enrollment_id,
+                             'expense_id' => $query->expense_id,
+                             'revenue_id' => $query->revenue_id,
+                             'type' => $query->type,                            
+                             'nameDetalle' => $query->expense 
+                             ? $query->expense->name 
+                             : ($query->revenue 
+                                 ? $query->revenue->name 
+                                 : ($query->type == 'Ingreso' 
+                                     ? '[MANTENEDOR ELIMINADO]' 
+                                     : '[MANTENEDOR ELIMINADO]')),
+                             'typeDetail' => $typeDetail
+                         ];
+                                 });
+     }
+    //////////////////////////////////////////////////////////////////
 
     public function combinedData(Request $request)
     {
@@ -546,7 +937,7 @@ class FinanceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update_ANTERIOR(Request $request)
     {
         try {
             $data = $request->validate([

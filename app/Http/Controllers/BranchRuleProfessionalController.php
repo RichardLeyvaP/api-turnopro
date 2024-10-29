@@ -43,8 +43,47 @@ class BranchRuleProfessionalController extends Controller
         return response()->json(['msg' =>'Error al asignar el estado de la rule a este professional'], 500);
         }
     }
+    
+     //obtener la cantidad de estado por convivencias
+    public function branch_rule_professional_periodo(Request $request)
+    {
 
-    public function storeByType(Request $request)
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'startDate' => 'required|date',
+                'endDate' => 'required|date',
+            ]);
+            $results = [];
+            $results = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data) {
+                // Filtramos por la sucursal
+                $query->where('branch_id', $data['branch_id']);
+            })
+            ->where('professional_id', $data['professional_id']) // Filtramos por el profesional
+            ->whereDate('data', '>=', $data['startDate']) // Filtramos por fecha mayor o igual al inicio
+            ->whereDate('data', '<=', $data['endDate']) // Filtramos por fecha menor o igual al fin
+            ->join('branch_rule', 'branch_rule_professional.branch_rule_id', '=', 'branch_rule.id')
+            ->join('rules', 'branch_rule.rule_id', '=', 'rules.id')
+            ->select(
+                'rules.name as rule_name',
+                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 0 THEN 1 ELSE 0 END) as estado_0'),
+                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 1 THEN 1 ELSE 0 END) as estado_1'),
+                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 3 THEN 1 ELSE 0 END) as estado_3')
+            )
+            ->groupBy('rules.name') // Agrupamos por el nombre de la regla
+            ->get();
+
+
+            return response()->json($results, 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
+        }
+    }
+
+  
+       public function storeByType_ANTERIOR(Request $request)
     {
         Log::info("Asignar cumplimiento de rule a un professional");
         try {
@@ -52,15 +91,17 @@ class BranchRuleProfessionalController extends Controller
                 'type' => 'required|string',
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
-                'estado' => 'required|int'
+                'estado' => 'required|int',
+                'id' => 'sometimes|int'
             ]); 
             $professional = Professional::find($data['professional_id']);
             $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
                 $query->where('type', $data['type']);
             })->where('branch_id', $data['branch_id'])->first();
-           $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule){
-                $query->whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id);
-            })->exists();
+        //   $existencia = Professional::whereHas('branchRules', function ($query) use ($branchrule){
+        //         $query->whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id);
+        //     })->exists();
+        $existencia = BranchRuleProfessional::where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->first();
             if ($data['type'] == 'Tiempo' && $data['estado'] == 0) {
                 $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
                                                 ->where('professional_id', $data['professional_id'])
@@ -72,10 +113,95 @@ class BranchRuleProfessionalController extends Controller
         $branchProfessional->save();
             }
             if ($existencia) {
-                $professional->branchrules()->updateExistingPivot($branchrule->id,['estado'=>$data['estado']]);     
+                $existencia->estado = 0;
+                $existencia->save();
+                //$professional->branchrules()->updateExistingPivot($branchrule->id,['estado'=>$data['estado']]);     
             return response()->json(['msg' => 'Estado actualizado correctamente de una rule del professional'], 200);
             }
             return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage().'Error al asignar el estado de la rule a este professional'], 500);
+        }
+    }
+    
+    public function storeByType(Request $request)
+    {
+        Log::info("Asignar cumplimiento de rule a un professional");
+        try {
+            $data = $request->validate([
+                'type' => 'required|string',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'estado' => 'required|int',
+                'id' => 'sometimes|int'
+            ]); 
+            $professional = Professional::find($data['professional_id']);
+            $branchrule = BranchRule::whereHas('rule', function ($query) use ($data){
+                $query->where('type', $data['type']);
+            })->where('branch_id', $data['branch_id'])->first();
+           $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
+           ->where('branch_rule_id', $branchrule->id)
+           ->where('professional_id', $data['professional_id'])
+           ->first();
+            if ($data['type'] == 'Tiempo' && $data['estado'] == 0) {
+                $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                ->where('professional_id', $data['professional_id'])
+                                                ->firstOrFail();
+                // Asignar el siguiente número de llegada
+        $branchProfessional->living = 1;
+
+        // Guardar los cambios
+        $branchProfessional->save();
+            }
+            if ($existencia) {
+                $existencia->estado = $data['estado'];
+                $existencia->save();
+                //$professional->branchrules()->updateExistingPivot($branchrule->id,['estado'=>$data['estado']]);     
+            return response()->json(['msg' => 'Estado actualizado correctamente de una rule del professional'], 200);
+            }
+            return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+        return response()->json(['msg' => $th->getMessage().'Error al asignar el estado de la rule a este professional'], 500);
+        }
+    }
+    
+     public function storeByTypeId(Request $request)
+    {
+        Log::info("Asignar cumplimiento de rule a un professional por id-2");
+        
+        try {
+            $data = $request->validate([
+                'type' => 'required|string',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'estado' => 'required|int',
+                'id' => 'required|int'
+            ]); 
+            Log::info($data['id']);
+        Log::info($data['type']);
+            $branchRuleProfessional = BranchRuleProfessional::where('id', $data['id'])->first();
+            Log::info($branchRuleProfessional);
+            if ($branchRuleProfessional) {
+                $branchRuleProfessional->estado = $data['estado'];
+                $branchRuleProfessional->save();
+                
+                if ($data['type'] == 'Tiempo' && $data['estado'] == 0) {
+                    $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                    ->where('professional_id', $data['professional_id'])
+                                                    ->firstOrFail();
+                    // Asignar el siguiente número de llegada
+                    $branchProfessional->living = 1;
+    
+                    // Guardar los cambios
+                    $branchProfessional->save();
+                }
+                Log::info($branchRuleProfessional);
+                return response()->json(['msg' => 'Estado actualizado correctamente de una rule del professional'], 200);
+            }else {
+                return response()->json(['msg' => 'Rule del Professional no encontrado'], 204);
+            }
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error al asignar el estado de la rule a este professional'], 500);
@@ -125,7 +251,7 @@ class BranchRuleProfessionalController extends Controller
 
     public function rules_professional(Request $request)
     {
-        try {             
+         try {             
             Log::info("Entra a buscar el estado de las rules de un  professional");
             $data = $request->validate([
                 'professional_id' => 'required|numeric', 
@@ -186,44 +312,6 @@ class BranchRuleProfessionalController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
         return response()->json(['msg' => 'Error al actualizar estado del cumplimiento de rule del professional'], 500);
-        }
-    }
-
-    //obtener la cantidad de estado por convivencias
-    public function branch_rule_professional_periodo(Request $request)
-    {
-
-        try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric',
-                'startDate' => 'required|date',
-                'endDate' => 'required|date',
-            ]);
-            $results = [];
-            $results = BranchRuleProfessional::whereHas('branchRule', function ($query) use ($data) {
-                // Filtramos por la sucursal
-                $query->where('branch_id', $data['branch_id']);
-            })
-            ->where('professional_id', $data['professional_id']) // Filtramos por el profesional
-            ->whereDate('data', '>=', $data['startDate']) // Filtramos por fecha mayor o igual al inicio
-            ->whereDate('data', '<=', $data['endDate']) // Filtramos por fecha menor o igual al fin
-            ->join('branch_rule', 'branch_rule_professional.branch_rule_id', '=', 'branch_rule.id')
-            ->join('rules', 'branch_rule.rule_id', '=', 'rules.id')
-            ->select(
-                'rules.name as rule_name',
-                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 0 THEN 1 ELSE 0 END) as estado_0'),
-                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 1 THEN 1 ELSE 0 END) as estado_1'),
-                DB::raw('SUM(CASE WHEN branch_rule_professional.estado = 3 THEN 1 ELSE 0 END) as estado_3')
-            )
-            ->groupBy('rules.name') // Agrupamos por el nombre de la regla
-            ->get();
-
-
-            return response()->json($results, 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
 

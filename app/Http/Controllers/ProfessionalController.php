@@ -10,7 +10,6 @@ use App\Models\Client;
 use App\Models\ClientProfessional;
 use App\Models\Order;
 use App\Models\Professional;
-use App\Models\ProfessionalWorkPlace;
 use App\Models\Reservation;
 use App\Models\Schedule;
 use App\Models\Service;
@@ -23,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\ProfessionalWorkPlace;
 
 class ProfessionalController extends Controller
 {
@@ -65,7 +65,7 @@ class ProfessionalController extends Controller
     }
     public function professionalsBranch(Request $request)
     {
-        try {
+         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -206,7 +206,7 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function show_apk1(Request $request)
+    public function show_apk_ANTERIOR(Request $request)
     {
         try {
             $professionals_data = $request->validate([
@@ -222,7 +222,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
-
+    
     public function show_apk(Request $request)
     {
         try {
@@ -280,7 +280,8 @@ class ProfessionalController extends Controller
             $reservations = [];
 
             $currentDateTime =  Carbon::now();
-            if (Carbon::parse($data['data'])->isToday()) {
+          //  if (Carbon::parse($data['data'])->isToday()) {
+           if (Carbon::parse($data['data'])->isToday() && $currentDateTime->format('H:i') >= '01:05') {
                 $professional = Professional::where('professionals.id', $data['professional_id'])
                     ->whereHas('branches', function ($query) use ($data) {
                         $query->where('branch_id', $data['branch_id']);
@@ -903,7 +904,7 @@ class ProfessionalController extends Controller
 
     public function destroy(Request $request)
     {
-        try {
+       try {
 
             $professionals_data = $request->validate([
                 'id' => 'required|numeric'

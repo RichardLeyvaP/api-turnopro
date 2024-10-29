@@ -95,7 +95,7 @@ class SendEmailService {
               $mail->id_reservation = $id_reservation;
               $mail->branch_address = $branch_address;
               $mail->code_reserva = $code_reserva;
-              $this->sendEmail($client_email,$mail,'Confirmación de Reserva en Simplifies');
+              $this->sendEmail($client_email,$mail,'Recordatorio de Reserva en Simplifies');
 
 
     }

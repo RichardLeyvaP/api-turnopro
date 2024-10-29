@@ -62,6 +62,7 @@ class OperationTipController extends Controller
                 // Guardar el modelo
                 $operationTip->save();
             //}
+        
             Log::info($request->input('car_ids'));
             if ($request->input('car_ids')) {
                 // Actualizar carros con professional_payment_id
@@ -373,6 +374,7 @@ class OperationTipController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
+              Log::info('Estas son las trazas');
             $cashier = Professional::where('id', $request->professional_id)->first();
             $nameCashier = $cashier->name;
             $branch = Branch::where('id', $data['branch_id'])->first();
@@ -387,7 +389,7 @@ class OperationTipController extends Controller
 
                 // Expresión regular para extraer los números después de 'Carro:'
                 $regex = '/Carro:\s*(\d+)/';
-
+                Log::info('Estas son las trazas');
                 // Iterar sobre los detalles y extraer los IDs
                 foreach ($traces as $trace) {
                     if (preg_match($regex, $trace->details, $matches)) {
