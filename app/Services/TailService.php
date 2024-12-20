@@ -92,7 +92,7 @@ class TailService
             Log::info($reservation);
             Log::info('clientProfessional');
             Log::info($reservation->car->clientProfessional);
-            $professional = $reservation->car->clientProfessional->professional;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             $client = $reservation->car->clientProfessional->client;
             $workplace = $professional->workplaces()
                 ->whereDate('data', $reservation->data)
@@ -188,7 +188,7 @@ class TailService
                     Log::info($professional);
                     }*/
             } else {
-                $professional = $reservation->car->clientProfessional->professional;
+                $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             }
             $client = $reservation->car->clientProfessional->client;
             $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
@@ -242,7 +242,7 @@ class TailService
             $query->where('branch_id', $branch_id);
         })->whereIn('attended', [1])->get()->map(function ($tail) {
             $reservation = $tail->reservation;
-            $professional = $reservation->car->clientProfessional->professional;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             $client = $reservation->car->clientProfessional->client;
             $workplace = $professional->workplaces()
                 ->whereDate('data', $reservation->data)

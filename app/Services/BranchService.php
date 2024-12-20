@@ -1377,12 +1377,16 @@ class BranchService
             })->where('pay', 1)->get();
             $retention = $professional->retention;
             $winProfessional = $cars->sum(function ($car) {
-                return $car->orders->sum(function ($order) {
-                    return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                });
+                return $car->orders
+                    ->where('is_product', 0)  // Filtrar donde is_product sea igual a 0
+                    ->sum(function ($order) {
+                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                    });
             });
             $amuntGenerate = $cars->sum(function ($car) {
-                return $car->orders->sum('price');
+                return $car->orders
+                    ->where('is_product', 0)  // Filtrar donde is_product sea igual a 0
+                    ->sum('price');
             });
             $retentionPorcent = ($winProfessional * $retention) / 100;
             $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', Carbon::now())->sum('retention');
@@ -1641,6 +1645,10 @@ class BranchService
                 ->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
                 ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
                 ->get();
+                Log::info($professional->name);
+                Log::info('Bonos');
+                Log::info($payments->sum('amount'));
+
             //foreach ($branches as $branch) {
             $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
                 $query->where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
@@ -1649,12 +1657,16 @@ class BranchService
             })->where('pay', 1)->get();
             $retention = $professional->retention;
             $winProfessional = $cars->sum(function ($car) {
-                return $car->orders->sum(function ($order) {
-                    return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                });
+                return $car->orders
+                    ->where('is_product', 0)  // Filtrar donde is_product sea igual a 0
+                    ->sum(function ($order) {
+                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                    });
             });
             $amuntGenerate = $cars->sum(function ($car) {
-                return $car->orders->sum('price');
+                return $car->orders
+                    ->where('is_product', 0)  // Filtrar donde is_product sea igual a 0
+                    ->sum('price');
             });
             $retentionPorcent = ($winProfessional * $retention) / 100;
             $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
@@ -1707,7 +1719,7 @@ class BranchService
                 'amountGenerate' => $amuntGenerate,
                 'retention' => $totalRetention,
                 //'retention' => $retentionPorcent,
-                'tip' => $tips,
+                'tip' => ($amount- $convivencia) + $winTips, //$tips
                 'tip80' => $winTips,
                 'bonus' => $bonusRetention,
                 'renta' => $winProfessional + $bonusAuxiliar,

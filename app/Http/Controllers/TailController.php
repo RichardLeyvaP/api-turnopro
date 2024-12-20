@@ -529,10 +529,10 @@ class TailController extends Controller
                 $tailsData = Tail::whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
                 })->whereIn('attended', [0, 3, 33])->get();
-
+                Log::info($tailsData);
                 foreach ($tailsData as $tail) {
                     $reservation = $tail->reservation;
-                    $professional = $reservation->car->clientProfessional->professional;
+                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
                     $client = $reservation->car->clientProfessional->client;
                     $workplace = $professional->workplaces()
                         ->whereDate('data', $reservation->data)
@@ -597,7 +597,7 @@ class TailController extends Controller
                                 }
                             }
                         } else {
-                            $professionalbar = $reservation->car->clientProfessional->professional;
+                            $professionalbar = $reservation->car->clientProfessional->professional()->withTrashed()->first();;
                         }
                         $tails1[] = [
                             'reservation_id' => $reservation->id,
@@ -665,7 +665,7 @@ class TailController extends Controller
                 Log::info("Estados de los professionales de colacion");
                 $orderDatas = $orderDatas = Order::with(['car.reservation', 'car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])
                     ->whereHas('car.reservation', function ($query) use ($data) {
-                        $query->where('branch_id', $data['branch_id']);
+                        $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
                     })
                     ->where('request_delete', true)
                     ->whereDate('data', Carbon::now()->toDateString())
@@ -828,7 +828,7 @@ class TailController extends Controller
             // Procesar la lista
             $reservations = $reservations->map(function ($tail) use ($attendedReservations, $unattendedReservations){
                 $reservation = $tail->reservation;
-                $professional = $reservation->car->clientProfessional->professional;
+                $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();;
                 $client = $reservation->car->clientProfessional->client;
 
                 $tail = $reservation->tail;
@@ -874,71 +874,6 @@ class TailController extends Controller
             // Ordenar las reservas atendidas y no atendidas
             $attendedReservations = $attendedReservations->sortByDesc('start_time')->values();
             $unattendedReservations = $unattendedReservations->sortBy('created_at')->values();
-
-            return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
-        }
-    }
-    
-     public function tail_branch_attended_NOOOOOOOOOOOOOO(Request $request)
-    {
-        try {
-
-            $data = $request->validate([
-                'branch_id' => 'required'
-            ]);
-            $data['branch_id'] = intval($data['branch_id']);
-
-            // Cargar relaciones con eager loading
-            $reservations = Tail::with([
-                'reservation.car.clientProfessional.professional',
-                'reservation.car.clientProfessional.client',
-                'reservation.car',
-                'reservation'
-            ])->whereHas('reservation', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereDate('data', Carbon::now());
-            })->whereIn('attended', [0, 1, 3, 11, 111, 4, 5, 33])->get();
-
-            // Procesar la lista
-            $reservations = $reservations->map(function ($tail) {
-                $reservation = $tail->reservation;
-                $professional = $reservation->car->clientProfessional->professional;
-                $client = $reservation->car->clientProfessional->client;
-
-                // Cargar workplace en la colección para evitar múltiples consultas.
-                $workplace = $professional->workplaces->where('data', $reservation->data)->first();
-
-                $tail = $reservation->tail;
-
-                $name = ($tail->attended == 0 && $tail->aleatorie == 1) ? '' : $professional->name;
-
-                $createdAt = $reservation->from_home == 1 ? $reservation->updated_at : $reservation->created_at;
-
-                return [
-                    'reservation_id' => $reservation->id,
-                    'car_id' => $reservation->car_id,
-                    'from_home' => intval($reservation->from_home),
-                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
-                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
-                    'total_time' => $reservation->total_time,
-                    'client_name' => $client->name,
-                    'professional_name' => $name,
-                    'client_id' => $client->id,
-                    'professional_id' => $professional->id,
-                    'professional_state' => $professional->state,
-                    'attended' => $tail->attended,
-                    'puesto' => $workplace ? $workplace->name : null,
-                    'code' => $reservation->code,
-                    'select_professional' => intval($reservation->car->select_professional),
-                    'created_at' => $createdAt
-                ];
-            });
-
-            // Separar reservas atendidas y no atendidas
-            $attendedReservations = $reservations->whereIn('attended', [1, 11, 111, 4, 5, 33])->sortByDesc('start_time')->values();
-            $unattendedReservations = $reservations->whereIn('attended', [0, 3])->sortBy('created_at')->values();
 
             return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {

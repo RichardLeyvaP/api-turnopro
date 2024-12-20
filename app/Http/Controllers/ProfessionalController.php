@@ -910,21 +910,9 @@ class ProfessionalController extends Controller
                 'id' => 'required|numeric'
             ]);
             $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url != "professionals/default.jpg") {
-                //$this->imageService->destroyImagen($professional->image_url);
-                $destination = public_path("storage\\" . $professional->image_url);
-                if (File::exists($destination)) {
-                    File::delete($destination);
-                }
-            }
-            //$user = User::find($professional->user_id);
-            $client = Client::where('user_id', $professional->user_id)->first();
-            if ($client) {
+            $user_id = $professional->user_id;     
                 Professional::destroy($professionals_data['id']);
-            } else {
-                Professional::destroy($professionals_data['id']);
-                User::destroy($professional->user_id);
-            }
+                User::destroy($user_id);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

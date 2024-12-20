@@ -17,11 +17,11 @@ class VacationController extends Controller
         try {
             Log::info('Entra a buscar las vacaciones');
             $vacations = Vacation::with(['professional'])->get()->map(function ($vacation) {
-                $professional = $vacation->professional;
+                $professional = $vacation->professional()->withTrashed()->first();
                 return [
                     'id' => $vacation->id,
                     'professional_id' => $professional->id,
-                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'name' => $professional->name,
                     'image_url' => $professional->image_url,
                     'description' => $vacation->description,
                     'startDate' => $vacation->startDate,
@@ -32,7 +32,7 @@ class VacationController extends Controller
             $professionals = Professional::with('user', 'charge')->get()->map(function ($professional) {
                 return [
                     'id' => $professional->id,
-                    'name' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
+                    'name' => $professional->name,
                     'image_url' => $professional->image_url,
                     'charge' => $professional->charge->name
                 ];

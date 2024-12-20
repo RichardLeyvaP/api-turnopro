@@ -80,17 +80,9 @@ class BranchProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $now = Carbon::now();
-            $professionals = BranchProfessional::where('branch_id', $data['branch_id'])->with('professional.charge')->get()/*->map(function ($query){
-                $professional = $query->professional;
-                return [
-                    'id' => $query->id,
-                    'professional_id' => $query->professional_id,
-                    'ponderation' => $query->ponderation,
-                    'name' => $professional->name.' '.$professional->surname,
-                    'image_url' => $professional->image_url,
-                    'charge' => $professional->chrage
-                ];
-            })*/;
+            $professionals = BranchProfessional::where('branch_id', $data['branch_id'])->whereHas('professional', function ($query) {
+                $query->whereNull('deleted_at'); // Verifica que el profesional no esté eliminado
+            })->with('professional.charge')->get();
             $data = [];
             foreach ($professionals as $branchprofessional) {
                 $data[] = [
@@ -245,18 +237,9 @@ class BranchProfessionalController extends Controller
         $diaActualIngles = Carbon::now()->isoFormat('dddd');
         Log::info('Dia actual en ingles');
         Log::info($diaActualIngles);
-         // Obtener el día actual en español
-         /*$diaActualEspañol = ucfirst(Carbon::now()->translatedFormat('l'));
-        Log::info('Día actual en español: ' . $diaActualEspañol);
-            // Inicializar el array de fechas
-        $fechas = [];
-
-        // Si el día actual está en el array de días de la semana, agregar su fecha correspondiente
-        if (in_array($diaActualEspañol, $diasSemana)) {
-            Log::info('El día actual está en los días seleccionados');
-            $fechas[] = Carbon::now()->format('Y-m-d');
-        }*/
-        // Obtener las fechas para cada día de la semana en el array
+        // Obtener el año actual y hasta dos años más
+        $añoActual = Carbon::now()->year;
+        $añoLimite = $añoActual + 2;
         foreach ($diasSemana as $dia) {
             // Restablecer la fecha actual para cada iteración del bucle
             $fechaActual = Carbon::now();
@@ -267,14 +250,10 @@ class BranchProfessionalController extends Controller
             if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
                 $fecha->addWeek();
             }
-            while ($fecha->year === $fechaActual->year) { // Verificar todo el año
+            while ($fecha->year <= $añoLimite) { // Verificar todo el año
                 $fechas[] = $fecha->format('Y-m-d');
                 $fecha->addWeek(); // Avanzar una semana
             }
-            /*while ($fecha->month === $fechaActual->month) {
-                $fechas[] = $fecha->format('Y-m-d');
-                $fecha->addWeek(); // Avanzar una semana
-            }*/
         }
         // Ordenar las fechas
         sort($fechas);
@@ -344,6 +323,8 @@ class BranchProfessionalController extends Controller
                 'type' => 'required|string',
                 'state' => 'required|numeric'
             ]);
+            Log::info('Solicitud de salida o colación');
+            Log::info($data);
             $tittle = '';
             $description = '';            
             $ProfessionalWorkPlace = [];
@@ -399,16 +380,27 @@ class BranchProfessionalController extends Controller
             }
             elseif ($data['state'] == 2 || $data['state'] == 0) {
                 if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
-                    $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
+                    $ProfessionalWorkPlace = ProfessionalWorkPlace::with(['workplace' => function ($query) use ($data) {
                         $query->where('busy', 1)->where('branch_id', $data['branch_id']);
-                    })->latest('created_at')->first();
-                    if ($ProfessionalWorkPlace != null) {
-                        $workplace = Workplace::where('id', $ProfessionalWorkPlace->workplace_id)->first();
-                    $workplace->busy = 0;
-                    $workplace->save();
-                    $ProfessionalWorkPlace->state = 0;
-                    $ProfessionalWorkPlace->save();
+                    }])
+                    ->where('professional_id', $professional->id)
+                    ->whereDate('data', Carbon::now())
+                    ->latest('created_at')
+                    ->first();
+                    if ($ProfessionalWorkPlace && $ProfessionalWorkPlace->workplace) {
+                        Log::info('Puesto de trabajo');
+                        Log::info($ProfessionalWorkPlace);
+                        $ProfessionalWorkPlace->workplace->busy = 0;
+                        $ProfessionalWorkPlace->workplace->save();
+                        $ProfessionalWorkPlace->state = 0;
+                        $ProfessionalWorkPlace->save();
+                    }else {
+                        Log::info('Relación puesto de trabajo Null');
+                        Log::info($ProfessionalWorkPlace);
+                        Log::info('Puesto de trabajo Null');
+                        Log::info($ProfessionalWorkPlace->workplace);
                     }
+                    
                 }//end if de barbero
                 if ($data['type'] == 'Tecnico') {
                     $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
@@ -422,7 +414,9 @@ class BranchProfessionalController extends Controller
                     }
                 }//end if de tecnico
 
-                if ($data['state'] == 2) {                                    
+                if ($data['state'] == 2) {                         
+                    Log::info('Professional aceptada solicitud de salida a colación:');                              
+                    Log::info($professional->name);                              
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
@@ -433,6 +427,8 @@ class BranchProfessionalController extends Controller
                     $notification->type = $data['type'];                     
                     $notification->save();
                 }else {
+                    Log::info('Professional aceptada solicitud de Salida:');                              
+                    Log::info($professional->name);
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];

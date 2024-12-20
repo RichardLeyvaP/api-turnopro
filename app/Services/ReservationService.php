@@ -229,7 +229,7 @@ class ReservationService
             }else {
                 $reservation = $reservation2->first();
                 $branch = $reservation->branch;
-                $professional = $reservation->car->clientProfessional->professional;
+                $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             }
             $result = [
                 'clientName' => $client->name,

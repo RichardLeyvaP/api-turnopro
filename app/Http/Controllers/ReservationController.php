@@ -20,12 +20,14 @@ use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\Workplace;
 use App\Services\ProfessionalService;
 use App\Services\ReservationService;
 use App\Services\SendEmailService;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\Mailer\Exception\TransportException;
 
 class ReservationController extends Controller
@@ -161,11 +163,40 @@ class ReservationController extends Controller
                 $data['from_home'] = $request->from_home;
             } else {
                 $data['from_home'] = 1;
-                $intervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
+                $reservationIntervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
                 Log::info('Horarios del barbero');
-                Log::info($intervals);
-                
-                // Convertir la hora a verificar en un objeto DateTime
+                Log::info($reservationIntervals);
+                // Verificar si el array tiene un número impar de elementos
+                if (count($reservationIntervals) % 2 !== 0) {
+                    // Duplicar el último elemento
+                    $reservationIntervals[] = end($reservationIntervals);
+                }
+                $reservation_intervals = array_chunk($reservationIntervals, 2);
+                $reservation_intervals = array_map(function ($chunk) {
+                    return [
+                        'start' => Carbon::parse($chunk[0]),
+                        'end' => Carbon::parse($chunk[1]),
+                    ];
+                }, $reservation_intervals);
+                // Nuevo intervalo propuesto
+                $new_start = Carbon::parse($data['start_time']);
+                $total_time = Service::whereIn('id', $servs)->sum('duration_service');
+                $new_end = $new_start->copy()->addMinutes($total_time);
+
+                // Verificar solapamientos
+                foreach ($reservation_intervals as $interval) {
+                    $existing_start = $interval['start'];
+                    $existing_end = $interval['end'];
+
+                    if (
+                        $new_start->between($existing_start, $existing_end, true) || // Inicio dentro del rango existente
+                        $new_end->between($existing_start, $existing_end, true) ||  // Fin dentro del rango existente
+                        ($new_start->lessThanOrEqualTo($existing_start) && $new_end->greaterThanOrEqualTo($existing_end)) // Cubre un intervalo existente
+                    ) {
+                        return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
+                    }
+                }
+                /*// Convertir la hora a verificar en un objeto DateTime
                 $start_to_check = Carbon::parse($data['start_time']);
                 $total_time = Service::whereIn('id', $servs)->sum('duration_service');
                 $start_time = Carbon::parse($data['start_time']);
@@ -216,7 +247,7 @@ class ReservationController extends Controller
                         DB::commit();
                         return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
                     }
-                }
+                }*/
                 
             }
             $id_client = 0;
@@ -240,22 +271,6 @@ class ReservationController extends Controller
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
             else {
-                /*if ($data['email_client'] != null) {                    
-                $user = User::where('email', $data['email_client'])->whereHas('client', function ($query) use ($data){
-                    $query->where('name', $data['name_client']);
-                })->first();
-                }else {
-                    $user = User::where('name', $data['name_client'])->whereHas('client', function ($query) use ($data){
-                        $query->where('name', $data['name_client']);
-                    })->first();
-                }
-                if ($user) {
-                    Log::info("Encontro el ususario");
-                    Log::info($user);
-                    $client = $user->client;
-                    $id_client = $client->id;
-                    $reservation = $this->reservationService->store($data, $servs, $id_client);
-                }else {*/
                     Log::info("Si no existe registrarlo");
                     $userNew = User::create([
                         'name' => $data['name_client'],
@@ -332,9 +347,6 @@ class ReservationController extends Controller
                 //optener nombre del professional
                 $professional = Professional::find($data['professional_id']);
                 $name = $professional->name;
-                //todo *************** llamando al servicio de envio de email *******************
-                //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
-                //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
                 if ($reservation != null) {
                     $id = $reservation->id;
                 } else {
@@ -354,10 +366,10 @@ class ReservationController extends Controller
                     'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
                     'code_reserva' => $code
                 ];
-   Log::info("OKOKOK");
+                Log::info("OKOKOK");
 
                 Log::info($data);
-                SendEmailJob::dispatch($data);
+                //SendEmailJob::dispatch($data);
             }
                 DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
@@ -594,7 +606,7 @@ class ReservationController extends Controller
 
                 $reservationsData = $reservations->map(function ($reservation) {
                     $client = $reservation->car->clientProfessional->client;
-                    $professional = $reservation->car->clientProfessional->professional;
+                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
                     return [
                         'id' => $reservation->id,
                         'car_id' => $reservation->car_id,
@@ -624,7 +636,7 @@ class ReservationController extends Controller
                 $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->get();
                 $reservationsData = $reservations->map(function ($reservation) {
                     $client = $reservation->car->clientProfessional->client;
-                    $professional = $reservation->car->clientProfessional->professional;
+                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
                     return [
                         'id' => $reservation->id,
                         'car_id' => $reservation->car_id,
@@ -983,6 +995,12 @@ class ReservationController extends Controller
         }
         log::info('registrar las reservaciones del dia en la cola');
         try {
+            Notification::truncate();
+            Workplace::query()->update(['busy' => 0, 'select' => 0]);
+            Tail::truncate();
+            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL, 'state' => 0]);
+            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
+            PersonalAccessToken::query()->delete();
             $reservations = Reservation::whereDate('data', Carbon::today())
                 ->whereDoesntHave('tail')
                 ->orderBy('start_time')->get();

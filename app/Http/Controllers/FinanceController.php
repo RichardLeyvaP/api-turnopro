@@ -1092,7 +1092,7 @@ class FinanceController extends Controller
                         'operation' => $query->operation,
                         'ingreso' => $query->amount,
                         'gasto' => '',
-                        'detailOperation' => $query->revenue->name,
+                        'detailOperation' => $query->revenue ? $query->revenue->name : 'MANTENEDOR ELIMINADO',
                     ];
                 })->sortByDesc('data')->values();
 
@@ -1113,7 +1113,7 @@ class FinanceController extends Controller
                                 'operation' => $query->operation,
                                 'ingreso' => '',
                                 'gasto' => $query->amount,
-                                'detailOperation' => $query->expense->name,
+                                'detailOperation' => $query->expense ? $query->expense->name : 'MANTENEDOR ELIMINADO',
                             ];
                         })->sortByDesc('data')->values();
 
@@ -1137,7 +1137,7 @@ class FinanceController extends Controller
                         'operation' => $query->operation,
                         'ingreso' => $query->amount,
                         'gasto' => '',
-                        'detailOperation' => $query->revenue->name,
+                        'detailOperation' => $query->revenue ? $query->revenue->name : 'MANTENEDOR ELIMINADO',
                     ];
                 })->sortByDesc('data')->values();
 
@@ -1159,7 +1159,7 @@ class FinanceController extends Controller
                         'operation' => $query->operation,
                         'ingreso' => '',
                         'gasto' => $query->amount,
-                        'detailOperation' => $query->expense->name,
+                        'detailOperation' => $query->expense ? $query->expense->name : 'MANTENEDOR ELIMINADO',
                     ];
                 })->sortByDesc('data')->values();
 
@@ -1574,7 +1574,7 @@ class FinanceController extends Controller
             }
     }
 
-    public function finances_detail_operation_month(Request $request){
+    public function finances_detail_operation_month_ANTERIOR(Request $request){
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -1600,8 +1600,49 @@ class FinanceController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
+    
+     public function finances_detail_operation_month(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable',
+                'month' => 'nullable'
+            ]);
+            $financeDates = [];
+            $finances = Finance::Where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->whereMonth('data', $data['month'])->get();
+            foreach($finances as $finance){
 
-    public function finances_detail_operation(Request $request){
+                $name = '';
+                if($finance['revenue_id'] == null &&  $finance['expense_id'] == null)
+                {
+                    $name = 'MANTENEDOR ELIMINADO';
+                }
+                else if($finance['revenue_id'])
+                {
+                    $name = $finance['revenue']['name'];
+                }
+                else{
+                    $name = $finance['expense']['name'];
+                }
+                $financeDates [] = [
+                    'data' => $finance['data'],
+                    'operation' => $finance['operation'],
+                    'amount' => $finance['amount'],
+                    'file' => $finance['file'],
+                    'comment' => $finance['comment'],                    
+                    'typeOperation' => $name,                    
+                ];
+            }
+            // Devolvemos el resultado
+            return response()->json(['finances' => $financeDates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }
+    
+
+    public function finances_detail_operation_ANTERIOR(Request $request){
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -1617,6 +1658,45 @@ class FinanceController extends Controller
                     'file' => $finance['file'],
                     'comment' => $finance['comment'],                    
                     'typeOperation' => $finance['revenue_id'] ? $finance['revenue']['name'] : $finance['expense']['name'],                    
+                ];
+            }
+            // Devolvemos el resultado
+            return response()->json(['finances' => $financeDates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }
+    
+    
+     public function finances_detail_operation(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable'
+            ]);
+            $financeDates = [];
+            $finances = Finance::Where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->get();
+            foreach($finances as $finance){
+                $name = '';
+                if($finance['revenue_id'] == null &&  $finance['expense_id'] == null)
+                {
+                    $name = 'MANTENEDOR ELIMINADO';
+                }
+                else if($finance['revenue_id'])
+                {
+                    $name = $finance['revenue']['name'];
+                }
+                else{
+                    $name = $finance['expense']['name'];
+                }
+                $financeDates [] = [
+                    'data' => $finance['data'],
+                    'operation' => $finance['operation'],
+                    'amount' => $finance['amount'],
+                    'file' => $finance['file'],
+                    'comment' => $finance['comment'],                    
+                    'typeOperation' => $name,                    
                 ];
             }
             // Devolvemos el resultado

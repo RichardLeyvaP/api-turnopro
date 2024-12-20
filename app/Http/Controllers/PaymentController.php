@@ -232,6 +232,12 @@ class PaymentController extends Controller
       public function update(Request $request)
     {
         try {
+            $payment = Payment::where('car_id', $request->car_id)->first();
+            if ($payment) {
+                Log::info("Pago del carro ya ha sido registrado anteriormente");
+                Log::info($request->car_id);
+                return response()->json(['msg' => 'El pago ya ha sido registrado para este carro.'], 200); 
+            }
             DB::beginTransaction();
             Log::info("Pagar Carro");
             $data = $request->validate([
@@ -250,16 +256,7 @@ class PaymentController extends Controller
             $control = 0;
             $car = Car::find($data['car_id']);            
            $branch = Branch::where('id', $request->branch_id)->first();
-            $payment = Payment::where('car_id', $data['car_id'])->first();
-            if ($payment) {
-                if ($payment->cash) {
-                    $box = Box::where('branch_id', $request->branch_id)->whereDate('data', Carbon::now())->first();
-                        $box->existence = $box->existence - $payment->cash;
-                        $box->save();
-                }
-            }else {
                 $payment = new Payment();
-            }
             // Lógica basada en el valor de $data['tipByCash']
             switch ($data['tipByCash']) {
                 case 'Efectivo':
@@ -416,8 +413,8 @@ class PaymentController extends Controller
     public function product_sales(Request $request)
     {
         try {
-
-            Log::info("Editar");
+            DB::beginTransaction();
+            Log::info("Editar Pago de venta de productos en la caja");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'cash' => 'nullable|numeric',
@@ -501,9 +498,11 @@ class PaymentController extends Controller
                             $finance->data = Carbon::now();                
                             $finance->file = '';
                             $finance->save();
+                            DB::commit();
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
+            DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al realizar el pago'], 500);
         }
     }
