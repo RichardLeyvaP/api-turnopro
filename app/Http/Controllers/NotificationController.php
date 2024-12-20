@@ -458,7 +458,7 @@ class NotificationController extends Controller
                 return response()->json("No se envió la notificación porque el número de teléfono es nulo", 200);
             }
 
-            $message = "Envío de notificación de prueba con Twlio";
+            $message = "Usted será atendido apróximadamente en 3 minutos";
 
             try {
                 $this->twilio->sendSms($data['telefone_client'], $message);
