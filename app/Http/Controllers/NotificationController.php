@@ -9,6 +9,7 @@ use App\Models\BranchRule;
 use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Services\TwilioService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -16,6 +17,13 @@ use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
+    protected $twilio;
+
+    public function __construct(TwilioService $twilio)
+    {
+        $this->twilio = $twilio;
+    }
+
     public function index()
     {
         Log::info('entra a buscar las notificaciones por professional');
@@ -398,43 +406,7 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
-
-    // public function whatsapp_notification(Request $request)
-    // {
-    //     Log::info('Eviar notificacion whatsApp');
-    //     try {
-    //         $data = $request->validate([
-    //             'telefone_client' => 'required'
-    //         ]);
-    //         //funcion
-    //         $phone = $data['telefone_client'];
-    //         $token = 'EAAagNvvUedwBOZBRlNnV1vpITV9yY021G4IrEy6UJqoB7ErYIA13abKyZA54ZBWm64KS9PTZBaRYBh2zWLn594NZBcPMjt2R14Cx3IB6nOfpfyZBH6a6mNeVxDZC3q6GbBZAs4ZAFI0ZChhY957058Y7tk20s72Se2mk9unBNrfdc7eapXtI9KxWu62mE43lIxpsR3Ob7lwO7ZByB6ZBaslLlQ7JgeqXb7IZD';
-    //     // $carbon = new Carbon();
-    //     $body = [
-    //         'messaging_product' => 'whatsapp',
-    //         'to' => $phone,
-    //         'type' => 'template',
-    //         'template' => [
-    //             'name' => 'hello_world',
-    //             'language' => [
-    //                 'code' => 'en_us'
-    //             ],
-
-    //         ]
-    //     ];
-
-
-    //     $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
-    //     Log::error('scanner');
-    //     Log::info($response);
-    //         return response()->json("Este es el numero de celular ".$data['telefone_client'], 200);
-    //     } catch (\Throwable $th) {
-    //         Log::error($th);
-    //         return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
-    //     }
-    // }
-
-    public function whatsapp_notification(Request $request)
+    public function whatsapp_notificationAnterior(Request $request)
     {
         Log::info('Enviar notificación WhatsApp');
 
@@ -467,6 +439,34 @@ class NotificationController extends Controller
             Log::info($response);
 
             return response()->json("Este es el número de celular " . $data['telefone_client'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notificaciones"], 500);
+        }
+    }
+
+    public function whatsapp_notification(Request $request)
+    {
+        Log::info('Enviar notificación Twlio');
+
+        try {
+            $data = $request->validate([
+                'telefone_client' => 'nullable'
+            ]);
+
+            if (is_null($data['telefone_client'])) {
+                return response()->json("No se envió la notificación porque el número de teléfono es nulo", 200);
+            }
+
+            $message = "Envío de notificación de prueba con Twlio";
+
+            try {
+                $this->twilio->sendSms($data['telefone_client'], $message);
+    
+                return response()->json(['success' => true, 'message' => 'SMS enviado con éxito.']);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notificaciones"], 500);
