@@ -411,7 +411,7 @@ class TailService
         }
 
         Log::info('Llamando a la cola el profesional: ' . $professional->name . ' en el servicio TailService(tail_branch_professional)');
-        $today = Carbon::now()->format('Y-m-d');
+        $today = "2024-12-31";
         // Eager loading para evitar consultas N+1
         $tails = Tail::with([
             'reservation.car.clientProfessional.client',
@@ -456,7 +456,7 @@ class TailService
                     'image_service' => $service->image_service,
                     'description' => $service->service_comment
                 ];
-            });
+            })->values();
 
             return [
                 'reservation_id' => $reservation->id,

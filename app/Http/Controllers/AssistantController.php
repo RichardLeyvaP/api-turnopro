@@ -237,7 +237,7 @@ class AssistantController extends Controller
                 'branch_id' => 'required|numeric',
             ]);
             $notifications = [];            
-            $now = Carbon::now();
+            $now = "2024-12-31";
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
             $notifications = $branch->notifications()
@@ -306,7 +306,7 @@ class AssistantController extends Controller
                     'image_service' => $service->image_service,
                     'description' => $service->service_comment
                 ];
-            });
+            })->values();
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => intval($reservation->car_id),

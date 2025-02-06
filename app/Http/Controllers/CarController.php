@@ -2795,7 +2795,7 @@ class CarController extends Controller
             $fiel = null;
             $frecuencia = null;
             $reservations = Reservation::whereHas('car', function ($query) use ($client) {
-                $query->whereHas('clientProfessional', function ($query) use ($client) {
+                $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($client) {
                     $query->where('client_id', $client->id);
                 });
             })->orderByDesc('data')->limit(12)->get();
@@ -2830,13 +2830,9 @@ class CarController extends Controller
                     $query->where('client_id', $client->id);
                 })->orderByDesc('data')->orderByDesc('updated_at')->first();
 
-                $reservation = $reservations->sortByDesc('start_time')
-                ->filter(function ($query) {
-                    return $query->confirmation == 2;
-                })
-                ->first();
+                $reservation = $reservations->first();
                 if ($reservation != null) {                   
-                    $professional = $reservation->car->clientProfessional->professionalc->first();
+                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
                 }
                 else{
                     $professional = [];

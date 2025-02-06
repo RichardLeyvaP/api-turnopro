@@ -79,7 +79,7 @@ class ReservationService
             $order->data = $data['data'];
             $order->is_product = false;
             //logica de porciento de ganancia
-            $order->percent_win = $service->price_service * $percent/100;
+            $order->percent_win = $service->price_service * $percent / 100;
             $order->price = $service->price_service;
             $order->request_delete = false;
             $order->save();
@@ -96,20 +96,18 @@ class ReservationService
         $fechaCarbon = Carbon::createFromFormat('Y-m-d', $data['data']);
         if ($fechaCarbon->isToday() && $data['from_home'] == 0) {
             //$reservationsDay = Reservation::whereHas()->whereDate('data', Carbon::now())->where('from_home', 0)->where('branch_id', $data['branch_id'])->get();
-            if($data['select_professional'] == 1){           
-            $code = 'SELECT'/*.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT)*/;
-            }
-            else{
+            if ($data['select_professional'] == 1) {
+                $code = 'SELECT'/*.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT)*/;
+            } else {
                 // $reservationsDay = Reservation::whereHas('car', function ($query){
-                 $reservationsDay = Reservation::withTrashed()->whereHas('car', function ($query){
+                $reservationsDay = Reservation::withTrashed()->whereHas('car', function ($query) {
                     $query->where('select_professional', 0);
-                })->whereDate('data', Carbon::now())->where('from_home', 0)->where('branch_id', $data['branch_id'])->get();   
-            $code = 'TA'.str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT);
-            //$code = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+                })->whereDate('data', Carbon::now())->where('from_home', 0)->where('branch_id', $data['branch_id'])->get();
+                $code = 'TA' . str_pad($reservationsDay->count() + 1, 2, '0', STR_PAD_LEFT);
+                //$code = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
             }
-        }
-        else{
-            $code = 'RE'.substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+        } else {
+            $code = 'RE' . substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
             //$code = 'RESERVA';
         }
         // $confirmation = 0;
@@ -122,13 +120,13 @@ class ReservationService
         // } else {
         //     $confirmation = 0;
         // }
-         $confirmation = 1;
+        $confirmation = 1;
         if ($fechaCarbon->isToday()) {
             if ($data['from_home'] == 0) {
                 $confirmation = 4;
             }
         }
-        $reservation = new Reservation();    
+        $reservation = new Reservation();
         $start_time = Carbon::parse($data['start_time'])->toTimeString();
         $reservation->start_time = Carbon::parse($start_time)->toTimeString();
         $reservation->final_hour = Carbon::parse($start_time)->addMinutes($total_time)->toTimeString();
@@ -150,14 +148,14 @@ class ReservationService
     {
         $fiel = null;
         $frecuencia = null;
-        $cantMaxService = 0;        
+        $cantMaxService = 0;
         $client = Client::find($data['client_id']);
         $result = [
             'clientName' => $client->name,
             'professionalName' => "Ninguno",
             'branchName' => '',
             'image_data' => '',
-            'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
+            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now() : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
             'image_url' => '',
             'cantVisit' => 0,
             'endLook' => '',
@@ -166,17 +164,14 @@ class ReservationService
             'services' =>  [],
             'products' => []
         ];
-        
-        /*if (!$client) {
-            Log::info("client_history 1");
-            return  $result;
-        }*/
+
         Log::info("client_history 2");
         $reservations = Reservation::whereHas('car', function ($query) use ($data) {
-            $query->whereHas('clientProfessional', function ($query) use ($data){
+            $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($data) {
                 $query->where('client_id', $data['client_id']);
             });
         })->orderByDesc('data')->limit(12)->get();
+
         if ($reservations->isEmpty()) {
             return $result;
         }
@@ -203,78 +198,77 @@ class ReservationService
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
             $query->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-        $reservation2 = $reservations->sortByDesc('start_time')
-            ->filter(function ($query) {
-                return $query->confirmation == 2;
-            });
-       $reservationids2 = $reservation2->pluck('car_id')->take(3);
+        /*$reservation2 = $reservations->filter(function ($reservation) {
+                return $reservation->confirmation == 2;
+            })->sortByDesc('data'); // Ordena después de filtrar*/
+        $reservationids2 = $reservations->pluck('car_id')->take(3);
         $products = Product::with(['orders' => function ($query) use ($data, $reservationids2) {
             $query->selectRaw('SUM(cant) as total_sale_price')
                 ->groupBy('product_id')
                 ->whereIn('car_id', $reservationids2)
                 ->where('is_product', 1);
         }])
-        ->get()->filter(function ($product) {
-            return !$product->orders->isEmpty();
-        });
+            ->get()->filter(function ($product) {
+                return !$product->orders->isEmpty();
+            });
         $comment = Comment::whereHas('clientProfessional', function ($query) use ($data) {
             $query->where('client_id', $data['client_id']);
         })->orderByDesc('data')->orderByDesc('updated_at')->first();
         //if ($reservations !== null && !$reservations->isEmpty()) {
-            Log::info('Tiene Reserva');
-            if ($reservation2->isEmpty()) {
-                $branch = [];
-                $professional = [];
-                $reservation = [];
-            }else {
-                $reservation = $reservation2->first();
-                $branch = $reservation->branch;
-                $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
-            }
-            $result = [
-                'clientName' => $client->name,
-                'professionalName' => $professional ? $professional->name : '',
-                'branchName' => $branch ? $branch->name : '',
-                'image_data' => $branch ? $branch->image_data : 'branches/default.jpg',
-                'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
-                'imageLook' => $client->client_image ? $client->client_image.'?$'. Carbon::now() : 'clients/default_profile.jpg'.'?$'. Carbon::now(),
-                'cantVisit' => $reservation2->count(),
-                'endLook' => $comment ? $comment->look : null,
-                'lastDate' => $reservation ? $reservation->data : '',
-                'frecuencia' => $frecuencia,
-                'services' => $services->map(function ($service) use ($cantMaxService) {
-                    return [
-                        'id' => $service->id,
-                        'name' => $service->name,
-                        'simultaneou' => $service->simultaneou,
-                        'price_service' => $service->price_service,
-                        'type_service' => $service->type_service,
-                        'profit_percentaje' => $service->profit_percentaje,
-                        'duration_service' => $service->duration_service,
-                        'image_service' => $service->image_service,
-                        'service_comment' => $service->service_comment,
-                        'cant' => $service->orders_count
-                    ];
-                }),
-                'products' => $products->map(function ($product) {
-                    $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
-                    return [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'code' => $product->code,
-                        'description' => $product->description,
-                        'product_exit' => 0, //solo para utilizar el modelo en apk bien,
-                        'status_product' => $product->status_product,
-                        'purchase_price' => $product->purchase_price,
-                        'sale_price' => $product->sale_price,
-                        'image_product' => $product->image_product,
-                        'created_at' => $product->created_at,
-                        'updated_at' => $product->updated_at,
-                        'cant' => $total_sale_price
-                    ];
-                })->values(),
-                'cantMaxService' => $services->max('orders_count')
-            ];
+        Log::info('Tiene Reserva');
+        if ($reservations->isEmpty()) {
+            $branch = [];
+            $professional = [];
+            $reservation = [];
+        } else {
+            $reservation = $reservations->first();
+            $branch = $reservation->branch;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
+        }
+        $result = [
+            'clientName' => $client->name,
+            'professionalName' => $professional ? $professional->name : '',
+            'branchName' => $branch ? $branch->name : '',
+            'image_data' => $branch ? $branch->image_data : 'branches/default.jpg',
+            'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
+            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now() : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
+            'cantVisit' => $reservations->count(),
+            'endLook' => $comment ? $comment->look : null,
+            'lastDate' => $reservation ? $reservation->data : '',
+            'frecuencia' => $frecuencia,
+            'services' => $services->map(function ($service) use ($cantMaxService) {
+                return [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
+                    'cant' => $service->orders_count
+                ];
+            }),
+            'products' => $products->map(function ($product) {
+                $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'product_exit' => 0, //solo para utilizar el modelo en apk bien,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                    'cant' => $total_sale_price
+                ];
+            })->values(),
+            'cantMaxService' => $services->max('orders_count')
+        ];
         /*} else {
             return  $result;
         }*/

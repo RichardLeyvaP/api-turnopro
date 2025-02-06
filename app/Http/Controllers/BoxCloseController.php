@@ -1170,10 +1170,10 @@ class BoxCloseController extends Controller
 
         // Log para verificar el valor de código
 
-        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+        /*if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
             Log::info("Código no coincide");
             return response()->json(['msg' => 'Código inválido'], 403);
-        }
+        }*/
         try {
             // Obtener la fecha actual
             $now = Carbon::now();
@@ -1192,7 +1192,7 @@ class BoxCloseController extends Controller
             Log::info($ultimoDiaMesAnterior);
             //$boxCloseData = [];
             $professionalsData = [];
-
+            return ($mesAnterior .'-'. $añoAnterior);
             $ingreso = 0;
             $gasto = 0;
             $branches = Branch::all();

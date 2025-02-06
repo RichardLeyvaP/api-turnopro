@@ -461,7 +461,7 @@ class NotificationController extends Controller
             $message = "Usted será atendido apróximadamente en 3 minutos";
 
             try {
-                $this->twilio->sendSms($data['telefone_client'], $message);
+                $this->twilio->sendSms("whatsapp:".$data['telefone_client'], $message);
     
                 return response()->json(['success' => true, 'message' => 'SMS enviado con éxito.']);
             } catch (\Exception $e) {

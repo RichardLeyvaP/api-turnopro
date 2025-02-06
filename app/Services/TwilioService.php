@@ -11,17 +11,15 @@ class TwilioService
 
     public function __construct()
     {
-        $sid = env('TWILIO_ACCOUNT_SID');
-        $token = env('TWILIO_AUTH_TOKEN');
 
-        Log::info('TWILIO_ACCOUNT_SID: ' . $sid);  // Verifica si se carga correctamente el SID
+        /*Log::info('TWILIO_ACCOUNT_SID: ' . $sid);  // Verifica si se carga correctamente el SID
         Log::info('TWILIO_AUTH_TOKEN: ' . $token); // Verifica si se carga correctamente el token
 
         if (empty($sid) || empty($token)) {
             throw new \Exception('Las credenciales de Twilio no están configuradas correctamente.');
-        }
+        }*/
 
-        $this->client = new Client($sid, $token);
+        //$this->client = new Client($sid, $token);
     }
 
     /**
@@ -33,9 +31,14 @@ class TwilioService
      */
     public function sendSms($to, $message)
     {
-        $this->client->messages->create($to, [
-            'from' => env('TWILIO_PHONE_NUMBER'),
-            'body' => $message,
-        ]);
+        try {
+            $this->client->messages->create($to, [
+                'from' => "whatsapp:+14155238886",
+                'body' => $message,
+            ]);
+        } catch (\Twilio\Exceptions\RestException $e) {
+            Log::error('Error al enviar SMS: ' . $e->getMessage());
+            throw $e;  // Rethrow or handle error appropriately
+        }
     }
 }

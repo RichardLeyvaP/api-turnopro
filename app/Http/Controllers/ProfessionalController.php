@@ -65,7 +65,7 @@ class ProfessionalController extends Controller
     }
     public function professionalsBranch(Request $request)
     {
-         try {
+        try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -74,33 +74,33 @@ class ProfessionalController extends Controller
                 $professionals = Professional::whereDoesntHave('branches')->orWhereHas('branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })
-                ->orWhereHas('charge', function ($query) {
-                    $query->where('name', 'Administrador');
-                })
-                ->with('user', 'charge')
-                ->get()
-                ->map(function ($professional) use ($now) {
-                    return [
-                        'id' => $professional->id,
-                        'name' => $professional->name,
-                        'surname' => $professional->surname,
-                        'second_surname' => $professional->second_surname,
-                        'fullName' => $professional->fullName,
-                        'email' => $professional->email,
-                        'phone' => $professional->phone,
-                        'user_id' => $professional->user_id,
-                        'state' => $professional->state,
-                        'image_url' => $professional->image_url . '?$' . $now,
-                        'charge_id' => $professional->charge_id,
-                        'user' => $professional->user->name,
-                        'charge' => $professional->charge->name,
-                        'retention' => $professional->retention,
-                    ];
-                });
-            }else {
+                    ->orWhereHas('charge', function ($query) {
+                        $query->where('name', 'Administrador');
+                    })
+                    ->with('user', 'charge')
+                    ->get()
+                    ->map(function ($professional) use ($now) {
+                        return [
+                            'id' => $professional->id,
+                            'name' => $professional->name,
+                            'surname' => $professional->surname,
+                            'second_surname' => $professional->second_surname,
+                            'fullName' => $professional->fullName,
+                            'email' => $professional->email,
+                            'phone' => $professional->phone,
+                            'user_id' => $professional->user_id,
+                            'state' => $professional->state,
+                            'image_url' => $professional->image_url . '?$' . $now,
+                            'charge_id' => $professional->charge_id,
+                            'user' => $professional->user->name,
+                            'charge' => $professional->charge->name,
+                            'retention' => $professional->retention,
+                        ];
+                    });
+            } else {
                 $professionals = Professional::whereHas('charge', function ($query) {
-                    $query->where('name',  '!=','Administrador');
-                })->whereDoesntHave('branches')->orWhereHas('branches', function ($query) use ($data){
+                    $query->where('name',  '!=', 'Administrador');
+                })->whereDoesntHave('branches')->orWhereHas('branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })->with('user', 'charge')->get()->map(function ($professional) use ($now) {
                     return [
@@ -222,7 +222,7 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
-    
+
     public function show_apk(Request $request)
     {
         try {
@@ -235,11 +235,11 @@ class ProfessionalController extends Controller
             $workplaceProfessional = ProfessionalWorkPlace::where('professional_id', $professional->id)
                 ->whereDate('data', $today)
                 ->where('state', 1)->orderByDesc('data')->first();
-                if ($workplaceProfessional != null) {
-                    $branch_id = $workplaceProfessional->workplace->branch_id;
-                }
-            if ($professional !== null){
-                if ($professional->state == 1 && $branch_id !=0) {
+            if ($workplaceProfessional != null) {
+                $branch_id = $workplaceProfessional->workplace->branch_id;
+            }
+            if ($professional !== null) {
+                if ($professional->state == 1 && $branch_id != 0) {
                     $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 4)->whereHas('car.clientProfessional', function ($query) use ($professionals_data) {
                         $query->where('professional_id', $professionals_data['id']);
                     })->whereHas('tail', function ($query) use ($professionals_data) {
@@ -247,15 +247,13 @@ class ProfessionalController extends Controller
                     })->whereDate('data', Carbon::now())->orderBy('start_time')->first();
                     if ($reservation != null) {
                         return 3;
-                    }
-                    else {
+                    } else {
                         return $professional->state;
                     }
-                }else {
+                } else {
                     return $professional->state;
                 }
-            }
-            else
+            } else
                 return -1;
         } catch (\Throwable $th) {
             Log::error($th);
@@ -280,20 +278,20 @@ class ProfessionalController extends Controller
             $reservations = [];
 
             $currentDateTime =  Carbon::now();
-          //  if (Carbon::parse($data['data'])->isToday()) {
-           if (Carbon::parse($data['data'])->isToday() && $currentDateTime->format('H:i') >= '01:05') {
+            //  if (Carbon::parse($data['data'])->isToday()) {
+            if (Carbon::parse($data['data'])->isToday() && $currentDateTime->format('H:i') >= '01:05') {
                 $professional = Professional::where('professionals.id', $data['professional_id'])
                     ->whereHas('branches', function ($query) use ($data) {
                         $query->where('branch_id', $data['branch_id']);
                     })
                     ->with(['reservations' => function ($query) use ($data) {
                         $query->whereDate('data', $data['data'])
-                              ->orderBy('start_time')
-                              ->whereIn('confirmation', [1, 4])
-                              ->whereHas('tail', function ($subquery) {
-                                  $subquery->where('aleatorie', '!=', 1);
-                              });
-                    }])->whereIn('state', [1,2])->join('branch_professional', function ($join) use ($data) {
+                            ->orderBy('start_time')
+                            ->whereIn('confirmation', [1, 4])
+                            ->whereHas('tail', function ($subquery) {
+                                $subquery->where('aleatorie', '!=', 1);
+                            });
+                    }])->whereIn('state', [1, 2])->join('branch_professional', function ($join) use ($data) {
                         $join->on('professionals.id', '=', 'branch_professional.professional_id')
                             ->where('branch_professional.branch_id', '=', $data['branch_id'])
                             ->where('branch_professional.arrival', '!=', NULL);
@@ -367,28 +365,23 @@ class ProfessionalController extends Controller
                                 $finalTime->addHour();
                                 $roundedMinutes = '55';
                             }*/
-                            if ($finalMinutes <= 10){
-                            $roundedMinutes = '05';
+                            if ($finalMinutes <= 10) {
+                                $roundedMinutes = '05';
+                            } elseif ($finalMinutes <= 20) {
+
+                                $roundedMinutes = '15';
+                            } elseif ($finalMinutes <= 30) {
+                                $roundedMinutes = '25';
+                            } elseif ($finalMinutes <= 40) {
+                                $roundedMinutes = '35';
+                            } elseif ($finalMinutes <= 50) {
+                                $roundedMinutes = '45';
+                            } elseif ($finalMinutes <= 59) {
+                                $roundedMinutes = '55';
+                            } else {
+                                $finalTime->addHour();
+                                $roundedMinutes = '00';
                             }
-                         elseif ($finalMinutes <= 20) {
-                            
-                            $roundedMinutes = '15';
-                            }
-                         elseif ($finalMinutes <= 30) {
-                            $roundedMinutes = '25';
-                        }elseif ($finalMinutes <= 40) {
-                            $roundedMinutes = '35';
-                        } 
-                        elseif ($finalMinutes <= 50) {
-                            $roundedMinutes = '45';
-                        } 
-                        elseif ($finalMinutes <= 59) {
-                            $roundedMinutes = '55';
-                        }
-                        else {
-                            $finalTime->addHour();
-                            $roundedMinutes = '00';
-                        }
 
                             $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                             $finalTime = Carbon::parse($finalFormatted);
@@ -441,7 +434,7 @@ class ProfessionalController extends Controller
                         $query->where('branch_id', $data['branch_id']);
                     })
                     ->with(['reservations' => function ($query) use ($data) {
-                        $query->whereDate('data', $data['data'])->orderBy('start_time');
+                        $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1, 4]);
                     }])
                     ->first();
                 if ($professional && $professional->reservations->isNotEmpty()) {
@@ -454,57 +447,20 @@ class ProfessionalController extends Controller
 
                         $finalTime = Carbon::parse($reservation->final_hour);
                         $finalMinutes = $finalTime->minute;
-
-                        /*if ($finalMinutes <= 15) {
-                            if ($finalMinutes <= 5) {
-                                $roundedMinutes = '5';
-                            }elseif ($finalMinutes <= 10) {
-                                $roundedMinutes = '10';
-                            }else{
-                            $roundedMinutes = '15';
-                            }
-                        } elseif ($finalMinutes <= 30) {
-                            if ($finalMinutes <= 20) {
-                                $roundedMinutes = '15';
-                            }elseif ($finalMinutes <= 25) {
-                                $roundedMinutes = '20';
-                            }
-                            else {
-                            $roundedMinutes = '25';
-                            }
-                        } elseif ($finalMinutes <= 45) {
-                            if ($finalMinutes <= 35) {
-                                $roundedMinutes = '30';
-                            }elseif ($finalMinutes <= 40) {
-                                $roundedMinutes = '35';
-                            }
-                            else {
-                            $roundedMinutes = '40';
-                            }
-                        } else {
-                            $finalTime->addHour();
-                            $roundedMinutes = '55';
-                        }*/
-
-                        if ($finalMinutes <= 10){
+                        if ($finalMinutes <= 10) {
                             $roundedMinutes = '05';
-                            }
-                         elseif ($finalMinutes <= 20) {
-                            
+                        } elseif ($finalMinutes <= 20) {
+
                             $roundedMinutes = '15';
-                            }
-                         elseif ($finalMinutes <= 30) {
+                        } elseif ($finalMinutes <= 30) {
                             $roundedMinutes = '25';
-                        }elseif ($finalMinutes <= 40) {
+                        } elseif ($finalMinutes <= 40) {
                             $roundedMinutes = '35';
-                        } 
-                        elseif ($finalMinutes <= 50) {
+                        } elseif ($finalMinutes <= 50) {
                             $roundedMinutes = '45';
-                        } 
-                        elseif ($finalMinutes <= 59) {
+                        } elseif ($finalMinutes <= 59) {
                             $roundedMinutes = '55';
-                        }
-                        else {
+                        } else {
                             $finalTime->addHour();
                             $roundedMinutes = '00';
                         }
@@ -862,7 +818,7 @@ class ProfessionalController extends Controller
                     'msg' => $validator->errors()->all()
                 ], 401);
             }
-            $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
+            $userName = User::whereHas('professional')->where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
             if ($userName) {
                 return response()->json([
                     'msg' => 'Usuario ya existe'
@@ -904,15 +860,15 @@ class ProfessionalController extends Controller
 
     public function destroy(Request $request)
     {
-       try {
+        try {
 
             $professionals_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
             $professional = Professional::find($professionals_data['id']);
-            $user_id = $professional->user_id;     
-                Professional::destroy($professionals_data['id']);
-                User::destroy($user_id);
+            $user_id = $professional->user_id;
+            Professional::destroy($professionals_data['id']);
+            User::destroy($user_id);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

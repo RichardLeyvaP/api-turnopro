@@ -552,7 +552,7 @@ class BranchProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $professionals = Professional::whereHas('branches', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
+                $query->where('branch_id', $data['branch_id'])->where('arrival', '!=', null);
             })->where('state', 2)->get()->map(function ($query) {
                 return [
                     'professional_name' => $query->name . " " . $query->surname,

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BranchService extends Model
 {
@@ -26,7 +27,7 @@ class BranchService extends Model
 
     public function service()
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo(Service::class)->withTrashed();
     }
 
     public function branch()
