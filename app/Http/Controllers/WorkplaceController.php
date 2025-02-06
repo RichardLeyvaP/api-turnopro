@@ -54,13 +54,30 @@ class WorkplaceController extends Controller
         }
     }
 
-    public function branch_workplaces_busy(Request $request)
+    public function branch_workplaces_busy_ANTERIOR(Request $request)
     {
         try {
             $workplace_data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
             return response()->json(['workplaces' => Workplace::where('branch_id', $workplace_data['branch_id'])->where('busy', 0)->get()], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
+        }
+    }
+    
+    public function branch_workplaces_busy(Request $request)
+    {
+        try {
+            $workplace_data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+
+            $workplaces = Workplace::where('branch_id', $workplace_data['branch_id'])->where('busy', 0)->get();
+            Log::info('Puestos de trabajos libres');
+            Log::info($workplaces);
+            return response()->json(['workplaces' => $workplaces], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);

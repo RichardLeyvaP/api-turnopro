@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
@@ -10,6 +11,7 @@ class Professional extends Model
 {
     use HasFactory;
     use HasRelationships;
+    use SoftDeletes;
 
     public function business()
     {

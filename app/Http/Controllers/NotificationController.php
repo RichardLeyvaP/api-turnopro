@@ -450,6 +450,9 @@ class NotificationController extends Controller
             //funcion
             $phone = $data['telefone_client'];
             $token = 'EAAagNvvUedwBOZBRlNnV1vpITV9yY021G4IrEy6UJqoB7ErYIA13abKyZA54ZBWm64KS9PTZBaRYBh2zWLn594NZBcPMjt2R14Cx3IB6nOfpfyZBH6a6mNeVxDZC3q6GbBZAs4ZAFI0ZChhY957058Y7tk20s72Se2mk9unBNrfdc7eapXtI9KxWu62mE43lIxpsR3Ob7lwO7ZByB6ZBaslLlQ7JgeqXb7IZD';
+          //  $tokenNEW = 'EAARHBCxovkoBOzeY2mavELTq6ZBbfCYVYDqDhZCsWoiqxk9qAMymnsqPVfoMd7rIWqWzL1IDZCdCOvRTigNVguLQV14xuaU5qIpnqAiAsZAkZBn5MQR4XdHa9tHj2Gf1I3Qmxll4TNYlIKBHqfpvoqsou1Ip2hPGnSo2HhoYwdqnfYSl68QAnHdH3FLuQJPhiggZDZD';
+         //$whatsappBusinessId = '61568543272906'; 
+         
             // $carbon = new Carbon();
             $body = [
                 'messaging_product' => 'whatsapp',
@@ -464,6 +467,7 @@ class NotificationController extends Controller
             ];
 
             $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
+           // $response = Http::withToken($token)->post("https://graph.facebook.com/v21.0/472310509300893/messages", $body);
             Log::info($response);
 
             return response()->json("Este es el número de celular " . $data['telefone_client'], 200);

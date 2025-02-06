@@ -441,7 +441,7 @@ class ProfessionalController extends Controller
                         $query->where('branch_id', $data['branch_id']);
                     })
                     ->with(['reservations' => function ($query) use ($data) {
-                        $query->whereDate('data', $data['data'])->orderBy('start_time');
+                        $query->whereDate('data', $data['data'])->orderBy('start_time')->whereIn('confirmation', [1,4]);
                     }])
                     ->first();
                 if ($professional && $professional->reservations->isNotEmpty()) {
@@ -862,7 +862,8 @@ class ProfessionalController extends Controller
                     'msg' => $validator->errors()->all()
                 ], 401);
             }
-            $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
+            // $userName = User::where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
+            $userName = User::whereHas('professional')->where('name', $request->user)->where('id', '!=', $professionals_data['user_id'])->first();
             if ($userName) {
                 return response()->json([
                     'msg' => 'Usuario ya existe'
@@ -902,7 +903,7 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function destroy(Request $request)
+    public function destroy_ANTERIOR(Request $request)
     {
        try {
 
@@ -925,6 +926,24 @@ class ProfessionalController extends Controller
                 Professional::destroy($professionals_data['id']);
                 User::destroy($professional->user_id);
             }
+            return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la professional'], 500);
+        }
+    }
+    
+     public function destroy(Request $request)
+    {
+       try {
+
+            $professionals_data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+            $professional = Professional::find($professionals_data['id']);
+            $user_id = $professional->user_id;     
+                Professional::destroy($professionals_data['id']);
+                User::destroy($user_id);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

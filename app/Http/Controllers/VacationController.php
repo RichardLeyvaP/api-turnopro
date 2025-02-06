@@ -17,7 +17,8 @@ class VacationController extends Controller
         try {
             Log::info('Entra a buscar las vacaciones');
             $vacations = Vacation::with(['professional'])->get()->map(function ($vacation) {
-                $professional = $vacation->professional;
+                // $professional = $vacation->professional;
+                $professional = $vacation->professional()->withTrashed()->first();
                 return [
                     'id' => $vacation->id,
                     'professional_id' => $professional->id,

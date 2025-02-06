@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Service extends Model
 {
     use HasFactory;
     use HasRelationships;
+    use SoftDeletes;
 
     public function branchServices(){
         return $this->hasMany(BranchService::class);

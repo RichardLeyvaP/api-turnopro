@@ -1082,8 +1082,11 @@ class BoxCloseController extends Controller
             // Obtener el mes y año del mes anterior
             //$mesAnterior = $now->month;
             //$añoAnterior = $now->year;
-            $mesAnterior = $now->subMonth()->month; 
-            $añoAnterior = $now->subMonth()->year; 
+            // $mesAnterior = $now->subMonth()->month; 
+            // $añoAnterior = $now->subMonth()->year; 
+            
+              $mesAnterior = $now->copy()->subMonth()->month;  
+             $añoAnterior = $now->copy()->subMonth()->year; 
             //$boxCloseData = [];
             $professionalsData = [];
 
@@ -1399,170 +1402,10 @@ class BoxCloseController extends Controller
         //
     }
     
-        public function box_close_automatic_ANTERIOR(Request $request)
-    {
-        $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
-
-        // Log para verificar el valor de código
-
-        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
-            return response()->json(['msg' => 'Código inválido'], 403);
-        }
-        try {
-            Log::info("Cierre de caja Forzado Automático");
-
-            // Obtener la fecha del día anterior
-            $yesterday = Carbon::yesterday()->toDateString();
-            
-            $totalBonuses = [];
-            $branches = Branch::all(); // Obtener todas las sucursales
-
-            DB::beginTransaction();
-            foreach ($branches as $branch) {
-                $box = Box::whereDate('data', $yesterday)
-                    ->where('branch_id', $branch->id)
-                    ->first();
-
-                if (!$box) {
-                    $box = new Box();
-                    $box->existence = 0; // Ajustar según tu lógica
-                    $box->data = Carbon::now(); // Aquí puedes ajustar la fecha si es necesario
-                    $box->branch_id = $branch->id;
-                    $box->save();
-                }
-
-                $boxClose = BoxClose::where('box_id', $box->id)->first();
-                if (!$boxClose) {
-                    $boxClose = new BoxClose();
-                }
-
-                // Cálculo de totalAmount
-                $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)
-                    ->whereDate('date', $yesterday)
-                    ->where(function($query) {
-                        $query->where('type', 'Bono convivencias')
-                            ->orWhere('type', 'Bono servicios');
-                    })
-                    ->sum('amount');
-
-                $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
-                    $query->where('branch_id', $branch->id);
-                })->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-                })->select('id', 'name', 'image_url', 'retention')->get();
-
-                $bonus = [];
-                foreach ($professionals as $professional) {
-                    $bonus[] = $this->metaService->store_box_close($branch, $yesterday, $professional->id);
-                }
-
-                $bonusCollection = collect($bonus);
-                $flattenedBonus = $bonusCollection->flatMap(function ($item) {
-                    return collect($item);
-                });
-
-                $totalBonus = $flattenedBonus->sum('amount');
-                Log::info('$totalBonus Bonussssssss');
-                Log::info($totalBonus);
-
-                if ($totalBonus) {
-                    Log::info('Entra a descontar los bonos de la existencia');
-                    $difference = $totalBonus - $totalAmount;
-                    Log::info('Diferencia de bono cierre de caja'.$difference);
-                    $box->existence -= $difference;
-                    $box->save();
-                }
-
-                // Calcular montos para el cierre de caja
-                $payments = Payment::where('branch_id', $branch->id)
-                    ->whereDate('created_at', $yesterday)
-                    ->get();
-
-                $cars_id = $payments->pluck('car_id');
-                $cars = Car::whereIn('id', $cars_id)->get();
-                $orders = Order::whereIn('car_id', $cars_id)->get();
-                $cashiers = CashierSale::where('branch_id', $branch->id)
-                    ->whereDate('data', $yesterday)
-                    ->get();
-
-                $services = $orders->where('is_product', 0)->sum('price');
-                $products = $orders->where('is_product', 1)->sum('price') + $cashiers->sum('price');
-
-                $totalMount = $services + $products + $cars->sum('tip');
-
-                // Guardar los datos en BoxClose
-                $boxClose->box_id = $box->id;
-                $boxClose->totalMount = $totalMount;
-                $boxClose->totalService = $services;
-                $boxClose->totalProduct = $products;
-                $boxClose->totalTip = $cars->sum('tip');
-                $boxClose->totalCash = $payments->sum('cash');
-                $boxClose->totalCreditCard = $payments->sum('creditCard');
-                $boxClose->totalDebit = $payments->sum('debit');
-                $boxClose->totalTransfer = $payments->sum('transfer');
-                $boxClose->totalOther = $payments->sum('other');
-                $boxClose->totalCardGif = $payments->sum('cardGif');
-                $boxClose->data = $yesterday; // Usar la fecha del día anterior
-                $boxClose->save();
-
-                // Generar el PDF
-                $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])
-                    ->setPaper('a4', 'patriot')
-                    ->loadView('mails.cierrecaja', [
-                        'data' => $boxClose,
-                        'box' => $box,
-                        'branch' => $branch,
-                        'totalBonus' => $totalBonus
-                    ]);
-
-                $reporte = $pdf->output(); // Convertir el PDF en una cadena
-
-                // Intentar enviar el correo y manejar cualquier error
-                try {
-                    $this->sendEmailService->emailBoxClosure(
-                        'yasmany891230@gmail.com', 
-                        $reporte, 
-                        $branch->business['name'], 
-                        $branch['name'], 
-                        $box['data'], 
-                        $box['cashFound'], 
-                        $box['existence'], 
-                        $box['extraction'], 
-                        $cars->sum('tip'), 
-                        $products, 
-                        $services, 
-                        $payments->sum('cash'), 
-                        $payments->sum('creditCard'), 
-                        $payments->sum('debit'), 
-                        $payments->sum('transfer'), 
-                        $payments->sum('other'), 
-                        $totalMount, 
-                        $payments->sum('cardGif'), 
-                        $totalBonus
-                    );
-                } catch (\Exception $emailException) {
-                    Log::error('Error al enviar el correo: ' . $emailException->getMessage());
-                    // Puedes optar por continuar o no, dependiendo de la lógica de tu aplicación
-                    // Aquí podrías registrar el error en la base de datos si es necesario
-                }
-
-                $totalBonuses[] = $totalBonus; // Guardar el total de bonos por sucursal
-                Log::info('Cierre de la caja para sucursal: ' . $branch->id);
-                Log::info($boxClose);
-            }
-
-            DB::commit();
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'totalBonuses' => $totalBonuses], 200);
-        } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store');
-            Log::error($th->getMessage());
-
-            DB::rollback();
-            return response()->json(['msg' => $th->getMessage() . ' Error interno del servidor'], 500);
-        }
-    }
+ 
     
-      public function box_close_automatic(Request $request)
+    
+    public function box_close_automatic_ANTERIOR(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
 
@@ -1578,7 +1421,7 @@ class BoxCloseController extends Controller
             // Obtener la fecha del día anterior
             $yesterday = Carbon::yesterday()->toDateString();
             
-            $totalBonuses = [];
+            $totalBonuses = [];         
             $branches = Branch::all(); // Obtener todas las sucursales
 
             DB::beginTransaction();
@@ -1586,19 +1429,20 @@ class BoxCloseController extends Controller
                 $box = Box::whereDate('data', $yesterday)
                     ->where('branch_id', $branch->id)
                     ->first();
-
-                if (!$box) {
-                    $box = new Box();
-                    $box->existence = 0; // Ajustar según tu lógica
-                    $box->data = $yesterday; // Aquí puedes ajustar la fecha si es necesario
-                    $box->branch_id = $branch->id;
-                    $box->save();
+                Log::info($yesterday);
+                Log::info('Caja');             
+                Log::info($branch->name);             
+                Log::info($box);             
+                //Log::info($box->id);             
+                if ($box) {
+                    $boxClose = BoxClose::where('box_id', $box->id)->first();
+                }else {
+                    $boxClose = [];
                 }
-
-                $boxClose = BoxClose::where('box_id', $box->id)->first();
-            if (!$boxClose) 
+            if (!$boxClose && $box) 
             {
-                    $boxClose = new BoxClose();
+                Log::info("Entra a realizar cierre de caja automático");
+                Log::info($branch->name);
                      // Cálculo de totalAmount
                 $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)
                     ->whereDate('date', $yesterday)
@@ -1625,16 +1469,16 @@ class BoxCloseController extends Controller
                 });
 
                 $totalBonus = $flattenedBonus->sum('amount');
-                Log::info('$totalBonus Bonussssssss');
+                Log::info('$totalBonus Bonussssssss (Automatico)');
                 Log::info($totalBonus);
 
                 if ($totalBonus) {
-                    Log::info('Entra a descontar los bonos de la existencia');
+                    Log::info('Entra a descontar los bonos de la existencia (Automatico)');
                     $difference = $totalBonus - $totalAmount;
-                    Log::info('Diferencia de bono cierre de caja'.$difference);
+                    Log::info('Diferencia de bono cierre de caja (Automatico) '.$difference);
                     $box->existence -= $difference;
                     $box->save();
-                }
+                } 
 
                 // Calcular montos para el cierre de caja
                 $payments = Payment::where('branch_id', $branch->id)
@@ -1654,6 +1498,7 @@ class BoxCloseController extends Controller
                 $totalMount = $services + $products + $cars->sum('tip');
 
                 // Guardar los datos en BoxClose
+                $boxClose = new BoxClose();
                 $boxClose->box_id = $box->id;
                 $boxClose->totalMount = $totalMount;
                 $boxClose->totalService = $services;
@@ -1668,7 +1513,54 @@ class BoxCloseController extends Controller
                 $boxClose->data = $yesterday; // Usar la fecha del día anterior
                 $boxClose->save();
 
-                // Generar el PDF
+                Log::info("Generar PDF Automatico");
+                $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus]);
+                $reporte = $pdf->output(); // Convertir el PDF en una cadena
+                $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
+                    $query->where('name', 'Administrador')
+                        ->orWhere('name', 'Encargado')
+                        ->orWhere('name', 'Administrador de Sucursal')
+                        ->orWhere('name', 'Coordinador');
+                })->whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branches.id', $branch->id);
+                })/*whereIn('charge_id', [3, 4, 5, 12])*/
+                    ->pluck('email');
+                $emailassociated = $branch->associates()->pluck('email');
+                $emailArray = $emailassociated->toArray();
+                $mergedEmails = $emails->merge($emailArray);
+                Log::info('$mergedEmails correos a enviar cierre de caja');
+                Log::info($mergedEmails);
+                foreach ($mergedEmails as $email) {
+                    try {
+                        $this->sendEmailService->emailBoxClosure(
+                            $email, 
+                            $reporte, 
+                            $branch->business['name'], 
+                            $branch['name'], 
+                            $box['data'], 
+                            $box['cashFound'], 
+                            $box['existence'], 
+                            $box['extraction'], 
+                            $cars->sum('tip'), 
+                            $products, 
+                            $services, 
+                            $payments->sum('cash'), 
+                            $payments->sum('creditCard'), 
+                            $payments->sum('debit'), 
+                            $payments->sum('transfer'), 
+                            $payments->sum('other'), 
+                            $totalMount, 
+                            $payments->sum('cardGif'), 
+                            $totalBonus
+                        );
+                    } catch (\Swift_TransportException $e) {
+                        Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                    } catch (\Exception $e) {
+                        Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    }
+                }
+
+               /*// Generar el PDF
                 $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])
                     ->setPaper('a4', 'patriot')
                     ->loadView('mails.cierrecaja', [
@@ -1707,10 +1599,9 @@ class BoxCloseController extends Controller
                     Log::error('Error al enviar el correo: ' . $emailException->getMessage());
                     // Puedes optar por continuar o no, dependiendo de la lógica de tu aplicación
                     // Aquí podrías registrar el error en la base de datos si es necesario
-                }
-
+                }*/
                 $totalBonuses[] = $totalBonus; // Guardar el total de bonos por sucursal
-                Log::info('Cierre de la caja para sucursal: ' . $branch->id);
+                Log::info('Cierre de la caja para sucursal (Automatico): ' . $branch->id);
                 Log::info($boxClose);
             }//if
 
@@ -1719,11 +1610,174 @@ class BoxCloseController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Cierre de caja realizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store');
+            Log::info('BoxCloseController->box_close_automatic');
             Log::error($th->getMessage());
 
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . ' Error interno del servidor'], 500);
+        }
+    } 
+    
+        public function box_close_automatic(Request $request)
+    {
+        $codigo = $request->query('codigo'); // Captura el parámetro "codigo" de la URL
+
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            Log::info("Código no coincide");
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
+
+        try {
+            Log::info("Cierre de caja Forzado Automático");
+
+            // Obtener la fecha del día anterior
+            $yesterday = Carbon::yesterday()->toDateString();
+
+            $totalBonuses = [];
+            $branches = Branch::where('id', '!=', 20)->get(); // Obtener todas las sucursales
+
+            foreach ($branches as $branch) {
+                DB::beginTransaction();
+                try {
+                    $box = Box::whereDate('data', $yesterday)
+                        ->where('branch_id', $branch->id)
+                        ->first();
+
+                    if (!$box) {
+                        $box = new Box();
+                        $box->existence = 0; // Ajustar según tu lógica
+                        $box->data = $yesterday;
+                        $box->branch_id = $branch->id;
+                        $box->save();
+                    }
+
+                    $boxClose = BoxClose::where('box_id', $box->id)->first();
+                    if (!$boxClose) {
+                        $boxClose = new BoxClose(); // Crear uno nuevo si no existe
+                    }
+
+                    $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)
+                        ->whereDate('date', $yesterday)
+                        ->where(function ($query) {
+                            $query->where('type', 'Bono convivencias')
+                                ->orWhere('type', 'Bono servicios');
+                        })
+                        ->sum('amount');
+
+                    $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
+                        $query->where('branch_id', $branch->id);
+                    })->whereHas('charge', function ($query) {
+                        $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    })->select('id', 'name', 'image_url', 'retention')->get();
+
+                    $bonus = [];
+                    foreach ($professionals as $professional) {
+                        $bonus[] = $this->metaService->store_box_close($branch, $yesterday, $professional->id);
+                    }
+
+                    $bonusCollection = collect($bonus);
+                    $flattenedBonus = $bonusCollection->flatMap(function ($item) {
+                        return collect($item);
+                    });
+
+                    $totalBonus = $flattenedBonus->sum('amount');
+
+                    if ($totalBonus) {
+                        $difference = $totalBonus - $totalAmount;
+                        $box->existence -= $difference;
+                        $box->save();
+                    }
+
+                    $payments = Payment::where('branch_id', $branch->id)
+                        ->whereDate('created_at', $yesterday)
+                        ->get();
+
+                    $cars_id = $payments->pluck('car_id');
+                    $cars = Car::whereIn('id', $cars_id)->get();
+                    $orders = Order::whereIn('car_id', $cars_id)->get();
+                    $cashiers = CashierSale::where('branch_id', $branch->id)
+                        ->whereDate('data', $yesterday)
+                        ->get();
+
+                    $services = $orders->where('is_product', 0)->sum('price');
+                    $products = $orders->where('is_product', 1)->sum('price') + $cashiers->sum('price');
+
+                    $totalMount = $services + $products + $cars->sum('tip');
+
+                    // Guardar los datos en BoxClose
+                    $boxClose->box_id = $box->id;
+                    $boxClose->totalMount = $totalMount;
+                    $boxClose->totalService = $services;
+                    $boxClose->totalProduct = $products;
+                    $boxClose->totalTip = $cars->sum('tip');
+                    $boxClose->totalCash = $payments->sum('cash');
+                    $boxClose->totalCreditCard = $payments->sum('creditCard');
+                    $boxClose->totalDebit = $payments->sum('debit');
+                    $boxClose->totalTransfer = $payments->sum('transfer');
+                    $boxClose->totalOther = $payments->sum('other');
+                    $boxClose->totalCardGif = $payments->sum('cardGif');
+                    $boxClose->data = $yesterday;
+                    $boxClose->save();
+
+                    DB::commit();
+
+                    Log::info("Generar PDF Automatico");
+                $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus]);
+                $reporte = $pdf->output(); // Convertir el PDF en una cadena
+                $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
+                    $query->where('name', 'Administrador')
+                        ->orWhere('name', 'Encargado')
+                        ->orWhere('name', 'Administrador de Sucursal')
+                        ->orWhere('name', 'Coordinador');
+                })->whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branches.id', $branch->id);
+                })/*whereIn('charge_id', [3, 4, 5, 12])*/
+                    ->pluck('email');
+                $emailassociated = $branch->associates()->pluck('email');
+                $emailArray = $emailassociated->toArray();
+                $mergedEmails = $emails->merge($emailArray);
+                Log::info('$mergedEmails correos a enviar cierre de caja');
+                Log::info($mergedEmails);
+                foreach ($mergedEmails as $email) {
+                    try {
+                        $this->sendEmailService->emailBoxClosure(
+                            $email, 
+                            $reporte, 
+                            $branch->business['name'], 
+                            $branch['name'], 
+                            $box['data'], 
+                            $box['cashFound'], 
+                            $box['existence'], 
+                            $box['extraction'], 
+                            $cars->sum('tip'), 
+                            $products, 
+                            $services, 
+                            $payments->sum('cash'), 
+                            $payments->sum('creditCard'), 
+                            $payments->sum('debit'), 
+                            $payments->sum('transfer'), 
+                            $payments->sum('other'), 
+                            $totalMount, 
+                            $payments->sum('cardGif'), 
+                            $totalBonus
+                        );
+                    } catch (\Swift_TransportException $e) {
+                        Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                    } catch (\Exception $e) {
+                        Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    }
+                }
+
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    Log::error("Error al procesar la sucursal {$branch->name}: " . $th->getMessage());
+                }
+            }
+
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error("Error general en el cierre de caja: " . $th->getMessage());
+            return response()->json(['msg' => 'Error interno del servidor'], 500);
         }
     }
 

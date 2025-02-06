@@ -224,7 +224,7 @@ class MetaService
             if (!$cars->isEmpty())
                 if ($retentionP) {
                     $percentWinSum = $cars->sum(function ($car) {
-                        return $car->orders->sum(function ($order) {
+                        return $car->orders->where('is_product', 0)->sum(function ($order) {
                             return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
                         });
                     });
@@ -451,7 +451,7 @@ class MetaService
             if (!$cars->isEmpty())
                 if ($retentionP) {
                     $percentWinSum = $cars->sum(function ($car) {
-                        return $car->orders->sum(function ($order) {
+                        return $car->orders->where('is_product', 0)->sum(function ($order) {
                             return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
                         });
                     });
@@ -677,7 +677,7 @@ class MetaService
              if (!$cars->isEmpty())
                  if ($retentionP) {
                      $percentWinSum = $cars->sum(function ($car) {
-                         return $car->orders->sum(function ($order) {
+                         return $car->orders->where('is_product', 0)->sum(function ($order) {
                              return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
                          });
                      });
@@ -903,7 +903,7 @@ class MetaService
              if (!$cars->isEmpty())
                  if ($retentionP) {
                      $percentWinSum = $cars->sum(function ($car) {
-                         return $car->orders->sum(function ($order) {
+                         return $car->orders->where('is_product', 0)->sum(function ($order) {
                              return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
                          });
                      });

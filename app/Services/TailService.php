@@ -23,7 +23,9 @@ use Illuminate\Support\Facades\Log;
 class TailService
 {
 
-    public function cola_branch_data_ANTERIOR($branch_id)
+  
+    
+       public function cola_branch_data_ANTERIOR($branch_id)
     {
         /*$tails1 = Tail::whereHas('reservation', function ($query) use ($branch_id){
             $query->where('branch_id', $branch_id);
@@ -53,6 +55,7 @@ class TailService
                 }else{*/
             $name = $professional->name;
             $image = $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg";
+            $createdAt = $reservation->from_home == 1 ? $reservation->updated_at : $reservation->created_at;
             //}
             return [
                 'reservation_id' => $reservation->id,
@@ -69,9 +72,10 @@ class TailService
                 'professional_state' => $professional->state,
                 'attended' => $tail->attended,
                 'puesto' => $workplace ? $workplace->name : null,
+                'created_at' => $createdAt,
                 'select_professional' => intval($reservation->car->select_professional)
             ];
-        })->sortByDesc('professional_state')->sortBy('start_time')->values();
+        })->sortByDesc('professional_state')->sortBy('created_at')->values();
 
         return $tails;
     }
@@ -92,7 +96,7 @@ class TailService
             Log::info($reservation);
             Log::info('clientProfessional');
             Log::info($reservation->car->clientProfessional);
-            $professional = $reservation->car->clientProfessional->professional;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             $client = $reservation->car->clientProfessional->client;
             $workplace = $professional->workplaces()
                 ->whereDate('data', $reservation->data)
@@ -188,7 +192,8 @@ class TailService
                     Log::info($professional);
                     }*/
             } else {
-                $professional = $reservation->car->clientProfessional->professional;
+                // $professional = $reservation->car->clientProfessional->professional;
+                $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             }
             $client = $reservation->car->clientProfessional->client;
             $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
@@ -242,7 +247,8 @@ class TailService
             $query->where('branch_id', $branch_id);
         })->whereIn('attended', [1])->get()->map(function ($tail) {
             $reservation = $tail->reservation;
-            $professional = $reservation->car->clientProfessional->professional;
+            // $professional = $reservation->car->clientProfessional->professional;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             $client = $reservation->car->clientProfessional->client;
             $workplace = $professional->workplaces()
                 ->whereDate('data', $reservation->data)
@@ -456,7 +462,7 @@ class TailService
                     'image_service' => $service->image_service,
                     'description' => $service->service_comment
                 ];
-            });
+            })->values();
 
             return [
                 'reservation_id' => $reservation->id,

@@ -306,7 +306,7 @@ class AssistantController extends Controller
                     'image_service' => $service->image_service,
                     'description' => $service->service_comment
                 ];
-            });
+            })->values();
                 return [
                     'reservation_id' => $reservation->id,
                     'car_id' => intval($reservation->car_id),

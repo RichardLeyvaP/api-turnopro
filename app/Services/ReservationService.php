@@ -146,7 +146,8 @@ class ReservationService
         return $reservation;
     }
 
-    public function client_history($data)
+   
+     public function client_history_ANTERIOR($data)
     {
         $fiel = null;
         $frecuencia = null;
@@ -203,7 +204,7 @@ class ReservationService
         $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
             $query->whereIn('car_id', $reservationids)->where('is_product', 0);
         }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
-        $reservation2 = $reservations->sortByDesc('start_time')
+        $reservation2 = $reservations->sortByDesc('data')
             ->filter(function ($query) {
                 return $query->confirmation == 2;
             });
@@ -227,9 +228,9 @@ class ReservationService
                 $professional = [];
                 $reservation = [];
             }else {
-                $reservation = $reservation2->first();
+                $reservation = $reservations->first();
                 $branch = $reservation->branch;
-                $professional = $reservation->car->clientProfessional->professional;
+                $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
             }
             $result = [
                 'clientName' => $client->name,
@@ -275,6 +276,139 @@ class ReservationService
                 })->values(),
                 'cantMaxService' => $services->max('orders_count')
             ];
+        /*} else {
+            return  $result;
+        }*/
+
+        Log::info("client_history 7");
+        return $result;
+    }
+    
+      public function client_history($data)
+    {
+        $fiel = null;
+        $frecuencia = null;
+        $cantMaxService = 0;
+        $client = Client::find($data['client_id']);
+        $result = [
+            'clientName' => $client->name,
+            'professionalName' => "Ninguno",
+            'branchName' => '',
+            'image_data' => '',
+            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now() : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
+            'image_url' => '',
+            'cantVisit' => 0,
+            'endLook' => '',
+            'lastDate' => '',
+            'frecuencia' => "No Frecuente",
+            'services' =>  [],
+            'products' => []
+        ];
+
+        Log::info("client_history 2");
+        $reservations = Reservation::whereHas('car', function ($query) use ($data) {
+            $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('client_id', $data['client_id']);
+            });
+        })->orderByDesc('data')->limit(12)->get();
+
+        if ($reservations->isEmpty()) {
+            return $result;
+        }
+
+        $countReservations = $reservations->count();
+        if ($countReservations >= 12) {
+            $currentYear = Carbon::now()->year;
+
+            $fiel = $reservations->filter(function ($reservation) use ($currentYear) {
+                return Carbon::parse($reservation->data)->year == $currentYear;
+            })->count();
+            if ($fiel >= 12) {
+                $frecuencia = "Fiel";
+            }
+        } elseif ($countReservations >= 3) {
+            $frecuencia = "Frecuente";
+        } else {
+            $frecuencia = "No Frecuente";
+        }
+        Log::info("client_history 5");
+
+        $reservationids = $reservations->pluck('car_id')->take(3);
+        Log::info("client_history 6");
+        $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
+            $query->whereIn('car_id', $reservationids)->where('is_product', 0);
+        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
+        /*$reservation2 = $reservations->filter(function ($reservation) {
+                return $reservation->confirmation == 2;
+            })->sortByDesc('data'); // Ordena después de filtrar*/
+        $reservationids2 = $reservations->pluck('car_id')->take(3);
+        $products = Product::with(['orders' => function ($query) use ($data, $reservationids2) {
+            $query->selectRaw('SUM(cant) as total_sale_price')
+                ->groupBy('product_id')
+                ->whereIn('car_id', $reservationids2)
+                ->where('is_product', 1);
+        }])
+            ->get()->filter(function ($product) {
+                return !$product->orders->isEmpty();
+            });
+        $comment = Comment::whereHas('clientProfessional', function ($query) use ($data) {
+            $query->where('client_id', $data['client_id']);
+        })->orderByDesc('data')->orderByDesc('updated_at')->first();
+        //if ($reservations !== null && !$reservations->isEmpty()) {
+        Log::info('Tiene Reserva');
+        if ($reservations->isEmpty()) {
+            $branch = [];
+            $professional = [];
+            $reservation = [];
+        } else {
+            $reservation = $reservations->first();
+            $branch = $reservation->branch;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
+        }
+        $result = [
+            'clientName' => $client->name,
+            'professionalName' => $professional ? $professional->name : '',
+            'branchName' => $branch ? $branch->name : '',
+            'image_data' => $branch ? $branch->image_data : 'branches/default.jpg',
+            'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
+            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now() : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
+            'cantVisit' => $reservations->count(),
+            'endLook' => $comment ? $comment->look : null,
+            'lastDate' => $reservation ? $reservation->data : '',
+            'frecuencia' => $frecuencia,
+            'services' => $services->map(function ($service) use ($cantMaxService) {
+                return [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
+                    'cant' => $service->orders_count
+                ];
+            }),
+            'products' => $products->map(function ($product) {
+                $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code,
+                    'description' => $product->description,
+                    'product_exit' => 0, //solo para utilizar el modelo en apk bien,
+                    'status_product' => $product->status_product,
+                    'purchase_price' => $product->purchase_price,
+                    'sale_price' => $product->sale_price,
+                    'image_product' => $product->image_product,
+                    'created_at' => $product->created_at,
+                    'updated_at' => $product->updated_at,
+                    'cant' => $total_sale_price
+                ];
+            })->values(),
+            'cantMaxService' => $services->max('orders_count')
+        ];
         /*} else {
             return  $result;
         }*/

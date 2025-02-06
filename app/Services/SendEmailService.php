@@ -223,7 +223,7 @@ class SendEmailService {
               $mail->value_card = $value_card;
               $mail->expiration_date = $expiration_date;
               $mail->image_cardgift = $image_cardgift;
-              $this->sendEmail($client_email,$mail,'Asignación de Targeta de Regalo');
+              $this->sendEmail($client_email,$mail,'Asignación de Tarjeta de Regalo');
 
     }
 

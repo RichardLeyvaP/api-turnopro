@@ -1076,7 +1076,7 @@ class FinanceController extends Controller
         }
     }
 
-    public function revenue_expense_details(Request $request)
+    public function revenue_expense_details_ANTERIOR(Request $request)
     {
         try {
             $data = $request->validate([
@@ -1160,6 +1160,119 @@ class FinanceController extends Controller
                         'ingreso' => '',
                         'gasto' => $query->amount,
                         'detailOperation' => $query->expense->name,
+                    ];
+                })->sortByDesc('data')->values();
+
+            $totalGastos = $gastos->sum('gasto');
+                if($totalGastos){
+                    $gastos->push((object)[
+                        'data' => '',
+                        'operation' => 'Total',
+                        'ingreso' => '',
+                        'gasto' => $totalGastos,
+                        'detailOperation' => '',
+                    ]);
+                }
+            
+
+            $resultado = $ingresos->concat($gastos);
+            }
+            
+
+            // Devolvemos el resultado
+            return response()->json(['finances' => $resultado, 'totalIngresos' => $totalIngresos, 'totalGastos' => $totalGastos], 200);
+
+            //return response()->json($result, 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
+        }
+    }
+
+ public function revenue_expense_details(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable'
+            ]);
+            //$currentYear = $data['year'];
+            if($request->mounth){
+                $ingresos = Finance::where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where('operation', 'Ingreso')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => $query->amount,
+                        'gasto' => '',
+                        'detailOperation' => $query->revenue ? $query->revenue->name : 'MANTENEDOR ELIMINADO',
+                    ];
+                })->sortByDesc('data')->values();
+
+                    $totalIngresos = $ingresos->sum('ingreso');
+                        if($totalIngresos){
+                    $ingresos->push((object)[
+                        'data' => '',
+                        'operation' => 'Total',
+                        'ingreso' => $totalIngresos,
+                        'gasto' => '',
+                        'detailOperation' => '',
+                    ]);}
+
+                    $gastos = Finance::where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->where('operation', 'Gasto')
+                        ->get()->map(function ($query) {
+                            return [
+                                'data' => $query->data,
+                                'operation' => $query->operation,
+                                'ingreso' => '',
+                                'gasto' => $query->amount,
+                                'detailOperation' => $query->expense ? $query->expense->name : 'MANTENEDOR ELIMINADO',
+                            ];
+                        })->sortByDesc('data')->values();
+
+                    $totalGastos = $gastos->sum('gasto');
+                        if($totalGastos){
+                    $gastos->push((object)[
+                        'data' => '',
+                        'operation' => 'Total',
+                        'ingreso' => '',
+                        'gasto' => $totalGastos,
+                        'detailOperation' => '',
+                    ]);}
+
+                    $resultado = $ingresos->concat($gastos);
+                    }
+            else {
+                $ingresos = Finance::where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->where('operation', 'Ingreso')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => $query->amount,
+                        'gasto' => '',
+                        'detailOperation' => $query->revenue ? $query->revenue->name : 'MANTENEDOR ELIMINADO',
+                    ];
+                })->sortByDesc('data')->values();
+
+            $totalIngresos = $ingresos->sum('ingreso');
+            if($totalIngresos){
+            $ingresos->push((object)[
+                'data' => '',
+                'operation' => 'Total',
+                'ingreso' => $totalIngresos,
+                'gasto' => '',
+                'detailOperation' => '',
+            ]);
+        }
+
+            $gastos = Finance::where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->where('operation', 'Gasto')
+                ->get()->map(function ($query) {
+                    return [
+                        'data' => $query->data,
+                        'operation' => $query->operation,
+                        'ingreso' => '',
+                        'gasto' => $query->amount,
+                        'detailOperation' => $query->expense ? $query->expense->name : 'MANTENEDOR ELIMINADO',
                     ];
                 })->sortByDesc('data')->values();
 
@@ -1574,7 +1687,7 @@ class FinanceController extends Controller
             }
     }
 
-    public function finances_detail_operation_month(Request $request){
+    public function finances_detail_operation_month_ANTERIOR(Request $request){
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -1600,8 +1713,49 @@ class FinanceController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
+    
+     public function finances_detail_operation_month(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable',
+                'month' => 'nullable'
+            ]);
+            $financeDates = [];
+            $finances = Finance::Where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->whereMonth('data', $data['month'])->get();
+            foreach($finances as $finance){
 
-    public function finances_detail_operation(Request $request){
+                $name = '';
+                if($finance['revenue_id'] == null &&  $finance['expense_id'] == null)
+                {
+                    $name = 'MANTENEDOR ELIMINADO';
+                }
+                else if($finance['revenue_id'])
+                {
+                    $name = $finance['revenue']['name'];
+                }
+                else{
+                    $name = $finance['expense']['name'];
+                }
+                $financeDates [] = [
+                    'data' => $finance['data'],
+                    'operation' => $finance['operation'],
+                    'amount' => $finance['amount'],
+                    'file' => $finance['file'],
+                    'comment' => $finance['comment'],                    
+                    'typeOperation' => $name,                    
+                ];
+            }
+            // Devolvemos el resultado
+            return response()->json(['finances' => $financeDates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }
+    
+
+    public function finances_detail_operation_ANTERIOR(Request $request){
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -1617,6 +1771,45 @@ class FinanceController extends Controller
                     'file' => $finance['file'],
                     'comment' => $finance['comment'],                    
                     'typeOperation' => $finance['revenue_id'] ? $finance['revenue']['name'] : $finance['expense']['name'],                    
+                ];
+            }
+            // Devolvemos el resultado
+            return response()->json(['finances' => $financeDates], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }
+    
+    
+     public function finances_detail_operation(Request $request){
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'year' => 'nullable'
+            ]);
+            $financeDates = [];
+            $finances = Finance::Where('branch_id', $data['branch_id'])->whereYear('data', $data['year'])->get();
+            foreach($finances as $finance){
+                $name = '';
+                if($finance['revenue_id'] == null &&  $finance['expense_id'] == null)
+                {
+                    $name = 'MANTENEDOR ELIMINADO';
+                }
+                else if($finance['revenue_id'])
+                {
+                    $name = $finance['revenue']['name'];
+                }
+                else{
+                    $name = $finance['expense']['name'];
+                }
+                $financeDates [] = [
+                    'data' => $finance['data'],
+                    'operation' => $finance['operation'],
+                    'amount' => $finance['amount'],
+                    'file' => $finance['file'],
+                    'comment' => $finance['comment'],                    
+                    'typeOperation' => $name,                    
                 ];
             }
             // Devolvemos el resultado

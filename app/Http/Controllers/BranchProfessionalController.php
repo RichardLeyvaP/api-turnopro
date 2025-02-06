@@ -72,7 +72,7 @@ class BranchProfessionalController extends Controller
         }
     }
 
-    public function branch_professionals(Request $request)
+    public function branch_professionals_ANTERIOR(Request $request)
     {
         try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
@@ -91,6 +91,37 @@ class BranchProfessionalController extends Controller
                     'charge' => $professional->chrage
                 ];
             })*/;
+            $data = [];
+            foreach ($professionals as $branchprofessional) {
+                $data[] = [
+                    'id' => $branchprofessional['id'],
+                    'professional_id' => $branchprofessional['professional_id'],
+                    'ponderation' => $branchprofessional['ponderation'],
+                    'limit' => $branchprofessional['limit'],
+                    'mountpay' => $branchprofessional['mountpay'],
+                    'name' => $branchprofessional['professional']['name'],
+                    'image_url' => $branchprofessional['professional']['image_url'].'?$'.$now,
+                    'charge' => $branchprofessional['professional']['charge']['name'],
+                ];
+            }
+            return response()->json(['professionals' => $data], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
+        }
+    }
+    
+     public function branch_professionals(Request $request)
+    {
+        try {
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $now = Carbon::now();
+            $professionals = BranchProfessional::where('branch_id', $data['branch_id'])->whereHas('professional', function ($query) {
+                $query->whereNull('deleted_at'); // Verifica que el profesional no esté eliminado
+            })->with('professional.charge')->get();
             $data = [];
             foreach ($professionals as $branchprofessional) {
                 $data[] = [
@@ -228,7 +259,7 @@ class BranchProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
-    function obtenerFechasDiasSemana($diasSemana)
+    function obtenerFechasDiasSemana_ANTERIOR($diasSemana)
     {
         // Definir los nombres de los días de la semana en inglés
         $diasSemanaIngles = [
@@ -275,6 +306,47 @@ class BranchProfessionalController extends Controller
                 $fechas[] = $fecha->format('Y-m-d');
                 $fecha->addWeek(); // Avanzar una semana
             }*/
+        }
+        // Ordenar las fechas
+        sort($fechas);
+
+        return $fechas;
+    }
+    
+     function obtenerFechasDiasSemana($diasSemana)
+    {
+        // Definir los nombres de los días de la semana en inglés
+        $diasSemanaIngles = [
+            'Lunes' => 'Monday',
+            'Martes' => 'Tuesday',
+            'Miércoles' => 'Wednesday',
+            'Jueves' => 'Thursday',
+            'Viernes' => 'Friday',
+            'Sábado' => 'Saturday',
+            'Domingo' => 'Sunday'
+        ];
+
+        // Obtener el día actual en inglés
+        $diaActualIngles = Carbon::now()->isoFormat('dddd');
+        Log::info('Dia actual en ingles');
+        Log::info($diaActualIngles);
+        // Obtener el año actual y hasta dos años más
+        $añoActual = Carbon::now()->year;
+        $añoLimite = $añoActual + 2;
+        foreach ($diasSemana as $dia) {
+            // Restablecer la fecha actual para cada iteración del bucle
+            $fechaActual = Carbon::now();
+            $diaIngles = $diasSemanaIngles[$dia];
+            Log::info('$diaIngles seleccionados');
+            Log::info($diaIngles);
+            $fecha = $this->siguienteFechaDiaSemana($fechaActual, $diaIngles);
+            if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
+                $fecha->addWeek();
+            }
+            while ($fecha->year <= $añoLimite) { // Verificar todo el año
+                $fechas[] = $fecha->format('Y-m-d');
+                $fecha->addWeek(); // Avanzar una semana
+            }
         }
         // Ordenar las fechas
         sort($fechas);
@@ -335,7 +407,8 @@ class BranchProfessionalController extends Controller
         }
     }
 
-    public function update_state(Request $request)
+    
+     public function update_state_ANTERIOR(Request $request)
     {
         try {
             $data = $request->validate([
@@ -422,7 +495,9 @@ class BranchProfessionalController extends Controller
                     }
                 }//end if de tecnico
 
-                if ($data['state'] == 2) {                                    
+                if ($data['state'] == 2) {                         
+                    Log::info('Professional aceptada solicitud de salida a colación:');                              
+                    Log::info($professional->name);                              
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
@@ -433,6 +508,238 @@ class BranchProfessionalController extends Controller
                     $notification->type = $data['type'];                     
                     $notification->save();
                 }else {
+                    Log::info('Professional aceptada solicitud de Salida:');                              
+                    Log::info($professional->name);
+                    $professional->start_time = Carbon::now();
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Aceptada su solicitud de Salida';
+                    $notification->description = 'Aceptada su solicitud de Salida,'.Carbon::now()->format('H:i');
+                    $notification->state = 3;
+                    $notification->type = $data['type'];
+                    $notification->save();
+                    $record = Record::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('start_time', Carbon::now())->first();
+                    if ($record != null) {
+                        $record->end_time = Carbon::now();
+                        $record->save();
+                    }
+                }
+                //para las notificaciones de solicitud a 1
+                Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
+                $reservations = $professional->reservations()
+                    ->where('branch_id', $data['branch_id'])
+                    ->where('confirmation', 4)
+                    ->whereDate('data', Carbon::now())
+                    ->whereHas('tail', function ($query) {
+                        $query->where('aleatorie', '!=', 0);
+                    })
+                    ->get();
+                    if ($reservations->isNotEmpty()) {
+                    // Itera sobre las reservas y actualiza el campo 'aleatorie' de las relaciones 'tail'
+                        foreach ($reservations as $reservation) {
+                            $tail = $reservation->tail;
+                            $tail->aleatorie = 1;
+                            $tail->save();
+                            //$reservation->tail()->update(['aleatorie' => 1]);                            
+                            Log::info('Pasando aleatorios a state 1 reservation_id:'.$reservation->id);
+                        }
+                    }
+            }
+            elseif ($data['state'] == 4 || $data['state'] == 3){
+                $branch = Branch::find($data['branch_id']);
+                //if ($data['type'] == 'Ambos') {
+                /*$professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
+                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Barbero y Encargado');
+                })->get();*/
+                $professionals = BranchProfessional::with(['professional' => function($query) {
+                    $query->select('id', 'charge_id'); // Especifica los campos necesarios
+                }, 'professional.charge' => function($query) {
+                    $query->select('id', 'name'); // Especifica los campos necesarios
+                }])
+                ->where('branch_id', $data['branch_id'])
+                ->whereHas('professional.charge', function ($query) {
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                })
+                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                // Agrupa los profesionales por su cargo
+                $groupedProfessionals = $professionals->groupBy('professional.charge.name');
+
+                // Extrae los IDs de los profesionales para cada cargo
+                $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
+                $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $charge = $professional->charge->name;
+                $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;
+                if ($data['state'] == 4) {
+                    $tittle = 'Solicitud de Salida';
+                    $description = 'EL'.' '.$charge.' '.$professional->name.' '.'esta pidiendo solicitud de salida';
+                }else {
+                    $tittle = 'Solicitud de Colación';
+                    $description = 'EL'.' '.$charge.' '.$professional->name.' '.'esta pidiendo solicitud de colación';
+                }
+                if (!$encargados->isEmpty()) {
+                    foreach ($encargados as $encargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $encargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = 'profesional'.$data['professional_id'];
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$coordinadors->isEmpty()) {
+                    foreach ($coordinadors as $coordinador) {
+                        $notification = new Notification();
+                        $notification->professional_id = $coordinador;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Coordinador';
+                        $notification->stateApk = 'profesional'.$data['professional_id'];
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                if (!$barberoEncargados->isEmpty()) {
+                    foreach ($barberoEncargados as $barberoEncargado) {
+                        $notification = new Notification();
+                        $notification->professional_id = $barberoEncargado;
+                        $notification->tittle = $tittle;
+                        $notification->description = $description;
+                        $notification->type = 'Encargado';
+                        $notification->stateApk = 'profesional'.$data['professional_id'];
+                        $branch->notifications()->save($notification);
+                    }
+                }
+                //}
+            }
+            $professional->state = $data['state'];
+            $professional->save();
+            DB::commit();
+            return response()->json(['msg' => 'Estado modificado correctamente'], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
+        }
+    }
+    
+     public function update_state(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'type' => 'required|string',
+                'state' => 'required|numeric'
+            ]);
+            Log::info('Solicitud de salida o colación');
+            Log::info($data);
+            $tittle = '';
+            $description = '';            
+            $ProfessionalWorkPlace = [];
+            DB::beginTransaction();
+            $professional = Professional::find($data['professional_id']);
+            if ($professional->state == 2) {
+                $professional->end_time = Carbon::now();
+
+                //actualizar lugar de llegada
+                // Obtener el número máximo de llegada para la sucursal dada
+                $maxArrival = BranchProfessional::where('branch_id', $data['branch_id'])->max('arrival');
+
+                // Si no hay valores, inicializar a 0
+                if (is_null($maxArrival)) {
+                    $maxArrival = 0;
+                }
+
+                // Encontrar el registro específico y actualizar el campo arrival
+                $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                                                        ->where('professional_id', $data['professional_id'])
+                                                        ->firstOrFail();
+
+                // Asignar el siguiente número de llegada
+                $branchProfessional->arrival = $maxArrival + 1;
+
+                // Guardar los cambios
+                $branchProfessional->save();
+
+            }
+            if ($data['state'] == 1) {
+                if ($professional->state == 4) {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Rechazada su solicitud de Salida';
+                    $notification->description = 'Su solicitud de Salida fue rechazada';
+                    $notification->state = 3;   
+                    $notification->type = $data['type'];                  
+                    $notification->save();
+                }
+                if ($professional->state == 3) {
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Rechazada su solicitud de Colación';
+                    $notification->description = 'Su solicitud de Colación fue rechazada';
+                    $notification->state = 3;                    
+                    $notification->type = $data['type'];                    
+                    $notification->save();
+                }
+                //para las notificaciones de solicitud a 1
+                Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
+            }
+            elseif ($data['state'] == 2 || $data['state'] == 0) {
+                if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
+                    $ProfessionalWorkPlace = ProfessionalWorkPlace::with(['workplace' => function ($query) use ($data) {
+                        $query->where('busy', 1)->where('branch_id', $data['branch_id']);
+                    }])
+                    ->where('professional_id', $professional->id)
+                    ->whereDate('data', Carbon::now())
+                    ->latest('created_at')
+                    ->first();
+                    if ($ProfessionalWorkPlace && $ProfessionalWorkPlace->workplace) {
+                        Log::info('Puesto de trabajo');
+                        Log::info($ProfessionalWorkPlace);
+                        $ProfessionalWorkPlace->workplace->busy = 0;
+                        $ProfessionalWorkPlace->workplace->save();
+                        $ProfessionalWorkPlace->state = 0;
+                        $ProfessionalWorkPlace->save();
+                    }
+                    else {
+                        Log::info('Relación puesto de trabajo Null');
+                        Log::info($ProfessionalWorkPlace);
+                        Log::info('Puesto de trabajo Null');
+                        Log::info($ProfessionalWorkPlace->workplace);
+                    }
+                    
+                }//end if de barbero
+                if ($data['type'] == 'Tecnico') {
+                    $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
+                        $query->where('branch_id', $data['branch_id']);
+                    })->latest('created_at')->first();
+                    if ($ProfessionalWorkPlace != null){
+                        $places = json_decode($ProfessionalWorkPlace->places, true);
+                    Workplace::whereIn('id', $places)->update(['select' => 0]);
+                    $ProfessionalWorkPlace->state = 0;
+                    $ProfessionalWorkPlace->save();
+                    }
+                }//end if de tecnico
+
+                if ($data['state'] == 2) {                         
+                    Log::info('Professional aceptada solicitud de salida a colación:');                              
+                    Log::info($professional->name);                              
+                    $professional->start_time = Carbon::now();
+                    $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Aceptada su solicitud de Colación';
+                    $notification->description = 'Aceptada su solicitud de Colación, de ('.Carbon::now()->format('H:i').' a '.Carbon::now()->addMinutes(60)->format('H:i').')';
+                    $notification->state = 3;
+                    $notification->type = $data['type'];                     
+                    $notification->save();
+                }else {
+                    Log::info('Professional aceptada solicitud de Salida:');                              
+                    Log::info($professional->name);
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
@@ -547,7 +854,7 @@ class BranchProfessionalController extends Controller
         }
     }
 
-    public function branch_colacion(Request $request)
+    public function branch_colacion_ANTERIOR(Request $request)
     {
 
         try {
@@ -557,6 +864,33 @@ class BranchProfessionalController extends Controller
             ]);
             $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
+            })->where('state', 2)->get()->map(function ($query) {
+                return [
+                    'professional_name' => $query->name . " " . $query->surname,
+                    'client_image' => $query->image_url ? $query->image_url : "professionals/default_profile.jpg",
+                    'professional_id' => $query->id,
+                    'professional_state' => $query->state,
+                    'start_time' => Carbon::parse($query->start_time)->format('H:i'),
+                    'charge' => $query->charge->name
+                ];
+            });
+            return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
+        }
+    }
+    
+    public function branch_colacion(Request $request)
+    {
+
+        try {
+            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $professionals = Professional::whereHas('branches', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id'])->where('arrival', '!=', null);
             })->where('state', 2)->get()->map(function ($query) {
                 return [
                     'professional_name' => $query->name . " " . $query->surname,

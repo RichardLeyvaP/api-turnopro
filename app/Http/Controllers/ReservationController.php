@@ -20,6 +20,8 @@ use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\Workplace;
+use Laravel\Sanctum\PersonalAccessToken;
 use App\Services\ProfessionalService;
 use App\Services\ReservationService;
 use App\Services\SendEmailService;
@@ -27,6 +29,7 @@ use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\Mailer\Exception\TransportException;
+
 
 class ReservationController extends Controller
 {
@@ -124,7 +127,7 @@ class ReservationController extends Controller
         }
     }
 
-    public function reservation_store(Request $request)
+    public function reservation_store_ANTERIOR(Request $request)
     {
         Log::info("Guardar Reservacion");
         DB::beginTransaction();
@@ -219,6 +222,233 @@ class ReservationController extends Controller
                 }
                 
             }
+            $id_client = 0;
+            $code = '';
+            $reservation = [];
+            //1-Verificar que el usuario no este registrado
+            if ($data['client_id'] != 0) {
+                $id_client = $data['client_id'];
+                $clientExist = Client::where('id', $data['client_id'])->first();
+                Log::info('Cliente Existente');
+                Log::info($clientExist);
+                if ($clientExist != null) {
+                    $clientExist->email = $data['email_client'];
+                    $clientExist->save();                    
+                    $userExist = $clientExist->user;
+                    Log::info('User Existente');
+                    Log::info($userExist);
+                    $userExist->email = $data['email_client'];
+                    $userExist->save();
+                }
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+            }
+            else {
+                /*if ($data['email_client'] != null) {                    
+                $user = User::where('email', $data['email_client'])->whereHas('client', function ($query) use ($data){
+                    $query->where('name', $data['name_client']);
+                })->first();
+                }else {
+                    $user = User::where('name', $data['name_client'])->whereHas('client', function ($query) use ($data){
+                        $query->where('name', $data['name_client']);
+                    })->first();
+                }
+                if ($user) {
+                    Log::info("Encontro el ususario");
+                    Log::info($user);
+                    $client = $user->client;
+                    $id_client = $client->id;
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+                }else {*/
+                    Log::info("Si no existe registrarlo");
+                    $userNew = User::create([
+                        'name' => $data['name_client'],
+                        'email' => $data['email_client'],
+                        'password' => Hash::make($data['phone_client'].''.$data['name_client'])
+                    ]);
+                    $client = new Client();
+                    $client->name = $data['name_client'];
+                    //$client->surname = $data['surname_client'];
+                    //$client->second_surname = $data['second_surname'];
+                    $client->email = $data['email_client'];
+                    $client->phone = $data['phone_client'];
+                    $client->user_id = $userNew->id;
+                    //$client->client_image = 'clients/default_profile.jpg';
+                    $client->save();
+                    $id_client = $client->id;
+
+                    Log::info("Id que tiene");
+                    Log::info($id_client);
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+                //}
+            }
+            
+            // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
+            Log::info("5.comparando fechas");
+
+
+            $fechaHoy = Carbon::today();
+            // Obtener la fecha formateada como 'YYYY-MM-DD'
+            $fechaFormateada = $fechaHoy->toDateString();
+            Log::info($data['data']);
+            Log::info($fechaFormateada);
+
+            if (($data['data'] == $fechaFormateada)) {
+                Log::info("5.las fechas son iguales");
+                $this->reservation_tail();
+                Log::info("5.actualice la cola");
+            }
+            //crear la notificacion
+            if ($data['from_home'] == 0 && $data['select_professional'] == 1) {
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->branch_id = $data['branch_id'];
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();
+            }
+            if ($data['from_home'] == 0 && $data['select_professional'] == 0){
+                // Convierte start_time a un objeto Carbon para la fecha de hoy
+             $startDateTime = Carbon::createFromFormat('H:i', $data['start_time']);
+
+             // Obtén la hora actual
+             $now = Carbon::now();
+ 
+             // Calcula la diferencia en minutos entre la hora actual y el start_time
+             $diffInMinutes = $startDateTime->diffInMinutes($now, false);
+ 
+             // Si la diferencia es menor o igual a 3 minutos y positiva (o cero), ejecuta alguna acción
+             if ($diffInMinutes >= 0 && $diffInMinutes <= 3) {
+                 // Realiza alguna acción
+                 $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Nuevo cliente en cola';
+                    $notification->description = 'Tienes un nuevo cliente en cola';
+                    $notification->type = 'Barbero';
+                    $notification->save();
+             }
+            }
+            
+            if ($data['from_home'] == 1) {
+                $code = $reservation->code;
+                //optener nombre del professional
+                $professional = Professional::find($data['professional_id']);
+                $name = $professional->name;
+                //todo *************** llamando al servicio de envio de email *******************
+                //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+                //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+                if ($reservation != null) {
+                    $id = $reservation->id;
+                } else {
+                    $id = 0;
+                }
+                Log::info('Id de la reservacion');
+                Log::info($id);
+                $data = [
+                    'confirm_reservation' => true, // Indica que es una confirmación de reserva
+                    'data_reservation' => $data['data'], // Datos de la reserva
+                    'start_time' => $data['start_time'], // Hora de inicio
+                    'client_id' => $id_client, // ID del cliente
+                    'branch_id' => $data['branch_id'], // ID de la sucursal
+                    'type' => null, // Tipo (en este caso, se deja como null)
+                    'name_professional' => $name, // Nombre del profesional
+                    'recipient' => null, // Destinatario (en este caso, se deja como null),                
+                    'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
+                    'code_reserva' => $code
+                ];
+        Log::info("OKOKOK");
+
+                Log::info($data);
+                SendEmailJob::dispatch($data);
+            }
+                DB::commit();
+            return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
+        } catch (TransportException $e) {
+            Log::error($e);
+            DB::rollback();
+            return response()->json(['msg' => 'La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico '], 422);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
+        }
+    }
+    
+    public function reservation_store(Request $request)
+    {
+        Log::info("Guardar Reservacion");
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'start_time' => 'required',
+                'data' => 'required|date',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'email_client' => 'nullable',
+                'phone_client' => 'required',
+                'name_client' => 'required',
+                'client_id' => 'nullable',
+                //'second_surname' => 'required',
+            ]);            
+            $servs = $request->input('services');
+            Log::info($request);
+            if ($request->has('select_professional')) {
+                $data['select_professional'] = $request->select_professional;
+                // Actualiza el campo 'living' a NULL para el branch_id dado
+                BranchProfessional::where('branch_id', $data['branch_id'])
+                ->update(['living' => NULL]);
+                $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+                Log::info('Professionales recalculando el orden para cliente:'.$data['name_client']);
+                Log::info($professionals);
+                if ($professionals) {
+                    $data['professional_id'] = $professionals[0]['id'];
+                    $data['start_time'] = $professionals[0]['start_time'];
+                }
+            } else {
+                $data['select_professional'] = 1;
+            }
+            if ($request->has('from_home')) {
+                $data['from_home'] = $request->from_home;
+            } 
+            else {
+                $data['from_home'] = 1;
+                $reservationIntervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
+                Log::info('Horarios del barbero');
+                Log::info($reservationIntervals);
+                // Verificar si el array tiene un número impar de elementos
+                if (count($reservationIntervals) % 2 !== 0) {
+                    // Duplicar el último elemento
+                    $reservationIntervals[] = end($reservationIntervals);
+                }
+                $reservation_intervals = array_chunk($reservationIntervals, 2);
+                $reservation_intervals = array_map(function ($chunk) {
+                    return [
+                        'start' => Carbon::parse($chunk[0]),
+                        'end' => Carbon::parse($chunk[1]),
+                    ];
+                }, $reservation_intervals);
+                // Nuevo intervalo propuesto
+                $new_start = Carbon::parse($data['start_time']);
+                $total_time = Service::whereIn('id', $servs)->sum('duration_service');
+                $new_end = $new_start->copy()->addMinutes($total_time);
+
+                // Verificar solapamientos
+                foreach ($reservation_intervals as $interval) {
+                    $existing_start = $interval['start'];
+                    $existing_end = $interval['end'];
+
+                    if (
+                        $new_start->between($existing_start, $existing_end, false) || // Inicio dentro del rango existente
+                        $new_end->between($existing_start, $existing_end, false) ||  // Fin dentro del rango existente
+                        ($new_start->lessThanOrEqualTo($existing_start) && $new_end->greaterThanOrEqualTo($existing_end)) // Cubre un intervalo existente
+                    ) {
+                        return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
+                    }
+                }
+	}
+            
             $id_client = 0;
             $code = '';
             $reservation = [];
@@ -460,7 +690,7 @@ class ReservationController extends Controller
             $type = '';
             $reservations = Reservation::WhereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->orderBy('data')->get();
+            })->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->whereNot('confirmation',[3])->orderBy('data')->get();
             foreach ($reservations as $reservation) {
                 $client = $reservation['car']['clientProfessional']['client'];
                 $startTime = Carbon::parse($reservation['start_time']);
@@ -570,7 +800,7 @@ class ReservationController extends Controller
         }
     }
 
-    public function reservations_count_week(Request $request)
+    public function reservations_count_week_ANTERIOR(Request $request)
     {
         try {
             Log::info("Entra a buscar una las reservations de la semana");
@@ -657,6 +887,96 @@ class ReservationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
+    
+      public function reservations_count_week(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar una las reservations de la semana");
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);
+
+            $array = [];
+            $start = now()->startOfWeek(); // Start of the current week, shifted to Monday
+            $end = now()->endOfWeek();   // End of the current week, shifted to Sunday
+            $dates = [];
+            $reservationsData = [];
+            //return [$start, $end];
+            $i = 0;
+            $day = 0; //en $day = 1 es Lunes,$day=2 es Martes...$day=7 es Domingo, esto e spara el front
+            if ($data['branch_id'] != 0) {
+                Log::info('Es una Sucursal');
+                // Consulta para obtener las reservas de la semana actual
+                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->with(['car.clientProfessional.client', 'car.clientProfessional.professional'])->where('branch_id', $data['branch_id'])->orderBy('data')->get();
+
+                $reservationsData = $reservations->map(function ($reservation) {
+                    $client = $reservation->car->clientProfessional->client;
+                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
+                    return [
+                        'id' => $reservation->id,
+                        'car_id' => $reservation->car_id,
+                        'client_professional_id' => $reservation->car->client_professional_id,
+                        'clientName' => $client->name,
+                        'professionalName' => $professional->name,
+                        'client_image' => $client->client_image,
+                        'image_url' => $professional->image_url,
+                        'data' => $reservation->data,
+                        'start_time' => $reservation->start_time,
+                        'end_time' => $reservation->final_hour,
+                        'total_time' => $reservation->total_time
+
+                    ];
+                });
+
+                for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
+                    $machingResult = $reservations->where('data', $date->toDateString())->count();
+                    //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
+                    $dates[$i] = $machingResult ? $machingResult : 0;
+                }
+                $dates;
+
+                $reservations = $dates;
+            } else {
+                Log::info("Business");
+                $reservations = Reservation::whereDate('data', '>=', $start)->whereDate('data', '<=', $end)->where('from_home', 1)->get();
+                $reservationsData = $reservations->map(function ($reservation) {
+                    $client = $reservation->car->clientProfessional->client;
+                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
+                    return [
+                        'id' => $reservation->id,
+                        'car_id' => $reservation->car_id,
+                        'client_professional_id' => $reservation->car->client_professional_id,
+                        'clientName' => $client->name . ' ' . $client->surname,
+                        'professionalName' => $professional->name . ' ' . $professional->surname,
+                        'client_image' => $client->client_image,
+                        'image_url' => $professional->image_url,
+                        'data' => $reservation->data,
+                        'start_time' => $reservation->start_time,
+                        'end_time' => $reservation->final_hour,
+                        'total_time' => $reservation->total_time
+
+                    ];
+                });
+                for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
+                    $machingResult = $reservations->where('data', $date->toDateString())->count();
+                    //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
+                    $dates[$i] = $machingResult ? $machingResult : 0;
+                }
+                $dates;
+
+                $reservations = $dates;
+            }
+
+            //$reservationsString = implode(',', $reservations);
+            return response(['cantReservations' => $reservations, 'reservations' => $reservationsData], 200, ['Content-Type' => 'application/json']);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
+        }
+    }
+    
+    
 
     public function show(Request $request)
     {
@@ -971,7 +1291,7 @@ class ReservationController extends Controller
         }
     }
     
-      public function reservation_tail_task(Request $request)
+      public function reservation_tail_task_ANTERIOR(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
 
@@ -1088,6 +1408,131 @@ class ReservationController extends Controller
             return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
         }
     }
+    
+      public function reservation_tail_task(Request $request)
+    {
+        $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
+
+        // Log para verificar el valor de código
+
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            Log::info("Código no coincide");
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
+        log::info('registrar las reservaciones del dia en la cola');
+        try {
+            Notification::truncate();
+            Workplace::query()->update(['busy' => 0, 'select' => 0]);
+            Tail::truncate();
+            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL, 'state' => 0]);
+            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
+            PersonalAccessToken::query()->delete();
+            $reservations = Reservation::whereDate('data', Carbon::today())
+                ->whereDoesntHave('tail')
+                ->orderBy('start_time')->get();
+                $current_date = Carbon::now();
+                $ct = 0;
+                $fechaHoy = Carbon::today();
+            // Obtener la fecha formateada como 'YYYY-MM-DD'
+                $fechaFormateada = $fechaHoy->toDateString();
+                Log::info($fechaFormateada);
+            foreach ($reservations as $reservation) {
+                // Si la reserva es del día actual y no está confirmada (confirmation = 0)
+                if ($reservation->confirmation == 0 && $reservation->data == $fechaFormateada) {
+                    log::info('Eliminando reserva no confirmada: ' . $reservation->id);
+                    
+                    // Actualiza el campo cause antes de eliminar la reserva
+                    $reservation->cause = 'No confirmo la reserva';
+                    $reservation->save();
+                    
+                    // Soft delete de la reserva
+                    $reservation->delete();
+                    
+                    // Continua con la siguiente reserva
+                    continue;
+                }
+                log::info('Revisando este metodo - foreach:'.$ct);
+                if ($reservation->car->select_professional == 0) {
+                    log::info('Revisando este metodo - select_professional == 0:'.$ct);
+                    $professional_id = $reservation->car->clientProfessional->professional_id;
+                    log::info('Revisando este metodo - $professional_id :'.$professional_id);
+                    $professional = Professional::find($professional_id);
+                    log::info('Revisando este metodo - $professional :'.$professional);
+                    $branch_id = $reservation->branch_id;
+                    $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
+                        $query->where('branch_id', $branch_id)->orderBy('created_at');
+                    })->where('aleatorie', 1)->get();
+                    if ($tails->isEmpty()) {    
+                            $reservations2 = $professional->reservations()
+                        ->where('branch_id', $branch_id)
+                        ->where('confirmation', 4)
+                        ->whereDate('data', Carbon::now())
+                        ->whereHas('tail', function ($query){
+                            $query->whereNot('aleatorie', 1);
+                        })
+                        //->where('final_hour', '>=', $current_date->format('H:i'))
+                        ->orderBy('start_time')
+                        ->get();
+                        
+                        log::info('Revisando este metodo - $reservations2 :'.$ct);
+                        Log::info($reservations2);
+                        if ($reservations2->isEmpty()) {
+                            log::info('Revisando este metodo - if ($reservations2->isEmpty()) :'.$ct);
+                            Log::info('No tiene reservas');
+                            $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                            $reservation->timeClock = now();
+                            $reservation->save();
+                            break;
+                        }else {
+                            log::info('Revisando este metodo - if (!$reservations2->isEmpty()) :'.$ct);
+                            $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                            break;
+                        }
+                }//iftailsempty
+                else {    
+                    log::info('Revisando este metodo -  Entrando al foreach-2:estoy en el else no hay aleatorios');
+                    $services = $this->verific_services($tails, $branch_id, $professional);
+                    if ($services == true) {
+                        $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                      }else {
+                        $reservations3 = $professional->reservations()
+                            ->where('branch_id', $branch_id)
+                            ->where('confirmation', 4)
+                            ->whereDate('data', Carbon::now())
+                            ->whereHas('tail', function ($query){
+                                $query->whereNot('aleatorie', 1);
+                            })
+                            ->orderBy('start_time')
+                            ->get();
+                            Log::info('Professional tiene reservaciones: '.$professional);
+                            Log::info('reservaciones: '.$reservations3);
+                            if ($reservations3->isEmpty()) {                                
+                                $cola = $reservation->tail()->create(['aleatorie' => 2]);
+                                $reservation->timeClock = now();
+                                $reservation->save();
+                                break;
+                            }else {
+                                $cola = $reservation->tail()->create(['aleatorie' => 1]);
+                                break;
+                            }
+                      }
+                  }
+                    
+                }else {
+                    log::info('Revisando este metodo -  Estoy en el else creando la cola');
+                    $cola = $reservation->tail()->create();
+                }
+                $ct++;
+            }
+          
+          
+            return response()->json(['msg' => 'Cola creada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
+        }
+    }
+
 
     private function verific_services($tails, $branch_id, $professional)
     {

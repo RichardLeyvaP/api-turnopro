@@ -492,7 +492,7 @@ class OrderController extends Controller
         }
     }
 
-    public function destroy(Request $request)
+    public function destroy_ANTERIOR(Request $request)
     {
         Log::info("Eliminar orden");
         Log::info($request);
@@ -510,6 +510,106 @@ class OrderController extends Controller
             Log::info($car);
             if ($order->is_product == 1) {                
             Log::info("Es producto");
+                $productstore = ProductStore::find($order->product_store_id);
+                $product = $productstore->product;
+                $cant = $order->cant;
+                $productstore->product_quantity = $cant;
+                $productstore->product_exit = $productstore->product_exit + $cant;
+                $productstore->save();
+
+                $notification = new Notification();
+                $notification->professional_id = $car->clientProfessional->professional_id;
+                $notification->branch_id = $reservation->branch_id;
+                $notification->tittle = 'Aceptada Eliminación de Producto';
+                $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
+                $notification->type = 'Barbero';
+                $notification->save();
+
+            }
+            if ($order->is_product == 0) {
+                Log::info("servicio");
+                $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
+                Log::info($branchServiceprofessional);
+                $service = $branchServiceprofessional->branchService->service;
+                Log::info("card:".$car);
+                //$reservation = Reservation::where('car_id', $order->car_id)->first();
+                Log::info($reservation);
+                $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
+                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
+                $reservation->save();
+                //reducir tiempo al reloj
+                $updated = Carbon::parse($order->updated_at);
+                $starnow = Carbon::now();
+                $diffInSegunds = $updated->diffInSeconds($starnow, false);
+                Log::info('diferencia en segundos'.$diffInSegunds);
+                $timeMod =  ($service->duration_service*60)+$diffInSegunds;
+                Log::info('diferencia en segundos1'.$timeMod);
+                $tail = $reservation->tail;
+                $timeClock = $tail->timeClock - $timeMod;
+                Log::info('diferencia en segundos - reloj actual'.$timeClock);
+                $timeClock1 = $timeClock <=0 ? 0 : $timeClock;
+                Log::info('diferencia en segundos - reloj actual bd'.$timeClock1);
+                $tail->timeClock = $timeClock1;
+                $tail->save();
+                $notification = new Notification();
+                $notification->professional_id = $car->clientProfessional->professional_id;
+                $notification->branch_id = $reservation->branch_id;
+                $notification->tittle = 'Aceptada Eliminación de Servicio';
+                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'seg'.'.'.$reservation->id;
+                $notification->type = 'Barbero';
+                $notification->state = 3;
+                $notification->save();
+            }
+            //para las notificaciones de solicitud a 1
+            Notification::where('branch_id', $reservation->branch_id)->where('state', 0)->where('stateApk', 'orden'.$data['id'])->update(['state' => 1]);
+            $amountTemp = $car->amount - $order->price;
+            $car->amount = $amountTemp;
+            $order->delete();
+            if($amountTemp)
+            {
+                $car->save();
+            }
+            else {
+                $car->delete();
+            }
+            DB::commit();
+            return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::info("Eliminar orden:$th");
+            return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
+        }
+    }
+    
+    public function destroy(Request $request)//2024-10-12
+    {
+        Log::info("Eliminar orden");
+        Log::info($request);
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric'
+            ]);
+            $order = Order::find($data['id']);
+            $car = Car::find($order->car_id);
+            $reservation = $car->reservation;
+            $client = $car->clientProfessional->client;
+            //$branch = Branch::where('id', $car->reservation->branch_id)->first();
+            Log::info($order);
+            Log::info($car);
+            if($reservation->confirmation == 2){
+                Log::info('Manda a eliminar una orden con el cliente ya finalizado');
+                Log::info('$car->id');
+                Log::info($car->id);
+                Log::info('$reservation->id');
+                Log::info($reservation->id);
+                Log::info('Cliente');
+                Log::info($client->name);
+                DB::commit();
+                return response()->json(['msg' =>'Solicitud de eliminar la orden no realizada cliente finalizado'], 200);
+            }
+            if ($order->is_product == 1) {                
+                Log::info("Es producto");
                 $productstore = ProductStore::find($order->product_store_id);
                 $product = $productstore->product;
                 $cant = $order->cant;
