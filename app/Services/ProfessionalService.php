@@ -988,37 +988,7 @@ class ProfessionalService
 
                             $finalTime = Carbon::parse($reservation->final_hour);
                             $finalMinutes = $finalTime->minute;
-
-                            /*if ($finalMinutes <= 15) {
-                                if ($finalMinutes <= 5) {
-                                    $roundedMinutes = '5';
-                                }elseif ($finalMinutes <= 10) {
-                                    $roundedMinutes = '10';
-                                }else{
-                                $roundedMinutes = '15';
-                                }
-                            } elseif ($finalMinutes <= 30) {
-                                if ($finalMinutes <= 20) {
-                                    $roundedMinutes = '15';
-                                }elseif ($finalMinutes <= 25) {
-                                    $roundedMinutes = '20';
-                                }
-                                else {
-                                $roundedMinutes = '25';
-                                }
-                            } elseif ($finalMinutes <= 45) {
-                                if ($finalMinutes <= 35) {
-                                    $roundedMinutes = '30';
-                                }elseif ($finalMinutes <= 40) {
-                                    $roundedMinutes = '35';
-                                }
-                                else {
-                                $roundedMinutes = '40';
-                                }
-                            } else {
-                                $finalTime->addHour();
-                                $roundedMinutes = '55';
-                            }*/
+                            
                             if ($finalMinutes <= 10){
                             $roundedMinutes = '05';
                             }
@@ -1069,11 +1039,24 @@ class ProfessionalService
                                 $reservations[] = $startTime->format('H:i');
                                 $startTime->addMinutes(10);
                             }
+
+                            if (count($reservations) % 2 !== 0) {
+                                $reservations[] = end($reservations); // Agrega el último valor duplicado si es impar
+                            }
                         } else {
                             $startTime = Carbon::parse($start_time);
                             while ($startTime <= $horaActualMas2Horas) {
-                                $reservations[] = $startTime->format('H:i');
+                                $formattedTime = $startTime->format('H:i');
+                                // Solo agrega el tiempo si no está en el array
+                                if (!in_array($formattedTime, $reservations)) {
+                                    $reservations[] = $formattedTime;
+                                }
+
                                 $startTime->addMinutes(10);
+                            }
+
+                            if (count($reservations) % 2 !== 0) {
+                                $reservations[] = end($reservations); // Agrega el último valor duplicado si es impar
                             }
                         }
 
@@ -1111,38 +1094,7 @@ class ProfessionalService
                         $finalTime = Carbon::parse($reservation->final_hour);
                         $finalMinutes = $finalTime->minute;
 
-                        /*if ($finalMinutes <= 15) {
-                            if ($finalMinutes <= 5) {
-                                $roundedMinutes = '5';
-                            }elseif ($finalMinutes <= 10) {
-                                $roundedMinutes = '10';
-                            }else{
-                            $roundedMinutes = '15';
-                            }
-                        } elseif ($finalMinutes <= 30) {
-                            if ($finalMinutes <= 20) {
-                                $roundedMinutes = '15';
-                            }elseif ($finalMinutes <= 25) {
-                                $roundedMinutes = '20';
-                            }
-                            else {
-                            $roundedMinutes = '25';
-                            }
-                        } elseif ($finalMinutes <= 45) {
-                            if ($finalMinutes <= 35) {
-                                $roundedMinutes = '30';
-                            }elseif ($finalMinutes <= 40) {
-                                $roundedMinutes = '35';
-                            }
-                            else {
-                            $roundedMinutes = '40';
-                            }
-                        } else {
-                            $finalTime->addHour();
-                            $roundedMinutes = '55';
-                        }*/
-
-                        if ($finalMinutes <= 10){
+                         if ($finalMinutes <= 10){
                             $roundedMinutes = '05';
                             }
                          elseif ($finalMinutes <= 20) {
