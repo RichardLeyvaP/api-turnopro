@@ -398,41 +398,6 @@ class NotificationController extends Controller
         }
     }
 
-    // public function whatsapp_notification(Request $request)
-    // {
-    //     Log::info('Eviar notificacion whatsApp');
-    //     try {
-    //         $data = $request->validate([
-    //             'telefone_client' => 'required'
-    //         ]);
-    //         //funcion
-    //         $phone = $data['telefone_client'];
-    //         $token = 'EAAagNvvUedwBOZBRlNnV1vpITV9yY021G4IrEy6UJqoB7ErYIA13abKyZA54ZBWm64KS9PTZBaRYBh2zWLn594NZBcPMjt2R14Cx3IB6nOfpfyZBH6a6mNeVxDZC3q6GbBZAs4ZAFI0ZChhY957058Y7tk20s72Se2mk9unBNrfdc7eapXtI9KxWu62mE43lIxpsR3Ob7lwO7ZByB6ZBaslLlQ7JgeqXb7IZD';
-    //     // $carbon = new Carbon();
-    //     $body = [
-    //         'messaging_product' => 'whatsapp',
-    //         'to' => $phone,
-    //         'type' => 'template',
-    //         'template' => [
-    //             'name' => 'hello_world',
-    //             'language' => [
-    //                 'code' => 'en_us'
-    //             ],
-
-    //         ]
-    //     ];
-
-
-    //     $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
-    //     Log::error('scanner');
-    //     Log::info($response);
-    //         return response()->json("Este es el numero de celular ".$data['telefone_client'], 200);
-    //     } catch (\Throwable $th) {
-    //         Log::error($th);
-    //         return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
-    //     }
-    // }
-
     public function whatsapp_notification(Request $request)
     {
         Log::info('Enviar notificación WhatsApp');
@@ -1196,11 +1161,8 @@ class NotificationController extends Controller
         $codigo = $request->query('codigo');
 
         // Verifica si el código es válido
-        if ($codigo !== 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
-            Log::warning('Intento de acceso no autorizado al método notification_recording', [
-                'codigo_proporcionado' => $codigo,
-                'ip' => $request->ip(),
-            ]);
+         if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            Log::info("Código no coincide");
             return response()->json(['msg' => 'Código inválido'], 403);
         }
 
@@ -1215,6 +1177,7 @@ class NotificationController extends Controller
 
             // Obtener los clientes atendidos en el día específico (hace 15 días)
             $clientesDiaEspecifico = Reservation::whereDate('data', $fechaEspecifica)
+                ->where('confirmation', 2) // Especificar que confirmation sea igual a 2
                 ->with([
                     'car.clientProfessional.client' => function ($query) {
                         $query->select('id', 'name', 'phone');
@@ -1235,11 +1198,13 @@ class NotificationController extends Controller
             // Filtrar los clientes que no han tenido reservaciones desde el día específico hasta la fecha actual
             $clientesFiltrados = $clientesDiaEspecifico->filter(function ($item) use ($fechaEspecifica, $fechaActual) {
                 $client = $item['client'];
+                $branchId = $item['branch']->id; // Obtener el branch_id de la reservación
 
                 // Verificar si el cliente tiene reservaciones desde el día específico hasta la fecha actual
                 $tieneReservacionesRecientes = Reservation::whereHas('car.clientProfessional.client', function ($query) use ($client) {
                     $query->where('id', $client->id);
                 })
+                    ->where('branch_id', $branchId) // Especificar el branch_id
                     ->whereDate('data', '>', $fechaEspecifica) // Reservaciones después del día específico
                     ->whereDate('data', '<=', $fechaActual) // Hasta la fecha actual
                     ->exists();
@@ -1258,11 +1223,8 @@ class NotificationController extends Controller
                     'branch' => $item['branch']->name, // Nombre de la sucursal
                 ];
 
-                // Crear el mensaje personalizado
-                $mensaje = "Estimado {$cliente['name']}, llevas ya un tiempo sin visitar la sucursal {$cliente['branch']}.";
-
                 // Enviar el WhatsApp
-                $envioExitoso = $this->enviarWhatsApp($cliente['phone'], $mensaje);
+                $envioExitoso = $this->enviarWhatsApp($cliente['phone'], $cliente['name'], $cliente['branch']);
 
                 // Registrar el resultado
                 if ($envioExitoso) {
@@ -1277,7 +1239,7 @@ class NotificationController extends Controller
 
             return response()->json([
                 'msg' => 'Proceso de notificación completado',
-                //'clientes' => $clientesFinales,
+                'clientes' => $clientesFinales,
             ], 200);
         } catch (\Throwable $th) {
             Log::error('Error al obtener los clientes: ' . $th->getMessage(), [
@@ -1287,55 +1249,13 @@ class NotificationController extends Controller
         }
     }
 
-    /*protected function enviarWhatsApp($phone, $message)
-    {
-        try {
-            // Asegúrate de que el número esté en el formato correcto
-            if (strpos($phone, 'whatsapp:') === false) {
-                $phone = 'whatsapp:' . $phone; // Prepend 'whatsapp:' si no está presente
-            }
-
-            Log::info('Enviando WhatsApp al número: ' . $phone); // Verificar el valor del teléfono
-
-            $twilioSid = env('TWILIO_SID');
-            $twilioToken = env('TWILIO_AUTH_TOKEN');
-            $twilioWhatsAppNumber = env('TWILIO_WHATSAPP_NUMBER');
-            $recipientNumber = $phone;
-            $message = $message;
-
-            try {
-                $twilio = new Client($twilioSid, $twilioToken);
-
-                $twilio->messages->create(
-                    $recipientNumber,
-                    [
-                        "from" => "whatsapp:+" . $twilioWhatsAppNumber,
-                        "body" => $message,
-                    ]
-                );
-
-                return back()->with(['success' => 'WhatsApp message sent successfully!']);
-            } catch (Exception $e) {
-                return back()->with(['error' => $e->getMessage()]);
-            }
-        } catch (\Throwable $th) {
-            Log::error('Excepción al enviar WhatsApp a ' . $phone . ': ' . $th->getMessage());
-            return false;
-        }
-    }*/
-
-    protected function enviarWhatsApp($phone)
+    protected function enviarWhatsApp($phone, $name, $branch)
     {
         $twilioSid = env('TWILIO_SID');
         $twilioToken = env('TWILIO_AUTH_TOKEN');
         $twilioWhatsAppNumber = env('TWILIO_WHATSAPP_NUMBER');
         $recipientNumber = $phone;
         //$message = 'Usted va ser atendido aproximadamente en 3 minutos';
-
-        Log::info('Twilio SID: ' . $twilioSid);
-        Log::info('Twilio Token: ' . $twilioToken);
-        Log::info('Twilio WhatsApp Number: ' . $twilioWhatsAppNumber);
-        Log::info('Recipient Number inicial: ' . $recipientNumber);
 
         if (empty($recipientNumber)) {
             return back()->with(['error' => 'El número de teléfono es obligatorio.']);
@@ -1354,10 +1274,11 @@ class NotificationController extends Controller
                 $recipientNumber,
                 [
                     "from" => "whatsapp:56931435036", // Número de WhatsApp de Twilio
-                    "template_sid" => "HXabc5167c48681a4eaeeff4323505064a", // SID de la plantilla
-                    "contentSid" => "HXabc5167c48681a4eaeeff4323505064a", // SID de la plantilla
+                    "template_sid" => "HXabc5167c48681a4eaeeff4323505064a", // SID de la nueva plantilla
                     "contentVariables" => json_encode([
-                        "1" => "3" // Parámetro dinámico
+                        "1" => $name, // Nombre del cliente
+                        "2" => $branch, // Nombre de la barbería
+                        "3" => "https://reservasbh.simplifies.cl/", // Enlace de reserva
                     ]),
                 ]
             );
