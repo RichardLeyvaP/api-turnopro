@@ -9,7 +9,10 @@ use App\Models\BranchRule;
 use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Reservation;
+use Twilio\Rest\Client;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -44,16 +47,16 @@ class NotificationController extends Controller
                 if ($request->has('stateApk')) {
                     $stateApk = $request->stateApk;
                 }
-                $professionals = BranchProfessional::with(['professional' => function($query) {
+                $professionals = BranchProfessional::with(['professional' => function ($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
-                }, 'professional.charge' => function($query) {
+                }, 'professional.charge' => function ($query) {
                     $query->select('id', 'name'); // Especifica los campos necesarios
                 }])
-                ->where('branch_id', $data['branch_id'])
-                ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
-                })
-                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                    ->where('branch_id', $data['branch_id'])
+                    ->whereHas('professional.charge', function ($query) {
+                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    })
+                    ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
@@ -115,8 +118,8 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Notificacion creada correctamente"], 500);
         }
     }
-    
-      public function store_MAL_ANTE(Request $request)
+
+    public function store_MAL_ANTE(Request $request)
     {
         Log::info('Entra a registrar las notificaciones');
         try {
@@ -133,16 +136,16 @@ class NotificationController extends Controller
                 if ($request->has('stateApk')) {
                     $stateApk = $request->stateApk;
                 }
-                $professionals = BranchProfessional::with(['professional' => function($query) {
+                $professionals = BranchProfessional::with(['professional' => function ($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
-                }, 'professional.charge' => function($query) {
+                }, 'professional.charge' => function ($query) {
                     $query->select('id', 'name'); // Especifica los campos necesarios
                 }])
-                ->where('branch_id', $data['branch_id'])
-                ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
-                })
-                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                    ->where('branch_id', $data['branch_id'])
+                    ->whereHas('professional.charge', function ($query) {
+                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    })
+                    ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
@@ -181,18 +184,17 @@ class NotificationController extends Controller
                         $branch->notifications()->save($notification);
                     }
                 }
-            } 
-            elseif ($data['type'] == 'Barbero'){
+            } elseif ($data['type'] == 'Barbero') {
                 $branchrule = BranchRule::whereHas('rule', function ($query) {
                     $query->where('type', 'Tiempo');
                 })
-                ->where('branch_id', $data['branch_id'])
-                ->first();
+                    ->where('branch_id', $data['branch_id'])
+                    ->first();
 
-            $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
-                ->where('branch_rule_id', $branchrule->id)
-                ->where('professional_id', $data['professional_id'])
-                ->first();
+                $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
+                    ->where('branch_rule_id', $branchrule->id)
+                    ->where('professional_id', $data['professional_id'])
+                    ->first();
             }
             if ($existencia && $existencia->estado != 0) {
                 $notification = new Notification();
@@ -201,8 +203,7 @@ class NotificationController extends Controller
                 $notification->description = $data['description'];
                 $notification->type = $data['type'];
                 $branch->notifications()->save($notification);
-            }
-            else {
+            } else {
                 $notification = new Notification();
                 $notification->professional_id = $data['professional_id'];
                 $notification->tittle = $data['tittle'];
@@ -225,8 +226,8 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Notificacion creada correctamente"], 500);
         }
     }
-    
-      public function store(Request $request)
+
+    public function store(Request $request)
     {
         Log::info('Entra a registrar las notificaciones');
         try {
@@ -243,16 +244,16 @@ class NotificationController extends Controller
                 if ($request->has('stateApk')) {
                     $stateApk = $request->stateApk;
                 }
-                $professionals = BranchProfessional::with(['professional' => function($query) {
+                $professionals = BranchProfessional::with(['professional' => function ($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
-                }, 'professional.charge' => function($query) {
+                }, 'professional.charge' => function ($query) {
                     $query->select('id', 'name'); // Especifica los campos necesarios
                 }])
-                ->where('branch_id', $data['branch_id'])
-                ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
-                })
-                ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
+                    ->where('branch_id', $data['branch_id'])
+                    ->whereHas('professional.charge', function ($query) {
+                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    })
+                    ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
@@ -292,19 +293,18 @@ class NotificationController extends Controller
                     }
                 }
                 return response()->json(['msg' => 'Notifications creada correctamente'], 200);
-            } 
-            elseif ($data['type'] == 'Barbero'){
+            } elseif ($data['type'] == 'Barbero') {
                 $branchrule = BranchRule::whereHas('rule', function ($query) {
                     $query->where('type', 'Tiempo');
                 })
-                ->where('branch_id', $data['branch_id'])
-                ->first();
+                    ->where('branch_id', $data['branch_id'])
+                    ->first();
 
-            $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
-                ->where('branch_rule_id', $branchrule->id)
-                ->where('professional_id', $data['professional_id'])
-                ->first();
-            
+                $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())
+                    ->where('branch_rule_id', $branchrule->id)
+                    ->where('professional_id', $data['professional_id'])
+                    ->first();
+
                 if ($existencia && $existencia->estado != 0) {
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
@@ -314,8 +314,7 @@ class NotificationController extends Controller
                     $branch->notifications()->save($notification);
                 }
                 return response()->json(['msg' => 'Notifications creada correctamente'], 200);
-            }
-            else {
+            } else {
                 $notification = new Notification();
                 $notification->professional_id = $data['professional_id'];
                 $notification->tittle = $data['tittle'];
@@ -450,9 +449,9 @@ class NotificationController extends Controller
             //funcion
             $phone = $data['telefone_client'];
             $token = 'EAAagNvvUedwBOZBRlNnV1vpITV9yY021G4IrEy6UJqoB7ErYIA13abKyZA54ZBWm64KS9PTZBaRYBh2zWLn594NZBcPMjt2R14Cx3IB6nOfpfyZBH6a6mNeVxDZC3q6GbBZAs4ZAFI0ZChhY957058Y7tk20s72Se2mk9unBNrfdc7eapXtI9KxWu62mE43lIxpsR3Ob7lwO7ZByB6ZBaslLlQ7JgeqXb7IZD';
-          //  $tokenNEW = 'EAARHBCxovkoBOzeY2mavELTq6ZBbfCYVYDqDhZCsWoiqxk9qAMymnsqPVfoMd7rIWqWzL1IDZCdCOvRTigNVguLQV14xuaU5qIpnqAiAsZAkZBn5MQR4XdHa9tHj2Gf1I3Qmxll4TNYlIKBHqfpvoqsou1Ip2hPGnSo2HhoYwdqnfYSl68QAnHdH3FLuQJPhiggZDZD';
-         //$whatsappBusinessId = '61568543272906'; 
-         
+            //  $tokenNEW = 'EAARHBCxovkoBOzeY2mavELTq6ZBbfCYVYDqDhZCsWoiqxk9qAMymnsqPVfoMd7rIWqWzL1IDZCdCOvRTigNVguLQV14xuaU5qIpnqAiAsZAkZBn5MQR4XdHa9tHj2Gf1I3Qmxll4TNYlIKBHqfpvoqsou1Ip2hPGnSo2HhoYwdqnfYSl68QAnHdH3FLuQJPhiggZDZD';
+            //$whatsappBusinessId = '61568543272906'; 
+
             // $carbon = new Carbon();
             $body = [
                 'messaging_product' => 'whatsapp',
@@ -467,7 +466,7 @@ class NotificationController extends Controller
             ];
 
             $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
-           // $response = Http::withToken($token)->post("https://graph.facebook.com/v21.0/472310509300893/messages", $body);
+            // $response = Http::withToken($token)->post("https://graph.facebook.com/v21.0/472310509300893/messages", $body);
             Log::info($response);
 
             return response()->json("Este es el número de celular " . $data['telefone_client'], 200);
@@ -489,8 +488,8 @@ class NotificationController extends Controller
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
-    
-    
+
+
     public function notification_truncate(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
@@ -720,7 +719,7 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
-    
+
     public function professional_show(Request $request)
     {
         Log::info('Dada una sucursal y un professional devuelve las notificaciones');
@@ -1188,6 +1187,187 @@ class NotificationController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al eliminar la notificacion"], 500);
+        }
+    }
+
+    public function whatsapp_notification_remember(Request $request)
+    {
+        // Captura el parámetro "codigo" de la URL
+        $codigo = $request->query('codigo');
+
+        // Verifica si el código es válido
+        if ($codigo !== 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            Log::warning('Intento de acceso no autorizado al método notification_recording', [
+                'codigo_proporcionado' => $codigo,
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
+
+        try {
+            Log::info("Obteniendo clientes atendidos en un día específico sin reservaciones recientes");
+
+            // Obtener la fecha actual
+            $fechaActual = Carbon::today()->toDateString(); // Formato: "YYYY-MM-DD"
+
+            // Obtener la fecha específica (hace 15 días)
+            $fechaEspecifica = Carbon::today()->subDays(15)->toDateString(); // Hace 15 días
+
+            // Obtener los clientes atendidos en el día específico (hace 15 días)
+            $clientesDiaEspecifico = Reservation::whereDate('data', $fechaEspecifica)
+                ->with([
+                    'car.clientProfessional.client' => function ($query) {
+                        $query->select('id', 'name', 'phone');
+                    },
+                    'branch' => function ($query) {
+                        $query->select('id', 'name'); // Incluir el nombre de la sucursal
+                    }
+                ])
+                ->get()
+                ->map(function ($reservation) {
+                    return [
+                        'client' => $reservation->car->clientProfessional->client,
+                        'branch' => $reservation->branch, // Incluir la sucursal
+                    ];
+                })
+                ->unique('client.id'); // Evitar duplicados por cliente
+
+            // Filtrar los clientes que no han tenido reservaciones desde el día específico hasta la fecha actual
+            $clientesFiltrados = $clientesDiaEspecifico->filter(function ($item) use ($fechaEspecifica, $fechaActual) {
+                $client = $item['client'];
+
+                // Verificar si el cliente tiene reservaciones desde el día específico hasta la fecha actual
+                $tieneReservacionesRecientes = Reservation::whereHas('car.clientProfessional.client', function ($query) use ($client) {
+                    $query->where('id', $client->id);
+                })
+                    ->whereDate('data', '>', $fechaEspecifica) // Reservaciones después del día específico
+                    ->whereDate('data', '<=', $fechaActual) // Hasta la fecha actual
+                    ->exists();
+
+                // Devolver solo los clientes que NO tienen reservaciones en ese período
+                return !$tieneReservacionesRecientes;
+            });
+
+            // Recorrer los clientes, formatear los datos y enviar notificaciones en un solo ciclo
+            $clientesFinales = $clientesFiltrados->map(function ($item) {
+                // Formatear los datos del cliente
+                $cliente = [
+                    'id' => $item['client']->id,
+                    'name' => $item['client']->name,
+                    'phone' => $item['client']->phone,
+                    'branch' => $item['branch']->name, // Nombre de la sucursal
+                ];
+
+                // Crear el mensaje personalizado
+                $mensaje = "Estimado {$cliente['name']}, llevas ya un tiempo sin visitar la sucursal {$cliente['branch']}.";
+
+                // Enviar el WhatsApp
+                $envioExitoso = $this->enviarWhatsApp($cliente['phone'], $mensaje);
+
+                // Registrar el resultado
+                if ($envioExitoso) {
+                    Log::info("Notificación enviada correctamente a {$cliente['name']} ({$cliente['phone']})");
+                } else {
+                    Log::warning("Error al enviar notificación a {$cliente['name']} ({$cliente['phone']})");
+                }
+
+                // Retornar los datos del cliente
+                return $cliente;
+            })->values()->toArray();
+
+            return response()->json([
+                'msg' => 'Proceso de notificación completado',
+                //'clientes' => $clientesFinales,
+            ], 200);
+        } catch (\Throwable $th) {
+            Log::error('Error al obtener los clientes: ' . $th->getMessage(), [
+                'exception' => $th,
+            ]);
+            return response()->json(['msg' => 'Error interno del sistema'], 500);
+        }
+    }
+
+    /*protected function enviarWhatsApp($phone, $message)
+    {
+        try {
+            // Asegúrate de que el número esté en el formato correcto
+            if (strpos($phone, 'whatsapp:') === false) {
+                $phone = 'whatsapp:' . $phone; // Prepend 'whatsapp:' si no está presente
+            }
+
+            Log::info('Enviando WhatsApp al número: ' . $phone); // Verificar el valor del teléfono
+
+            $twilioSid = env('TWILIO_SID');
+            $twilioToken = env('TWILIO_AUTH_TOKEN');
+            $twilioWhatsAppNumber = env('TWILIO_WHATSAPP_NUMBER');
+            $recipientNumber = $phone;
+            $message = $message;
+
+            try {
+                $twilio = new Client($twilioSid, $twilioToken);
+
+                $twilio->messages->create(
+                    $recipientNumber,
+                    [
+                        "from" => "whatsapp:+" . $twilioWhatsAppNumber,
+                        "body" => $message,
+                    ]
+                );
+
+                return back()->with(['success' => 'WhatsApp message sent successfully!']);
+            } catch (Exception $e) {
+                return back()->with(['error' => $e->getMessage()]);
+            }
+        } catch (\Throwable $th) {
+            Log::error('Excepción al enviar WhatsApp a ' . $phone . ': ' . $th->getMessage());
+            return false;
+        }
+    }*/
+
+    protected function enviarWhatsApp($phone)
+    {
+        $twilioSid = env('TWILIO_SID');
+        $twilioToken = env('TWILIO_AUTH_TOKEN');
+        $twilioWhatsAppNumber = env('TWILIO_WHATSAPP_NUMBER');
+        $recipientNumber = $phone;
+        //$message = 'Usted va ser atendido aproximadamente en 3 minutos';
+
+        Log::info('Twilio SID: ' . $twilioSid);
+        Log::info('Twilio Token: ' . $twilioToken);
+        Log::info('Twilio WhatsApp Number: ' . $twilioWhatsAppNumber);
+        Log::info('Recipient Number inicial: ' . $recipientNumber);
+
+        if (empty($recipientNumber)) {
+            return back()->with(['error' => 'El número de teléfono es obligatorio.']);
+        }
+
+        // Asegúrate de que el número de teléfono esté en el formato correcto
+        if (strpos($recipientNumber, 'whatsapp:') === false) {
+            $recipientNumber = 'whatsapp:' . $recipientNumber;
+        }
+
+        try {
+            $twilio = new Client($twilioSid, $twilioToken);
+
+            // Enviar un mensaje usando la plantilla aprobada
+            $twilio->messages->create(
+                $recipientNumber,
+                [
+                    "from" => "whatsapp:56931435036", // Número de WhatsApp de Twilio
+                    "template_sid" => "HXabc5167c48681a4eaeeff4323505064a", // SID de la plantilla
+                    "contentSid" => "HXabc5167c48681a4eaeeff4323505064a", // SID de la plantilla
+                    "contentVariables" => json_encode([
+                        "1" => "3" // Parámetro dinámico
+                    ]),
+                ]
+            );
+
+            Log::info('Message sent successfully'. $twilio);
+
+            return back()->with(['success' => 'WhatsApp message sent successfully!']);
+        } catch (Exception $e) {
+            Log::error('Error sending WhatsApp message: ' . $e->getMessage());
+            return back()->with(['error' => $e->getMessage()]);
         }
     }
 }

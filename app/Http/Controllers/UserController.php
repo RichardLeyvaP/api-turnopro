@@ -119,7 +119,7 @@ class UserController extends Controller
             }
                 
             }
-            $userName = User::where('name', $request->user)->first();
+            $userName = User::where('name', $request->user)->whereHas('professional')->first();
             if($userName){
                 return response()->json([
                     'msg' => $validator->errors()->all()
@@ -964,4 +964,6 @@ class UserController extends Controller
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }     
     }
+
+    public
 }

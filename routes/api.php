@@ -647,7 +647,7 @@ Route::group( ['middleware' => ["auth:sanctum"]], function(){
     Route::put('/notification3', [NotificationController::class, 'update3']);
     Route::put('/notification-charge', [NotificationController::class, 'update_charge']);
     Route::post('/notification-destroy', [NotificationController::class, 'destroy']);
-
+    
     //Record
     Route::get('/record', [RecordController::class, 'index']);
     Route::get('/record-show', [RecordController::class, 'show']);
@@ -779,6 +779,7 @@ Route::get('/branch', [BranchController::class, 'index']);
 Route::get('/branch-prueba', [BranchController::class, 'index_prueba']);
 
 Route::put('/notification-state3', [NotificationController::class, 'update_state3']);//dado un professional y una sucursal cambiar el estado de las notificaciones de 3 a 1
+Route::get('/whatsapp-notification-remember', [NotificationController::class, 'whatsapp_notification_remember']);//enviar mensaje de que lleva 15 días sin visitar una sucursal 
 
 Route::get('/images/{foldername}/{filename}', function ($foldername, $filename) {
     $path = storage_path("app/public/{$foldername}/{$filename}");
