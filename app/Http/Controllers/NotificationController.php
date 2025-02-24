@@ -1173,7 +1173,7 @@ class NotificationController extends Controller
             $fechaActual = Carbon::today()->toDateString(); // Formato: "YYYY-MM-DD"
 
             // Obtener la fecha específica (hace 15 días)
-            $fechaEspecifica = Carbon::today()->subDays(15)->toDateString(); // Hace 15 días
+            $fechaEspecifica = Carbon::today()->subDays(20)->toDateString(); // Hace 15 días
 
             // Obtener los clientes atendidos en el día específico (hace 15 días)
             $clientesDiaEspecifico = Reservation::whereDate('data', $fechaEspecifica)
