@@ -964,6 +964,4 @@ class UserController extends Controller
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }     
     }
-
-    public
 }

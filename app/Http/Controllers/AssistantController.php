@@ -8,12 +8,21 @@ use App\Models\Reservation;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\Tail;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class AssistantController extends Controller
 {
+    
+    private NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function professional_branch_notif_queque_ANTERIOR_OPTIMIZADO(Request $request)
     {
         Log::info('Dada una sucursal y un professional devuelve las notificaciones');
@@ -321,6 +330,7 @@ class AssistantController extends Controller
                     'client_id' => intval($client->id),
                     'professional_id' => intval($data['professional_id']),
                     'attended' => intval($tail->attended),
+                    'notification' => intval($tail->notification),
                     'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
                     'clock' => intval($tail->clock),
                     'timeClock' => intval($tail->timeClock),
@@ -332,6 +342,25 @@ class AssistantController extends Controller
 
                 ];
             })->values();
+
+            if ($branchTails->isNotEmpty() && $branchTails->first()['attended'] == 0) {
+                $firstReservation = $branchTails->first();
+                $client_name = $firstReservation['client_name'];
+                $telefone_client = $firstReservation['telefone_client'];
+                if ($firstReservation['notification'] == 0) {
+                    $reservation_id = $firstReservation['reservation_id'];
+
+                    $send = $this->notificationService->sendWhatsApp($telefone_client, $client_name);
+                    if ($send == true) {
+                        Log::info("Notificación enviada correctamente a {$client_name}:({$telefone_client})");
+                    } else {
+                        Log::warning("Error al enviar notificación a {$client_name}:({$telefone_client})");
+                    }
+            
+                // Actualizar el campo notification en la tabla tails
+                Tail::where('reservation_id', $reservation_id)->update(['notification' => 1]);
+                }
+            }
             return response()->json(['notifications' => $notifications, 'tail' => $branchTails], 200);
         } catch (\Throwable $th) {
             Log::error($th);

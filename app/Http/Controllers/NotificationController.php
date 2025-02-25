@@ -10,6 +10,7 @@ use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
 use App\Models\Reservation;
+use App\Services\NotificationService;
 use Twilio\Rest\Client;
 use Carbon\Carbon;
 use Exception;
@@ -19,6 +20,14 @@ use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
+
+    private NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+    
     public function index()
     {
         Log::info('entra a buscar las notificaciones por professional');
@@ -1224,7 +1233,7 @@ class NotificationController extends Controller
                 ];
 
                 // Enviar el WhatsApp
-                $envioExitoso = $this->enviarWhatsApp($cliente['phone'], $cliente['name'], $cliente['branch']);
+                $envioExitoso = $this->notificationService->sendWhatsAppRemember($cliente['phone'], $cliente['name'], $cliente['branch']);
 
                 // Registrar el resultado
                 if ($envioExitoso) {
@@ -1249,7 +1258,7 @@ class NotificationController extends Controller
         }
     }
 
-    protected function enviarWhatsApp($phone, $name, $branch)
+    /*protected function enviarWhatsApp($phone, $name, $branch)
     {
         $twilioSid = env('TWILIO_SID');
         $twilioToken = env('TWILIO_AUTH_TOKEN');
@@ -1290,5 +1299,5 @@ class NotificationController extends Controller
             Log::error('Error sending WhatsApp message: ' . $e->getMessage());
             return back()->with(['error' => $e->getMessage()]);
         }
-    }
+    }*/
 }

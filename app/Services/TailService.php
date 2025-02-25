@@ -19,11 +19,17 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class TailService
 {
 
-  
+    private NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     
        public function cola_branch_data_ANTERIOR($branch_id)
     {
@@ -478,6 +484,7 @@ class TailService
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
                 'attended' => $tail->attended,
+                'notification' => intval($tail->notification),
                     'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
                     'clock' => $tail->clock,
                     'timeClock' => $tail->timeClock,
@@ -489,6 +496,24 @@ class TailService
 
                 ];
             })->values();
+            if ($tails->isNotEmpty() && $tails->first()['attended'] == 0) {
+                $firstReservation = $tails->first();
+                $client_name = $firstReservation['client_name'];
+                $telefone_client = $firstReservation['telefone_client'];
+                if ($firstReservation['notification'] == 0) {
+                    $reservation_id = $firstReservation['reservation_id'];
+
+                    $send = $this->notificationService->sendWhatsApp($telefone_client, $client_name);
+                    if ($send == true) {
+                        Log::info("Notificación enviada correctamente a {$client_name}:({$telefone_client})");
+                    } else {
+                        Log::warning("Error al enviar notificación a {$client_name}:({$telefone_client})");
+                    }
+            
+                // Actualizar el campo notification en la tabla tails
+                Tail::where('reservation_id', $reservation_id)->update(['notification' => 1]);
+                }
+            }
             return $tails;
     }
     
