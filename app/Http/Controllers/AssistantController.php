@@ -345,9 +345,9 @@ class AssistantController extends Controller
 
             if ($branchTails->isNotEmpty() && $branchTails->first()['attended'] == 0) {
                 $firstReservation = $branchTails->first();
-                $client_name = $firstReservation['client_name'];
-                $telefone_client = $firstReservation['telefone_client'];
                 if ($firstReservation['notification'] == 0) {
+                    $client_name = $firstReservation['client_name'];
+                    $telefone_client = $firstReservation['telefone_client'];
                     $reservation_id = $firstReservation['reservation_id'];
 
                     $send = $this->notificationService->sendWhatsApp($telefone_client, $client_name);
