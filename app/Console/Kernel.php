@@ -140,6 +140,27 @@ class Kernel extends ConsoleKernel
             }
         })->dailyAt('07:00'); // Cuarta tarea a las 7:00 AM
 
+        // Definir la cuarta tarea-Actualizar la cola del dia
+        $schedule->call(function () {
+          $codigoGlobal = $this->codigoGlobal;
+       //   Log::info('Iniciando la tercera tarea programada.Actualizar la cola del dia');
+          // Crear un cliente HTTP
+          $client = new Client();
+          try {
+              // Hacer una solicitud GET a la tercera ruta completa de la API
+              $response = $client->get('https://api2.simplifies.cl/api/whatsapp-notification-remember?codigo=' . urlencode($codigoGlobal));
+
+              // Verificar la respuesta
+              if ($response->getStatusCode() == 200) {
+                 // Log::info('La solicitud a /reservation_tail se ejecutó correctamente.');
+              } else {
+                //  Log::error('Error al ejecutar la solicitud a /reservation_tail: ' . $response->getStatusCode());
+              }
+          } catch (Exception $e) {
+            //  Log::error('Excepción al hacer la solicitud a /reservation_tail: ' . $e->getMessage());
+          }
+      })->dailyAt('07:30'); // Cuarta tarea a las 7:00 AM
+
         // Definir Cierrede caja automaticos
         $schedule->call(function () {
            // Log::info('Iniciando tarea programada.Realizar cierre de caja del dia anterior');
