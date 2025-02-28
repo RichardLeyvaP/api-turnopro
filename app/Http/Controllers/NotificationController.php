@@ -27,7 +27,7 @@ class NotificationController extends Controller
     {
         $this->notificationService = $notificationService;
     }
-    
+
     public function index()
     {
         Log::info('entra a buscar las notificaciones por professional');
@@ -1170,7 +1170,7 @@ class NotificationController extends Controller
         $codigo = $request->query('codigo');
 
         // Verifica si el código es válido
-         if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
             Log::info("Código no coincide");
             return response()->json(['msg' => 'Código inválido'], 403);
         }
@@ -1202,7 +1202,9 @@ class NotificationController extends Controller
                         'branch' => $reservation->branch, // Incluir la sucursal
                     ];
                 })
-                ->unique('client.id'); // Evitar duplicados por cliente
+                ->unique(function ($item) {
+                    return $item['client']->phone; // Agrupar por número de teléfono
+                });
 
             // Filtrar los clientes que no han tenido reservaciones desde el día específico hasta la fecha actual
             $clientesFiltrados = $clientesDiaEspecifico->filter(function ($item) use ($fechaEspecifica, $fechaActual) {
@@ -1222,8 +1224,15 @@ class NotificationController extends Controller
                 return !$tieneReservacionesRecientes;
             });
 
+            // Calcular el tiempo máximo de ejecución en función de la cantidad de clientes y el intervalo de 2 segundos
+            $clientes = $clientesFiltrados->count();
+            $tiempoEstimado = ($clientes + 2) * 2;
+            set_time_limit($tiempoEstimado); // Establecer el límite de ejecución dinámicamente
+            Log::info("Total de clientes: {$clientes}");
+            Log::info("Tiempo estimado: {$tiempoEstimado}");
             // Recorrer los clientes, formatear los datos y enviar notificaciones en un solo ciclo
-            $clientesFinales = $clientesFiltrados->map(function ($item) {
+            
+               $clientesFinales = $clientesFiltrados->map(function ($item) {
                 // Formatear los datos del cliente
                 $cliente = [
                     'id' => $item['client']->id,
@@ -1234,13 +1243,16 @@ class NotificationController extends Controller
 
                 // Enviar el WhatsApp
                 $envioExitoso = $this->notificationService->sendWhatsAppRemember($cliente['phone'], $cliente['name'], $cliente['branch']);
-
                 // Registrar el resultado
                 if ($envioExitoso) {
                     Log::info("Notificación enviada correctamente a {$cliente['name']} ({$cliente['phone']})");
+
                 } else {
                     Log::warning("Error al enviar notificación a {$cliente['name']} ({$cliente['phone']})");
                 }
+
+                // Pausar entre envíos
+                sleep(2); // Pausar 2 segundos entre cada notificación
 
                 // Retornar los datos del cliente
                 return $cliente;
