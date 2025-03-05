@@ -1139,8 +1139,9 @@ class ReservationController extends Controller
         try {
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
-
             ]);
+            Log::info("Anunciando llegada reserva:");
+            Log::info($data['reservation_id']);
             $reservacion = Reservation::find($data['reservation_id']);
             //$professional = $reservacion->car->clientProfessional->professional;
             //$branch_id = $reservacion->branch_id;
@@ -1155,7 +1156,6 @@ class ReservationController extends Controller
 
             // Calcular la diferencia en minutos
             $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
-
             // Verificar si la diferencia es exactamente 20 minutos
             if ($diferenciaEnMinutos <= 20){
                 $reservacion->confirmation = 4;
