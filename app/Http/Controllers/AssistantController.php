@@ -290,7 +290,7 @@ class AssistantController extends Controller
             ->join('reservations', 'tails.reservation_id', '=', 'reservations.id')
             ->orderByRaw('reservations.confirmation = 4 DESC')
             ->orderBy('reservations.from_home', 'desc')
-            ->orderByRaw('CASE WHEN reservations.from_home = 0 THEN reservations.created_at ELSE reservations.updated_at END ASC')
+            ->orderByRaw('CASE WHEN reservations.from_home = 0 THEN reservations.created_at ELSE reservations.announced END ASC')
             ->select('tails.*')  // Selecciona sólo las columnas del modelo Tail
             ->with('reservation') // Carga la relación reservation
             ->get();

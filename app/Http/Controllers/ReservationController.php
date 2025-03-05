@@ -1159,6 +1159,7 @@ class ReservationController extends Controller
             // Verificar si la diferencia es exactamente 20 minutos
             if ($diferenciaEnMinutos <= 20){
                 $reservacion->confirmation = 4;
+                $reservacion->announced = now();
                 $reservacion->save();
                 $branch_id = $reservacion->branch_id;
                 $professional_id = $reservacion->car->clientProfessional->professional_id;
