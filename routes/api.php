@@ -608,9 +608,11 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
 
     //BranchRuleProfessional
     Route::get('/branchruleprofessional', [BranchRuleProfessionalController::class, 'index']);
+    Route::get('/branchruleprofessional-data', [BranchRuleProfessionalController::class, 'index_branch_data']);
     Route::get('/branchruleprofessional-show', [BranchRuleProfessionalController::class, 'show']);
     Route::post('/branchruleprofessional', [BranchRuleProfessionalController::class, 'store']);
     Route::put('/branchruleprofessional', [BranchRuleProfessionalController::class, 'update']);
+    Route::put('/branchruleprofessional-state', [BranchRuleProfessionalController::class, 'update_rule_state']);
     Route::post('/branchruleprofessional-destroy', [BranchRuleProfessionalController::class, 'destroy']);
     Route::post('/storeByType', [BranchRuleProfessionalController::class, 'storeByType']); //registrar convivencia x el tipo de rule
     Route::post('/storeByTypeId', [BranchRuleProfessionalController::class, 'storeByTypeId']); //registrar convivencia x el id de rule
