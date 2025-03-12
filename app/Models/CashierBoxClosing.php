@@ -5,31 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Payment extends Model
+class CashierBoxClosing extends Model
 {
     use HasFactory;
 
-    public function car()
-    {
-        return $this->belongsTo(Car::class);
-    }
+    protected $table = 'cashier_box_closings'; // Nombre de la tabla
 
+    /**
+     * Obtener la sucursal asociada al cierre de caja.
+     */
     public function branch()
     {
         return $this->belongsTo(Branch::class);
     }
 
+    /**
+     * Obtener el usuario asociado al cierre de caja.
+     */
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
-
-    protected $casts = [
-        'cash' => 'double',
-        'creditCard' => 'double',
-        'debit' => 'double',
-        'transfer' => 'double',
-        'other' => 'double',
-        'cardGif' => 'double'
-    ];
 }

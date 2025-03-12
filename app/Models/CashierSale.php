@@ -16,7 +16,7 @@ class CashierSale extends Model
 
     public function professional()
     {
-        return $this->belongsTo(Professional::class);
+        return $this->belongsTo(Professional::class)->withTrashed();
     }
 
     public function productStore()

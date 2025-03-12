@@ -131,10 +131,12 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/productstore', [ProductStoreController::class, 'index']);
     //Route::get('/productstore-show', [ProductStoreController::class, 'show']);
     Route::get('/productstore-show', [ProductStoreController::class, 'show_branch']);
+    Route::get('/productstore-show-state', [ProductStoreController::class, 'show_branch_state']);
     Route::get('/show-stores-products', [ProductStoreController::class, 'showStoresProducts']); //devolver los products y los stores
     Route::get('/productstore-show-academy-web', [ProductStoreController::class, 'product_show_academy_web']); //dada una branch devuelve los productos de los almacenes que hay en el
     Route::post('/productstore', [ProductStoreController::class, 'store']);
     Route::put('/productstore', [ProductStoreController::class, 'update']);
+    Route::put('/productstore-exit', [ProductStoreController::class, 'subtractProductExit']);
     Route::get('/category_products', [ProductStoreController::class, 'category_products']); //dada una branch y una categiría devolver los pructos
     Route::post('/move-product-store', [ProductStoreController::class, 'move_product_store']);
     Route::get('/move-products', [ProductStoreController::class, 'movement_products']); //devolver los movientos de productos de una branch dada en eun año dado
@@ -333,6 +335,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
 
     //BoxClose
     Route::post('/closebox', [BoxCloseController::class, 'store']);
+    Route::post('/closebox-cashier', [BoxCloseController::class, 'store_cashier']);
     Route::post('/bonus-professional', [BoxCloseController::class, 'store1']); //para pagar a un barbero en especifico de un dia especifico, de una sucursal específica
     Route::post('/box-close-new', [BoxCloseController::class, 'box_close_new']); //para pagar ejecutar cierre de caja para agregar retenciones
     Route::get('/closebox', [BoxCloseController::class, 'index']);

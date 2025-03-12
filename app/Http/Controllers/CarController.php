@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\BranchProfessional;
 use App\Models\Business;
 use App\Models\Car;
+use App\Models\CashierBoxClosing;
 use App\Models\CashierSale;
 use App\Models\ClientProfessional;
 use App\Models\Comment;
@@ -1440,21 +1441,25 @@ class CarController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required|numeric',
+                'data' => 'nullable|date'
             ]);
 
             Log::info("Recibiendo request para branch_cars", $data);
-
+            $userId = $request->user()->id;
             // Cargar la sucursal solo si es necesaria para el proceso
             $branch = Branch::find($data['branch_id']);
             if (!$branch) {
                 return response()->json(['msg' => 'Sucursal no encontrada'], 404);
             }
 
+            // Asignar la fecha actual si data no está presente
+            $today = $data['data'] ?? Carbon::now();
+
             // Consultar todos los carros de la sucursal para el día actual con relaciones necesarias
-            $cars = Car::whereHas('reservation', function ($query) use ($data) {
+            $cars = Car::whereHas('reservation', function ($query) use ($data, $today) {
                 $query->where('branch_id', $data['branch_id'])
-                    ->whereDate('data', Carbon::now())
+                    ->whereDate('data', $today)
                     ->whereIn('confirmation', [2, 4]);
             })
             ->with([
@@ -1495,30 +1500,34 @@ class CarController extends Controller
                     'professional_id' => $professional->id,
                     'image_url' => $professional->image_url ?? "professionals/default_profile.jpg",
                     'state' => (int)$state,
-                    'updated_at' => optional($tail)->updated_at ?? '2024-09-13 10:10:00'
+                    'updated_at' => optional($tail)->updated_at ?? '2024-09-13 10:10:00',
+                    'user_id' => $car->user_id
                 ];
             })
             ->sortBy('updated_at')
             ->sortBy('state')
             ->values();
-
+            $cashierclosebox = CashierBoxClosing::where('branch_id', $data['branch_id'])
+            ->where('user_id', $userId)
+            ->whereDate('data', $today)
+            ->first();
             // Consultar caja, pagos y ventas de la caja
             $box = Box::with('boxClose')
                     ->where('branch_id', $data['branch_id'])
-                    ->whereDate('data', Carbon::now())
+                    ->whereDate('data', $today)
                     ->first();
 
             $payments = Payment::where('branch_id', $data['branch_id'])
-                            ->whereDate('created_at', Carbon::now())
+                            ->whereDate('created_at', $today)
                             ->get();
 
             $cashierSales = CashierSale::where('branch_id', $data['branch_id'])
-                                    ->whereDate('data', Carbon::now())
+                                    ->whereDate('data', $today)
                                     ->get();
 
             // Obtener bonos del día actual
             $bonus = ProfessionalPayment::where('branch_id', $data['branch_id'])
-                                        ->whereDate('date', Carbon::now())
+                                        ->whereDate('date', $today)
                                         ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
                                         ->sum('amount');
 
@@ -1527,7 +1536,8 @@ class CarController extends Controller
                 'box' => $box,
                 'payments' => $payments,
                 'cashierSales' => $cashierSales,
-                'bonusPay' => $bonus
+                'bonusPay' => $bonus,
+                'cashierclosebox' => $cashierclosebox
             ], 200, [], JSON_NUMERIC_CHECK);
 
         } catch (\Throwable $th) {

@@ -243,6 +243,7 @@ class PaymentController extends Controller
     {
         try {
             $payment = Payment::where('car_id', $request->car_id)->first();
+            $userId = $request->user()->id;
             if ($payment) {
                 Log::info("Pago del carro ya ha sido registrado anteriormente");
                 Log::info($request->car_id);
@@ -318,6 +319,7 @@ class PaymentController extends Controller
             $payment->other = $data['other'];
             $payment->cardGif = $data['cardGift'];
             $payment->branch_id = $request->branch_id;
+            $payment->user_id = $userId;
             $payment->save();
 
             $finance = Finance::orderBy('control', 'desc')->first();
@@ -424,7 +426,7 @@ class PaymentController extends Controller
     {
         try {
 
-            Log::info("Editar");
+            Log::info("Pagar venta de productos");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'cash' => 'nullable|numeric',
@@ -438,7 +440,7 @@ class PaymentController extends Controller
             ]);     
             $ids = $request->input('ids');
            $branch = Branch::where('id', $request->branch_id)->first();
-
+           $userId = $request->user()->id;
             Log::info($data['cardGift']);
             if ($data['cardGift'] != 0) {
                 Log::info($data['code']);
@@ -460,6 +462,7 @@ class PaymentController extends Controller
             $payment->other = $data['other'];
             $payment->cardGif = $data['cardGift'];
             $payment->branch_id = $request->branch_id;
+            $payment->user_id = $userId;
             $payment->save();
 
             CashierSale::whereIn('id', $ids)->update(['pay' => 1]);

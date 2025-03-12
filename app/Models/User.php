@@ -60,4 +60,24 @@ class User extends Authenticatable
     {
         return $this->belongsTo(CardGiftUser::class);
     }
+
+    public function cars()
+    {
+        return $this->hasMany(Car::class);
+    }
+
+    public function boxCloses()
+    {
+        return $this->hasMany(BoxClose::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function cashiersales()
+    {
+        return $this->hasMany(CashierSale::class);
+    }
 }

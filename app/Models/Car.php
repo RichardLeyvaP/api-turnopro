@@ -48,6 +48,11 @@ class Car extends Model
         return $this->belongsTo(OperationTip::class, 'operation_tip_id');
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
     protected $casts = [
         'amount' => 'double'
     ];

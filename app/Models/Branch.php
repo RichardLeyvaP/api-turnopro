@@ -118,4 +118,10 @@ class Branch extends Model
         return $this->hasMany(Retention::class);
     }
 
+     // Relación con la tabla cashier_box_closings
+     public function cashierBoxClosings()
+     {
+         return $this->hasMany(CashierBoxClosing::class);
+     }
+
 }

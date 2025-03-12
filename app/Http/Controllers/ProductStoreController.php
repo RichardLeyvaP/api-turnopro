@@ -12,6 +12,7 @@ use App\Traits\ProductExitTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ProductStoreController extends Controller
@@ -246,6 +247,176 @@ class ProductStoreController extends Controller
         }
     }
 
+    public function show_branch_state(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'nullable|numeric'
+            ]);
+            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el de una branch");
+            if ($data['branch_id'] != 0) {
+                Log::info("No es Administrador");
+                $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data){
+                    $query->where('branch_id', $data['branch_id']);
+                })->where('product_exit', '>', 0)->whereHas('product', function ($query) {
+                    $query->where('status_product', 'no en venta'); // Filtro para status_product
+                })->with('product', 'store')->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        //'product_quantity' => $query->product_quantity,
+                        'product_exit' => $query->product_exit,
+                        'product_id' => $query->product_id,
+                        'store_id' => $query->store_id,
+                        'stock_depletion' => $query->stock_depletion,
+                        'name' => $query->product->name,
+                        'reference' => $query->product->reference,
+                        'code' => $query->product->code,
+                        'status_product' => $query->product->status_product,
+                        'sale_price' => $query->product->sale_price,
+                        'purchase_price' => $query->product->purchase_price,
+                        'image_product' => $query->product->image_product,
+                        'direccionStore' => $query->store->address,
+                        'storetReference' => $query->store->reference,
+                        'quantity' => 0
+                    ];
+                });
+            }else {
+                $productStore = ProductStore::with('product', 'store')->where('product_exit', '>', 0)->whereHas('product', function ($query) {
+                    $query->where('status_product', 'no en venta'); // Filtro para status_product
+                })->get()->map(function ($query) {
+                    return [
+                        'id' => $query->id,
+                        //'product_quantity' => $query->product_quantity,
+                        'product_exit' => $query->product_exit,
+                        'product_id' => $query->product_id,
+                        'store_id' => $query->store_id,
+                        'stock_depletion' => $query->stock_depletion,
+                        'name' => $query->product->name,
+                        'reference' => $query->product->reference,
+                        'code' => $query->product->code,
+                        'status_product' => $query->product->status_product,
+                        'sale_price' => $query->product->sale_price,
+                        'purchase_price' => $query->product->purchase_price,
+                        'image_product' => $query->product->image_product,
+                        'direccionStore' => $query->store->address,
+                        'storetReference' => $query->store->reference, 
+                        'quantity' => 0                   
+                    ];
+                });
+            }
+            
+            return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
+        }
+    }
+
+    /*public function subtractProductExit(Request $request)
+    {
+        // Validar la solicitud
+        $request->validate([
+            'id' => 'required|integer|exists:product_store,id',
+            'quantity' => 'required|integer|min:1', // La cantidad debe ser un entero positivo
+        ]);
+
+        // Obtener la cantidad a restar
+        $quantityToSubtract = $request->input('quantity');
+        $id = $request->input('id');
+
+        // Iniciar una transacción de base de datos
+        DB::beginTransaction();
+
+        try {
+            // Obtener el registro de ProductStore por su ID
+            $productStore = ProductStore::findOrFail($id);
+
+            // Calcular el nuevo valor de product_exit
+            $newProductExit = max($productStore->product_exit - $quantityToSubtract, 0);
+
+            // Actualizar el campo product_exit
+            $productStore->product_exit = $newProductExit;
+
+            // Guardar los cambios en la base de datos
+            $productStore->save();
+
+            // Confirmar la transacción
+            DB::commit();
+
+            // Respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'message' => "Se restaron $quantityToSubtract unidades correctamente.",
+                'new_product_exit' => $newProductExit,
+            ]);
+        } catch (\Exception $e) {
+            // Revertir la transacción en caso de error
+            DB::rollBack();
+
+            // Log del error
+            Log::error('Error al restar unidades de product_exit: ' . $e->getMessage());
+
+            // Respuesta de error
+            return response()->json([
+                'success' => false,
+                'message' => 'Hubo un error al restar las unidades.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }*/
+    public function subtractProductExit(Request $request)
+    {
+        // Validar la solicitud
+        $request->validate([
+            'changes' => 'required|array',
+            'changes.*.id' => 'required|integer|exists:product_store,id',
+            'changes.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        // Obtener los cambios
+        $changes = $request->input('changes');
+
+        // Iniciar una transacción de base de datos
+        DB::beginTransaction();
+
+        try {
+            foreach ($changes as $change) {
+                // Obtener el registro de ProductStore por su ID
+                $productStore = ProductStore::findOrFail($change['id']);
+
+                // Calcular el nuevo valor de product_exit
+                $newProductExit = max($productStore->product_exit - $change['quantity'], 0);
+
+                // Actualizar el campo product_exit
+                $productStore->product_exit = $newProductExit;
+
+                // Guardar los cambios en la base de datos
+                $productStore->save();
+            }
+
+            // Confirmar la transacción
+            DB::commit();
+
+            // Respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'message' => 'Cantidades actualizadas correctamente.',
+            ]);
+        } catch (\Exception $e) {
+            // Revertir la transacción en caso de error
+            DB::rollBack();
+
+            // Log del error
+            Log::error('Error al restar unidades de product_exit: ' . $e->getMessage());
+
+            // Respuesta de error
+            return response()->json([
+                'success' => false,
+                'message' => 'Hubo un error al actualizar las cantidades.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
     public function academy_show(Request $request)
     {
         try {

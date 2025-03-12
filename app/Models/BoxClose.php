@@ -13,6 +13,11 @@ class BoxClose extends Model
         return $this->belongsTo(Box::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
     protected $casts = [
         'totalMount' => 'double',
         'totalService' => 'double',
