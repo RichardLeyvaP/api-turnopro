@@ -371,11 +371,12 @@ class ProductStoreController extends Controller
             'changes' => 'required|array',
             'changes.*.id' => 'required|integer|exists:product_store,id',
             'changes.*.quantity' => 'required|integer|min:1',
+            'branch_id' => 'required|integer|exists:branches,id',
         ]);
 
         // Obtener los cambios
         $changes = $request->input('changes');
-
+        $branch_id = $request->input('branch_id');
         // Iniciar una transacción de base de datos
         DB::beginTransaction();
 
@@ -392,6 +393,7 @@ class ProductStoreController extends Controller
 
                 // Guardar los cambios en la base de datos
                 $productStore->save();
+                $this->actualizarProductExit($productStore, $branch_id);  
             }
 
             // Confirmar la transacción
