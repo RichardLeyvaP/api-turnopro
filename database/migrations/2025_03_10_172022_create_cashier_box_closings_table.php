@@ -25,11 +25,11 @@ return new class extends Migration
             $table->decimal('totalCardGif', 15, 2)->nullable(); // Total en tarjetas de regalo
             $table->decimal('existence', 15, 2)->nullable(); // Existencia
             $table->decimal('cashFound', 15, 2)->nullable(); // Efectivo encontrado
-            $table->decimal('extraccion', 15, 2)->nullable(); // Extracción
+            $table->decimal('extraction', 15, 2)->nullable(); // Extracción
             $table->unsignedBigInteger('branch_id')->nullable(); // ID de la sucursal
             $table->date('data')->nullable()->useCurrent(); // Datos adicionales en formato JSON
             $table->decimal('adelanto', 15, 2)->nullable(); // Adelanto
-            $table->decimal('bonos', 15, 2)->nullable(); // Bonos
+            $table->decimal('totalBonus', 15, 2)->nullable(); // Bonos
             $table->decimal('diferencia', 15, 2)->nullable(); // Diferencia
             $table->unsignedBigInteger('user_id')->nullable(); // ID del usuario
             $table->text('description')->nullable(); // Descripción del cierre de caja

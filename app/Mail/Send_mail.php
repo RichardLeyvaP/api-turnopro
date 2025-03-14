@@ -70,6 +70,11 @@ class Send_mail extends Mailable
      public $product;
      public $productstoreexist;
 
+     //propiedades adiciones boxclose parcial
+     public $boxcloseData;
+     public $cashierData;
+     public $nameProfessional;
+
 
     /**
      * Create a new message instance.
@@ -149,8 +154,12 @@ class Send_mail extends Mailable
                 'branch' => $this->branch,
                 'store' => $this->store,
                 'product' => $this->product,
-                'productstoreexist' => $this->productstoreexist
+                'productstoreexist' => $this->productstoreexist,
 
+                //propiedades adicionales cierre de caja parcial
+                'boxcloseData' => $this->boxcloseData,
+                'cashierData' => $this->cashierData,
+                'nameProfessional' => $this->nameProfessional,
 
             ]
         );

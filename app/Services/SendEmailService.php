@@ -152,6 +152,25 @@ class SendEmailService {
 
     }
 
+    public function emailBoxClosureParcial($client_email, $type,$branchBusinessName, $branchName, $boxData, $boxcloseData, $totalBonus, $cashierData, $nameProfessional )
+    {
+        $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
+        $template = 'cierre_de_caja_parcial';
+       
+
+              Log::info($client_email);
+              $mail = new Send_mail($logoUrl, '$client_name','','$data_reservation',$template,'$start_time','$branch_name',$type);
+              $mail->branchBusinessName = $branchBusinessName;
+              $mail->branchName = $branchName;
+              $mail->boxData = $boxData;
+              $mail->boxcloseData = $boxcloseData;
+              $mail->totalBonus = $totalBonus;
+              $mail->cashierData = $cashierData;
+              $mail->nameProfessional = $nameProfessional;
+              $this->sendEmail($client_email,$mail,'Cierre de Caja Parcial');
+
+    }
+
 
     //este configurarlo para el envio de cierre de caja del mes
     public function emailBoxClosureMonthly(
