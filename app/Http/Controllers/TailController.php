@@ -1000,7 +1000,7 @@ class TailController extends Controller
            // Llamada al método en el modelo para realizar la eliminación lógica
             Reservation::softDeleteExpiredReservations($data['branch_id'], $data['professional_id']);
 
-            return response()->json(['tail' => $this->tailService->tail_branch_professional($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
+            return response()->json(['tail' => $this->tailService->tail_branch_professional($data['branch_id'], $data['professional_id'])], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
