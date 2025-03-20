@@ -12,7 +12,7 @@
     <div style="text-align: left;">
         <strong>{{ $branch->business['name'] }}</strong><br>
         Sucursal: {{ $branch['name'] }}<br>
-        Fecha: {{ $box['data'] }}<br>
+        Fecha: {{ \Carbon\Carbon::parse($box['data'])->format('Y-m-d H:i') }}<br>
     </div>
 </div>
 
@@ -174,8 +174,12 @@
             <td style="padding: 5px; text-align: right; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;">{{ number_format(round($cashierData['difference'], 2), 2) }}</td>
         </tr>
         <tr style="border: 1.5px solid black;">
-            <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Descripción:</strong></td>
-            <td style="padding: 5px; text-align: right; line-height: 1;">{{ $cashierData['description'] ?? 0 }}</td>
+            <td style="padding: 5px; text-align: left; line-height: 1;" colspan="2"><strong>Descripción:</strong></td>
+        </tr>
+        <tr style="border: 1.5px solid black;">
+            <td style="padding: 5px; text-align: left; line-height: 1.5; word-wrap: break-word; white-space: normal;" colspan="2">
+                {{ $cashierData['description'] ?? 'Sin descripción' }}
+            </td>
         </tr>
     </table>
 @endif

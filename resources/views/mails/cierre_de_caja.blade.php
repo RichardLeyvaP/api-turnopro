@@ -251,9 +251,14 @@
                     </td>
                 </tr>
                 @if (isset($cashierData['description']) && $cashierData['description'])
-                    <tr>
-                        <td colspan="2"><strong>Descripción:</strong> {{ $cashierData['description'] ?? 0 }}</td>
-                    </tr>
+                <tr>
+                    <td colspan="2"><strong>Descripción:</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 5px; text-align: left; line-height: 1.5; word-wrap: break-word; white-space: normal;">
+                        <strong>Descripción:</strong> {{ $cashierData['description'] ?? 'Sin descripción' }}
+                    </td>
+                </tr>
                 @endif
             @endif
 
