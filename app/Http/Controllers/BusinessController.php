@@ -43,7 +43,7 @@ class BusinessController extends Controller
     public function business_branch_academy()
     {
         try {
-            $business = Business::with('branches', 'enrollments')->first();
+            $business = Business::with('branches')->first();
 
             $branches = $business->branches;
             $enrollments = $business->enrollments;
@@ -69,7 +69,7 @@ class BusinessController extends Controller
                 }
             }
 
-            // Agregar las enrollments al resultado
+            /*// Agregar las enrollments al resultado
             foreach ($enrollments as $enrollment) {
                 $resultArray[] = [
                     'id' => $enrollment->id,
@@ -84,7 +84,7 @@ class BusinessController extends Controller
                     'business_id' => $enrollment->id,
                     'type' => 'Academia'
                 ];
-            }
+            }*/
             return response()->json(['business' => $resultArray], 200);
         } catch (\Throwable $th) {
             Log::error($th);

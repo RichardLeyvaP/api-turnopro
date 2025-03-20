@@ -21,12 +21,12 @@ class ClientProfessional extends Model
 
     public function client()
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(Client::class)->withTrashed();
     }
 
     public function professional()
     {
-        return $this->belongsTo(Professional::class);
+        return $this->belongsTo(Professional::class)->withTrashed();
     }
     //para decirle a q table debe administrar
     protected $table = "client_professional";

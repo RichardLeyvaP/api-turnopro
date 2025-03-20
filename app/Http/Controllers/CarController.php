@@ -1510,7 +1510,7 @@ class CarController extends Controller
             $cashierclosebox = CashierBoxClosing::where('branch_id', $data['branch_id'])
             ->where('user_id', $userId)
             ->whereDate('data', $today)
-            ->first();
+            ->get();
             // Consultar caja, pagos y ventas de la caja
             $box = Box::with('boxClose')
                     ->where('branch_id', $data['branch_id'])

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->decimal('totalTip', 15, 2)->nullable(); // Propinas totales
             $table->decimal('totalProduct', 15, 2)->nullable(); // Total de productos
             $table->decimal('totalService', 15, 2)->nullable(); // Total de servicios
+            $table->decimal('differenceAccounts', 15, 2)->nullable(); // Diferencia en cuentas
             $table->decimal('totalCash', 15, 2)->nullable(); // Total en efectivo
             $table->decimal('totalCreditCard', 15, 2)->nullable(); // Total en tarjeta de crédito
             $table->decimal('totalDebit', 15, 2)->nullable(); // Total en tarjeta de débito
@@ -23,14 +24,17 @@ return new class extends Migration
             $table->decimal('totalOther', 15, 2)->nullable(); // Otros totales
             $table->decimal('totalMount', 15, 2)->nullable(); // Monto total
             $table->decimal('totalCardGif', 15, 2)->nullable(); // Total en tarjetas de regalo
+            $table->decimal('differencePay', 15, 2)->nullable(); // Diferencia en pagos
             $table->decimal('existence', 15, 2)->nullable(); // Existencia
             $table->decimal('cashFound', 15, 2)->nullable(); // Efectivo encontrado
             $table->decimal('extraction', 15, 2)->nullable(); // Extracción
+            $table->decimal('differenceBox', 15, 2)->nullable(); // Diferencia en la caja
             $table->unsignedBigInteger('branch_id')->nullable(); // ID de la sucursal
             $table->date('data')->nullable()->useCurrent(); // Datos adicionales en formato JSON
-            $table->decimal('adelanto', 15, 2)->nullable(); // Adelanto
+            $table->decimal('advancement', 15, 2)->nullable(); // Adelanto
             $table->decimal('totalBonus', 15, 2)->nullable(); // Bonos
-            $table->decimal('diferencia', 15, 2)->nullable(); // Diferencia
+            $table->decimal('difference', 15, 2)->nullable(); // Diferencia
+            $table->string('type')->nullable()->default('Diario');
             $table->unsignedBigInteger('user_id')->nullable(); // ID del usuario
             $table->text('description')->nullable(); // Descripción del cierre de caja
             $table->timestamps(); // created_at y updated_at

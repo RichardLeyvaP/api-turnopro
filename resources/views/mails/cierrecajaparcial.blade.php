@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cierre de Caja</title>
+    <title>Cierre de Caja Parcial</title>
 </head>
 <body style="font-family: Arial, sans-serif;">
 
@@ -36,13 +36,23 @@
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo en caja:</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($box['existence'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['existence'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['existence'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Extracción</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($box['extraction'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['extraction'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['extraction'] ?? 0, 2), 2) }}</td>
     </tr>
+    
+     <!-- Fila adicional para mostrar la diferencia si existe -->
+     @if(isset($cashierData['differenceBox']) && $cashierData['differenceBox'] != 0)
+     <tr style="border: 2px solid #D32F2F; background-color: #FFEBEE;">
+         <td style="padding: 5px; text-align: left; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;"><strong>Diferencia en Caja</strong></td>
+         <td style="padding: 5px; text-align: right; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;" colspan="2">
+             {{ number_format(round($cashierData['differenceBox'], 2), 2) }}
+         </td>
+     </tr>
+ @endif
 </table>
 
 <br>
@@ -62,18 +72,27 @@
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Prestación de Servicios</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalService'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalService'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalService'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Venta de Productos</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalProduct'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalProduct'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalProduct'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Propinas</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalTip'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalTip'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalTip'] ?? 0, 2), 2) }}</td>
     </tr>
+    <!-- Fila adicional para mostrar la diferencia en cuentas si existe -->
+    @if(isset($cashierData['differenceAccounts']) && $cashierData['differenceAccounts'] != 0)
+        <tr style="border: 2px solid #D32F2F; background-color: #FFEBEE;">
+            <td style="padding: 5px; text-align: left; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;"><strong>Diferencia en Cuentas</strong></td>
+            <td style="padding: 5px; text-align: right; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;" colspan="2">
+                {{ number_format(round($cashierData['differenceAccounts'], 2), 2) }}
+            </td>
+        </tr>
+    @endif
 </table>
 
 <br>
@@ -88,33 +107,42 @@
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalCash'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCash'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCash'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Tarjeta de Crédito</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalCreditCard'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCreditCard'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCreditCard'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Débito</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalDebit'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalDebit'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalDebit'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Transferencia</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalTransfer'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalTransfer'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalTransfer'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Total Giftcard</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalCardGif'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCardGif'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCardGif'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Otros Métodos</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalOther'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalOther'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalOther'] ?? 0, 2), 2) }}</td>
     </tr>
+    <!-- Fila adicional para mostrar la diferencia en pagos si existe -->
+    @if(isset($cashierData['differencePay']) && $cashierData['differencePay'] != 0)
+        <tr style="border: 2px solid #D32F2F; background-color: #FFEBEE;">
+            <td style="padding: 5px; text-align: left; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;"><strong>Diferencia en Pagos</strong></td>
+            <td style="padding: 5px; text-align: right; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;" colspan="2">
+                {{ number_format(round($cashierData['differencePay'], 2), 2) }}
+            </td>
+        </tr>
+    @endif
 </table>
 
 <br>
@@ -129,25 +157,25 @@
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Total bonos</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalBonus, 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalBonus'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalBonus'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Total Ingresado</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalMount'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalMount'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalMount'] ?? 0, 2), 2) }}</td>
     </tr>
 </table>
 
 <!-- Diferencia, Descripción y Realizado por -->
-@if(isset($cashierData['diferencia']) && $cashierData['diferencia'] !== null)
+@if(isset($cashierData['difference']) && $cashierData['difference'] !== null)
     <table width="100%" style="border-collapse: collapse; border: 1.5px solid black; margin-top: 20px;">
-        <tr style="border: 1.5px solid black;">
-            <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Diferencia:</strong></td>
-            <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['diferencia'], 2), 2) }}</td>
+        <tr style="border: 2px solid #D32F2F; background-color: #FFEBEE;">
+            <td style="padding: 5px; text-align: left; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;"><strong>Total de Diferencias:</strong></td>
+            <td style="padding: 5px; text-align: right; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;">{{ number_format(round($cashierData['difference'], 2), 2) }}</td>
         </tr>
         <tr style="border: 1.5px solid black;">
             <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Descripción:</strong></td>
-            <td style="padding: 5px; text-align: right; line-height: 1;">{{ $cashierData['description'] }}</td>
+            <td style="padding: 5px; text-align: right; line-height: 1;">{{ $cashierData['description'] ?? 0 }}</td>
         </tr>
     </table>
 @endif

@@ -382,18 +382,25 @@ class ProductStoreController extends Controller
 
         try {
             foreach ($changes as $change) {
-                // Obtener el registro de ProductStore por su ID
-                $productStore = ProductStore::findOrFail($change['id']);
-
-                // Calcular el nuevo valor de product_exit
-                $newProductExit = max($productStore->product_exit - $change['quantity'], 0);
-
-                // Actualizar el campo product_exit
-                $productStore->product_exit = $newProductExit;
-
-                // Guardar los cambios en la base de datos
-                $productStore->save();
-                $this->actualizarProductExit($productStore, $branch_id);  
+                try {
+                    // Obtener el registro de ProductStore por su ID
+                    $productStore = ProductStore::findOrFail($change['id']);
+            
+                    // Calcular el nuevo valor de product_exit
+                    $newProductExit = max($productStore->product_exit - $change['quantity'], 0);
+            
+                    // Actualizar el campo product_exit
+                    $productStore->product_exit = $newProductExit;
+            
+                    // Guardar los cambios en la base de datos
+                    $productStore->save();
+            
+                    // Llamar a la función para actualizar y notificar
+                    $this->actualizarProductExit($productStore, $branch_id);
+                } catch (\Exception $e) {
+                    // Capturar cualquier error que ocurra durante el proceso
+                    Log::error('Error al procesar el cambio: ' . $e->getMessage());
+                }
             }
 
             // Confirmar la transacción

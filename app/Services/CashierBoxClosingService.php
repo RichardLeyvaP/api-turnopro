@@ -15,14 +15,15 @@ class CashierBoxClosingService
         $existingRecord = CashierBoxClosing::where('branch_id', $data['branch_id'])
             ->where('user_id', $data['user_id'])
             ->whereDate('data', $data['data'])
+            ->where('type', $data['type'])
             ->first();
     
         // Campos que se pueden asignar dinámicamente
         $fields = [
             'totalTip', 'totalProduct', 'totalService', 'totalCash', 'totalCreditCard',
             'totalDebit', 'totalTransfer', 'totalOther', 'totalMount', 'totalCardGif',
-            'existence', 'cashFound', 'extraction', 'branch_id', 'data', 'adelanto',
-            'totalBonus', 'diferencia', 'user_id', 'description',
+            'existence', 'cashFound', 'extraction', 'branch_id', 'data', 'advancement',
+            'totalBonus', 'difference', 'user_id', 'description', 'differenceBox', 'differenceAccounts', 'differencePay', 'type'
         ];
     
         if ($existingRecord) {

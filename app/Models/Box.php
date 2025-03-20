@@ -15,7 +15,7 @@ class Box extends Model
     }
 
     public function boxClose(){
-        return $this->hasOne(BoxClose::class);
+        return $this->hasMany(BoxClose::class);
     }
 
     
