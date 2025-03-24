@@ -344,6 +344,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/bonus-show', [BoxCloseController::class, 'bonus']);
     Route::post('/bonu-payment', [BoxCloseController::class, 'bonu_payment']);
     Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
+    Route::get('/closebox-diary', [BoxCloseController::class, 'boxClosesDiary']);
 
     //Box
     Route::put('/box', [BoxController::class, 'update']);

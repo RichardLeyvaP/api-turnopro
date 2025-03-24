@@ -56,12 +56,83 @@ class BoxCloseController extends Controller
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function boxClosesDiary(Request $request)
     {
-        //
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|integer|exists:branches,id',
+                'data' => 'nullable|date'
+            ]);
+            /*$boxes= Box::with(['boxClose' => function($query) {
+                $query->where('type', 'Diario');
+            }])->whereDate('data', $data['data'])->where('branch_id', $data['branch_id'])->get();*/
+            $boxes = Box::with(['boxClose' => function($query) {
+                $query->where('type', 'Diario');
+            }])
+            ->where('branch_id', $request->branch_id)
+            ->when($request->filled('data'), function($query) use ($request) {
+                $query->whereDate('data', $request->data);
+            }, function($query) {
+                $query->whereBetween('data', [
+                    Carbon::now()->startOfMonth(),
+                    Carbon::now()->endOfMonth()
+                ]);
+            })
+            ->get()
+            ->map(function($box) {
+                $boxClose = $box->boxClose->first();
+                // Obtener bonos detallados para este día
+                $bonusPayments = ProfessionalPayment::with(['professional:id,name,image_url'])
+                    ->where('branch_id', $box->branch_id)
+                    ->whereDate('date', $box->data)
+                    ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
+                    ->get()
+                    ->map(function($payment) {
+                        return [
+                            'professional_id' => $payment->professional_id,
+                            'professional_name' => $payment->professional->name ?? null,
+                            'professional_image' => $payment->professional->image_url ?? null,
+                            'date' => $payment->date,
+                            'amount' => $payment->amount,
+                            'type' => $payment->type
+                        ];
+                    });
+                $baseData = [
+                    'id' => $box->id,
+                    'branch_id' => $box->branch_id,
+                    'data' => $box->data,
+                    'cashFound' => $box->cashFound ?? 0,
+                    'existence' => $box->existence ?? 0,
+                    'extraction' => $box->extraction ?? 0,
+                    'bonus_details' => $bonusPayments ?? 0,
+                ];
+
+                if ($boxClose) {
+                    $closeData = [
+                        'close_id' => $boxClose->id,
+                        'totalMount' => $boxClose->totalMount ?? 0,
+                        'totalService' => $boxClose->totalService ?? 0,
+                        'totalProduct' => $boxClose->totalProduct ?? 0,
+                        'totalTip' => $boxClose->totalTip ?? 0,
+                        'totalCash' => $boxClose->totalCash ?? 0,
+                        'totalDebit' => $boxClose->totalDebit ?? 0,
+                        'totalCreditCard' => $boxClose->totalCreditCard ?? 0,
+                        'totalTransfer' => $boxClose->totalTransfer ?? 0,
+                        'totalOther' => $boxClose->totalOther ?? 0,
+                        'totalCardGif' => $boxClose->totalCardGif ?? 0,
+                        'close_type' => $boxClose->type
+                    ];
+                    
+                    return array_merge($baseData, $closeData);
+                }
+
+                return $baseData;
+            });
+            return response()->json(['boxcloses' => $boxes], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar el carrito"], 500);
+        }
     }
 
     /**
