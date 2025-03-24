@@ -158,6 +158,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/cars-winner-mounth', [CarController::class, 'cars_sum_amount_mounth']); //Dado un business devolver las ganancial del mes
     Route::put('/car', [CarController::class, 'update']);
     Route::post('/car-destroy-solicitud', [CarController::class, 'destroy_solicitud']);
+    Route::post('/car-update-solicitud', [CarController::class, 'update_solicitud']);
     Route::post('/car-destroy', [CarController::class, 'destroy']);
     Route::get('/branch-cars-delete', [CarController::class, 'branch_cars_delete']); //devuelve los cars de una branch en la fecha actual solicitados a eliminar
     Route::post('/car-denegada', [CarController::class, 'destroy_denegada']);

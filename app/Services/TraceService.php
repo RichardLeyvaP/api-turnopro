@@ -18,6 +18,10 @@ class TraceService {
         $trace->operation = $data['operation'];
         $trace->details = $data['details'];
         $trace->description = $data['description'];
+        // Solo asigna car_id si existe en el array
+        if (array_key_exists('car_id', $data)) {
+            $trace->car_id = $data['car_id'];
+        }
         $trace->save();
 
         return $trace;

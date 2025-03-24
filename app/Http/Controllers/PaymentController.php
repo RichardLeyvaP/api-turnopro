@@ -265,6 +265,7 @@ class PaymentController extends Controller
             ]);         
             Log::info($data);
             $control = 0;
+            $method = null;
             $car = Car::find($data['car_id']);            
            $branch = Branch::where('id', $request->branch_id)->first();
                 $payment = new Payment();
@@ -272,26 +273,32 @@ class PaymentController extends Controller
             switch ($data['tipByCash']) {
                 case 'Efectivo':
                     $data['cash'] += $data['tip'];
+                    $method = 'cash';
                     break;
                 
                 case 'Débito':
                     $data['debit'] += $data['tip'];
+                    $method = 'debit';
                     break;
                 
                 case 'Transferencia':
                     $data['transfer'] += $data['tip'];
+                    $method = 'transfer';
                     break;
                 
                 case 'Tarjeta de regalo':
                     $data['cardGift'] += $data['tip'];
+                    $method = 'cardGift';
                     break;
                 
                 case 'Tarjeta de Crédito':
                     $data['creditCard'] += $data['tip'];
+                    $method = 'creditCard';
                     break;
 
                 case 'Otro Método':
                     $data['other'] += $data['tip'];
+                    $method = 'other';
                     break;
             }
             Log::info($data['cardGift']);
@@ -320,6 +327,7 @@ class PaymentController extends Controller
             $payment->cardGif = $data['cardGift'];
             $payment->branch_id = $request->branch_id;
             $payment->user_id = $userId;
+            $payment->method = $method;
             $payment->save();
 
             $finance = Finance::orderBy('control', 'desc')->first();
@@ -343,6 +351,7 @@ class PaymentController extends Controller
                             $finance->revenue_id = 8;
                             $finance->data = Carbon::now();
                             $finance->file = '';
+                            $finance->car_id = $data['car_id'];
                             $finance->save();
             }
             if($winProducts){
@@ -356,6 +365,7 @@ class PaymentController extends Controller
                             $finance->revenue_id = 7;
                             $finance->data = Carbon::now();
                             $finance->file = '';
+                            $finance->car_id = $data['car_id'];
                             $finance->save();
             }
             if($winServices){
@@ -370,6 +380,7 @@ class PaymentController extends Controller
                 $finance->revenue_id = 8;
                 $finance->data = Carbon::now();
                 $finance->file = '';
+                $finance->car_id = $data['car_id'];
                 $finance->save();
             }
             if($data['tip']){
@@ -384,6 +395,7 @@ class PaymentController extends Controller
                 $finance->revenue_id = 8;
                 $finance->data = Carbon::now();
                 $finance->file = '';
+                $finance->car_id = $data['car_id'];
                 $finance->save();
             }
             $car->pay = 1;
@@ -411,6 +423,7 @@ class PaymentController extends Controller
                 'operation' => 'Paga Carro',
                 'details' => 'Carro: '.$car->id,
                 'description' => $car->clientProfessional->professional->name,
+                'car_id' => $data['car_id']
             ];
             $this->traceService->store($trace);
             DB::commit();

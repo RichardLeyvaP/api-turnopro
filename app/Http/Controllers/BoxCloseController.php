@@ -344,7 +344,7 @@ class BoxCloseController extends Controller
                 // Calcular la suma de los montos
                 //$totalAmount = $subquery->sum('amount');
                 $difference = $totalBonus - $totalAmount;
-                Log::info('Diferencia de bono ierre de caja' . $difference);
+                Log::info('Diferencia de bono cierre de caja' . $difference);
                 // Ajustar la existencia de $box según la diferencia
                 // Si la diferencia es positiva, se resta de box->existence
                 // Si es negativa, se suma a box->existence
@@ -380,6 +380,7 @@ class BoxCloseController extends Controller
             $cashierData['branch_id'] = $branchId;
             $cashierData['user_id'] = $userId;
             $cashierData['data'] = Carbon::now();
+            $cashierData['type'] = 'Diario';
             $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
