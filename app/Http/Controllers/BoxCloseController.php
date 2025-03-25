@@ -11,6 +11,7 @@ use App\Models\BranchProfessional;
 use App\Models\BranchRuleProfessional;
 use App\Models\BranchServiceProfessional;
 use App\Models\Car;
+use App\Models\CashierBoxClosing;
 use App\Models\CashierSale;
 use App\Models\CloseBox;
 use App\Models\Finance;
@@ -56,16 +57,13 @@ class BoxCloseController extends Controller
         //
     }
 
-    public function boxClosesDiary(Request $request)
+    /*public function boxClosesDiary(Request $request)
     {
         try {
             $data = $request->validate([
                 'branch_id' => 'required|integer|exists:branches,id',
                 'data' => 'nullable|date'
             ]);
-            /*$boxes= Box::with(['boxClose' => function($query) {
-                $query->where('type', 'Diario');
-            }])->whereDate('data', $data['data'])->where('branch_id', $data['branch_id'])->get();*/
             $boxes = Box::with(['boxClose' => function($query) {
                 $query->where('type', 'Diario');
             }])
@@ -133,8 +131,126 @@ class BoxCloseController extends Controller
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
-    }
+    }*/
 
+    public function boxClosesDiary(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|integer|exists:branches,id',
+                'data' => 'nullable|date'
+            ]);
+
+            $boxes = Box::with(['boxClose' => function ($query) {
+                $query->where('type', 'Diario');
+            }])
+                ->where('branch_id', $request->branch_id)
+                ->when($request->filled('data'), function ($query) use ($request) {
+                    $query->whereDate('data', $request->data);
+                }, function ($query) {
+                    $query->whereBetween('data', [
+                        Carbon::now()->startOfMonth(),
+                        Carbon::now()->endOfMonth()
+                    ]);
+                })
+                ->get()
+                ->map(function ($box) {
+                    $boxClose = $box->boxClose->first();
+
+                    // Obtener cierres de caja del cajero que coincidan en user_id, fecha y tipo
+                    $cashierBoxClosing = null;
+                    if ($boxClose) {
+                        /*$cashierBoxClosing = DB::table('cashier_box_closings')
+                            ->where('user_id', $boxClose->user_id)
+                            ->whereDate('data', $box->data)
+                            ->where('type', 'Diario')
+                            ->first();*/
+                        $cashierBoxClosing = DB::table('cashier_box_closings')
+                            ->leftJoin('users', 'cashier_box_closings.user_id', '=', 'users.id')
+                            ->leftJoin('professionals', 'professionals.user_id', '=', 'users.id')
+                            ->where('cashier_box_closings.user_id', $boxClose->user_id)
+                            ->whereDate('cashier_box_closings.data', $box->data)
+                            ->where('cashier_box_closings.type', 'Diario')
+                            ->select(
+                                'cashier_box_closings.*',
+                                'professionals.name as professional_name'
+                            )
+                            ->first();
+                    }
+
+                    // Obtener bonos detallados para este día
+                    // Calcular el total de bonos para este día
+                    $totalBonus = ProfessionalPayment::where('branch_id', $box->branch_id)
+                        ->whereDate('date', $box->data)
+                        ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
+                        ->sum('amount');
+
+                    $baseData = [
+                        'id' => $box->id,
+                        'branch_id' => $box->branch_id,
+                        'data' => $box->data,
+                        'cashFound' => $box->cashFound ?? 0,
+                        'existence' => $box->existence ?? 0,
+                        'extraction' => $box->extraction ?? 0,
+                    ];
+
+                    $mergedData = $baseData;
+
+                    if ($boxClose) {
+                        $closeData = [
+                            'close_id' => $boxClose->id,
+                            'totalMount' => $boxClose->totalMount ?? 0,
+                            'totalService' => $boxClose->totalService ?? 0,
+                            'totalProduct' => $boxClose->totalProduct ?? 0,
+                            'totalTip' => $boxClose->totalTip ?? 0,
+                            'totalCash' => $boxClose->totalCash ?? 0,
+                            'totalDebit' => $boxClose->totalDebit ?? 0,
+                            'totalCreditCard' => $boxClose->totalCreditCard ?? 0,
+                            'totalTransfer' => $boxClose->totalTransfer ?? 0,
+                            'totalOther' => $boxClose->totalOther ?? 0,
+                            'totalCardGif' => $boxClose->totalCardGif ?? 0,
+                            'totalBonus' => $totalBonus ?? 0, // Agregamos el total de bonos aquí
+                            'close_type' => $boxClose->type,
+                            'user_id' => $boxClose->user_id ?? null,
+                        ];
+
+                        $mergedData = array_merge($mergedData, $closeData);
+                    }
+
+                    if ($cashierBoxClosing) {
+                        $cashierData = [
+                            'cashier_close_id' => $cashierBoxClosing->id,
+                            'cashier_user_id' => $cashierBoxClosing->user_id ?? null,
+                            'cashier_total' => $cashierBoxClosing->total ?? 0,
+                            'cashier_totaCash' => $cashierBoxClosing->totalCash ?? 0,
+                            'cashier_totalCreditCard' => $cashierBoxClosing->totalCreditCard ?? 0,
+                            'cashier_totalDebit' => $cashierBoxClosing->totalDebit ?? 0,
+                            'cashier_totalTransfer' => $cashierBoxClosing->totalTransfer ?? 0,
+                            'cashier_totalOther' => $cashierBoxClosing->totalOther ?? 0,
+                            'cashier_totalCardGif' => $cashierBoxClosing->totalCardGif ?? 0,
+                            'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
+                            'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
+                            'cashier_differencePay' => $cashierBoxClosing->differencePay ?? 0,
+                            'cashier_difference' => $cashierBoxClosing->difference ?? 0,
+                            'description' => $cashierBoxClosing->description ?? 0,
+                            'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
+                            'details' => $cashierBoxClosing->details,
+                            'professional_name' => $cashierBoxClosing->professional_name ?? 'No asignado'
+                            // Agrega aquí otros campos relevantes de cashier_box_closings
+                        ];
+
+                        $mergedData = array_merge($mergedData, $cashierData);
+                    }
+
+                    return $mergedData;
+                });
+
+            return response()->json(['boxcloses' => $boxes], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar el carrito"], 500);
+        }
+    }
     /**
      * Store a newly created resource in storage.
      */
