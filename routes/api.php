@@ -59,6 +59,7 @@ use App\Http\Controllers\TraceController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\OperationTipController;
 use App\Http\Controllers\CashierSaleController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
 use Illuminate\Http\Request;
@@ -353,6 +354,13 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/box-show', [BoxController::class, 'show']);
     Route::post('/box', [BoxController::class, 'store']);
     Route::post('/box-destroy', [BoxController::class, 'destroy']);
+
+    //Payment Method
+    Route::put('/payment-method', [PaymentMethodController::class, 'update']);
+    Route::get('/payment-method', [PaymentMethodController::class, 'index']);
+    Route::get('/payment-method-show', [PaymentMethodController::class, 'show']);
+    Route::post('/payment-method', [PaymentMethodController::class, 'store']);
+    Route::post('/payment-method-destroy', [PaymentMethodController::class, 'destroy']);
 
     //BranchServiceProfessional
     Route::get('/services-professional-branch-web', [BranchServiceProfessionalController::class, 'services_professional_branch_web']); //devolver los servicios que realiza un professional en un abranch

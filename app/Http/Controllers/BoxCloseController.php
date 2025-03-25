@@ -313,7 +313,7 @@ class BoxCloseController extends Controller
 
             $userId = $request->user()->id;
             $idService = null;
-            $totalBonus = 0;
+            $totalBonus = $editedCloseBox['totalBonus'];
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $request->branch_id)->first();
             if (!$box) {
                 $box = new Box();
@@ -327,7 +327,7 @@ class BoxCloseController extends Controller
             if (!$boxClose) {
                 $boxClose = new BoxClose();
             }
-            $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function ($query) {
+            /*$totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function ($query) {
                 $query->where('type', 'Bono convivencias')
                     ->orWhere('type', 'Bono servicios');
             })->sum('amount');
@@ -339,7 +339,7 @@ class BoxCloseController extends Controller
             Log::info('$totalBonus Bonussssssss');
             Log::info($totalBonus);
 
-            if ($totalBonus) {
+            /*if ($totalBonus) {
                 Log::info('Entra a descontar los bonos de la existencia');
                 // Calcular la suma de los montos
                 //$totalAmount = $subquery->sum('amount');
@@ -350,7 +350,7 @@ class BoxCloseController extends Controller
                 // Si es negativa, se suma a box->existence
                 $box->existence -= $difference;
                 $box->save(); // Guardar los cambios en $box
-            }
+            }*/
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -420,7 +420,7 @@ class BoxCloseController extends Controller
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
             /*$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);*/
 
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'bonus' => $bonus], 200);
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente',], 200);
         } catch (TransportException $e) {
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
@@ -464,7 +464,7 @@ class BoxCloseController extends Controller
 
             $userId = $request->user()->id;
             $idService = null;
-            $totalBonus = 0;
+            $totalBonus = $editedCloseBox['totalBonus'];
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $request->branch_id)->first();
             if (!$box) {
                 $box = new Box();
