@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentMethodController extends Controller
 {
@@ -53,6 +54,31 @@ class PaymentMethodController extends Controller
         ], 201);
     }
 
+    public function update(Request $request)
+    {
+        try {
+
+            Log::info("entra a actualizar un metodo de ingreso");
+             $data = $request->validate([
+                'id' => 'required|numeric',
+                'name' => 'required|max:50',
+                'type' => 'required|string|max:255',
+                'description' => 'nullable|string',
+            ]);
+            Log::info($request);
+            $method = PaymentMethod::find( $data['id']);
+            $method->name =  $data['name'];
+            $method->type =  $data['type'];
+            $method->description =  $data['description'];
+            $method->save();
+
+            return response()->json(['msg' => 'Metodo de ingreso actualizado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::info($th);
+            return response()->json(['msg' => 'Error interno del sistema'], 500);
+        }
+    }
+
     /**
      * Display the specified resource.
      */
@@ -70,13 +96,19 @@ class PaymentMethodController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PaymentMethod $paymentMethod)
+    public function destroy(Request $request)
     {
-        $paymentMethod->delete();
+        try {
+            
+            $data = $request->validate([
+               'id' => 'required|numeric'
+           ]);
+           PaymentMethod::destroy( $data['id']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment method deleted successfully.'
-        ]);
+           return response()->json(['msg' => 'Metodo de ingreso eliminado correctamente'], 200);
+       } catch (\Throwable $th) {
+           Log::error($th);
+           return response()->json(['msg' => 'Error inerno del sistema'], 500);
+       }
     }
 }
