@@ -138,15 +138,17 @@ class BoxCloseController extends Controller
         try {
             $data = $request->validate([
                 'branch_id' => 'required|integer|exists:branches,id',
-                'data' => 'nullable|date'
+                'data' => 'nullable|date',
+                'endDate' => 'nullable|date',
             ]);
 
-            $boxes = Box::with(['boxClose' => function ($query) {
-                $query->where('type', 'Diario');
-            }])
+            $boxes = Box::with(['boxClose'])
                 ->where('branch_id', $request->branch_id)
-                ->when($request->filled('data'), function ($query) use ($request) {
-                    $query->whereDate('data', $request->data);
+                ->when($request->filled('data') && $request->filled('endDate'), function ($query) use ($request) {
+                    $query->whereBetween('data', [
+                        Carbon::parse($request->data)->startOfDay(),
+                        Carbon::parse($request->endDate)->endOfDay()
+                    ]);
                 }, function ($query) {
                     $query->whereBetween('data', [
                         Carbon::now()->startOfMonth(),
@@ -154,51 +156,37 @@ class BoxCloseController extends Controller
                     ]);
                 })
                 ->get()
-                ->map(function ($box) {
-                    $boxClose = $box->boxClose->first();
-
-                    // Obtener cierres de caja del cajero que coincidan en user_id, fecha y tipo
-                    $cashierBoxClosing = null;
-                    if ($boxClose) {
-                        /*$cashierBoxClosing = DB::table('cashier_box_closings')
-                            ->where('user_id', $boxClose->user_id)
-                            ->whereDate('data', $box->data)
-                            ->where('type', 'Diario')
-                            ->first();*/
+                ->flatMap(function ($box) {
+                    // Procesar todos los boxClose en lugar de solo el primero
+                    return $box->boxClose->map(function ($boxClose) use ($box) {
+                        // Obtener cierres de caja del cajero que coincidan en user_id, fecha y tipo
                         $cashierBoxClosing = DB::table('cashier_box_closings')
                             ->leftJoin('users', 'cashier_box_closings.user_id', '=', 'users.id')
                             ->leftJoin('professionals', 'professionals.user_id', '=', 'users.id')
-                            ->where('cashier_box_closings.user_id', $boxClose->user_id)
-                            ->whereDate('cashier_box_closings.data', $box->data)
-                            ->where('cashier_box_closings.type', 'Diario')
+                            ->where('cashier_box_closings.box_close_id', $boxClose->id)
                             ->select(
                                 'cashier_box_closings.*',
                                 'professionals.name as professional_name'
                             )
                             ->first();
-                    }
 
-                    // Obtener bonos detallados para este día
-                    // Calcular el total de bonos para este día
-                    $totalBonus = ProfessionalPayment::where('branch_id', $box->branch_id)
-                        ->whereDate('date', $box->data)
-                        ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
-                        ->sum('amount');
+                        // Obtener bonos detallados para este día
+                        $totalBonus = ProfessionalPayment::where('branch_id', $box->branch_id)
+                            ->whereDate('date', $box->data)
+                            ->whereIn('type', ['Bono servicios', 'Bono convivencias'])
+                            ->sum('amount');
 
-                    $baseData = [
-                        'id' => $box->id,
-                        'branch_id' => $box->branch_id,
-                        'data' => $box->data,
-                        'cashFound' => $box->cashFound ?? 0,
-                        'existence' => $box->existence ?? 0,
-                        'extraction' => $box->extraction ?? 0,
-                    ];
+                        $baseData = [
+                            'box_id' => $box->id,
+                            'branch_id' => $box->branch_id,
+                            'data' => $box->data,
+                            'cashFound' => $box->cashFound ?? 0,
+                            'existence' => $box->existence ?? 0,
+                            'extraction' => $box->extraction ?? 0,
+                        ];
 
-                    $mergedData = $baseData;
-
-                    if ($boxClose) {
                         $closeData = [
-                            'close_id' => $boxClose->id,
+                            'id' => $boxClose->id,
                             'totalMount' => $boxClose->totalMount ?? 0,
                             'totalService' => $boxClose->totalService ?? 0,
                             'totalProduct' => $boxClose->totalProduct ?? 0,
@@ -209,40 +197,45 @@ class BoxCloseController extends Controller
                             'totalTransfer' => $boxClose->totalTransfer ?? 0,
                             'totalOther' => $boxClose->totalOther ?? 0,
                             'totalCardGif' => $boxClose->totalCardGif ?? 0,
-                            'totalBonus' => $totalBonus ?? 0, // Agregamos el total de bonos aquí
+                            'totalBonus' => $totalBonus ?? 0,
                             'close_type' => $boxClose->type,
                             'user_id' => $boxClose->user_id ?? null,
+                            'type' => $boxClose->type,
+                            'time' => $boxClose->created_at->format('H:i'),
+                            'advancement' => $boxClose->advancement ?? 0,
                         ];
 
-                        $mergedData = array_merge($mergedData, $closeData);
-                    }
+                        $mergedData = array_merge($baseData, $closeData);
 
-                    if ($cashierBoxClosing) {
-                        $cashierData = [
-                            'cashier_close_id' => $cashierBoxClosing->id,
-                            'cashier_user_id' => $cashierBoxClosing->user_id ?? null,
-                            'cashier_total' => $cashierBoxClosing->total ?? 0,
-                            'cashier_totaCash' => $cashierBoxClosing->totalCash ?? 0,
-                            'cashier_totalCreditCard' => $cashierBoxClosing->totalCreditCard ?? 0,
-                            'cashier_totalDebit' => $cashierBoxClosing->totalDebit ?? 0,
-                            'cashier_totalTransfer' => $cashierBoxClosing->totalTransfer ?? 0,
-                            'cashier_totalOther' => $cashierBoxClosing->totalOther ?? 0,
-                            'cashier_totalCardGif' => $cashierBoxClosing->totalCardGif ?? 0,
-                            'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
-                            'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
-                            'cashier_differencePay' => $cashierBoxClosing->differencePay ?? 0,
-                            'cashier_difference' => $cashierBoxClosing->difference ?? 0,
-                            'description' => $cashierBoxClosing->description ?? 0,
-                            'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
-                            'details' => $cashierBoxClosing->details,
-                            'professional_name' => $cashierBoxClosing->professional_name ?? 'No asignado'
-                            // Agrega aquí otros campos relevantes de cashier_box_closings
-                        ];
+                        if ($cashierBoxClosing) {
+                            $cashierData = [
+                                'cashier_close_id' => $cashierBoxClosing->id,
+                                'cashier_user_id' => $cashierBoxClosing->user_id ?? null,
+                                'cashier_total' => $cashierBoxClosing->total ?? 0,
+                                'cashier_existence' => $cashierBoxClosing->existence ?? 0,
+                                'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
+                                'cashier_totaCash' => $cashierBoxClosing->totalCash ?? 0,
+                                'cashier_totalCreditCard' => $cashierBoxClosing->totalCreditCard ?? 0,
+                                'cashier_totalDebit' => $cashierBoxClosing->totalDebit ?? 0,
+                                'cashier_totalTransfer' => $cashierBoxClosing->totalTransfer ?? 0,
+                                'cashier_totalOther' => $cashierBoxClosing->totalOther ?? 0,
+                                'cashier_totalCardGif' => $cashierBoxClosing->totalCardGif ?? 0,
+                                'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
+                                'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
+                                'cashier_differencePay' => $cashierBoxClosing->differencePay ?? 0,
+                                'cashier_difference' => $cashierBoxClosing->difference ?? 0,
+                                'description' => $cashierBoxClosing->description ?? 0,
+                                'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
+                                'details' => $cashierBoxClosing->details,
+                                'professional_name' => $cashierBoxClosing->professional_name ?? 'No asignado',
+                                'cashier_advancement' => $cashierBoxClosing->advancement ?? 0,
+                            ];
 
-                        $mergedData = array_merge($mergedData, $cashierData);
-                    }
+                            $mergedData = array_merge($mergedData, $cashierData);
+                        }
 
-                    return $mergedData;
+                        return $mergedData;
+                    });
                 });
 
             return response()->json(['boxcloses' => $boxes], 200, [], JSON_NUMERIC_CHECK);
@@ -407,6 +400,7 @@ class BoxCloseController extends Controller
                 'editedCloseBox' => 'required|array',
                 'cashierData' => 'required|array',
                 'car_ids'  => 'nullable|array',
+                'cashiersale_ids'  => 'nullable|array',
                 'branch_id' => 'required|integer',
                 'nameProfessional' => 'required|string',
             ]);
@@ -415,6 +409,7 @@ class BoxCloseController extends Controller
             $editedCloseBox = $request->input('editedCloseBox');
             $cashierData = $request->input('cashierData');
             $car_ids = $request->input('car_ids');
+            $cashiersale_ids = $request->input('cashiersale_ids');
             $branchId = $request->input('branch_id');
             $nameProfessional = $request->input('nameProfessional');
 
@@ -423,6 +418,7 @@ class BoxCloseController extends Controller
                 'editedCloseBox' => $editedCloseBox,
                 'cashierData' => $cashierData,
                 'car_ids' => $car_ids,
+                'cashiersale_ids' => $cashiersale_ids,
                 'branch_id' => $branchId,
                 'nameProfessional' => $nameProfessional,
             ]);
@@ -439,10 +435,10 @@ class BoxCloseController extends Controller
                 $box->save();
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
-            $boxClose = BoxClose::where('box_id', $box->id)->where('type', 'Diario')->first();
-            if (!$boxClose) {
-                $boxClose = new BoxClose();
-            }
+            //$boxClose = BoxClose::where('box_id', $box->id)->where('type', 'Diario')->first();
+            //if (!$boxClose) {
+            $boxClose = new BoxClose();
+            //}
             /*$totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function ($query) {
                 $query->where('type', 'Bono convivencias')
                     ->orWhere('type', 'Bono servicios');
@@ -497,9 +493,14 @@ class BoxCloseController extends Controller
             $cashierData['user_id'] = $userId;
             $cashierData['data'] = Carbon::now();
             $cashierData['type'] = 'Diario';
+            $cashierData['box_close_id'] = $boxClose->id;
             $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
+                    ->update(['user_id' => $userId]);
+            }
+            if (!empty($cashiersale_ids)) {
+                CashierSale::whereIn('id', $cashiersale_ids)
                     ->update(['user_id' => $userId]);
             }
             Log::info('$trace');
@@ -521,7 +522,7 @@ class BoxCloseController extends Controller
             $emailassociated = $branch->associates()->pluck('email');
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
-            $mergedEmails = ['yasmany891230@gmail.com'];
+            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
             Log::info('$mergedEmails correos a enviar cierre de caja');
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
@@ -558,6 +559,7 @@ class BoxCloseController extends Controller
                 'editedCloseBox' => 'required|array',
                 'cashierData' => 'required|array',
                 'car_ids'  => 'nullable|array',
+                'cashiersale_ids'  => 'nullable|array',
                 'branch_id' => 'required|integer',
                 'nameProfessional' => 'required|string',
             ]);
@@ -566,6 +568,7 @@ class BoxCloseController extends Controller
             $editedCloseBox = $request->input('editedCloseBox');
             $cashierData = $request->input('cashierData');
             $car_ids = $request->input('car_ids');
+            $cashiersale_ids = $request->input('cashiersale_ids');
             $branchId = $request->input('branch_id');
             $nameProfessional = $request->input('nameProfessional');
 
@@ -574,6 +577,7 @@ class BoxCloseController extends Controller
                 'editedCloseBox' => $editedCloseBox,
                 'cashierData' => $cashierData,
                 'car_ids' => $car_ids,
+                'cashiersale_ids' => $cashiersale_ids,
                 'branch_id' => $branchId,
                 'nameProfessional' => $nameProfessional,
             ]);
@@ -590,10 +594,10 @@ class BoxCloseController extends Controller
                 $box->save();
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
-            $boxClose = BoxClose::where('box_id', $box->id)->where('type', 'Parcial')->where('user_id', $userId)->first();
-            if (!$boxClose) {
-                $boxClose = new BoxClose();
-            }
+            //$boxClose = BoxClose::where('box_id', $box->id)->where('type', 'Parcial')->where('user_id', $userId)->first();
+            //if (!$boxClose) {
+            $boxClose = new BoxClose();
+            //}
             /*$bonus = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
                 $query->where('type', 'Bono convivencias')
                     ->orWhere('type', 'Bono servicios');
@@ -660,11 +664,16 @@ class BoxCloseController extends Controller
             $cashierData['user_id'] = $userId;
             $cashierData['data'] = Carbon::now();
             $cashierData['type'] = 'Parcial';
+            $cashierData['box_close_id'] = $boxClose->id;
             $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
 
             // Actualizar los registros en la tabla cars
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
+                    ->update(['user_id' => $userId]);
+            }
+            if (!empty($cashiersale_ids)) {
+                CashierSale::whereIn('id', $cashiersale_ids)
                     ->update(['user_id' => $userId]);
             }
             Log::info('$trace');
@@ -686,7 +695,7 @@ class BoxCloseController extends Controller
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
             Log::info('$mergedEmails correos a enviar cierre de caja');
-            $mergedEmails = ['yasmany891230@gmail.com'];
+            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
                 try {

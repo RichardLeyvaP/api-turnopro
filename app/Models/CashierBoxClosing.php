@@ -26,4 +26,9 @@ class CashierBoxClosing extends Model
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
+
+    public function boxClose()
+    {
+        return $this->belongsTo(BoxClose::class);
+    }
 }

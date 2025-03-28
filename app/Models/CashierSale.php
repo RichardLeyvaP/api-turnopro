@@ -24,5 +24,15 @@ class CashierSale extends Model
         return $this->belongsTo(ProductStore::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'cashiersale_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
     protected $table = "cashiersales";
 }

@@ -68,35 +68,63 @@
             font-weight: bold;
         }
 
-        .difference-row {
-            border: 2px solid #D32F2F;
-            background-color: #FFEBEE;
-        }
-
-        .difference-label {
-            padding: 5px;
-            text-align: left;
-            line-height: 1;
-            color: #D32F2F;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .difference-value {
-            padding: 5px;
-            text-align: right;
-            line-height: 1;
-            color: #D32F2F;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
         .footer {
             text-align: center;
             padding: 20px;
             background-color: rgba(68, 112, 243, 0.85);
             color: #fff;
             border-radius: 0 0 10px 10px;
+        }
+
+        /* Estilos para las diferencias */
+        /* Estilo para diferencias POSITIVAS (todo verde) */
+        .difference-positive {
+            background-color: #e8f5e9;
+            /* Fondo verde claro */
+            border: 1px solid #a5d6a7;
+            /* Borde verde */
+            color: #2e7d32;
+            /* Texto verde oscuro */
+        }
+
+        .difference-positive .difference-value {
+            font-weight: bold;
+            color: #1b5e20;
+            /* Valor en verde más oscuro */
+        }
+
+        /* Estilo para diferencias NEGATIVAS (todo rojo) */
+        .difference-negative {
+            background-color: #ffebee;
+            /* Fondo rojo claro */
+            border: 1px solid #ef9a9a;
+            /* Borde rojo */
+            color: #c62828;
+            /* Texto rojo oscuro */
+        }
+
+        .difference-negative .difference-value {
+            font-weight: bold;
+            color: #b71c1c;
+            /* Valor en rojo más oscuro */
+        }
+
+        .difference-zero {
+            color: #6c757d;
+            /* Gris */
+        }
+
+        .difference-description {
+            padding: 5px;
+            text-align: left;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        .difference-row td {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
         }
     </style>
 </head>
@@ -140,9 +168,9 @@
                 <td><strong>Extracción:</strong> {{ number_format(round($boxData['extraction'], 2), 2) }}</td>
                 <td><strong>Extracción:</strong> {{ number_format(round($cashierData['extraction'] ?? 0, 2), 2) }}</td>
             </tr>
-            <!-- Fila adicional para mostrar la diferencia en la caja si existe -->
+            <!-- Fila adicional para mostrar la diferencia en la caja si existe
             @if (isset($cashierData['differenceBox']) && $cashierData['differenceBox'] != 0)
-                <tr class="difference-row">
+<tr class="difference-row">
                     <td class="difference-label">
                         <strong>Diferencia en Caja:</strong>
                     </td>
@@ -150,7 +178,7 @@
                         {{ number_format(round($cashierData['differenceBox'], 2), 2) }}
                     </td>
                 </tr>
-            @endif
+@endif-->
             <tr class="section-header">
                 <td colspan="2"><strong>Cierre de las Cuentas y Formas de Pago:</strong></td>
             </tr>
@@ -171,9 +199,9 @@
                 <td><strong>Prestación de Servicios:</strong>
                     {{ number_format(round($cashierData['totalService'] ?? 0, 2), 2) }}</td>
             </tr>
-            <!-- Fila adicional para mostrar la diferencia en las Cuentas -->
+            <!-- Fila adicional para mostrar la diferencia en las Cuentas
             @if (isset($cashierData['differenceAccounts']) && $cashierData['differenceAccounts'] != 0)
-                <tr class="difference-row">
+<tr class="difference-row">
                     <td class="difference-label">
                         <strong>Diferencia en Cuentas:</strong>
                     </td>
@@ -181,7 +209,7 @@
                         {{ number_format(round($cashierData['differenceAccounts'], 2), 2) }}
                     </td>
                 </tr>
-            @endif
+@endif-->
             <tr class="section-header">
                 <td colspan="2"><strong>Formas de pago</strong></td>
             </tr>
@@ -196,7 +224,7 @@
                     {{ number_format(round($cashierData['totalCreditCard'] ?? 0, 2), 2) }}</td>
             </tr>
             <tr>
-                <td><strong>Débito:</strong> {{ number_format(round($totalDebit, 2), 2) }}</td>
+                <td><strong>Débito:</strong> {{ number_format(round($boxcloseData['totalDebit'], 2), 2) }}</td>
                 <td><strong>Débito:</strong> {{ number_format(round($cashierData['totalDebit'] ?? 0, 2), 2) }}</td>
             </tr>
             <tr>
@@ -219,9 +247,9 @@
                 <td><strong>Otros Métodos:</strong> {{ number_format(round($cashierData['totalOther'] ?? 0, 2), 2) }}
                 </td>
             </tr>
-            <!-- Fila adicional para mostrar la diferencia en la caja si existe -->
+            <!-- Fila adicional para mostrar la diferencia en la caja si existe
             @if (isset($cashierData['differencePay']) && $cashierData['differencePay'] != 0)
-                <tr class="difference-row">
+<tr class="difference-row">
                     <td class="difference-label">
                         <strong>Diferencia en Formas de Pago:</strong>
                     </td>
@@ -229,7 +257,7 @@
                         {{ number_format(round($cashierData['differencePay'], 2), 2) }}
                     </td>
                 </tr>
-            @endif
+@endif-->
             <tr class="total-row">
                 <td><strong>Total de Bonos:</strong> {{ number_format(round($totalBonus, 2), 2) }}</td>
                 <td><strong>Total de Bonos:</strong> {{ number_format(round($cashierData['totalBonus'] ?? 0, 2), 2) }}
@@ -240,9 +268,41 @@
                     {{ number_format(round($boxcloseData['totalMount'], 2), 2) }}</td>
             </tr>
 
-            <!-- Fila adicional para mostrar la diferencia si existe -->
+            @if (isset($cashierData['difference']))
+                @php
+                    $diffClass = '';
+                    if ($cashierData['difference'] < 0) {
+                        $diffClass = 'difference-negative';
+                    } elseif ($cashierData['difference'] > 0) {
+                        $diffClass = 'difference-positive';
+                    } else {
+                        $diffClass = 'difference-zero';
+                    }
+                @endphp
+
+                <tr class="difference-row {{ $diffClass }}">
+                    <td class="difference-label">
+                        <strong>Total de Diferencias:</strong>
+                    </td>
+                    <td class="difference-value">
+                        {{ number_format(round($cashierData['difference'], 2), 2) }}
+                    </td>
+                </tr>
+
+                @if (!empty($cashierData['description']))
+                    <tr class="{{ $diffClass }}">
+                        <td colspan="2"><strong>Descripción:</strong></td>
+                    </tr>
+                    <tr class="{{ $diffClass }}">
+                        <td colspan="2" class="difference-description">
+                            {{ $cashierData['description'] }}
+                        </td>
+                    </tr>
+                @endif
+            @endif
+            <!-- Fila adicional para mostrar la diferencia si existe
             @if (isset($cashierData['difference']) && $cashierData['difference'] != 0)
-                <tr class="difference-row">
+<tr class="difference-row">
                     <td class="difference-label">
                         <strong>Total de Diferencias:</strong>
                     </td>
@@ -251,7 +311,7 @@
                     </td>
                 </tr>
                 @if (isset($cashierData['description']) && $cashierData['description'])
-                <tr>
+<tr>
                     <td colspan="2"><strong>Descripción:</strong></td>
                 </tr>
                 <tr>
@@ -259,9 +319,9 @@
                         <strong>Descripción:</strong> {{ $cashierData['description'] ?? 'Sin descripción' }}
                     </td>
                 </tr>
-                @endif
-            @endif
-
+@endif
+@endif
+          -->
             <tr>
                 <td colspan="2"><strong>Realizado por:</strong> {{ $nameProfessional }}</td>
             </tr>

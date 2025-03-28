@@ -24,6 +24,11 @@ class Payment extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function cashierSale()
+    {
+        return $this->belongsTo(CashierSale::class);
+    }
+
     protected $casts = [
         'cash' => 'double',
         'creditCard' => 'double',

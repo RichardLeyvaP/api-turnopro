@@ -67,9 +67,9 @@ class PaymentMethodController extends Controller
             ]);
             Log::info($request);
             $method = PaymentMethod::find( $data['id']);
-            $method->name =  $data['name'];
-            $method->type =  $data['type'];
-            $method->description =  $data['description'];
+            $method->name = $data['name'];
+            $method->type = $data['type'];
+            $method->description = $data['description'] ?? null;
             $method->save();
 
             return response()->json(['msg' => 'Metodo de ingreso actualizado correctamente'], 200);

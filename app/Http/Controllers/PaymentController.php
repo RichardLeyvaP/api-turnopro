@@ -467,6 +467,7 @@ class PaymentController extends Controller
                 $cardGiftUser->save();
             }
             //Log::info($cardGiftUser);
+            $firstSaleId = $ids[0];
             $payment = new Payment();
             $payment->cash = $data['cash'];
             $payment->creditCard = $data['creditCard'];
@@ -476,6 +477,7 @@ class PaymentController extends Controller
             $payment->cardGif = $data['cardGift'];
             $payment->branch_id = $request->branch_id;
             $payment->user_id = $userId;
+            $payment->cashiersale_id = $firstSaleId;
             $payment->save();
 
             CashierSale::whereIn('id', $ids)->update(['pay' => 1]);

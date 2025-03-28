@@ -18,6 +18,11 @@ class BoxClose extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function cashierBoxClosing()
+    {
+        return $this->hasOne(CashierBoxClosing::class);
+    }
+
     protected $casts = [
         'totalMount' => 'double',
         'totalService' => 'double',

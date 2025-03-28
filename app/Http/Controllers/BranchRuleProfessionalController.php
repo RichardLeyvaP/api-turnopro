@@ -38,8 +38,48 @@ class BranchRuleProfessionalController extends Controller
             $branch_id = $request->input('branch_id');
             $date = $request->input('date');
 
-            // Consulta para obtener las convivencias de los trabajadores de la sucursal en la date dada
             $convivencias = BranchRuleProfessional::with(['branchRule.rule', 'professional'])
+                ->whereHas('branchRule', function ($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->whereDate('data', $date)
+                ->get();
+
+            // 1. Primero calculamos las estadísticas por profesional
+            $statsByProfessional = $convivencias->groupBy('professional.id')->map(function ($group) {
+                return [
+                    'fulfilled' => $group->where('estado', 1)->count(),      // Estado 1: Cumplidas
+                    'not_fulfilled' => $group->where('estado', 0)->count(), // Estado 0: Incumplidas
+                    'not_updated' => $group->where('estado', 3)->count(),   // Estado 3: No actualizadas
+                    'total' => $group->count(),
+                ];
+            });
+
+            // 2. Mantenemos tu formato original exacto y agregamos las estadísticas
+            $formattedData = $convivencias->map(function ($convivencia) use ($statsByProfessional) {
+                return [
+                    'id' => $convivencia->id,
+                    'estado' => $convivencia->estado,
+                    'professionalName' => $convivencia->professional->name,
+                    'professionalImage' => $convivencia->professional->image_url,
+                    'ruleName' => $convivencia->branchRule->rule->name,
+                    'last_edited_at' => $convivencia->last_edited_at,
+                    // Agregamos las estadísticas para este profesional
+                    'professionalStats' => $statsByProfessional[$convivencia->professional->id] ?? [
+                        'fulfilled' => 0,
+                        'not_fulfilled' => 0,
+                        'not_updated' => 0,
+                        'total' => 0
+                    ]
+                ];
+            });
+
+            return response()->json([
+                'convivencias' => $formattedData
+            ]);
+
+            // Consulta para obtener las convivencias de los trabajadores de la sucursal en la date dada
+            /*$convivencias = BranchRuleProfessional::with(['branchRule.rule', 'professional'])
                 ->whereHas('branchRule', function ($query) use ($branch_id) {
                     $query->where('branch_id', $branch_id); // Filtrar por branch_id
                 })
@@ -56,7 +96,7 @@ class BranchRuleProfessionalController extends Controller
                     'ruleName' => $convivencia->branchRule->rule->name, // Nombre de la regla
                     'last_edited_at' => $convivencia->last_edited_at, // Nombre de la regla
                 ];
-            });
+            });*/
 
             // Devolver la respuesta formateada
             return response()->json([
@@ -362,7 +402,7 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
-    public function update_rule_state(Request $request)
+    /*public function update_rule_state(Request $request)
     {
         Log::info("actualizar estado del cumplimiento de rule a un professional");
         try {
@@ -385,11 +425,58 @@ class BranchRuleProfessionalController extends Controller
                 'message' => 'Estado actualizado correctamente.',
                 'data' => $branchRuleProfessional,
             ], 200);
-            
+
             return response()->json(['msg' => 'Estado actualizado correctamente del cumplimiento de una rule del professional'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => 'Error al actualizar estado del cumplimiento de rule del professional'], 500);
+        }
+    }*/
+
+    public function update_rule_state(Request $request)
+    {
+        Log::info("Actualización masiva de estados de convivencias");
+
+        try {
+            $data = $request->validate([
+                'changes' => 'required|array',
+                'changes.*.id' => 'required|numeric',
+                'changes.*.estado' => 'required|numeric'
+            ]);
+
+            DB::beginTransaction();
+
+            $updatedIds = [];
+            $now = now();
+
+            foreach ($data['changes'] as $change) {
+                $branchRuleProfessional = BranchRuleProfessional::find($change['id']);
+
+                if ($branchRuleProfessional) {
+                    $branchRuleProfessional->estado = $change['estado'];
+                    $branchRuleProfessional->last_edited_at = $now;
+                    $branchRuleProfessional->save();
+
+                    $updatedIds[] = $branchRuleProfessional->id;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estados actualizados correctamente.',
+                'updated_count' => count($updatedIds),
+                'updated_ids' => $updatedIds
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error($th);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar estados',
+                'error' => $th->getMessage()
+            ], 500);
         }
     }
 

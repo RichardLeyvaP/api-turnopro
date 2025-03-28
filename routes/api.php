@@ -356,7 +356,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::post('/box-destroy', [BoxController::class, 'destroy']);
 
     //Payment Method
-    Route::put('/payment-method', [PaymentMethodController::class, 'update']);
+    Route::post('/payment-method-update', [PaymentMethodController::class, 'update']);
     Route::get('/payment-method', [PaymentMethodController::class, 'index']);
     Route::get('/payment-method-show', [PaymentMethodController::class, 'show']);
     Route::post('/payment-method', [PaymentMethodController::class, 'store']);
