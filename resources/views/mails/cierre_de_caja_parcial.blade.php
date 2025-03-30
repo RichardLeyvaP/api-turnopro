@@ -146,7 +146,20 @@
                     </div>
                 </td>
             </tr>
-
+        </table>
+        <table>
+            <tr class="section-header">
+                <td colspan="3"><strong>Tipos de Ingresos:</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Propinas:</strong> {{ number_format(round($boxcloseData['totalTip'], 2), 2) }}</td>
+                <td><strong>Venta de Productos:</strong>
+                    {{ number_format(round($boxcloseData['totalProduct'], 2), 2) }}</td>
+                <td><strong>Prestación de Servicios:</strong>
+                    {{ number_format(round($boxcloseData['totalService'], 2), 2) }}</td>
+             </tr>
+            </table>
+            <table>
             <tr>
                 <th>Datos del Sistema</th>
                 <th>Datos de la Cajera</th>
@@ -175,37 +188,6 @@
                     </td>
                     <td class="difference-value">
                         {{ number_format(round($cashierData['differenceBox'], 2), 2) }}
-                    </td>
-                </tr>
-@endif-->
-            <tr class="section-header">
-                <td colspan="2"><strong>Cierre de las Cuentas y Formas de Pago:</strong></td>
-            </tr>
-            <tr>
-                <td><strong>Propinas:</strong> {{ number_format(round($boxcloseData['totalTip'], 2), 2) }}</td>
-                <td><strong>Propinas:</strong> {{ number_format(round($cashierData['totalTip'] ?? 0, 2), 2) }}</td>
-            </tr>
-            <tr>
-                <td><strong>Venta de Productos:</strong>
-                    {{ number_format(round($boxcloseData['totalProduct'], 2), 2) }}</td>
-                <td><strong>Venta de Productos:</strong>
-                    {{ number_format(round($cashierData['totalProduct'] ?? 0, 2), 2) }}
-                </td>
-            </tr>
-            <tr>
-                <td><strong>Prestación de Servicios:</strong>
-                    {{ number_format(round($boxcloseData['totalService'], 2), 2) }}</td>
-                <td><strong>Prestación de Servicios:</strong>
-                    {{ number_format(round($cashierData['totalService'] ?? 0, 2), 2) }}</td>
-            </tr>
-            <!-- Fila adicional para mostrar la diferencia en las Cuentas
-            @if (isset($cashierData['differenceAccounts']) && $cashierData['differenceAccounts'] != 0)
-<tr class="difference-row">
-                    <td class="difference-label">
-                        <strong>Diferencia en Cuentas:</strong>
-                    </td>
-                    <td class="difference-value">
-                        {{ number_format(round($cashierData['differenceAccounts'], 2), 2) }}
                     </td>
                 </tr>
 @endif-->
