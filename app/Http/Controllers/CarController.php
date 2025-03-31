@@ -29,6 +29,7 @@ use App\Services\CarService;
 use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
@@ -1516,7 +1517,10 @@ class CarController extends Controller
                         'image_url' => $professional->image_url ?? "professionals/default_profile.jpg",
                         'state' => (int)$state,
                         'updated_at' => optional($tail)->updated_at ?? '2024-09-13 10:10:00',
-                        'user_id' => $car->user_id
+                        'user_id' => $car->user_id,
+                        'action_status' => $car->action_status,
+                        'action_descriptions' => $car->action_descriptions ?? [],
+                        'change_log' => $car->change_log ?? []
                     ];
                 })
                 ->sortBy('updated_at')
@@ -2941,6 +2945,8 @@ class CarController extends Controller
                 'id' => 'required|numeric',
                 'professional_id' => 'nullable'
             ]);
+            $user = Auth::user();
+            $professionalName = $user->professional ? $user->professional->name : $user->name;
             $car = Car::find($data['id']);
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
             $orders = Order::where('car_id', $data['id'])->where('is_product', 1)->select('product_store_id', 'cant')->get();
@@ -2998,8 +3004,23 @@ class CarController extends Controller
                 }
                 $reservation->save();
                 $reservation->delete();
+                if ($car->action_status !== 0) {                    
+                $car->logChanges(
+                    'Carro Eliminado',
+                    $professionalName,
+                    'delete'
+                );
+                $car->save();
+                }
             } elseif ($active == 2) {
                 $notification->description = 'Carro: ' . $car->id . ' Aceptado a editar';
+                if ($car->action_status !== 0) { 
+                $car->addActionDescription(
+                    actionType: 'approved',
+                    description: 'Carro aprobado a editar',
+                    nameProfessional: $professionalName
+                );
+                }
                 $car->active = 1;
                 $car->pay = 0;
                 $car->tip = 0;
@@ -3009,7 +3030,7 @@ class CarController extends Controller
             $notification->tittle = 'Aceptada';
             $notification->type = 'Caja';
             $branch->notifications()->save($notification);
-
+            
             // $car->delete();
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
@@ -3021,15 +3042,31 @@ class CarController extends Controller
 
     public function destroy_denegada(Request $request)
     {
-        Log::info("Eliminar");
+        Log::info("Denegar solicitud de edición o eliminación");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
                 'professional_id' => 'nullable'
             ]);
+            $user = Auth::user();
+            $professionalName = $user->professional ? $user->professional->name : $user->name;
             $car = Car::find($data['id']);
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
             $active = $car->active;
+            
+            $description = '';
+            if ($active == 3){                
+                $description = 'Solicitud de eliminación denegada';
+            }
+            if ($active == 2){                
+                $description = 'Solicitud de edición denegada';
+                }
+            $car->addActionDescription(
+                actionType: 'denied',
+                description: $description,
+                nameProfessional: $professionalName
+            );
+            $car->action_status = 0;
             $car->active = 1;
             $car->save();
             /*$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
@@ -3073,7 +3110,8 @@ class CarController extends Controller
             ]);
             $car = Car::find($data['id']);
             $branch = Branch::where('id', $request->branch_id)->first();
-
+            Log::info("Request de editar car");
+            Log::info($request);
             $client = $car->clientProfessional->client;
             $professional = $car->clientProfessional->professional;
             $trace = [
@@ -3082,12 +3120,18 @@ class CarController extends Controller
                 'client' => $client->name,
                 'amount' => $car->amount,
                 'operation' => 'Hace solicitud de editar carro: ' . $car->id,
-                'details' => '',
+                'details' => $request->description,
                 'description' => $professional->name,
                 'car_id' => $data['id']
             ];
             $this->traceService->store($trace);
-            $car->active = 2;
+            $car->addActionDescription(
+                actionType: 'edit',
+                description: $request->description,
+                nameProfessional: $request->nameProfessional
+            );
+            $car->active = $request->active;
+            $car->action_status = 1;
             $car->save();
             /* $administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
             $query->where('name', 'Administrador de Sucursal');
@@ -3129,12 +3173,18 @@ class CarController extends Controller
                 'client' => $client->name,
                 'amount' => $car->amount,
                 'operation' => 'Hace solicitud de eliminar carro: ' . $car->id,
-                'details' => '',
+                'details' => $request->description,
                 'description' => $professional->name,
                 'car_id' => $data['id']
             ];
             $this->traceService->store($trace);
+            $car->addActionDescription(
+                actionType: 'delete',
+                description: $request->description,
+                nameProfessional: $request->nameProfessional
+            );
             $car->active = 3;
+            $car->action_status = 2;
             $car->save();
             /* $administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
             $query->where('name', 'Administrador de Sucursal');

@@ -267,8 +267,8 @@ class PaymentController extends Controller
             $control = 0;
             $method = null;
             $car = Car::find($data['car_id']);            
-           $branch = Branch::where('id', $request->branch_id)->first();
-                $payment = new Payment();
+            $branch = Branch::where('id', $request->branch_id)->first();
+            $payment = new Payment();
             // Lógica basada en el valor de $data['tipByCash']
             switch ($data['tipByCash']) {
                 case 'Efectivo':
@@ -398,8 +398,33 @@ class PaymentController extends Controller
                 $finance->car_id = $data['car_id'];
                 $finance->save();
             }
+            $paymentData = [
+                'cash' => $data['cash'] ?? 0,
+                'creditCard' => $data['creditCard'] ?? 0,
+                'debit' => $data['debit'] ?? 0,
+                'transfer' => $data['transfer'] ?? 0,
+                'other' => $data['other'] ?? 0,
+                'cardGift' => $data['cardGift'] ?? 0,
+                'tip' => $data['tip'] ?? 0,
+                'tipByCash' => $data['tipByCash'] ?? null,
+            ];   
+            
+            if ($car->action_status != 0 && !empty($car->payment)) {
+                $changesDescription = $car->comparePaymentChanges($car->payment, $paymentData);
+                if (!empty($changesDescription)) {
+                    $car->logChanges(
+                        $changesDescription,
+                        $request->nameProfessional,
+                        'payment'
+                    );
+                }
+            }
+            // Guardar en el campo JSON payments del carro
+            $car->payment = $paymentData;
+            
             $car->pay = 1;
             $car->active = 0;
+            $car->action_status = 0;
             $car->tip = $data['tip'];
             $car->save();
             Log::info('Actualizar Cajda de la sucursal');

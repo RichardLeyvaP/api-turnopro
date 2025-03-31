@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\CarActionLogger;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Car extends Model
 {
     use HasFactory;
+    use CarActionLogger;
 
     public function clientProfessional()
     {
@@ -54,6 +56,47 @@ class Car extends Model
     }
 
     protected $casts = [
-        'amount' => 'double'
+        'amount' => 'double',
+        'action_descriptions' => 'array',  // Convierte JSON a array
+        'change_log' => 'array',            // Convierte JSON a array
+        'payment' => 'array'            // Convierte JSON a array
     ];
+
+    protected function comparePayments(array $oldPayments, array $newPayments): string
+{
+    $changes = [];
+    $fieldNames = [
+        'cash' => 'Efectivo',
+        'creditCard' => 'Tarjeta de Crédito',
+        'debit' => 'Tarjeta de Débito',
+        'transfer' => 'Transferencia',
+        'other' => 'Otro método',
+        'cardGift' => 'Tarjeta de Regalo',
+        'tip' => 'Propina',
+        'tipByCash' => 'Método de pago de la propina'
+    ];
+
+    foreach ($fieldNames as $field => $name) {
+        $oldValue = $oldPayments[$field] ?? null;
+        $newValue = $newPayments[$field] ?? null;
+
+        // Solo registrar cambios si hay diferencia
+        if ($oldValue != $newValue) {
+            if (is_numeric($oldValue)) {
+                // Para campos numéricos (montos)
+                $difference = $newValue - $oldValue;
+                if ($difference > 0) {
+                    $changes[] = "$name aumentó de $$oldValue a $$newValue (+$$difference)";
+                } elseif ($difference < 0) {
+                    $changes[] = "$name disminuyó de $$oldValue a $$newValue (-$$" . abs($difference) . ")";
+                }
+            } else {
+                // Para campos no numéricos (como tipByCash)
+                $changes[] = "$name cambió de '{$oldValue}' a '{$newValue}'";
+            }
+        }
+    }
+
+    return implode(', ', $changes);
+}
 }

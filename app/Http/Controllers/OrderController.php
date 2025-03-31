@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
@@ -199,6 +200,14 @@ class OrderController extends Controller
                     'description' => $professionalName,
                 ];
                 $this->traceService->store($trace);
+                if ($car->action_status != 0) {
+                $car->logChanges(
+                    'Agerga la cantidad de '.$order->cant.' ' . $order->productStore->product->name . ' para un total de: $'.$order->price,
+                    $request->nameProfessional,
+                    'add'
+                );
+                $car->save();
+                }
                 Log::info('$trace Pproduct');
                 Log::info($trace);
              }
@@ -214,6 +223,14 @@ class OrderController extends Controller
                     'description' => $professionalName,
                 ];
                 $this->traceService->store($trace);
+                if ($car->action_status != 0) {
+                    $car->logChanges(
+                        'Agerga el Servicio: '. $order->branchServiceProfessional->branchService->service->name . ' con un valor de: $'.$order->price,
+                        $request->nameProfessional,
+                        'add'
+                    );
+                    $car->save();
+                    }
                 Log::info('$trace Service');
                 //Log::info($trace);             
             }
@@ -692,6 +709,8 @@ class OrderController extends Controller
             ]);
             $order = Order::findOrFail($data['id']);
             $car = Car::findOrFail($order->car_id);
+            $user = Auth::user();
+            $nameProfessional = $user->professional ? $user->professional->name : $user->name;
             //$client = $car->clientProfessional->client;
             //$professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
@@ -717,20 +736,14 @@ class OrderController extends Controller
                     $branch->notifications()->save($notification);
                     //}
                 //}
-                /*$trace = [
-                    'branch' => $branch->name,
-                    'cashier' => $request->nameProfessional,
-                    'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
-                    'amount' => $order->price,
-                    'operation' => 'Elimina orden de Producto del carro: '.$car->id,
-                    'details' => $product->name,
-                    'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
-                ];
-                $this->traceService->store($trace);
-                Log::info('$trace Pproduct');
-                Log::info($trace);*/
-                //todo pendiente para revisar importante
-               //$this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
+                if ($car->action_status != 0) {
+                    $car->logChanges(
+                        'Elimina el producto' . $order->productStore->product->name . ' para un total de: $'.$order->price,
+                        $nameProfessional,
+                        action_type: 'delete'
+                    );
+                    $car->save();
+                }
             }
             elseif (!$order->is_product) {
                 Log::info("servicio");
@@ -753,18 +766,14 @@ class OrderController extends Controller
                     $branch->notifications()->save($notification);
                     //}
                 //}
-                /*$trace = [
-                    'branch' => $branch->name,
-                    'cashier' => $request->nameProfessional,
-                    'client' => $client->name.' '.$client->surname.' '.$client->second_surname,
-                    'amount' => $order->price,
-                    'operation' => 'Elimina orden de Servicio del carro: '.$car->id,
-                    'details' => $service->name,
-                    'description' => $professional->name.' '.$professional->surname.' '.$professional->second_surname,
-                ];
-                $this->traceService->store($trace);
-                Log::info('$trace Service');
-                Log::info($trace);      */
+                if ($car->action_status != 0) {
+                    $car->logChanges(
+                        'Elimina el servicio: ' . $service->name . ' con un valor de: $'.$order->price,
+                        $nameProfessional,
+                        'delete'
+                    );
+                    $car->save();
+                }
 
             }
             $order->delete();
