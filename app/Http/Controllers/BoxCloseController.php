@@ -214,13 +214,14 @@ class BoxCloseController extends Controller
                                 'cashier_total' => $cashierBoxClosing->total ?? 0,
                                 'cashier_existence' => $cashierBoxClosing->existence ?? 0,
                                 'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
+                                'cashier_totalService' => $cashierBoxClosing->totalService ?? 0,
+                                'cashier_totalProduct' => $cashierBoxClosing->totalProduct ?? 0,
                                 'cashier_totaCash' => $cashierBoxClosing->totalCash ?? 0,
                                 'cashier_totalCreditCard' => $cashierBoxClosing->totalCreditCard ?? 0,
                                 'cashier_totalDebit' => $cashierBoxClosing->totalDebit ?? 0,
                                 'cashier_totalTransfer' => $cashierBoxClosing->totalTransfer ?? 0,
                                 'cashier_totalOther' => $cashierBoxClosing->totalOther ?? 0,
                                 'cashier_totalCardGif' => $cashierBoxClosing->totalCardGif ?? 0,
-                                'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
                                 'cashier_totalBonus' => $cashierBoxClosing->totalBonus ?? 0,
                                 'cashier_differencePay' => $cashierBoxClosing->differencePay ?? 0,
                                 'cashier_difference' => $cashierBoxClosing->difference ?? 0,
@@ -435,34 +436,8 @@ class BoxCloseController extends Controller
                 $box->save();
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
-            //$boxClose = BoxClose::where('box_id', $box->id)->where('type', 'Diario')->first();
-            //if (!$boxClose) {
             $boxClose = new BoxClose();
-            //}
-            /*$totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function ($query) {
-                $query->where('type', 'Bono convivencias')
-                    ->orWhere('type', 'Bono servicios');
-            })->sum('amount');
-            $bonus = $this->metaService->store($branch);
-            $bonusCollection = collect($bonus);
-
-            // Calcular la suma de 'amount'
-            $totalBonus = $bonusCollection->sum('amount');
-            Log::info('$totalBonus Bonussssssss');
-            Log::info($totalBonus);
-
-            /*if ($totalBonus) {
-                Log::info('Entra a descontar los bonos de la existencia');
-                // Calcular la suma de los montos
-                //$totalAmount = $subquery->sum('amount');
-                $difference = $totalBonus - $totalAmount;
-                Log::info('Diferencia de bono cierre de caja' . $difference);
-                // Ajustar la existencia de $box según la diferencia
-                // Si la diferencia es positiva, se resta de box->existence
-                // Si es negativa, se suma a box->existence
-                $box->existence -= $difference;
-                $box->save(); // Guardar los cambios en $box
-            }*/
+            
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -494,7 +469,7 @@ class BoxCloseController extends Controller
             $cashierData['data'] = Carbon::now();
             $cashierData['type'] = 'Diario';
             $cashierData['box_close_id'] = $boxClose->id;
-            $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
+            $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
                     ->update(['user_id' => $userId]);
@@ -522,7 +497,8 @@ class BoxCloseController extends Controller
             $emailassociated = $branch->associates()->pluck('email');
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
-            $mergedEmails = ['yasmany891230@gmail.com'];
+            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com'];
             Log::info('$mergedEmails correos a enviar cierre de caja');
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
@@ -537,7 +513,7 @@ class BoxCloseController extends Controller
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
             /*$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);*/
 
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente',], 200);
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'boxClosePartial' => $boxCloseCashier], 200);
         } catch (TransportException $e) {
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
@@ -594,45 +570,8 @@ class BoxCloseController extends Controller
                 $box->save();
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
-            //$boxClose = BoxClose::where('box_id', $box->id)->where('type', 'Parcial')->where('user_id', $userId)->first();
-            //if (!$boxClose) {
             $boxClose = new BoxClose();
-            //}
-            /*$bonus = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
-                $query->where('type', 'Bono convivencias')
-                    ->orWhere('type', 'Bono servicios');
-            })->get()->map(function ($payment) {
-                return [
-                    'name' => $payment->professional->name,
-                    'image_url' => $payment->professional->image_url,
-                    'bonus' => $payment->type,
-                    'amount' => round($payment->amount),
-                ];
-            }); */
-            /*$totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function($query) {
-                $query->where('type', 'Bono convivencias')
-                    ->orWhere('type', 'Bono servicios');
-                })->sum('amount');  
-                $bonus = $this->metaService->store($branch);
-                $bonusCollection = collect($bonus);
-
-                // Calcular la suma de 'amount'
-                $totalBonus = $bonusCollection->sum('amount');
-                Log::info('$totalBonus Bonussssssss');
-                Log::info($totalBonus);
-
-                if ($totalBonus) {      
-                    Log::info('Entra a descontar los bonos de la existencia');
-                    // Calcular la suma de los montos
-                    //$totalAmount = $subquery->sum('amount');
-                    $difference = $totalBonus - $totalAmount;
-                    Log::info('Diferencia de bono ierre de caja'.$difference);
-                    // Ajustar la existencia de $box según la diferencia
-                        // Si la diferencia es positiva, se resta de box->existence
-                        // Si es negativa, se suma a box->existence
-                        $box->existence -= $difference;
-                        $box->save(); // Guardar los cambios en $box
-            }*/
+           
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -665,8 +604,7 @@ class BoxCloseController extends Controller
             $cashierData['data'] = Carbon::now();
             $cashierData['type'] = 'Parcial';
             $cashierData['box_close_id'] = $boxClose->id;
-            $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
-
+            $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             // Actualizar los registros en la tabla cars
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
@@ -696,6 +634,7 @@ class BoxCloseController extends Controller
             $mergedEmails = $emails->merge($emailArray);
             Log::info('$mergedEmails correos a enviar cierre de caja');
             $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com'];
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
                 try {
@@ -709,12 +648,40 @@ class BoxCloseController extends Controller
             // Supongamos que tienes 5 direcciones de correo electrónico en un array
             /*$this->sendEmailService->emailBoxClosure($mergedEmails, $reporte, $branch->business['name'], $branch['name'], $box['data'], $box['cashFound'], $box['existence'], $box['extraction'], $data['totalTip'], $data['totalProduct'], $data['totalService'], $data['totalCash'], $data['totalCreditCard'], $data['totalDebit'], $data['totalTransfer'], $data['totalOther'], $data['totalMount'], $data['totalCardGif'], $totalBonus);*/
 
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente'/*, 'bonus' => $bonus*/], 200);
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'boxClosePartial' => $boxCloseCashier], 200);
         } catch (TransportException $e) {
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
             Log::info('BoxCloseController->store_cashier');
+            Log::error($th);
+
+            //DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
+        }
+    }
+
+    public function store_cashier_confirm(Request $request)
+    {
+       
+        try {
+            Log::info("Cierre de caja parcial confimación");
+            $request->validate([
+                'id' => 'required|numeric',
+                'description' => 'required|string',
+            ]);
+            Log::info('BoxCloseController->store_cashier_confirm request');
+            Log::info($request);
+            $id = $request->id;
+
+            $cashier = CashierBoxClosing::where('id', $id)
+            ->first();
+            $cashier->description = $request->description;
+            $cashier->save();
+
+            return response()->json(['msg' => 'Cierre de caja confirmado correctamente'], 200);
+        }catch (\Throwable $th) {
+            Log::info('BoxCloseController->store_cashier_confirm');
             Log::error($th);
 
             //DB::rollback();

@@ -32,5 +32,10 @@ class Business extends Model
     public function finances(){
         return $this->HasMany(Finance::class);
     }
+
+    public function monthlyClosures()
+    {
+        return $this->hasMany(MonthlyClosure::class);
+    }
     
 }

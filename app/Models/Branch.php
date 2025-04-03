@@ -124,9 +124,9 @@ class Branch extends Model
          return $this->hasMany(CashierBoxClosing::class);
      }
 
-     /*public function monthlyOperations()
+     public function monthlyClosures()
     {
-        return $this->hasMany(MonthlyOperation::class);
-    }*/
+        return $this->hasMany(MonthlyClosure::class);
+    }
 
 }

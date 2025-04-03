@@ -59,6 +59,7 @@ use App\Http\Controllers\TraceController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\OperationTipController;
 use App\Http\Controllers\CashierSaleController;
+use App\Http\Controllers\MonthlyClosureController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Models\ChargePermission;
 use App\Models\CourseStudent;
@@ -338,6 +339,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     //BoxClose
     Route::post('/closebox', [BoxCloseController::class, 'store']);
     Route::post('/closebox-cashier', [BoxCloseController::class, 'store_cashier']);
+    Route::post('/closebox-cashier-confirm', [BoxCloseController::class, 'store_cashier_confirm']);
     Route::post('/bonus-professional', [BoxCloseController::class, 'store1']); //para pagar a un barbero en especifico de un dia especifico, de una sucursal específica
     Route::post('/box-close-new', [BoxCloseController::class, 'box_close_new']); //para pagar ejecutar cierre de caja para agregar retenciones
     Route::get('/closebox', [BoxCloseController::class, 'index']);
@@ -728,6 +730,14 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     //Retention
     Route::get('/retention', [RetentionController::class, 'index']);
     Route::post('/retention', [RetentionController::class, 'store']);
+
+    //Retention
+    Route::get('/mounthly-clousure-year', [MonthlyClosureController::class, 'getMonthlyClosures']);
+    Route::post('/mounthly-clousure', [MonthlyClosureController::class, 'store']);
+    Route::post('/mounthly-clousure-incomes', [MonthlyClosureController::class, 'store_incomes']);
+    Route::post('/mounthly-clousure-expenses', [MonthlyClosureController::class, 'store_expenses']);
+    Route::post('/mounthly-clousure-destroy', [MonthlyClosureController::class, 'destroy']);
+    Route::post('/mounthly-clousure-utility', [MonthlyClosureController::class, 'calculateUtility']);
 
     //ruta unificada de coordinador y encargado
     Route::get('/notification-tail-colation', [TailController::class, 'notification_tail_colation']);

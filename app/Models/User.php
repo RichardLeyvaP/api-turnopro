@@ -81,8 +81,8 @@ class User extends Authenticatable
         return $this->hasMany(CashierSale::class);
     }
 
-    /*public function monthlyOperations()
+    public function monthlyClosures()
     {
-        return $this->hasMany(MonthlyOperation::class);
-    }*/
+        return $this->hasMany(MonthlyClosure::class);
+    }
 }
