@@ -52,6 +52,9 @@ class Send_mail extends Mailable
     public $gasto;
     public $utilidad;
     public $professionalBonus;
+    public $monthName;
+    public $editedItem;
+    public $typeClose;
     
 
      // Propiedades adicionales correspondientes a la plantilla restaurar_pass
@@ -160,6 +163,11 @@ class Send_mail extends Mailable
                 'boxcloseData' => $this->boxcloseData,
                 'cashierData' => $this->cashierData,
                 'nameProfessional' => $this->nameProfessional,
+
+                //datos adicionales cierre de mes ejecutado
+                'editedItem' => $this->editedItem,
+                'monthName' => $this->monthName,
+                'typeClose' => $this->typeClose,
 
             ]
         );

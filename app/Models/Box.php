@@ -14,6 +14,11 @@ class Box extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function boxClose(){
         return $this->hasMany(BoxClose::class);
     }

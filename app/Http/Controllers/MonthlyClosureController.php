@@ -2,16 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoxClose;
+use App\Models\Branch;
+use App\Models\Business;
 use App\Models\Finance;
 use Illuminate\Http\Request;
 
 use App\Models\MonthlyClosure;
 use App\Models\Retention;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use App\Services\SendEmailService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+
 class MonthlyClosureController extends Controller
 {
+
+    private SendEmailService $sendEmailService;
+
+    public function __construct(SendEmailService $sendEmailService)
+    {
+
+        $this->sendEmailService = $sendEmailService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -30,74 +45,73 @@ class MonthlyClosureController extends Controller
                 'year' => 'nullable|integer|min:2000|max:' . (date('Y') + 1),
                 'month' => 'nullable|integer|between:1,12',
             ]);
-    
+
             // Obtener parámetros
-        $year = $request->input('year', date('Y'));
-        $month = $request->input('month');
-        $businessId = $request->input('business_id');
-        $branchId = $request->input('branch_id');
+            $year = $request->input('year', date('Y'));
+            $month = $request->input('month');
+            $businessId = $request->input('business_id');
+            $branchId = $request->input('branch_id');
 
-        // Construir consulta base
-        $query = MonthlyClosure::with([
-            'business:id,name',
-            'branch:id,name',
-            'user.professional:id,user_id,name'
-        ]);
+            // Construir consulta base
+            $query = MonthlyClosure::with([
+                'business:id,name',
+                'branch:id,name',
+                'user.professional:id,user_id,name'
+            ]);
 
-        // Filtrar por año (extraer año del campo month Y-m)
-        $query->whereRaw("SUBSTRING(month, 1, 4) = ?", [$year]);
+            // Filtrar por año (extraer año del campo month Y-m)
+            $query->whereRaw("SUBSTRING(month, 1, 4) = ?", [$year]);
 
-        // Filtrar por mes si está presente
-        if ($month) {
-            $query->whereRaw("SUBSTRING(month, 6, 2) = ?", [str_pad($month, 2, '0', STR_PAD_LEFT)]);
-        }
+            // Filtrar por mes si está presente
+            if ($month) {
+                $query->whereRaw("SUBSTRING(month, 6, 2) = ?", [str_pad($month, 2, '0', STR_PAD_LEFT)]);
+            }
 
-        // Filtrar por business_id
-        if ($businessId) {
-            $query->where(function($q) use ($businessId) {
-                $q->where('business_id', $businessId)
-                  ->orWhereHas('branch', function($branchQuery) use ($businessId) {
-                      $branchQuery->where('business_id', $businessId);
-                  });
+            // Filtrar por business_id
+            if ($businessId) {
+                $query->where(function ($q) use ($businessId) {
+                    $q->where('business_id', $businessId)
+                        ->orWhereHas('branch', function ($branchQuery) use ($businessId) {
+                            $branchQuery->where('business_id', $businessId);
+                        });
+                });
+            }
+
+            // Filtrar por branch_id si está presente
+            if ($branchId) {
+                $query->where('branch_id', $branchId);
+            }
+
+            // Ordenar por mes descendente
+            $query->orderBy('month', 'desc');
+
+            // Transformar los resultados
+            $closures = $query->get()->map(function ($closure) {
+                return [
+                    'id' => $closure->id,
+                    'data' => $closure->data,
+                    'available_money' => $closure->available_money ?? 0,
+                    'utility' => $closure->utility ?? 0,
+                    'net_utility' => $closure->net_utility ?? 0,
+                    'retention' => $closure->retention ?? 0,
+                    'discounts' => $closure->discounts ?? 0,
+                    'differences' => $closure->differences ?? 0,
+                    'incomes' => $closure->incomes ?? [],
+                    'expenses' => $closure->expenses ?? [],
+                    'businessName' => $closure->business->name ?? null,
+                    'branchName' => $closure->branch->name ?? null,
+                    'branch_id' => $closure->branch_id ?? null,
+                    'business_id' => $closure->business_id ?? null,
+                    'userName' => $closure->user->name  ?? null,
+                    'professionalName' => $closure->user->professional->name ?? null,
+                    'type' => $closure->branch_id ? 'Sucursal' : 'Negocio', // Nuevo campo para identificar el tipo
+                    'month' => $closure->month,
+                ];
             });
-        }
-
-        // Filtrar por branch_id si está presente
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
-
-        // Ordenar por mes descendente
-        $query->orderBy('month', 'desc');
-
-        // Transformar los resultados
-        $closures = $query->get()->map(function($closure) {
-            return [
-                'id' => $closure->id,
-                'data' => $closure->data,
-                'available_money' => $closure->available_money ?? 0,
-                'utility' => $closure->utility ?? 0,
-                'net_utility' => $closure->net_utility ?? 0,
-                'retention' => $closure->retention ?? 0,
-                'discounts' => $closure->discounts ?? 0,
-                'differences' => $closure->differences ?? 0,
-                'incomes' => $closure->incomes ?? [],
-                'expenses' => $closure->expenses ?? [],
-                'businessName' => $closure->business->name ?? null,
-                'branchName' => $closure->branch->name ?? null,
-                'branch_id' => $closure->branch_id ?? null,
-                'business_id' => $closure->business_id ?? null,
-                'userName' => $closure->user->name  ?? null,
-                'professionalName' => $closure->user->professional->name ?? null,
-                'type' => $closure->branch_id ? 'Sucursal' : 'Negocio', // Nuevo campo para identificar el tipo
-                'month' => $closure->month,
-            ];
-        });
             return response()->json([
                 'success' => true,
                 'closures' => $closures
             ]);
-    
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -135,15 +149,15 @@ class MonthlyClosureController extends Controller
                 'editedItem.business_id' => 'nullable|integer|exists:businesses,id',
                 'month' => 'nullable|date_format:Y-m',
             ]);
-            
+
             $editedItem = $validatedData['editedItem'];
             $month = $validatedData['month'] ?? now()->format('Y-m');
-            
+
             // Limpieza de valores
             $branchId = $editedItem['branch_id'] === "" ? null : $editedItem['branch_id'];
             $businessId = $editedItem['business_id'] === "" ? null : $editedItem['business_id'];
             $recordId = $editedItem['id'] === "" ? null : $editedItem['id'];
-             // Datos para actualizar/crear
+            // Datos para actualizar/crear
             $updateData = [
                 'data' => now()->toDateString(),
                 'branch_id' => $editedItem['branch_id'] ?? null,
@@ -159,12 +173,12 @@ class MonthlyClosureController extends Controller
                 'expenses' => json_encode($editedItem['expenses']),
                 'user_id' => auth()->id(),
             ];
-    
+
             // Lógica mejorada de creación/actualización
             if ($recordId) {
                 // Opción 1: Buscar y actualizar manualmente
                 $closure = MonthlyClosure::find($recordId);
-                
+
                 if ($closure) {
                     $closure->update($updateData);
                 } else {
@@ -183,15 +197,137 @@ class MonthlyClosureController extends Controller
                     $updateData
                 );
             }
-        
+            $now = Carbon::now();
+            $boxData = $now->format('Y-m-d H:i:s');
+            $monthName = Carbon::createFromFormat('Y-m', $month)
+            ->locale('es') // Establecer idioma español
+            ->isoFormat('MMMM [del] YYYY'); // Formato deseado
+            $carbonMonth = Carbon::createFromFormat('Y-m', $month);
+            $startDate = $carbonMonth->copy()->startOfMonth()->toDateString();
+            $endDate = $carbonMonth->copy()->endOfMonth()->toDateString();
+            $latestClosureIds = BoxClose::select(DB::raw('MAX(box_closes.id) as id'))
+                ->join('boxes', 'boxes.id', '=', 'box_closes.box_id')
+                ->join('branches', 'branches.id', '=', 'boxes.branch_id')
+                ->where('box_closes.type', 'Diario')
+                ->where('box_closes.data', '>=', $startDate)
+                ->where('box_closes.data', '<=', $endDate)
+                ->when($branchId, function($query) use ($branchId) {
+                    $query->where('branches.id', $branchId);
+                })
+                ->when($businessId && !$branchId, function($query) use ($businessId) {
+                    $query->where('branches.business_id', $businessId);
+                })
+                ->groupBy(DB::raw('DATE(box_closes.data)'))
+                ->pluck('id');
+
+            // Consulta principal para obtener los totales
+            $boxClose = BoxClose::selectRaw('
+                    COALESCE(SUM(totalMount), 0) as totalMount,
+                    COALESCE(SUM(totalService), 0) as totalService,
+                    COALESCE(SUM(totalProduct), 0) as totalProduct,
+                    COALESCE(SUM(totalTip), 0) as totalTip,
+                    COALESCE(SUM(totalCash), 0) as totalCash,
+                    COALESCE(SUM(totalDebit), 0) as totalDebit,
+                    COALESCE(SUM(totalCreditCard), 0) as totalCreditCard,
+                    COALESCE(SUM(totalTransfer), 0) as totalTransfer,
+                    COALESCE(SUM(totalOther), 0) as totalOther,
+                    COALESCE(SUM(totalCardGif), 0) as totalCardGif
+                ')
+                ->whereIn('box_closes.id', $latestClosureIds)
+                ->first();
             DB::commit();
-    
+            $user = auth()->user();
+
+            // Verificar si está autenticado y tiene un profesional asociado
+            if ($user && $user->professional) {
+                $professionalName = $user->professional->name;
+                // También puedes acceder a otros campos:
+                // $professionalId = $user->professional->id;
+                // $professionalSpecialty = $user->professional->specialty;
+            } else {
+                // Manejar el caso cuando no hay usuario autenticado o no tiene profesional
+                $professionalName = 'No asignado';
+            }
+            if ($branchId) {
+                $entity = Branch::findOrFail($branchId);
+                $entityName = $entity->name;                
+                $businessName = $entity->business->name;
+                $entityType = 'Sucursal';
+            } elseif ($businessId) {
+                $entity = Business::findOrFail($businessId);
+                $businessName = $entity->name;
+                $entityName = ''; 
+                $entityType = 'Negocio';
+            } else {
+                // Manejar caso donde no se proporciona ninguno (opcional)
+                $entityName = 'General';
+                $entityType = 'Reporte';
+            }
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensualEjecutado', ['branchBusinessName' => $businessName, 'branchName' => $entityName, 'entityType' => $entityType, 'boxData' => $boxData, 'boxcloseData' => $boxClose, 'editedItem' =>  $editedItem, 'nameProfessional' => $professionalName, 'monthName' => $monthName]);
+            $reporte = $pdf->output();
+            //Aqui hacer la logicac de enviar el correo
+            /*$emailsQuery = Professional::whereHas('charge', function($query) {
+                $query->where('name', 'Administrador')
+                    ->orWhere('name', 'Administrador de Sucursal');
+            });
+
+            // Aplicar filtro por branch o business
+            if ($branchId) {
+                // Filtro por branch específica
+                $emailsQuery->whereHas('branches', function($query) use ($branchId) {
+                    $query->where('branches.id', $branchId);
+                });
+                
+                // Emails de asociados de la branch
+                $branch = Branch::find($branchId);
+                $emailassociated = $branch->associates()->pluck('email');
+            } elseif ($businessId) {
+                // Filtro por todas las branches del business
+                $emailsQuery->whereHas('branches', function($query) use ($businessId) {
+                    $query->whereHas('business', function($q) use ($businessId) {
+                        $q->where('id', $businessId);
+                    });
+                });
+                
+                // Emails de asociados de todas las branches del business
+                $emailassociated = DB::table('branch_associates')
+                    ->join('branches', 'branch_associates.branch_id', '=', 'branches.id')
+                    ->where('branches.business_id', $businessId)
+                    ->pluck('branch_associates.email');
+            }
+
+            // Obtener emails y combinar
+            $emails = $emailsQuery->pluck('email');
+            $emailArray = $emailassociated->toArray();
+            $mergedEmails = $emails->merge($emailArray)->unique();
+            Log::info($mergedEmails);*/
+            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com'];
+            foreach ($mergedEmails as $email) {
+                try {
+                    $this->sendEmailService->emailBoxClosureMonthlyEjecutado(
+                        $email,
+                        $reporte,
+                        $businessName,
+                        $entityName,
+                        $entityType,
+                        $boxData,
+                        $boxClose,
+                        $editedItem,
+                        $professionalName,
+                        $monthName
+                    );
+                } catch (\Swift_TransportException $e) {
+                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                } catch (\Exception $e) {
+                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                }
+            }
             return response()->json([
                 'success' => true,
                 'message' => 'Cierre de mes realizado exitosamente',
                 'data' => $closure
             ], 201);
-    
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return response()->json([
@@ -202,7 +338,7 @@ class MonthlyClosureController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -224,15 +360,15 @@ class MonthlyClosureController extends Controller
                 'editedItem.business_id' => 'nullable|integer|exists:businesses,id',
                 'month' => 'nullable|date_format:Y-m',
             ]);
-            
+
             $editedItem = $validatedData['editedItem'];
             $month = $validatedData['month'] ?? now()->format('Y-m');
-            
+
             // Limpieza de valores
             $branchId = $editedItem['branch_id'] === "" ? null : $editedItem['branch_id'];
             $businessId = $editedItem['business_id'] === "" ? null : $editedItem['business_id'];
             $recordId = $editedItem['id'] === "" ? null : $editedItem['id'];
-            
+
             // Preparar datos para actualización/creación
             $updateData = [
                 'branch_id' => $branchId,
@@ -242,12 +378,12 @@ class MonthlyClosureController extends Controller
                 'incomes' => json_encode($editedItem['incomes'] ?? []),
                 'user_id' => auth()->id(),
             ];
-            
+
             // Lógica mejorada de creación/actualización
             if ($recordId) {
                 // Opción 1: Buscar y actualizar manualmente
                 $closure = MonthlyClosure::find($recordId);
-                
+
                 if ($closure) {
                     $closure->update($updateData);
                 } else {
@@ -266,16 +402,15 @@ class MonthlyClosureController extends Controller
                     $updateData
                 );
             }
-            
-        
+
+
             DB::commit();
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Ingresos Agregados correctamente',
                 'data' => $closure
             ], 201);
-    
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return response()->json([
@@ -286,7 +421,7 @@ class MonthlyClosureController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -308,15 +443,15 @@ class MonthlyClosureController extends Controller
                 'editedItem.business_id' => 'nullable|integer|exists:businesses,id',
                 'month' => 'nullable|date_format:Y-m',
             ]);
-            
+
             $editedItem = $validatedData['editedItem'];
             $month = $validatedData['month'] ?? now()->format('Y-m');
-            
+
             // Limpieza de valores
             $branchId = $editedItem['branch_id'] === "" ? null : $editedItem['branch_id'];
             $businessId = $editedItem['business_id'] === "" ? null : $editedItem['business_id'];
             $recordId = $editedItem['id'] === "" ? null : $editedItem['id'];
-            
+
             // Preparar datos para actualización/creación
             $updateData = [
                 'branch_id' => $branchId,
@@ -326,12 +461,12 @@ class MonthlyClosureController extends Controller
                 'expenses' => json_encode($editedItem['expenses'] ?? []),
                 'user_id' => auth()->id(),
             ];
-            
+
             // Lógica mejorada de creación/actualización
             if ($recordId) {
                 // Opción 1: Buscar y actualizar manualmente
                 $closure = MonthlyClosure::find($recordId);
-                
+
                 if ($closure) {
                     $closure->update($updateData);
                 } else {
@@ -350,16 +485,15 @@ class MonthlyClosureController extends Controller
                     $updateData
                 );
             }
-            
-        
+
+
             DB::commit();
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Gastos Agregados correctamente',
                 'data' => $closure
             ], 201);
-    
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return response()->json([
@@ -370,7 +504,7 @@ class MonthlyClosureController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -386,11 +520,11 @@ class MonthlyClosureController extends Controller
             $validatedData = $request->validate([
                 'editedItem' => 'required|array',
             ]);
-            
+
             $editedItem = $validatedData['editedItem'];
-            
+
             $recordId = $editedItem['id'] === "" ? null : $editedItem['id'];
-            
+
             // Preparar datos para actualización/creación
             $updateData = [
                 'data' => now()->toDateString(),
@@ -404,26 +538,25 @@ class MonthlyClosureController extends Controller
                 'expenses' => json_encode($editedItem['expenses']),
                 'user_id' => auth()->id(),
             ];
-            
+
             // Lógica mejorada de creación/actualización
             if ($recordId) {
                 // Opción 1: Buscar y actualizar manualmente
                 $closure = MonthlyClosure::find($recordId);
-                
+
                 if ($closure) {
                     $closure->update($updateData);
-                } 
+                }
             }
-            
-        
+
+
             DB::commit();
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Actualización realizada correctamente',
                 'data' => $closure
             ], 201);
-    
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return response()->json([
@@ -434,7 +567,7 @@ class MonthlyClosureController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -451,13 +584,13 @@ class MonthlyClosureController extends Controller
                 'business_id' => 'nullable|integer|exists:businesses,id',
                 'month' => 'nullable|date_format:Y-m',
             ]);
-    
-            
+
+
             // Obtener valores con null por defecto
             $branchId = $validated['branch_id'] ?? null;
             $businessId = $validated['business_id'] ?? null;
             $month = $validated['month'] ?? null;
-            
+
             // Validar que no se envíen ambos parámetros
             if ($branchId && $businessId) {
                 return response()->json([
@@ -465,11 +598,11 @@ class MonthlyClosureController extends Controller
                     'message' => 'Solo se puede filtrar por branch_id O business_id, no ambos'
                 ], 400);
             }
-            
+
             // Llamar al método del modelo según el parámetro recibido
             $result = Finance::calculatePreviousMonthUtility($branchId, $businessId, $month);
             $retentions = Retention::calculatePreviousMonthRetentionsWithIds($branchId, $businessId, $month);
-            
+
             return response()->json([
                 'success' => true,
                 'utility' => $result['utility'],
@@ -478,13 +611,12 @@ class MonthlyClosureController extends Controller
                 'retention_ids' => $retentions['ids'],
                 'message' => 'Cálculo de utilidad realizado correctamente'
             ]);
-            
         } catch (\Exception $e) {
-            Log::error('Error al calcular utilidad: '.$e->getMessage(), [
+            Log::error('Error al calcular utilidad: ' . $e->getMessage(), [
                 'exception' => $e,
                 'request_data' => $request->all()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Ocurrió un error al calcular la utilidad',
