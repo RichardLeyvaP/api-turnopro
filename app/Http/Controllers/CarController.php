@@ -2973,12 +2973,22 @@ class CarController extends Controller
                     $payment = Payment::where('car_id', $data['id'])->first();
                     // Eliminar finanzas relacionadas
                     Finance::where('car_id', $data['id'])->delete();
-
-                    // Procesar propina en efectivo
-                    if ($car->tip && $payment->method === 'cash') {
-                        $box = Box::whereDate('data', Carbon::now())
+                    $box = Box::whereDate('data', Carbon::now())
                             ->where('branch_id', $branch->id)
                             ->firstOrFail();
+                    if ($payment->cash > 0) {                
+                        // Decrementar el monto del pago en efectivo
+                        $box->decrement('existence', $payment->cash);
+                        
+                        // Opcional: Registrar el movimiento
+                        Log::info("Decrementado {$payment->cash} de existence en caja", [
+                            'box_id' => $box->id,
+                            'payment_id' => $payment->id,
+                            'car_id' => $data['id']
+                        ]);
+                    }
+                    // Procesar propina en efectivo
+                    if ($car->tip && $payment->method === 'cash') {
 
                         $box->decrement('existence', $car->tip);
                     }                    
