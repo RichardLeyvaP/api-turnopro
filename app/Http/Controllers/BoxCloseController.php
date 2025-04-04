@@ -31,6 +31,7 @@ use App\Services\SendEmailService;
 use App\Services\TraceService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Message;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Mailer\Exception\TransportException;
 
@@ -437,7 +438,7 @@ class BoxCloseController extends Controller
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = new BoxClose();
-            
+
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -497,8 +498,8 @@ class BoxCloseController extends Controller
             $emailassociated = $branch->associates()->pluck('email');
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
-            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
-            //$mergedEmails = ['yasmany891230@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            $mergedEmails = ['yasmany891230@gmail.com'];
             Log::info('$mergedEmails correos a enviar cierre de caja');
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
@@ -571,7 +572,7 @@ class BoxCloseController extends Controller
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = new BoxClose();
-           
+
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -663,24 +664,61 @@ class BoxCloseController extends Controller
 
     public function store_cashier_confirm(Request $request)
     {
-       
+
         try {
-            Log::info("Cierre de caja parcial confimación");
+            Log::info("Cierre de caja parcial confirmación");
+
             $request->validate([
-                'id' => 'required|numeric',
+                'id' => 'nullable|numeric',  // Cambiado a nullable
                 'description' => 'required|string',
             ]);
+
             Log::info('BoxCloseController->store_cashier_confirm request');
             Log::info($request);
-            $id = $request->id;
 
-            $cashier = CashierBoxClosing::where('id', $id)
-            ->first();
+            // Obtener el usuario autenticado
+            $userId = Auth::id();
+
+            // Buscar el registro a actualizar
+            if (empty($request->id)) {
+                // Si no viene ID, buscar el último registro del usuario para el día actual
+                $cashier = CashierBoxClosing::where('user_id', $userId)
+                    ->whereDate('created_at', Carbon::today())
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if (!$cashier) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No se encontró ningún cierre de caja para actualizar'
+                    ], 404);
+                }
+            } else {
+                // Si viene ID, buscar por ese ID
+                $cashier = CashierBoxClosing::find($request->id);
+
+                if (!$cashier) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El cierre de caja especificado no existe'
+                    ], 404);
+                }
+
+                // Verificar que el registro pertenezca al usuario actual (opcional)
+                if ($cashier->user_id != $userId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permiso para actualizar este registro'
+                    ], 403);
+                }
+            }
+
+            // Actualizar la descripción
             $cashier->description = $request->description;
             $cashier->save();
 
             return response()->json(['msg' => 'Cierre de caja confirmado correctamente'], 200);
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             Log::info('BoxCloseController->store_cashier_confirm');
             Log::error($th);
 
