@@ -107,8 +107,8 @@
         </table>
         <table>
             <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
-                  <td style="padding: 5px; text-align: left; line-height: 1;color: white;"><strong>Métodos de pago</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;color: white;"><strong>Valor</strong></td>
+                <td style="padding: 5px; text-align: left; line-height: 1;color: white;"><strong>Métodos de pago</strong></td>
+                <td style="padding: 5px; text-align: right; line-height: 1;color: white;"><strong>Valor</strong></td>
             </tr>
          
             
