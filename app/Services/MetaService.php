@@ -973,12 +973,19 @@ class MetaService
                                     
                     $order_id = $orders->pluck('id')->values();
                     if (!$orders->isEmpty()) {
+                        foreach($orders as $order){
+                            if ($order->meta == 1) {
+                                $order->percent_win = $order->price * $idService->percent / 100;                                
+                                $order->meta = 1;
+                                $order->save();
+                            }
+                        }
                         $cant = $orders->count();
                         $amount = $orders->first()->price * $cant;
-                        $professionalPayment = ProfessionalPayment::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
+                        /*$professionalPayment = ProfessionalPayment::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono convivencias')->first();
                         if ($professionalPayment == null) {
                             $professionalPayment = new ProfessionalPayment();
-                        }
+                        }*/
                             $retentionAmount = $retentionP ? $amount * $retentionP / 100 : 0;
                             $bonus[] = [
                                 'name' => $professional->name,
@@ -992,6 +999,12 @@ class MetaService
                                 'retention' => round($retentionAmount, 2)
                             ];
                         //}
+                        foreach($orders as $order){
+                            $order->meta = 1;
+                            $order->percent_win = 0;
+                            $order->save();
+                        }
+                        
                     }
                 }
             }
@@ -1016,10 +1029,10 @@ class MetaService
                 /*$filteredPayments = $professionalPayments->filter(function ($payment) {
                     return $payment->type == 'Bono servicios';
                 });*/
-                $professionalPaymentService = ProfessionalPayment::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
+                /*$professionalPaymentService = ProfessionalPayment::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono servicios')->first();
                 if ($professionalPaymentService == null) {
                     $professionalPaymentService = new ProfessionalPayment();
-                }
+                }*/
                     $retentionAmount = $retentionP ? $profesionalbonus->mountpay * $retentionP / 100 : 0;
                     $bonus[] = [
                         'name' => $professional->name,
@@ -1033,7 +1046,50 @@ class MetaService
                         'retention' => round($retentionAmount, 2)
                     ];
                 //}
-            }            
+
+                if($retentionP){
+                    $retention = Retention::where('branch_id', $branch_id)->whereDate('data', Carbon::now())->where('professional_id', $professional->id)->where('type', 'BonoService')->first();
+                            if ($retention == null) {
+                                $retention = new Retention();
+                            }
+                            
+                    Log::info('Entra a retencion bono de servicios'.$professional->name);
+                    //$retention = new Retention();
+                    $retention->branch_id = $branch_id;
+                    $retention->professional_id = $professional->id;
+                    $retention->data = Carbon::now();
+                    $retention->retention = round($retentionAmount, 2);
+                    $retention->type = 'BonoService';
+                    $retention->save();
+                }
+            }  
+            
+            //retention de ganancia de servicios
+            $percentWinSum = 0;
+            if (!$cars->isEmpty())
+                if ($retentionP) {
+                    $percentWinSum = $cars->sum(function ($car) {
+                        return $car->orders->where('is_product', 0)->sum(function ($order) {
+                            return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
+                        });
+                    });
+                    if ($percentWinSum) {
+                        if($retentionP){
+                            $retention = Retention::where('branch_id', $branch_id)->whereDate('data', Carbon::now())->where('professional_id', $professional->id)->where('type', 'Services')->first();
+                            if ($retention == null) {
+                                $retention = new Retention();
+                            }
+                            Log::info('Entra a retencion de servicios'.$professional->name);
+                            //$retention = new Retention();
+                            $retention->branch_id = $branch_id;
+                            $retention->professional_id = $professional->id;
+                            $retention->data = Carbon::now();
+                            $retention->retention = round($percentWinSum * $retentionP / 100, 2);
+                            $retention->save();
+                        }
+                    }
+                }
+            //end Retention
         }
         return $bonus;
     } catch (Exception $e) {

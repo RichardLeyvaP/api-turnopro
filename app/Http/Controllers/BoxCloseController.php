@@ -1134,7 +1134,7 @@ class BoxCloseController extends Controller
                     }*/
                 }
                 //Retention                         
-                $retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoConvivencia')->first();
+                /*$retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoConvivencia')->first();
                 if ($retention == null) {
                     $retention = new Retention();
                 }
@@ -1145,7 +1145,7 @@ class BoxCloseController extends Controller
                 $retention->data = Carbon::now();
                 $retention->retention = $data['retention'];
                 $retention->type = 'BonoConvivencia';
-                $retention->save();
+                $retention->save();*/
                 //}
 
 
@@ -1218,7 +1218,7 @@ class BoxCloseController extends Controller
                         $box->save(); // Guardar los cambios en $box
                     }*/
                 }
-                $retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoService')->first();
+                /*$retention = Retention::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('professional_id', $data['professional_id'])->where('type', 'BonoService')->first();
                 if ($retention == null) {
                     $retention = new Retention();
                 }
@@ -1229,7 +1229,7 @@ class BoxCloseController extends Controller
                 $retention->data = Carbon::now();
                 $retention->retention = $data['retention'];
                 $retention->type = 'BonoService';
-                $retention->save();
+                $retention->save();*/
                 //}
 
             }
