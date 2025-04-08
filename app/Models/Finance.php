@@ -104,6 +104,8 @@ class Finance extends Model
 
         return [
             'utility' => $utility,
+            'income' => $income,
+            'expense' => $expense,
             'ids' => $ids
         ];
         

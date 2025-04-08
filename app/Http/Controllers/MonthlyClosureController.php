@@ -96,8 +96,17 @@ class MonthlyClosureController extends Controller
                     'retention' => $closure->retention ?? 0,
                     'discounts' => $closure->discounts ?? 0,
                     'differences' => $closure->differences ?? 0,
-                    'incomes' => $closure->incomes ?? [],
-                    'expenses' => $closure->expenses ?? [],
+                    'system_incomes' => $closure->system_incomes ?? 0,
+                    'spent' => $closure->spent ?? 0,
+                    'client_utility' => $closure->client_utility ?? 0,
+                    'client_retention' => $closure->client_retention ?? 0,
+                    'difference_incomes' => $closure->difference_incomes ?? 0,
+                    'difference_utility' => $closure->difference_utility ?? 0,
+                    'difference_spent' => $closure->difference_spent ?? 0,
+                    'difference_retention' => $closure->difference_retention ?? 0,
+                    'description' => $closure->description ?? '',
+                    'incomes' => $this->parseJsonField($closure->incomes) ?? [],
+                    'expenses' => $this->parseJsonField($closure->expenses) ?? [],
                     'businessName' => $closure->business->name ?? null,
                     'branchName' => $closure->branch->name ?? null,
                     'branch_id' => $closure->branch_id ?? null,
@@ -127,6 +136,17 @@ class MonthlyClosureController extends Controller
         }
     }
 
+    protected function parseJsonField($value)
+{
+    if (is_array($value)) {
+        return $value;
+    }
+    
+    $parsed = json_decode($value, true);
+    
+    return is_array($parsed) ? $parsed : [];
+}
+
     /**
      * Store a newly created resource in storage.
      */
@@ -143,6 +163,15 @@ class MonthlyClosureController extends Controller
                 'editedItem.retention' => 'nullable|numeric|min:0',
                 'editedItem.discounts' => 'nullable|numeric|min:0',
                 'editedItem.differences' => 'nullable|numeric',
+                'editedItem.system_incomes' => 'nullable|numeric',
+                'editedItem.spent' => 'nullable|numeric',
+                'editedItem.client_retention' => 'nullable|numeric',
+                'editedItem.client_utility' => 'nullable|numeric',
+                'editedItem.difference_incomes' => 'nullable|numeric',
+                'editedItem.difference_spent' => 'nullable|numeric',
+                'editedItem.difference_utility' => 'nullable|numeric',
+                'editedItem.difference_retention' => 'nullable|numeric',
+                'editedItem.description' => 'nullable|string',
                 'editedItem.incomes' => 'nullable|array',
                 'editedItem.expenses' => 'nullable|array',
                 'editedItem.branch_id' => 'nullable|integer|exists:branches,id',
@@ -168,6 +197,15 @@ class MonthlyClosureController extends Controller
                 'retention' => $editedItem['retention'] ?? 0,
                 'discounts' => $editedItem['discounts'] ?? 0,
                 'differences' => $editedItem['differences'] ?? 0,
+                'spent' => $editedItem['spent'] ?? 0,
+                'system_incomes' => $editedItem['system_incomes'] ?? 0,
+                'client_retention' => $editedItem['client_retention'] ?? 0,
+                'client_utility' => $editedItem['client_utility'] ?? 0,
+                'difference_utility' => $editedItem['difference_utility'] ?? 0,
+                'difference_incomes' => $editedItem['difference_incomes'] ?? 0,
+                'difference_spent' => $editedItem['difference_spent'] ?? 0,
+                'difference_retention' => $editedItem['difference_retention'] ?? 0,
+                'description' => $editedItem['description'] ?? '',
                 'month' => $month,
                 'incomes' => json_encode($editedItem['incomes']),
                 'expenses' => json_encode($editedItem['expenses']),
@@ -205,23 +243,8 @@ class MonthlyClosureController extends Controller
             $carbonMonth = Carbon::createFromFormat('Y-m', $month);
             $startDate = $carbonMonth->copy()->startOfMonth()->toDateString();
             $endDate = $carbonMonth->copy()->endOfMonth()->toDateString();
-            $latestClosureIds = BoxClose::select(DB::raw('MAX(box_closes.id) as id'))
-                ->join('boxes', 'boxes.id', '=', 'box_closes.box_id')
-                ->join('branches', 'branches.id', '=', 'boxes.branch_id')
-                ->where('box_closes.type', 'Diario')
-                ->where('box_closes.data', '>=', $startDate)
-                ->where('box_closes.data', '<=', $endDate)
-                ->when($branchId, function($query) use ($branchId) {
-                    $query->where('branches.id', $branchId);
-                })
-                ->when($businessId && !$branchId, function($query) use ($businessId) {
-                    $query->where('branches.business_id', $businessId);
-                })
-                ->groupBy(DB::raw('DATE(box_closes.data)'))
-                ->pluck('id');
-
-            // Consulta principal para obtener los totales
-            $boxClose = BoxClose::selectRaw('
+            $boxClose = BoxClose::fromSub(function ($query) use ($startDate, $endDate, $branchId, $businessId) {
+                $query->selectRaw('
                     COALESCE(SUM(totalMount), 0) as totalMount,
                     COALESCE(SUM(totalService), 0) as totalService,
                     COALESCE(SUM(totalProduct), 0) as totalProduct,
@@ -233,8 +256,33 @@ class MonthlyClosureController extends Controller
                     COALESCE(SUM(totalOther), 0) as totalOther,
                     COALESCE(SUM(totalCardGif), 0) as totalCardGif
                 ')
-                ->whereIn('box_closes.id', $latestClosureIds)
-                ->first();
+                ->from('box_closes')
+                ->join('boxes', 'boxes.id', '=', 'box_closes.box_id')
+                ->join('branches', 'branches.id', '=', 'boxes.branch_id')
+                ->where('box_closes.type', 'Diario')
+                ->whereBetween('box_closes.data', [$startDate, $endDate])
+                ->when($branchId, function($query) use ($branchId) {
+                    $query->where('branches.id', $branchId);
+                })
+                ->when($businessId && !$branchId, function($query) use ($businessId) {
+                    $query->where('branches.business_id', $businessId);
+                })
+                ->whereIn('box_closes.id', function($subQuery) use ($startDate, $endDate, $branchId, $businessId) {
+                    $subQuery->select(DB::raw('MAX(box_closes.id)'))
+                        ->from('box_closes')
+                        ->join('boxes', 'boxes.id', '=', 'box_closes.box_id')
+                        ->join('branches', 'branches.id', '=', 'boxes.branch_id')
+                        ->where('box_closes.type', 'Diario')
+                        ->whereBetween('box_closes.data', [$startDate, $endDate])
+                        ->when($branchId, function($query) use ($branchId) {
+                            $query->where('branches.id', $branchId);
+                        })
+                        ->when($businessId && !$branchId, function($query) use ($businessId) {
+                            $query->where('branches.business_id', $businessId);
+                        })
+                        ->groupBy(DB::raw('DATE(box_closes.data)'));
+                });
+            }, 'box_closes')->first();
             DB::commit();
             $user = auth()->user();
 
@@ -353,9 +401,24 @@ class MonthlyClosureController extends Controller
         try {
             $validatedData = $request->validate([
                 'editedItem' => 'required|array',
+                'editedItem.id' => 'nullable|numeric',
                 'editedItem.available_money' => 'nullable|numeric|min:0',
+                'editedItem.utility' => 'nullable|numeric',
+                'editedItem.net_utility' => 'nullable|numeric',
+                'editedItem.retention' => 'nullable|numeric|min:0',
+                'editedItem.discounts' => 'nullable|numeric|min:0',
+                'editedItem.differences' => 'nullable|numeric',
+                'editedItem.system_incomes' => 'nullable|numeric',
+                'editedItem.spent' => 'nullable|numeric',
+                'editedItem.client_retention' => 'nullable|numeric',
+                'editedItem.client_utility' => 'nullable|numeric',
+                'editedItem.difference_incomes' => 'nullable|numeric',
+                'editedItem.difference_spent' => 'nullable|numeric',
+                'editedItem.difference_utility' => 'nullable|numeric',
+                'editedItem.difference_retention' => 'nullable|numeric',
+                'editedItem.description' => 'nullable|string',
                 'editedItem.incomes' => 'nullable|array',
-                'editedItem.id' => 'nullable',
+                'editedItem.expenses' => 'nullable|array',
                 'editedItem.branch_id' => 'nullable|integer|exists:branches,id',
                 'editedItem.business_id' => 'nullable|integer|exists:businesses,id',
                 'month' => 'nullable|date_format:Y-m',
@@ -368,14 +431,28 @@ class MonthlyClosureController extends Controller
             $branchId = $editedItem['branch_id'] === "" ? null : $editedItem['branch_id'];
             $businessId = $editedItem['business_id'] === "" ? null : $editedItem['business_id'];
             $recordId = $editedItem['id'] === "" ? null : $editedItem['id'];
-
-            // Preparar datos para actualización/creación
+            // Datos para actualizar/crear
             $updateData = [
-                'branch_id' => $branchId,
-                'business_id' => $businessId,
+                'branch_id' => $editedItem['branch_id'] ?? null,
+                'business_id' => $editedItem['business_id'] ?? null,
                 'available_money' => $editedItem['available_money'] ?? 0,
+                'utility' => $editedItem['utility'] ?? 0,
+                'net_utility' => $editedItem['net_utility'] ?? 0,
+                'retention' => $editedItem['retention'] ?? 0,
+                'discounts' => $editedItem['discounts'] ?? 0,
+                'differences' => $editedItem['differences'] ?? 0,
+                'spent' => $editedItem['spent'] ?? 0,
+                'system_incomes' => $editedItem['system_incomes'] ?? 0,
+                'client_retention' => $editedItem['client_retention'] ?? 0,
+                'client_utility' => $editedItem['client_utility'] ?? 0,
+                'difference_utility' => $editedItem['difference_utility'] ?? 0,
+                'difference_incomes' => $editedItem['difference_incomes'] ?? 0,
+                'difference_spent' => $editedItem['difference_spent'] ?? 0,
+                'difference_retention' => $editedItem['difference_retention'] ?? 0,
+                'description' => $editedItem['description'] ?? '',
                 'month' => $month,
-                'incomes' => json_encode($editedItem['incomes'] ?? []),
+                'incomes' => json_encode($editedItem['incomes']),
+                'expenses' => json_encode($editedItem['expenses']),
                 'user_id' => auth()->id(),
             ];
 
@@ -437,6 +514,7 @@ class MonthlyClosureController extends Controller
             $validatedData = $request->validate([
                 'editedItem' => 'required|array',
                 'editedItem.discounts' => 'nullable|numeric|min:0',
+                'editedItem.client_retention' => 'nullable|numeric|min:0',
                 'editedItem.expenses' => 'nullable|array',
                 'editedItem.id' => 'nullable',
                 'editedItem.branch_id' => 'nullable|integer|exists:branches,id',
@@ -457,6 +535,7 @@ class MonthlyClosureController extends Controller
                 'branch_id' => $branchId,
                 'business_id' => $businessId,
                 'discounts' => $editedItem['discounts'] ?? 0,
+                'client_retention' => $editedItem['client_retention'] ?? 0,
                 'month' => $month,
                 'expenses' => json_encode($editedItem['expenses'] ?? []),
                 'user_id' => auth()->id(),
@@ -519,42 +598,57 @@ class MonthlyClosureController extends Controller
         try {
             $validatedData = $request->validate([
                 'editedItem' => 'required|array',
+                'id' => 'nullable|integer'
             ]);
 
             $editedItem = $validatedData['editedItem'];
-
             $recordId = $editedItem['id'] === "" ? null : $editedItem['id'];
 
             // Preparar datos para actualización/creación
             $updateData = [
                 'data' => now()->toDateString(),
+                'branch_id' => $editedItem['branch_id'] ?? null,
+                'business_id' => $editedItem['business_id'] ?? null,
                 'available_money' => $editedItem['available_money'] ?? 0,
                 'utility' => $editedItem['utility'] ?? 0,
                 'net_utility' => $editedItem['net_utility'] ?? 0,
                 'retention' => $editedItem['retention'] ?? 0,
                 'discounts' => $editedItem['discounts'] ?? 0,
                 'differences' => $editedItem['differences'] ?? 0,
-                'incomes' => json_encode($editedItem['incomes']),
-                'expenses' => json_encode($editedItem['expenses']),
+                'spent' => $editedItem['spent'] ?? 0,
+                'system_incomes' => $editedItem['system_incomes'] ?? 0,
+                'client_retention' => $editedItem['client_retention'] ?? 0,
+                'client_utility' => $editedItem['client_utility'] ?? 0,
+                'difference_utility' => $editedItem['difference_utility'] ?? 0,
+                'difference_incomes' => $editedItem['difference_incomes'] ?? 0,
+                'difference_spent' => $editedItem['difference_spent'] ?? 0,
+                'difference_retention' => $editedItem['difference_retention'] ?? 0,
+                'description' => $editedItem['description'] ?? '',
+                'incomes' => json_encode($editedItem['incomes'] ?? []),
+                'expenses' => json_encode($editedItem['expenses'] ?? []),
                 'user_id' => auth()->id(),
             ];
 
-            // Lógica mejorada de creación/actualización
-            if ($recordId) {
-                // Opción 1: Buscar y actualizar manualmente
-                $closure = MonthlyClosure::find($recordId);
+            // Inicializar $closure como null
+            $closure = null;
 
+            if ($recordId) {
+                $closure = MonthlyClosure::find($recordId);
                 if ($closure) {
                     $closure->update($updateData);
+                } else {
+                    throw new \Exception("No se encontró el cierre mensual con ID: $recordId");
                 }
+            } else {
+                // Crear nuevo registro si no hay ID
+                $closure = MonthlyClosure::create($updateData);
             }
-
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Actualización realizada correctamente',
+                'message' => $recordId ? 'Actualización realizada correctamente' : 'Cierre creado correctamente',
                 'data' => $closure
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -566,11 +660,11 @@ class MonthlyClosureController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al crear cierre mensual: ' . $e->getMessage());
+            Log::error('Error al procesar cierre mensual: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al crear el cierre de mes',
+                'message' => 'Error al procesar el cierre mensual',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -602,10 +696,14 @@ class MonthlyClosureController extends Controller
             // Llamar al método del modelo según el parámetro recibido
             $result = Finance::calculatePreviousMonthUtility($branchId, $businessId, $month);
             $retentions = Retention::calculatePreviousMonthRetentionsWithIds($branchId, $businessId, $month);
+            $boxTotals = BoxClose::calculatePreviousMonthTotalAmount($branchId, $businessId, $month);
 
             return response()->json([
                 'success' => true,
                 'utility' => $result['utility'],
+                'system_incomes' => $result['income'],
+                'spent' => $result['expense'],
+                'totalMount' => $boxTotals['totalMount'],
                 'finance_ids' => $result['ids'],
                 'retentions_total' => $retentions['total'],
                 'retention_ids' => $retentions['ids'],

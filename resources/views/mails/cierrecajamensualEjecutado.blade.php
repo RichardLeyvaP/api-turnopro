@@ -77,7 +77,7 @@
     </tr>
     
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Total Ingresado</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Total Métodos de Pago</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($boxcloseData['totalMount'], 2), 2) }}</td>
     </tr>
 </table>
@@ -86,41 +86,79 @@
 
 <!-- Tercera Tabla: Ingreso, Gasto y Utilidad -->
 <table width="100%" style="border-collapse: collapse; border: 1.5px solid black;">
-    <!-- Encabezado -->
     <tr style="background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Resumen del cierre de mes</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;"><strong>Valor</strong></td>
+        <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Operación</th>
+        <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Datos del Administrador</th>
+        <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Datos del Sistema</th>
+        <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Diferencia</th>
     </tr>
     
-    <!-- Ingreso -->
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Dinero Disponible</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['available_money'], 2), 2) }}</td>
+    <tr>
+        <td style="padding: 8px; border: 1.5px solid black;">Ingresos</td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['available_money'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['system_incomes'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_incomes'] >= 0 ? 'black' : 'red' }};">
+            {{ number_format(round($editedItem['difference_incomes'], 2), 2) }}
+        </td>
     </tr>
     
-    <!-- Gasto -->
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Utilidad</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['utility'], 2), 2) }}</td>
+    <tr>
+        <td style="padding: 8px; border: 1.5px solid black;">Gastos</td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['discounts'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['spent'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_spent'] >= 0 ? 'black' : 'red' }};">
+            {{ number_format(round($editedItem['difference_spent'], 2), 2) }}
+        </td>
     </tr>
     
-    <!-- Utilidad -->
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Retención</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['retention'], 2), 2) }}</td>
+    <tr>
+        <td style="padding: 8px; border: 1.5px solid black;">Utilidad</td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['client_utility'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['utility'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_utility'] >= 0 ? 'black' : 'red' }};">
+            {{ number_format(round($editedItem['difference_utility'], 2), 2) }}
+        </td>
     </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">-Descuentos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['discounts'], 2), 2) }}</td>
+    
+    <tr>
+        <td style="padding: 8px; border: 1.5px solid black;">Retención</td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['client_retention'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['retention'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_retention'] >= 0 ? 'black' : 'red' }};">
+            {{ number_format(round($editedItem['difference_retention'], 2), 2) }}
+        </td>
     </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Diferencias</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['differences'], 2), 2) }}</td>
+    
+    <!-- Diferencia Total -->
+    @if($editedItem['differences'] != 0)
+    <tr>
+        <td colspan="4" style="padding: 8px; border: 1.5px solid black; background-color: rgba(0, 0, 0, 0.05); text-align: left; font-weight: bold; color: {{ $editedItem['differences'] >= 0 ? 'black' : 'red' }};">
+            Diferencia Total: {{ number_format(round($editedItem['differences'], 2), 2) }}
+        </td>
     </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Utilidad Final</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['net_utility'], 2), 2) }}</td>
+    <tr>
+        <td colspan="4" style="padding: 8px; border: 1.5px solid black;">
+            <strong>¿Por qué?</strong><br>
+            {{ $editedItem['description'] ?? 'Sin descripción' }}
+        </td>
     </tr>
+    @endif
 </table>
 
 <br><br>

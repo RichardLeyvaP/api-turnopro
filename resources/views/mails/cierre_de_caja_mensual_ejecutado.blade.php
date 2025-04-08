@@ -143,7 +143,7 @@
     </tr>
     
               <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Total Ingresado</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Total Métodos de Pago</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($boxcloseData['totalMount'], 2), 2) }}</td>
     </tr>
     
@@ -151,38 +151,88 @@
            
             
         </table>
-        <table>
-               <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
-        
-         <td style="padding: 5px; text-align: left; line-height: 1;color: white;"><strong>Resumen del cierre de mes</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;color: white;"><strong>Valor</strong></td>
-    </tr>
-    
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
+                <td style="padding: 5px; text-align: left; line-height: 1;color: white;" colspan="3"><strong>Resumen del cierre de mes</strong></td>
+            </tr>
+            <!-- Encabezado -->
+            <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
+                <th style="padding: 8px; text-align: center; line-height: 1; color: white;">Operación</th>
+                <th style="padding: 8px; text-align: center; line-height: 1; color: white;">Datos del Administrador</th>
+                <th style="padding: 8px; text-align: center; line-height: 1; color: white;">Datos del Sistema</th>
+                <th style="padding: 8px; text-align: center; line-height: 1; color: white;">Diferencias</th>
+            </tr>
+            
+            <!-- Ingresos -->
             <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Dinero Disponible</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['available_money'], 2), 2) }}</td>
-    </tr>
+                <td style="padding: 8px; text-align: center; line-height: 1;">Ingresos</td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['available_money'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['system_incomes'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1; color: {{ $editedItem['difference_incomes'] >= 0 ? 'black' : 'red' }};">
+                    {{ number_format(round($editedItem['difference_incomes'], 2), 2) }}
+                </td>
+            </tr>
+            
+            <!-- Gastos -->
             <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Utilidad</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['utility'], 2), 2) }}</td>
-    </tr>
-    
-        <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Retención</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['retention'], 2), 2) }}</td>
-    </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">-Descuentos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['discounts'], 2), 2) }}</td>
-    </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Diferencias</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['differences'], 2), 2) }}</td>
-    </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Utilidad Final</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($editedItem['net_utility'], 2), 2) }}</td>
-    </tr>
+                <td style="padding: 8px; text-align: center; line-height: 1;">Gastos</td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['discounts'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['spent'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1; color: {{ $editedItem['difference_spent'] >= 0 ? 'black' : 'red' }};">
+                    {{ number_format(round($editedItem['difference_spent'], 2), 2) }}
+                </td>
+            </tr>
+            
+            <!-- Utilidad -->
+            <tr style="border: 1.5px solid black;">
+                <td style="padding: 8px; text-align: center; line-height: 1;">Utilidad</td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['client_utility'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['utility'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1; color: {{ $editedItem['difference_utility'] >= 0 ? 'black' : 'red' }};">
+                    {{ number_format(round($editedItem['difference_utility'], 2), 2) }}
+                </td>
+            </tr>
+            
+            <!-- Retención -->
+            <tr style="border: 1.5px solid black;">
+                <td style="padding: 8px; text-align: center; line-height: 1;">Retención</td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['client_retention'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1;">
+                    {{ number_format(round($editedItem['retention'], 2), 2) }}
+                </td>
+                <td style="padding: 8px; text-align: center; line-height: 1; color: {{ $editedItem['difference_retention'] >= 0 ? 'black' : 'red' }};">
+                    {{ number_format(round($editedItem['difference_retention'], 2), 2) }}
+                </td>
+            </tr>
+            
+            <!-- Diferencia Total -->
+            <tr>
+                <td colspan="4" style="padding: 8px; text-align: left; line-height: 1; background-color: #f0f0f0; font-weight: bold; color: {{ $editedItem['differences'] >= 0 ? 'black' : 'red' }};">
+                    Diferencia Total: {{ number_format(round($editedItem['differences'], 2), 2) }}
+                </td>
+            </tr>
+            
+            <!-- Descripción -->
+            <tr>
+                <td colspan="4" style="padding: 8px; text-align: left; line-height: 1;">
+                    <strong>¿Por qué?</strong><br>
+                    {{ $editedItem['description'] ?? 'Sin descripción' }}
+                </td>
+            </tr>
         </table>
         <table>
             <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">

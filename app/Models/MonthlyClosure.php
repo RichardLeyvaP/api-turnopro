@@ -43,18 +43,34 @@ class MonthlyClosure extends Model
         'incomes', // Si es JSON
         'expenses', // Si es JSON
         'user_id',
-        'data' // Agregado basado en tu código anterior
+        'data', // Agregado basado en tu código anterior
+        'client_utility',
+        'client_retention',
+        'spent',
+        'system_incomes',
+        'difference_incomes',
+        'difference_utility',
+        'difference_retention',
+        'difference_spent',
+        'description'
     ];
 
     protected $casts = [
         'incomes' => 'array',
         'expenses' => 'array',
         'available_money' => 'float',
-    'utility' => 'float',
-    'net_utility' => 'float',
-    'retention' => 'float',
-    'discounts' => 'float',
-    'differences' => 'float'
+        'utility' => 'float',
+        'net_utility' => 'float',
+        'retention' => 'float',
+        'discounts' => 'float',
+        'differences' => 'float',
+        'client_utility',
+        'client_retention' => 'float',
+        'spent' => 'float',
+        'system_incomes' => 'float',
+        'difference_incomes' => 'float',
+        'difference_utility' => 'float',
+        'difference_retention' => 'float',
+        'difference_spent' => 'float'
     ];
-    
 }
