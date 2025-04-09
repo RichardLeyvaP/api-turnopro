@@ -97,6 +97,6 @@ class Car extends Model
         }
     }
 
-    return implode(', ', $changes);
+    return implode('*', $changes);
 }
 }

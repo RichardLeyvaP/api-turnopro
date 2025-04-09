@@ -1452,6 +1452,77 @@ class CarController extends Controller
         }
     }
 
+    public function branch_cars_date(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'data' => 'nullable|date'
+            ]);
+
+            Log::info("Recibiendo request para branch_cars", $data);
+            $userId = $request->user()->id;
+            // Cargar la sucursal solo si es necesaria para el proceso
+            $branch = Branch::find($data['branch_id']);
+            if (!$branch) {
+                return response()->json(['msg' => 'Sucursal no encontrada'], 404);
+            }
+
+            // Asignar la fecha actual si data no está presente
+            $today = $data['data'] ?? Carbon::now();
+
+            // Consultar todos los carros de la sucursal para el día actual con relaciones necesarias
+            $cars = Car::whereHas('reservation', function ($query) use ($data, $today) {
+                $query->where('branch_id', $data['branch_id'])
+                    ->whereDate('data', $today)
+                    ->whereIn('confirmation', [2]);
+            })
+                ->with([
+                    'clientProfessional.client:id,name,phone,client_image',
+                    'clientProfessional.professional:id,name,image_url',
+                    'orders:id,car_id,is_product,price'
+                ])
+                ->get()
+                ->map(function ($car) {
+                    // Obtener cliente y profesional
+                    $client = $car->clientProfessional->client;
+                    $professional = $car->clientProfessional->professional;
+
+                    // Calcular precios de productos y servicios directamente en la colección
+                    $products = $car->orders->where('is_product', 1)->sum('price');
+                    $services = $car->orders->where('is_product', 0)->sum('price');
+                    return [
+                        'id' => $car->id,
+                        'client_professional_id' => $car->client_professional_id,
+                        'amount' => $car->amount + ($car->technical_assistance * 5000) + $car->tip,
+                        'tip' => $car->tip,
+                        'pay' => (int)$car->pay,
+                        'active' => $car->active,
+                        'product' => $products,
+                        'service' => $services,
+                        'technical_assistance' => $car->technical_assistance * 5000,
+                        'clientName' => $client->name,
+                        'phone' => $client->phone ?? '',
+                        'professionalName' => $professional->name,
+                        'client_image' => $client->client_image ?? "comments/default_profile.jpg",
+                        'professional_id' => $professional->id,
+                        'image_url' => $professional->image_url ?? "professionals/default_profile.jpg",
+                        'user_id' => $car->user_id,
+                        'action_status' => $car->action_status,
+                        'action_descriptions' => $car->action_descriptions ?? [],
+                        'change_log' => $car->change_log ?? []
+                    ];
+                })
+                ->values();
+
+            return response()->json([
+                'cars' => $cars
+            ], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error("Error al mostrar los carros: " . $th->getMessage());
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
+        }
+    }
 
     public function branch_cars(Request $request)
     {
@@ -1671,7 +1742,9 @@ class CarController extends Controller
                         'client_image' => $client->client_image,
                         'professional_id' => $professional->id,
                         'image_url' => $professional->image_url,
-                        'nameBranch' => $branch->name
+                        'nameBranch' => $branch->name,
+                        'action_descriptions' => $car->action_descriptions ?? [],
+                        'change_log' => $car->change_log ?? []
                     ];
                     //}
                 })->sortBy('state')->values();
@@ -2947,6 +3020,7 @@ class CarController extends Controller
             ]);
             $user = Auth::user();
             $professionalName = $user->professional ? $user->professional->name : $user->name;
+            $professionalImage = $user->professional->image_url?? 'professionals/default.jpg';
             $car = Car::find($data['id']);
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
             $orders = Order::where('car_id', $data['id'])->where('is_product', 1)->select('product_store_id', 'cant')->get();
@@ -3018,7 +3092,8 @@ class CarController extends Controller
                 $car->logChanges(
                     'Carro Eliminado',
                     $professionalName,
-                    'delete'
+                    'delete',
+                    $professionalImage
                 );
                 $car->save();
                 }
@@ -3028,7 +3103,8 @@ class CarController extends Controller
                 $car->addActionDescription(
                     actionType: 'approved',
                     description: 'Carro aprobado a editar',
-                    nameProfessional: $professionalName
+                    nameProfessional: $professionalName,
+                    image: $professionalImage
                 );
                 }
                 $car->active = 1;
@@ -3060,6 +3136,7 @@ class CarController extends Controller
             ]);
             $user = Auth::user();
             $professionalName = $user->professional ? $user->professional->name : $user->name;
+            $professionalImage = $user->professional->image_url?? 'professionals/default.jpg';
             $car = Car::find($data['id']);
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
             $active = $car->active;
@@ -3074,7 +3151,8 @@ class CarController extends Controller
             $car->addActionDescription(
                 actionType: 'denied',
                 description: $description,
-                nameProfessional: $professionalName
+                nameProfessional: $professionalName,
+                image: $professionalImage
             );
             $car->action_status = 0;
             $car->active = 1;
@@ -3124,6 +3202,8 @@ class CarController extends Controller
             Log::info($request);
             $client = $car->clientProfessional->client;
             $professional = $car->clientProfessional->professional;
+            $user = Auth::user();
+            $professionalImage = $user->professional ? $user->professional->image_url : 'professionals/default.jpg';
             $trace = [
                 'branch' => $branch->name,
                 'cashier' => $request->nameProfessional,
@@ -3138,7 +3218,9 @@ class CarController extends Controller
             $car->addActionDescription(
                 actionType: 'edit',
                 description: $request->description,
-                nameProfessional: $request->nameProfessional
+                nameProfessional: $request->nameProfessional,
+                image: $professionalImage
+
             );
             $car->active = $request->active;
             $car->action_status = 1;
@@ -3174,7 +3256,8 @@ class CarController extends Controller
             ]);
             $car = Car::find($data['id']);
             $branch = Branch::where('id', $request->branch_id)->first();
-
+            $user = Auth::user();
+            $professionalImage = $user->professional ? $user->professional->image_url : 'professionals/default.jpg';
             $client = $car->clientProfessional->client;
             $professional = $car->clientProfessional->professional;
             $trace = [
@@ -3191,7 +3274,8 @@ class CarController extends Controller
             $car->addActionDescription(
                 actionType: 'delete',
                 description: $request->description,
-                nameProfessional: $request->nameProfessional
+                nameProfessional: $request->nameProfessional,
+                image: $professionalImage
             );
             $car->active = 3;
             $car->action_status = 2;

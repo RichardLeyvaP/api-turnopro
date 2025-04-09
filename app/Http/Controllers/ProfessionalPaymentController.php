@@ -228,12 +228,14 @@ class ProfessionalPaymentController extends Controller
 
             $professionalId = $request->professional_id;
             $branchId = $request->branch_id;
+            $currentYear = now()->year; // Obtiene el año actual
 
             $payments = ProfessionalPayment::where('professional_id', $professionalId)
                                             ->where(function($query) use ($branchId) {
                                                 $query->where('branch_id', $branchId)
                                                     ->orWhere('enrollment_id', '!=', null);
                                             })
+                                            ->whereYear('date', $currentYear) // Filtra por año actual usando el campo date
                                           ->get()->map(function ($query){
                                             return [
                                                 'id' => $query->id,

@@ -153,7 +153,7 @@
         </table>
         <table style="width: 100%; border-collapse: collapse;">
             <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
-                <td style="padding: 5px; text-align: left; line-height: 1;color: white;" colspan="3"><strong>Resumen del cierre de mes</strong></td>
+                <td style="padding: 5px; text-align: left; line-height: 1;color: white;" colspan="4"><strong>Resumen del cierre de mes</strong></td>
             </tr>
             <!-- Encabezado -->
             <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
@@ -222,7 +222,7 @@
             <!-- Diferencia Total -->
             <tr>
                 <td colspan="4" style="padding: 8px; text-align: left; line-height: 1; background-color: #f0f0f0; font-weight: bold; color: {{ $editedItem['differences'] >= 0 ? 'black' : 'red' }};">
-                    Diferencia Total: {{ number_format(round($editedItem['differences'], 2), 2) }}
+                    Diferencia Total en las utilidades: {{ number_format(round($editedItem['differences'], 2), 2) }}
                 </td>
             </tr>
             

@@ -187,7 +187,9 @@ class OrderController extends Controller
             $car = Car::find($data['car_id']);            
             $branch = Branch::where('id', $request->branch_id)->first();
             $clientName = $car->clientProfessional->client->name;
-            $professionalName = $car->clientProfessional->professional->name;
+            $user = Auth::user();
+            $professionalName = $user->professional ? $user->professional->name : $user->name;
+            $professionalImage = $user->professional->image_url?? 'professionals/default.jpg';
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 $order = $this->orderService->product_order_store($data);
                 $trace = [
@@ -204,7 +206,8 @@ class OrderController extends Controller
                 $car->logChanges(
                     'Agerga la cantidad de '.$order->cant.' ' . $order->productStore->product->name . ' para un total de: $'.$order->price,
                     $request->nameProfessional,
-                    'add'
+                    'add',
+                    $professionalImage
                 );
                 $car->save();
                 }
@@ -227,7 +230,8 @@ class OrderController extends Controller
                     $car->logChanges(
                         'Agerga el Servicio: '. $order->branchServiceProfessional->branchService->service->name . ' con un valor de: $'.$order->price,
                         $request->nameProfessional,
-                        'add'
+                        'add',
+                        $professionalImage
                     );
                     $car->save();
                     }
@@ -280,6 +284,7 @@ class OrderController extends Controller
                     'car_id' => $order->car_id,
                     'request_delete' => $order->request_delete,
                     'name' => $order->is_product ? $product->name : $service->name,
+                    'is_product' => $order->is_product,
                     'image' => $order->is_product ? $product->image_product : $service->image_service,
                     'price' => $order->price,
                     'category' => $order->is_product ? $product->productCategory->name : $order->branchServiceProfessional->type_service,
@@ -711,6 +716,7 @@ class OrderController extends Controller
             $car = Car::findOrFail($order->car_id);
             $user = Auth::user();
             $nameProfessional = $user->professional ? $user->professional->name : $user->name;
+            $professionalImage = $user->professional ? $user->professional->image_url : 'professionals/default.jpg';
             //$client = $car->clientProfessional->client;
             //$professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
@@ -740,7 +746,8 @@ class OrderController extends Controller
                     $car->logChanges(
                         'Elimina el producto' . $order->productStore->product->name . ' para un total de: $'.$order->price,
                         $nameProfessional,
-                        action_type: 'delete'
+                        'delete',
+                        $professionalImage
                     );
                     $car->save();
                 }
@@ -770,7 +777,8 @@ class OrderController extends Controller
                     $car->logChanges(
                         'Elimina el servicio: ' . $service->name . ' con un valor de: $'.$order->price,
                         $nameProfessional,
-                        'delete'
+                        'delete',
+                        $professionalImage
                     );
                     $car->save();
                 }
@@ -782,6 +790,13 @@ class OrderController extends Controller
                 $car->save();
             }
             else {
+                if ($car->reservation) {
+                    $car->reservation->update([
+                        'cause' => 'Reserva eliminada por haber eliminado los servicios en el car, la cajera',
+                        'deleted_at' => now()
+                    ]);
+                    
+                }
                 $car->delete();
             }
             

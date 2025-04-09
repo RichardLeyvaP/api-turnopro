@@ -439,6 +439,33 @@ class BoxCloseController extends Controller
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = new BoxClose();
 
+            //Recalcular Bonos
+            $totalAmount = ProfessionalPayment::where('branch_id', $branch->id)->whereDate('date', Carbon::now())->where(function ($query) {
+                $query->where('type', 'Bono convivencias')
+                    ->orWhere('type', 'Bono servicios');
+            })->sum('amount');
+            $bonus = $this->metaService->store($branch);
+            $bonusCollection = collect($bonus);
+
+            // Calcular la suma de 'amount'
+            $totalBonus = $bonusCollection->sum('amount');
+            Log::info('$totalBonus Bonussssssss');
+            Log::info($totalBonus);
+
+            if ($totalBonus) {
+                Log::info('Entra a descontar los bonos de la existencia');
+                // Calcular la suma de los montos
+                //$totalAmount = $subquery->sum('amount');
+                $difference = $totalBonus - $totalAmount;
+                Log::info('Diferencia de bono ierre de caja' . $difference);
+                // Ajustar la existencia de $box según la diferencia
+                // Si la diferencia es positiva, se resta de box->existence
+                // Si es negativa, se suma a box->existence
+                $box->existence -= $difference;
+                $box->save(); // Guardar los cambios en $box
+            }
+            //end Recalcular Bonos
+
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -498,8 +525,8 @@ class BoxCloseController extends Controller
             $emailassociated = $branch->associates()->pluck('email');
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
-            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
-            $mergedEmails = ['yasmany891230@gmail.com'];
+            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com'];
             Log::info('$mergedEmails correos a enviar cierre de caja');
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
@@ -594,7 +621,7 @@ class BoxCloseController extends Controller
                 'branch' => $branch->name,
                 'cashier' => $request->nameProfessional,
                 'client' => '',
-                'amount' => $cashierData['totalMount'],
+                'amount' => $boxClose['totalMount'],
                 'operation' => 'Cierre de Caja Parcial',
                 'details' => 'Ingreso diario Parcial',
                 'description' => ''

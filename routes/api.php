@@ -110,6 +110,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
 
     //Caja
     Route::get('/branch-cars', [CarController::class, 'branch_cars']); //devuelve los cars de una branch en la fecha actual
+    Route::get('/branch-cars-date', [CarController::class, 'branch_cars_date']); //devuelve los cars de una branch en la fecha actual
 
     //academia
     Route::post('/enrollment-destroy', [EnrollmentController::class, 'destroy']);

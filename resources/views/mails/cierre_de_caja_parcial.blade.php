@@ -201,12 +201,12 @@
             <tr>
                 <td><strong>Tarjeta de Créditos:</strong>
                     {{ number_format(round($boxcloseData['totalCreditCard'], 2), 2) }}</td>
-                <td><strong>Tarjeta de Créditos:</strong>
-                    {{ number_format(round($cashierData['totalCreditCard'] ?? 0, 2), 2) }}</td>
+                <td><strong>Tarjeta Producto:</strong>
+                    {{ number_format(round($cashierData['totalProduct'] ?? 0, 2), 2) }}</td>
             </tr>
             <tr>
                 <td><strong>Débito:</strong> {{ number_format(round($boxcloseData['totalDebit'], 2), 2) }}</td>
-                <td><strong>Débito:</strong> {{ number_format(round($cashierData['totalDebit'] ?? 0, 2), 2) }}</td>
+                <td><strong>Tarjeta Servicio:</strong> {{ number_format(round($cashierData['totalService'] ?? 0, 2), 2) }}</td>
             </tr>
             <tr>
                 <td><strong>Transferencia:</strong>

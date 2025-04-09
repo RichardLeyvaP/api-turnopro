@@ -95,39 +95,32 @@
 <!-- Segunda Tabla: Formas de pago -->
 <table width="100%" style="border-collapse: collapse; border: 1.5px solid black;">
     <tr style="background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Métodos de pago</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;"><strong>Datos del Sistema</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;"><strong>Datos de la Cajera</strong></td>
+        <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Datos del Sistema</strong></td>
+        <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Datos de la Cajera</strong></td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalCash'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCash'] ?? 0, 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo: {{ number_format(round($data['totalCash'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo: {{ number_format(round($cashierData['totalCash'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Tarjeta de Crédito</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalCreditCard'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCreditCard'] ?? 0, 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Tarjeta de Crédito: {{ number_format(round($data['totalCreditCard'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Tarjeta Servicio: {{ number_format(round($cashierData['totalService'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Débito</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalDebit'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalDebit'] ?? 0, 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Débito: {{ number_format(round($data['totalDebit'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Tarjeta producto: {{ number_format(round($cashierData['totalProduct'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Transferencia</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalTransfer'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalTransfer'] ?? 0, 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Transferencia: {{ number_format(round($data['totalTransfer'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Transferencia: {{ number_format(round($cashierData['totalTransfer'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Total Giftcard</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalCardGif'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalCardGif'] ?? 0, 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Total Giftcard: {{ number_format(round($data['totalCardGif'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Total Giftcard: {{ number_format(round($cashierData['totalCardGif'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Otros Métodos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalOther'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalOther'] ?? 0, 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Otros Métodos: {{ number_format(round($data['totalOther'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: left; line-height: 1;">Otros Métodos: {{ number_format(round($cashierData['totalOther'] ?? 0, 2), 2) }}</td>
     </tr>
     <!-- Fila adicional para mostrar la diferencia en pagos si existe 
     @if(isset($cashierData['differencePay']) && $cashierData['differencePay'] != 0)

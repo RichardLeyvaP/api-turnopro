@@ -4,7 +4,7 @@ namespace App\Traits;
 
 trait CarActionLogger
 {
-    public function addActionDescription(string $actionType, string $description, string $nameProfessional)
+    public function addActionDescription(string $actionType, string $description, string $nameProfessional, ?string $image = null)
     {
         // Obtener las descripciones actuales (maneja tanto array como string JSON)
         $descriptions = [];
@@ -20,6 +20,7 @@ trait CarActionLogger
             'action_type' => $actionType,
             'description' => $description,
             'nameProfessional' => $nameProfessional,
+            'image' => $image,
             'timestamp' => now()->toDateTimeString()
         ];
         
@@ -27,28 +28,29 @@ trait CarActionLogger
         $this->action_descriptions = $descriptions;
     }
     
-    public function logChanges(string $changes, string $nameProfessional, string $actionType)
-{
-    // Obtener el log actual de cambios (maneja tanto array como string JSON)
-    $changeLog = [];
-    
-    if (is_array($this->change_log)) {
-        $changeLog = $this->change_log;
-    } elseif (is_string($this->change_log)) {
-        $changeLog = json_decode($this->change_log, true) ?: [];
+    public function logChanges(string $changes, string $nameProfessional, string $actionType, ?string $image = null)
+    {
+        // Obtener el log actual de cambios (maneja tanto array como string JSON)
+        $changeLog = [];
+        
+        if (is_array($this->change_log)) {
+            $changeLog = $this->change_log;
+        } elseif (is_string($this->change_log)) {
+            $changeLog = json_decode($this->change_log, true) ?: [];
+        }
+        
+        // Agregar la nueva entrada de log
+        $changeLog[] = [
+            'action_type' => $actionType,
+            'changes' => $changes, // Guardamos el string directamente
+            'nameProfessional' => $nameProfessional, // Professional puede ser diferente en cada cambio
+            'image' => $image, 
+            'timestamp' => now()->toDateTimeString()
+        ];
+        
+        // Guardar (Laravel convertirá automáticamente a JSON por el cast)
+        $this->change_log = $changeLog;
     }
-    
-    // Agregar la nueva entrada de log
-    $changeLog[] = [
-        'action_type' => $actionType,
-        'changes' => $changes, // Guardamos el string directamente
-        'nameProfessional' => $nameProfessional, // Professional puede ser diferente en cada cambio
-        'timestamp' => now()->toDateTimeString()
-    ];
-    
-    // Guardar (Laravel convertirá automáticamente a JSON por el cast)
-    $this->change_log = $changeLog;
-}
 public function comparePaymentChanges(array $oldPayments, array $newPayments): string
     {
         $changes = [];
@@ -89,6 +91,6 @@ public function comparePaymentChanges(array $oldPayments, array $newPayments): s
             }
         }
 
-        return empty($changes) ? 'Sin cambios en métodos de pago' : implode(', ', $changes);
+        return empty($changes) ? 'Sin cambios en métodos de pago' : implode('*', $changes);
     }
 }

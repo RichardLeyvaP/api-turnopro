@@ -87,6 +87,9 @@
 <!-- Tercera Tabla: Ingreso, Gasto y Utilidad -->
 <table width="100%" style="border-collapse: collapse; border: 1.5px solid black;">
     <tr style="background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black;">
+        <th style="padding: 8px; text-align: center; border: 1.5px solid black;" colspan="4">Resumen del cierre de mes</th>
+    </tr>
+    <tr style="background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black;">
         <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Operación</th>
         <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Datos del Administrador</th>
         <th style="padding: 8px; text-align: center; border: 1.5px solid black;">Datos del Sistema</th>
@@ -149,7 +152,7 @@
     @if($editedItem['differences'] != 0)
     <tr>
         <td colspan="4" style="padding: 8px; border: 1.5px solid black; background-color: rgba(0, 0, 0, 0.05); text-align: left; font-weight: bold; color: {{ $editedItem['differences'] >= 0 ? 'black' : 'red' }};">
-            Diferencia Total: {{ number_format(round($editedItem['differences'], 2), 2) }}
+            Diferencia Total en las Utilidades: {{ number_format(round($editedItem['differences'], 2), 2) }}
         </td>
     </tr>
     <tr>

@@ -14,6 +14,7 @@ use App\Services\TraceService;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
@@ -244,6 +245,8 @@ class PaymentController extends Controller
         try {
             $payment = Payment::where('car_id', $request->car_id)->first();
             $userId = $request->user()->id;
+            $user = Auth::user();
+            $professionalImage = $user->professional ? $user->professional->image_url : 'professionals/default.jpg';
             if ($payment) {
                 Log::info("Pago del carro ya ha sido registrado anteriormente");
                 Log::info($request->car_id);
@@ -415,7 +418,8 @@ class PaymentController extends Controller
                     $car->logChanges(
                         $changesDescription,
                         $request->nameProfessional,
-                        'payment'
+                        'payment',
+                        $professionalImage
                     );
                 }
             }
