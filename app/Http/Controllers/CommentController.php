@@ -108,6 +108,41 @@ class CommentController extends Controller
         }
     }
 
+    public function storeByCarId(Request $request)
+    {
+        Log::info("storeByCarId CommentController car_id:".$request->car_id);
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'car_id' => 'required|numeric|exists:cars,id'
+            ]); 
+            $filename = "comments/default_profile.jpg";
+            
+            $comment = new Comment();
+            $reservation = Reservation::where('car_id', $data['car_id'])->firstOrFail();
+            $client_professional_id = $reservation->car->clientProfessional->id;
+            $comment->client_professional_id = $client_professional_id;
+            $comment->data = Carbon::now();
+            $comment->look = "Cliente finalizado desde la caja";
+            $comment->client_look = $filename;
+            $comment->save();
+
+            $reservation->finished_at = now();
+            $reservation->confirmation = 2;
+            $reservation->save();
+
+            $tail = $reservation->tail;
+            $tail->attended = 2;
+            $tail->save();
+            DB::commit();
+            return response()->json(['msg' => 'Comment guardado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            DB::rollback();
+        return response()->json(['msg' =>$th->getMessage().'Error al el comentario'], 500);
+        }
+    }
+
     public function show(Request $request)
     {
         try {

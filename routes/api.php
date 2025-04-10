@@ -653,6 +653,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::put('/comment', [CommentController::class, 'update']);
     Route::post('/comment-destroy', [CommentController::class, 'destroy']);
     Route::post('/storeByReservationId', [CommentController::class, 'storeByReservationId']);
+    Route::post('/storeByCarId', [CommentController::class, 'storeByCarId']);
 
     //Notification
     Route::get('/notification', [NotificationController::class, 'index']);
