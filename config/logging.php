@@ -54,7 +54,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['daily'], // Asegúrate que está usando 'daily' y no 'single'
             'ignore_exceptions' => false,
         ],
 
@@ -69,8 +69,9 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => 14,
+            'days' => 0, // Cero desactiva la rotación automática
             'replace_placeholders' => true,
+            'tap' => [App\Logging\CustomDailyLogFormat::class],
         ],
 
         'slack' => [
