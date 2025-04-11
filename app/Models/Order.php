@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
@@ -11,7 +12,7 @@ class Order extends Model
 
     public function branchServiceProfessional()
     {
-        return $this->belongsTo(BranchServiceProfessional::class);
+        return $this->belongsTo(BranchServiceProfessional::class)->withTrashed();
     }
 
     public function productStore()
@@ -26,7 +27,7 @@ class Order extends Model
 
     public function service()
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo(Service::class)->withTrashed();
     }
 
     public function product()

@@ -215,7 +215,7 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
-    public function store(Request $request)
+    /*public function store(Request $request)
     {
         try {
             $data = $request->validate([
@@ -244,9 +244,89 @@ class BranchServiceProfessionalController extends Controller
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
+    }*/
+
+    public function store(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_service_id' => 'required|numeric|exists:branch_service,id',
+                'professional_id' => 'required|numeric|exists:professionals,id',
+                'percent' => 'nullable|numeric',
+                'type_service' => 'nullable|string'
+            ]);
+
+            // Buscar relación existente (incluyendo eliminados lógicos)
+            $existingRelation = BranchServiceProfessional::withTrashed()
+                ->where('branch_service_id', $data['branch_service_id'])
+                ->where('professional_id', $data['professional_id'])
+                ->first();
+
+            // Si ya existe la relación
+            if ($existingRelation) {
+                // Si está eliminada lógicamente
+                if ($existingRelation->trashed()) {
+                    $existingRelation->restore();
+                    
+                    // Actualización campo por campo
+                    if ($data['type_service'] == 'Regular') {
+                        $existingRelation->percent = BranchService::find($data['branch_service_id'])
+                                            ->service->profit_percentaje;
+                        $existingRelation->type_service = 'Regular';
+                    } else {
+                        if (isset($data['percent'])) {
+                            $existingRelation->percent = $data['percent'];
+                        }
+                        if (isset($data['type_service'])) {
+                            $existingRelation->type_service = $data['type_service'];
+                        }
+                    }
+                    
+                    $existingRelation->save();
+
+                    return response()->json([
+                        'msg' => 'Relación profesional-servicio restaurada y actualizada',
+                        'action' => 'restored'
+                    ], 200);
+                }
+
+                return response()->json([
+                    'msg' => 'Este profesional ya tiene asignado este servicio',
+                    'action' => 'already_exists'
+                ], 409);
+            }
+
+            // Crear nueva relación (sin asignación masiva)
+            $newRelation = new BranchServiceProfessional();
+            $newRelation->branch_service_id = $data['branch_service_id'];
+            $newRelation->professional_id = $data['professional_id'];
+            
+            if ($data['type_service'] == 'Regular') {
+                $newRelation->percent = BranchService::find($data['branch_service_id'])
+                                    ->service->profit_percentaje;
+                $newRelation->type_service = 'Regular';
+            } else {
+                $newRelation->percent = $data['percent'] ?? null;
+                $newRelation->type_service = $data['type_service'] ?? null;
+            }
+
+            $newRelation->save();
+
+            return response()->json([
+                'msg' => 'Servicio asignado correctamente al profesional',
+                'action' => 'created'
+            ], 201);
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json([
+                'msg' => 'Error al asignar el servicio al profesional',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 
-    public function show(Request $request)
+    /*public function show(Request $request)
     {
         try {
             Log::info("Entra a buscar los srvicios que realiza una branch");
@@ -268,6 +348,43 @@ class BranchServiceProfessionalController extends Controller
                     'ponderation' => $service->pivot->ponderation
                 ];
             })->sortBy('ponderation')->values();
+            //$result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
+
+            return response()->json(['branchServices' => $services], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
+        }
+    }*/
+
+    public function show(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar los srvicios que realiza una branch");
+            $data = $request->validate([
+                'branch_id' => 'nullable|numeric|exists:branches,id'
+            ]);
+            $services = BranchService::where('branch_id', $data['branch_id'])
+            ->with('service') // Carga la relación con el servicio
+            ->get()
+            ->map(function ($branchService) {
+                $service = $branchService->service;
+                
+                return [
+                    'id' => $branchService->id,
+                    'service_id' => $service->id,
+                    'name' => $service->name,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
+                    'ponderation' => $branchService->ponderation
+                ];
+            })
+            ->sortBy('ponderation')
+            ->values();
             //$result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
 
             return response()->json(['branchServices' => $services], 200, [], JSON_NUMERIC_CHECK);
@@ -422,7 +539,7 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
-    public function destroy(Request $request)
+    /*public function destroy(Request $request)
     {
         try {
             $data = $request->validate([
@@ -436,6 +553,51 @@ class BranchServiceProfessionalController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
+        }
+    }*/
+
+    public function destroy(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_service_id' => 'required|numeric|exists:branch_service,id',
+                'professional_id' => 'required|numeric|exists:professionals,id'
+            ]);
+
+            // Buscar la relación específica
+            $relation = BranchServiceProfessional::where([
+                'branch_service_id' => $data['branch_service_id'],
+                'professional_id' => $data['professional_id']
+            ])->first();
+
+            if (!$relation) {
+                return response()->json([
+                    'msg' => 'La relación no existe'
+                ], 404);
+            }
+
+            // Verificar si ya está eliminada lógicamente
+            if ($relation->trashed()) {
+                return response()->json([
+                    'msg' => 'La relación ya fue eliminada anteriormente'
+                ], 410); // 410 Gone
+            }
+
+            // Eliminación lógica manual (sin usar delete() para evitar mass assignment)
+            $relation->deleted_at = now();
+            $relation->save();
+
+            return response()->json([
+                'msg' => 'Relación desvinculada correctamente (eliminación lógica)',
+                'deleted_at' => $relation->deleted_at
+            ], 200);
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json([
+                'msg' => 'Error al desvincular el servicio del profesional',
+                'error' => $th->getMessage()
+            ], 500);
         }
     }
 }
