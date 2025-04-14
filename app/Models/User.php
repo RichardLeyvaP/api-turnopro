@@ -85,4 +85,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(MonthlyClosure::class);
     }
+
+    public function advances()
+    {
+        return $this->hasMany(Advance::class);
+    }
 }

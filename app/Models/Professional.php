@@ -112,5 +112,10 @@ class Professional extends Model
         return $this->hasMany(Retention::class);
     }
 
+    public function advances()
+    {
+        return $this->hasMany(Advance::class);
+    }
+
     protected $table = "professionals";
 }

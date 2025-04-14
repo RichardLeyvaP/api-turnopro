@@ -635,8 +635,8 @@ class CarController extends Controller
                         'earnings' => $car->amount + ($car->technical_assistance * 5000) + $car->tip
                     ];
                 });
-                Log::info('Resultados de los carros');
-                Log::info($cars);
+                //Log::info('Resultados de los carros');
+                //Log::info($cars);
                 $sales = CashierSale::where('branch_id', $data['branch_id'])
                     ->whereDate('data', '>=', $start)
                     ->whereDate('data', '<=', $end)
@@ -648,8 +648,8 @@ class CarController extends Controller
                             'earnings' => $sale->price
                         ];
                     });
-                Log::info('Resultados de la venta de productos');
-                Log::info($sales);
+                //Log::info('Resultados de la venta de productos');
+                //Log::info($sales);
                 /*for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
                     $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
                     //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
@@ -671,8 +671,8 @@ class CarController extends Controller
             }*/
                 // Combinar los resultados de las reservas y las ventas en efectivo
                 $combinedEarnings = $cars->concat($sales);
-                Log::info('Resultados de los carros y la venta de productos');
-                Log::info($combinedEarnings);
+                //Log::info('Resultados de los carros y la venta de productos');
+                //Log::info($combinedEarnings);
                 // Inicializar el array de resultados
                 $dates = [];
 
@@ -690,8 +690,8 @@ class CarController extends Controller
                         'earnings' => $car->amount + ($car->technical_assistance * 5000) + $car->tip
                     ];
                 });
-                Log::info('Resultados de los carros empresa');
-                Log::info($cars);
+                //Log::info('Resultados de los carros empresa');
+                //Log::info($cars);
                 $sales = CashierSale::whereDate('data', '>=', $start)
                     ->whereDate('data', '<=', $end)
                     ->where('pay', 1)
@@ -707,8 +707,8 @@ class CarController extends Controller
                 // Combinar los resultados de las reservas y las ventas en efectivo
                 $combinedEarnings = $cars->concat($sales);
 
-                Log::info('Resultados de los carros y la venta de productos empresa');
-                Log::info($combinedEarnings);
+                //Log::info('Resultados de los carros y la venta de productos empresa');
+                //Log::info($combinedEarnings);
 
                 // Inicializar el array de resultados
                 $dates = [];

@@ -129,4 +129,9 @@ class Branch extends Model
         return $this->hasMany(MonthlyClosure::class);
     }
 
+    public function advances()
+    {
+        return $this->hasMany(Advance::class);
+    }
+
 }

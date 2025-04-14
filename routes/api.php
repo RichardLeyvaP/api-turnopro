@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdvanceController;
 use App\Http\Controllers\AssociatedController;
 use App\Http\Controllers\AssociateBranchController;
 use App\Http\Controllers\BoxCloseController;
@@ -740,6 +741,13 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::post('/mounthly-clousure-expenses', [MonthlyClosureController::class, 'store_expenses']);
     Route::post('/mounthly-clousure-destroy', [MonthlyClosureController::class, 'destroy']);
     Route::post('/mounthly-clousure-utility', [MonthlyClosureController::class, 'calculateUtility']);
+
+    //Adelantos
+    Route::get('/advance-branch-pendents', [AdvanceController::class, 'branchPendentAdvances']);
+    Route::get('/advance-period', [AdvanceController::class, 'getAdvances']);
+    Route::post('/advance', [AdvanceController::class, 'store']);
+    Route::post('/advance-update', [AdvanceController::class, 'update']);
+    Route::post('/advance-update-admin', [AdvanceController::class, 'update_admin']);
 
     //ruta unificada de coordinador y encargado
     Route::get('/notification-tail-colation', [TailController::class, 'notification_tail_colation']);
