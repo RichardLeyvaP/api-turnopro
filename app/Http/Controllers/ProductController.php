@@ -57,7 +57,8 @@ class ProductController extends Controller
                 'purchase_price' => 'required|numeric',
                 'sale_price' => 'nullable',
                 'image_product' => 'nullable',
-                'product_category_id' => 'required|numeric'
+                'product_category_id' => 'required|numeric',
+                'worker_discount' => 'required|numeric'
             ]);        
                 
             $product = new Product();            
@@ -69,6 +70,7 @@ class ProductController extends Controller
             $product->purchase_price = $product_data['purchase_price'];
             $product->sale_price = $product_data['sale_price'];
             $product->product_category_id = $product_data['product_category_id'];
+            $product->worker_discount = $product_data['worker_discount'];
             $product->save();
 
             $filename = "products/default.jpg";
@@ -450,7 +452,8 @@ class ProductController extends Controller
                 'purchase_price' => 'required|numeric',
                 'sale_price' => 'nullable',
                 'image_product' => 'nullable',
-                'product_category_id' => 'required|numeric'
+                'product_category_id' => 'required|numeric',
+                'worker_discount' => 'required|numeric'
             ]);
 
             $product = Product::find($product_data['id']);
@@ -471,6 +474,7 @@ class ProductController extends Controller
             $product->purchase_price = $product_data['purchase_price'];
             $product->sale_price = $product_data['sale_price'];
             $product->product_category_id = $product_data['product_category_id'];
+            $product->worker_discount = $product_data['worker_discount'];
             $product->save();
 
             return response()->json(['msg' => 'Producto actualizado correctamente'], 200);
