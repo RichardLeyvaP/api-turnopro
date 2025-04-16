@@ -54,7 +54,7 @@ class AdvanceController extends Controller
             // Construir consulta base
             $advances = Advance::where('branch_id', $validated['branch_id'])
                 ->with(['branch', 'professional'])
-                ->whereDate('data', $startDate)
+                ->whereDate('paid', 0)
                 //->whereDate('data', '<=', $endDate)
                 //->where('status', 'Pendiente')
                 ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Pagado')") // Orden específico
@@ -351,7 +351,7 @@ class AdvanceController extends Controller
                     
                     // Guardar traza usando el servicio de trazas
                     $this->traceService->store($trace);                    
-                    $advance->status = 'Pagado';
+                    $advance->status = 'Aprobado';
                 }else {
                     $box->existence -= $advance->amount;
                     $box->save();
