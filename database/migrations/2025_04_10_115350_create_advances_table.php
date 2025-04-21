@@ -16,7 +16,7 @@ return new class extends Migration
             $table->date('data');
             $table->foreignId('professional_id')->constrained('professionals')->onDelete('cascade');
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->string('type')->nullable();
             $table->decimal('amount', 14, 2)->nullable();
             $table->string('status')->nullable();

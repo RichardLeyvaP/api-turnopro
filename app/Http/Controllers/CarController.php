@@ -25,6 +25,7 @@ use App\Models\ProductSale;
 use App\Models\Reservation;
 use App\Models\Retention;
 use App\Models\Service;
+use App\Models\WorkerPurchase;
 use App\Services\CarService;
 use App\Services\TraceService;
 use Carbon\Carbon;
@@ -372,12 +373,12 @@ class CarController extends Controller
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', Carbon::now())
-                            ->whereHas('car', function ($query) use ($data) {  // Cambiado a car directamente
+                            ->whereHas('car', function ($query) use ($data) {
                                 $query->whereHas('reservation', function ($query) use ($data) {
                                     $query->whereDate('data', Carbon::now())
                                         ->where('branch_id', $data['branch_id']);
                                 })
-                                    ->where('pay', 1);  // Condición para pay en cars
+                                ->where('pay', 1);
                             })
                             ->where('is_product', 1);
                     },
@@ -387,30 +388,37 @@ class CarController extends Controller
                             ->where('cashiersales.branch_id', $data['branch_id'])
                             ->whereDate('data', Carbon::now())
                             ->where('pay', 1);
+                    },
+                    'workerPurchases' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', Carbon::now())
+                            ->where('status', 1); // Solo compras aprobadas (status = 1)
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->values()->sortByDesc(function ($product) {
-                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
                 })->map(function ($product) {
                     return [
                         'name' => $product->name,
-                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
-                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price')
                     ];
                 });
-
+                
                 $productsAnt = Product::with([
                     'orders' => function ($query) use ($data, $fechaFormateada) {
                         $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
                             ->groupBy('product_id')
                             ->whereDate('data', $fechaFormateada)
-                            ->whereHas('car', function ($query) use ($data, $fechaFormateada) {  // Cambiado a car directamente
+                            ->whereHas('car', function ($query) use ($data, $fechaFormateada) {
                                 $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
                                     $query->whereDate('data', $fechaFormateada)
                                         ->where('branch_id', $data['branch_id']);
                                 })
-                                    ->where('pay', 1);  // Condición para pay en cars
+                                ->where('pay', 1);
                             })
                             ->where('is_product', 1);
                     },
@@ -420,23 +428,29 @@ class CarController extends Controller
                             ->where('cashiersales.branch_id', $data['branch_id'])
                             ->whereDate('data', $fechaFormateada)
                             ->where('pay', 1);
+                    },
+                    'workerPurchases' => function ($query) use ($data, $fechaFormateada) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', $fechaFormateada)
+                            ->where('status', 1); // Solo compras aprobadas (status = 1)
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->values()->sortByDesc(function ($product) {
-                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
                 })->map(function ($product) {
                     return [
                         'name' => $product->name,
-                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
-                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price')
                     ];
                 });
+                
                 $resultPproduct[] = [
-                    //'name' => $mostSoldProductName,
                     'cant' => $products->sum('total_price'),
                     'products' => $products,
-                    //'nameAnt' => $mostSoldProductNameAnt,
                     'cantAnt' => $productsAnt->sum('total_price'),
                     'productsAnt' => $productsAnt,
                 ];
@@ -511,16 +525,22 @@ class CarController extends Controller
                             ->groupBy('product_id')
                             ->whereDate('data', Carbon::now())
                             ->where('pay', 1);
+                    },
+                    'workerPurchases' => function ($query) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->whereDate('data', Carbon::now())
+                            ->where('status', 1); // Solo compras aprobadas (status = 1)
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->values()->sortByDesc(function ($product) {
-                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
                 })->map(function ($product) {
                     return [
                         'name' => $product->name,
-                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
-                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price'),
                     ];
                 });
 
@@ -542,16 +562,22 @@ class CarController extends Controller
                             ->groupBy('product_id')
                             ->whereDate('data', $fechaFormateada)
                             ->where('pay', 1);
+                    },
+                    'workerPurchases' => function ($query) use ($fechaFormateada) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->whereDate('data', $fechaFormateada)
+                            ->where('status', 1); // Solo compras aprobadas (status = 1)
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->values()->sortByDesc(function ($product) {
-                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant');
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
                 })->map(function ($product) {
                     return [
                         'name' => $product->name,
-                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant'),
-                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price')
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price'),
                     ];
                 });
                 $resultPproduct[] = [
@@ -648,29 +674,22 @@ class CarController extends Controller
                             'earnings' => $sale->price
                         ];
                     });
-                //Log::info('Resultados de la venta de productos');
-                //Log::info($sales);
-                /*for ($date = $start, $i = 0; $date->lte($end); $date->addDay(), $i++) {
-                    $machingResult = $cars->where('date', $date->toDateString())->sum('earnings');
-                    //$dates['amount'][$i] = $machingResult ? $machingResult: 0;
-                    $dates[$i] = $machingResult ? $machingResult : 0;
-                }
-                return $dates;*/
-                /*for($start; $start <= $end; $start->addDay()){                            
-                                $branches = Branch::where('id', $data['branch_id'])->get()->map(function ($branch) use ($start){
-                                    $amount = $branch->cars()->whereHas('reservation', function ($query) use ($start){
-                                        $query->whereDate('data', $start);
-                                    })->sum('amount') + $branch->cars()->whereHas('reservation', function ($query) use ($start){
-                                        $query->whereDate('data', $start);
-                                    })->sum('tip') + $branch->cars()->whereHas('reservation', function ($query) use ($start){
-                                        $query->whereDate('data', $start);
-                                    })->sum('technical_assistance') * 5000;
-                                    return $amount;
-                });
-                $array [] = $branches;
-            }*/
-                // Combinar los resultados de las reservas y las ventas en efectivo
-                $combinedEarnings = $cars->concat($sales);
+                    // Agregar worker purchases
+                    $workerPurchases = WorkerPurchase::where('branch_id', $data['branch_id'])
+                    ->whereDate('data', '>=', $start)
+                    ->whereDate('data', '<=', $end)
+                    ->where('status', 1) // Solo compras aprobadas
+                    ->get()
+                    ->map(function ($purchase) {
+                        return [
+                            'date' => $purchase->data,
+                            'earnings' => $purchase->total,
+                            'type' => 'worker_purchase' // Agregado tipo para identificar la fuente
+                        ];
+                    });
+
+                    // Combinar los resultados de las reservas, ventas en efectivo y compras de trabajadores
+                    $combinedEarnings = $cars->concat($sales)->concat($workerPurchases);
                 //Log::info('Resultados de los carros y la venta de productos');
                 //Log::info($combinedEarnings);
                 // Inicializar el array de resultados
@@ -702,10 +721,20 @@ class CarController extends Controller
                             'earnings' => $sale->price
                         ];
                     });
-                Log::info('Resultados de la venta de productos empresa');
-                Log::info($sales);
-                // Combinar los resultados de las reservas y las ventas en efectivo
-                $combinedEarnings = $cars->concat($sales);
+                $workerPurchases = WorkerPurchase::whereDate('data', '>=', $start)
+                ->whereDate('data', '<=', $end)
+                ->where('status', 1) // Solo compras aprobadas
+                ->get()
+                ->map(function ($purchase) {
+                    return [
+                        'date' => $purchase->data,
+                        'earnings' => $purchase->total,
+                        'type' => 'worker_purchase' // Agregado tipo para identificar la fuente
+                    ];
+                });
+
+                // Combinar los resultados de las reservas, ventas en efectivo y compras de trabajadores
+                $combinedEarnings = $cars->concat($sales)->concat($workerPurchases);
 
                 //Log::info('Resultados de los carros y la venta de productos empresa');
                 //Log::info($combinedEarnings);
@@ -771,25 +800,40 @@ class CarController extends Controller
                             ->where('cashiersales.branch_id', $data['branch_id'])
                             ->whereDate('data', '>=', $startOfMonth)
                             ->whereDate('data', '<=', $endOfMonth);
+                    },
+                    'workerPurchases' => function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
+                            ->groupBy('product_id')
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth)
+                            ->where('status', 1); // Solo compras aprobadas
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->map(function ($product) {
                     $totalOrders = $product->orders->sum('total_cant');
-                    $totalSales = $product->cashiersales->sum('total_sales'); // Cambio aquí
+                    $totalSales = $product->cashiersales->sum('total_sales');
+                    $totalWorker = $product->workerPurchases->sum('total_worker');
+                    
                     $utilidadOrders = $product->orders->sum('utilidadOrder');
                     $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                    
                     $totalPriceOrders = $product->orders->sum('total_price');
                     $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
-                        'total_quantity' => $totalOrders + $totalSales,
-                        'utilidad' => $utilidadOrders + $utilidadSales,
-                        'price' => $totalPriceOrders + $totalPriceSales,
-                        'sales' => $totalPriceSales
+                        'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                        'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                        'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                        'sales' => $totalPriceSales + $totalPriceWorker
                     ];
                 })->sortByDesc('total_quantity')->values();
+                
                 $totalUtilidadProducts = $products->sum('utilidad');
                 $totalPriceProducts = $products->sum('price');
                 $productSales = $products->sum('sales');
@@ -841,23 +885,38 @@ class CarController extends Controller
                             ->where('cashiersales.branch_id', $data['branch_id'])
                             ->whereDate('data', '>=', $inicio_mes_anterior)
                             ->whereDate('data', '<=', $final_mes_anterior);
+                    },
+                    'workerPurchases' => function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
+                        $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
+                            ->groupBy('product_id')
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $inicio_mes_anterior)
+                            ->whereDate('data', '<=', $final_mes_anterior)
+                            ->where('status', 1); // Solo compras aprobadas
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->map(function ($product) {
+                    // Misma lógica de cálculo que para el mes actual
                     $totalOrders = $product->orders->sum('total_cant');
-                    $totalSales = $product->cashiersales->sum('total_sales'); // Cambio aquí
+                    $totalSales = $product->cashiersales->sum('total_sales');
+                    $totalWorker = $product->workerPurchases->sum('total_worker');
+                    
                     $utilidadOrders = $product->orders->sum('utilidadOrder');
                     $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                    
                     $totalPriceOrders = $product->orders->sum('total_price');
                     $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
-                        'total_quantity' => $totalOrders + $totalSales,
-                        'utilidad' => $utilidadOrders + $utilidadSales,
-                        'price' => $totalPriceOrders + $totalPriceSales,
-                        'sales' => $totalPriceSales
+                        'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                        'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                        'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                        'sales' => $totalPriceSales + $totalPriceWorker
                     ];
                 })->sortByDesc('total_quantity')->values();
                 $totalUtilidadProductsAnt = $productsAnt->sum('utilidad');
@@ -918,30 +977,36 @@ class CarController extends Controller
                             ->whereDate('data', '>=', $inicio_mes_anterior)
                             ->whereDate('data', '<=', $final_mes_anterior);
                     },
-                    'productsales' => function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
-                        $query->selectRaw('product_id, SUM(price) as total_price_sales')
+                    'workerPurchases' => function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
+                        $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
                             ->groupBy('product_id')
                             ->whereDate('data', '>=', $inicio_mes_anterior)
-                            ->whereDate('data', '<=', $final_mes_anterior);
+                            ->whereDate('data', '<=', $final_mes_anterior)
+                            ->where('status', 1); // Solo compras aprobadas
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->productsales->isEmpty(); // Filtramos si también tiene ventas en productsales
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->map(function ($product) {
+                    // Misma lógica de cálculo que para el mes actual
                     $totalOrders = $product->orders->sum('total_cant');
                     $totalSales = $product->cashiersales->sum('total_sales');
+                    $totalWorker = $product->workerPurchases->sum('total_worker');
+                    
                     $utilidadOrders = $product->orders->sum('utilidadOrder');
                     $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                    
                     $totalPriceOrders = $product->orders->sum('total_price');
                     $totalPriceSales = $product->cashiersales->sum('total_pricesales');
-                    $productSalePrice = $product->productsales->sum('total_price_sales'); // Sumamos las ventas de productsales
-
+                    $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
-                        'total_quantity' => $totalOrders + $totalSales, // Sumas las cantidades de orders y sales
-                        'utilidad' => $utilidadOrders + $utilidadSales,
-                        'price' => $totalPriceOrders + $totalPriceSales + $productSalePrice, // Sumas todos los precios, incluidos los de productsales
-                        'sales' => $totalPriceSales + $productSalePrice // Sumas también las ventas de productsales
+                        'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                        'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                        'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                        'sales' => $totalPriceSales + $totalPriceWorker
                     ];
                 })->sortByDesc('total_quantity')->values();
 
@@ -1006,30 +1071,35 @@ class CarController extends Controller
                             ->whereDate('data', '>=', $startOfMonth)
                             ->whereDate('data', '<=', $endOfMonth);
                     },
-                    'productsales' => function ($query) use ($startOfMonth, $endOfMonth) {
-                        $query->selectRaw('product_id, SUM(price) as total_price_sales')
+                    'workerPurchases' => function ($query) use ($startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
                             ->groupBy('product_id')
                             ->whereDate('data', '>=', $startOfMonth)
-                            ->whereDate('data', '<=', $endOfMonth);
+                            ->whereDate('data', '<=', $endOfMonth)
+                            ->where('status', 1); // Solo compras aprobadas
                     }
                 ])->get()->filter(function ($product) {
-                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->productsales->isEmpty(); // Filtramos si también tiene ventas en productsales
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
                 })->map(function ($product) {
                     $totalOrders = $product->orders->sum('total_cant');
                     $totalSales = $product->cashiersales->sum('total_sales');
+                    $totalWorker = $product->workerPurchases->sum('total_worker');
+                    
                     $utilidadOrders = $product->orders->sum('utilidadOrder');
                     $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                    
                     $totalPriceOrders = $product->orders->sum('total_price');
                     $totalPriceSales = $product->cashiersales->sum('total_pricesales');
-                    $productSalePrice = $product->productsales->sum('total_price_sales'); // Sumamos las ventas de productsales
-
+                    $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
-                        'total_quantity' => $totalOrders + $totalSales, // Sumas las cantidades de orders y sales
-                        'utilidad' => $utilidadOrders + $utilidadSales,
-                        'price' => $totalPriceOrders + $totalPriceSales + $productSalePrice, // Sumas todos los precios, incluidos los de productsales
-                        'sales' => $totalPriceSales + $productSalePrice // Sumas también las ventas de productsales
+                        'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                        'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                        'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                        'sales' => $totalPriceSales + $totalPriceWorker
                     ];
                 })->sortByDesc('total_quantity')->values();
 

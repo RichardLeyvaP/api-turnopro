@@ -33,6 +33,11 @@ class Product extends Model
     public function productStores(){
         return $this->hasMany(ProductStore::class);
     }
+
+    public function workerPurchases()
+    {
+        return $this->hasMany(WorkerPurchase::class);
+    }
     
     protected $casts = [
         'purchase_price' => 'double',

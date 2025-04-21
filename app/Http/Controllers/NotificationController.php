@@ -10,6 +10,7 @@ use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalWorkPlace;
 use App\Models\Reservation;
+use App\Models\WorkerPurchase;
 use App\Services\NotificationService;
 use Twilio\Rest\Client;
 use Carbon\Carbon;
@@ -1004,7 +1005,27 @@ class NotificationController extends Controller
                 }
             }
 
-            return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
+            $today = Carbon::now()->format('Y-m-d');
+
+        // Construir consulta base
+        $query = WorkerPurchase::where('status', 0) // Status Pendiente
+            ->whereDate('data', $today); // Solo del día actual
+
+        // Filtrar por branch_id solo si es diferente de 0
+        if (isset($validated['branch_id']) && $validated['branch_id'] != 0) {
+            $query->where('branch_id', $validated['branch_id']);
+        }
+
+        // Filtrar por professional_id si se proporciona
+        if (isset($validated['professional_id'])) {
+            $query->where('professional_id', $validated['professional_id']);
+        }
+
+        // Obtener resultados
+        $pendingCount = $query->count();
+            Log::info('Contar solicitudes pendientes del día actual: ' . $pendingCount);
+
+            return response()->json(['notifications' => $notifications, 'solicitudes' => $pendingCount], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\Worker;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Branch extends Model
@@ -132,6 +133,11 @@ class Branch extends Model
     public function advances()
     {
         return $this->hasMany(Advance::class);
+    }
+
+    public function workerPurchases()
+    {
+        return $this->hasMany(WorkerPurchase::class);
     }
 
 }

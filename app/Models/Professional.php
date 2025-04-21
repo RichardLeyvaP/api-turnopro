@@ -117,5 +117,10 @@ class Professional extends Model
         return $this->hasMany(Advance::class);
     }
 
+    public function workerPurchases()
+    {
+        return $this->hasMany(WorkerPurchase::class);
+    }
+
     protected $table = "professionals";
 }

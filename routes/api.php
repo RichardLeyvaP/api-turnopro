@@ -71,6 +71,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 //agregando el import de websocket
 use App\Http\Controllers\TestingEventController;
+use App\Http\Controllers\WorkerPurchaseController;
 use App\Models\Branch;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
@@ -131,6 +132,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/productstore-academy-show', [ProductStoreController::class, 'academy_show']); //devuelve los productos por almacenes de una academia
     Route::post('/productstore-destroy', [ProductStoreController::class, 'destroy']);
     Route::get('/productstore-show-web', [ProductStoreController::class, 'product_show_web']); //dada una branch devuelve los productos de los almacenes que hay en el
+    Route::get('/productstore-show-worker', [ProductStoreController::class, 'product_show_worker']); //dada una branch devuelve los productos de los almacenes que hay en el
     Route::get('/products-academy-show', [ProductStoreController::class, 'products_academy_show']); //devuelve los productos por almacenes de una academia para autocomplete
     Route::get('/productstore', [ProductStoreController::class, 'index']);
     //Route::get('/productstore-show', [ProductStoreController::class, 'show']);
@@ -745,9 +747,18 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     //Adelantos
     Route::get('/advance-branch-pendents', [AdvanceController::class, 'branchPendentAdvances']);
     Route::get('/advance-period', [AdvanceController::class, 'getAdvances']);
+    Route::get('/get-combined-data', [AdvanceController::class, 'getCombinedData']);
     Route::post('/advance', [AdvanceController::class, 'store']);
     Route::post('/advance-update', [AdvanceController::class, 'update']);
     Route::post('/advance-update-admin', [AdvanceController::class, 'update_admin']);
+
+    //Worker_purchase
+    //Route::get('/advance-branch-pendents', [AdvanceController::class, 'branchPendentAdvances']);
+    Route::get('/worker-purchase', [WorkerPurchaseController::class, 'getByDateAndBranch']);
+    Route::post('/worker-purchase', [WorkerPurchaseController::class, 'store']);
+    Route::post('/worker-purchase-products', [WorkerPurchaseController::class, 'storeBulk']);
+    Route::post('/worker-purchase-update', [WorkerPurchaseController::class, 'update']);
+    //Route::post('/advance-update-admin', [AdvanceController::class, 'update_admin']);
 
     //ruta unificada de coordinador y encargado
     Route::get('/notification-tail-colation', [TailController::class, 'notification_tail_colation']);
