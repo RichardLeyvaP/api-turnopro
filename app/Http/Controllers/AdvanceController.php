@@ -219,7 +219,7 @@ class AdvanceController extends Controller
                 'professional_id' => 'required|exists:professionals,id',
                 'branch_id' => 'required|exists:branches,id',
                 //'type' => 'nullable|string',
-                'amount' => 'nullable|numeric',
+                'amount' => 'required|integer',
                 //'status' => 'nullable|string'
             ]);
 
