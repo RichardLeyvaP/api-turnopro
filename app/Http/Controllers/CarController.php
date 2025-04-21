@@ -1685,6 +1685,10 @@ class CarController extends Controller
                 ->whereDate('data', $today)
                 ->get();
 
+            $workerPurchases = WorkerPurchase::whereDate('data', $today)
+                ->where('status', 1)
+                ->where('branch_id', $data['branch_id'])->get();
+
             // Obtener bonos del día actual
             $bonus = ProfessionalPayment::where('branch_id', $data['branch_id'])
                 ->whereDate('date', $today)
@@ -1696,6 +1700,7 @@ class CarController extends Controller
                 'box' => $box,
                 'payments' => $payments,
                 'cashierSales' => $cashierSales,
+                'workerPurchases' => $workerPurchases,
                 'bonusPay' => $bonus,
                 'cashierclosebox' => $cashierclosebox
             ], 200, [], JSON_NUMERIC_CHECK);

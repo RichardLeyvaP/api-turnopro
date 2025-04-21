@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('professional_id')->constrained('professionals')->onDelete('cascade');
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->date('data');
             $table->decimal('price', 14, 2); // Precio original del producto
             $table->decimal('discount', 5, 2); // Porcentaje de descuento aplicado
@@ -26,7 +27,7 @@ return new class extends Migration
             $table->tinyInteger('status')->default(0); // 0 = pendiente, 1 = completado, etc.
             $table->timestamps();
             
-            // Índices para mejorar el rendimiento en búsquedas
+            // Índices para mejorar el rendimientso en búsquedas
             $table->index(['professional_id', 'branch_id']);
             $table->index('data');
             $table->index('status');
