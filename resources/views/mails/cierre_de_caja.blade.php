@@ -248,6 +248,10 @@
                 </td>
             </tr>
             <tr class="total-row">
+                <td><strong>Total de Adelantos:</strong> {{ number_format(round($boxcloseData['advancement'], 2), 2) }}</td>
+                <td><strong></strong> </td>
+            </tr>
+            <tr class="total-row">
                 <td colspan="2"><strong>Total Ingresado:</strong>
                     {{ number_format(round($boxcloseData['totalMount'], 2), 2) }}</td>
             </tr>

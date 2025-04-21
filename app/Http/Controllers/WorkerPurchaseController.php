@@ -117,7 +117,7 @@ class WorkerPurchaseController extends Controller
 
             // Actualizar estado
             $workerPurchase->status = $validatedData['status'];
-            $workerPurchase->user_id = $userId;
+            //$workerPurchase->user_id = $userId;
             $workerPurchase->save();
 
             // Manejo de inventario solo para estado Confirmado (1)

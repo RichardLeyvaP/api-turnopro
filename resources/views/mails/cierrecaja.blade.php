@@ -148,6 +148,11 @@
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalBonus'] ?? 0, 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
+        <td style="padding: 5px; text-align: left; line-height: 1;">Total Adelantos</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['advancement'], 2), 2) }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;"></td>
+    </tr>
+    <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Total Ingresado</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalMount'], 2), 2) }}</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalMount'] ?? 0, 2), 2) }}</td>

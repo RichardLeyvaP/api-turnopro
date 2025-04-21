@@ -21,6 +21,7 @@ use App\Models\Product;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
 use App\Models\Retention;
+use App\Models\WorkerPurchase;
 use App\Services\CashierBoxClosingService;
 use App\Services\MetaService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -403,6 +404,7 @@ class BoxCloseController extends Controller
                 'cashierData' => 'required|array',
                 'car_ids'  => 'nullable|array',
                 'cashiersale_ids'  => 'nullable|array',
+                'workerpurchase_ids'  => 'nullable|array',
                 'branch_id' => 'required|integer',
                 'nameProfessional' => 'required|string',
             ]);
@@ -412,6 +414,7 @@ class BoxCloseController extends Controller
             $cashierData = $request->input('cashierData');
             $car_ids = $request->input('car_ids');
             $cashiersale_ids = $request->input('cashiersale_ids');
+            $workerpurchase_ids = $request->input('workerpurchase_ids');
             $branchId = $request->input('branch_id');
             $nameProfessional = $request->input('nameProfessional');
 
@@ -421,6 +424,7 @@ class BoxCloseController extends Controller
                 'cashierData' => $cashierData,
                 'car_ids' => $car_ids,
                 'cashiersale_ids' => $cashiersale_ids,
+                'workerpurchase_ids' => $workerpurchase_ids,
                 'branch_id' => $branchId,
                 'nameProfessional' => $nameProfessional,
             ]);
@@ -506,12 +510,16 @@ class BoxCloseController extends Controller
                 CashierSale::whereIn('id', $cashiersale_ids)
                     ->update(['user_id' => $userId]);
             }
+            if(!empty($workerpurchase_ids)){
+                WorkerPurchase::whereIn('id', $workerpurchase_ids)
+                ->update(['user_id' => $userId]);
+            }
             Log::info('$trace');
             Log::info($trace);
             DB::commit();
             //$professionals = $professionals->toArray();
             Log::info("Generar PDF");
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus, 'cashierData' => $cashierData, 'nameProfessional' => $nameProfessional]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecaja', ['data' => $editedCloseBox, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus, 'cashierData' => $cashierData, 'nameProfessional' => $nameProfessional]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
                 $query->where('name', 'Administrador')
@@ -564,6 +572,7 @@ class BoxCloseController extends Controller
                 'cashierData' => 'required|array',
                 'car_ids'  => 'nullable|array',
                 'cashiersale_ids'  => 'nullable|array',
+                'workerpurchase_ids'  => 'nullable|array',
                 'branch_id' => 'required|integer',
                 'nameProfessional' => 'required|string',
             ]);
@@ -573,6 +582,7 @@ class BoxCloseController extends Controller
             $cashierData = $request->input('cashierData');
             $car_ids = $request->input('car_ids');
             $cashiersale_ids = $request->input('cashiersale_ids');
+            $workerpurchase_ids = $request->input('workerpurchase_ids');
             $branchId = $request->input('branch_id');
             $nameProfessional = $request->input('nameProfessional');
 
@@ -582,6 +592,7 @@ class BoxCloseController extends Controller
                 'cashierData' => $cashierData,
                 'car_ids' => $car_ids,
                 'cashiersale_ids' => $cashiersale_ids,
+                'workerpurchase_ids' => $workerpurchase_ids,
                 'branch_id' => $branchId,
                 'nameProfessional' => $nameProfessional,
             ]);
@@ -642,12 +653,16 @@ class BoxCloseController extends Controller
                 CashierSale::whereIn('id', $cashiersale_ids)
                     ->update(['user_id' => $userId]);
             }
+            if(!empty($workerpurchase_ids)){
+                WorkerPurchase::whereIn('id', $workerpurchase_ids)
+                ->update(['user_id' => $userId]);
+            }
             Log::info('$trace');
             Log::info($trace);
             DB::commit();
             //$professionals = $professionals->toArray();
             Log::info("Generar PDF Cierre de caja Parcial");
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajaparcial', ['data' => $boxClose, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus, 'cashierData' => $cashierData, 'nameProfessional' => $nameProfessional]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajaparcial', ['data' => $editedCloseBox, 'box' => $box, 'branch' => $branch, 'totalBonus' => $totalBonus, 'cashierData' => $cashierData, 'nameProfessional' => $nameProfessional]);
             $reporte = $pdf->output(); // Convertir el PDF en una cadena
             $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
                 $query->where('name', 'Administrador')
@@ -661,8 +676,8 @@ class BoxCloseController extends Controller
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
             Log::info('$mergedEmails correos a enviar cierre de caja');
-            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
-            //$mergedEmails = ['yasmany891230@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            $mergedEmails = ['yasmany891230@gmail.com'];
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {
                 try {
