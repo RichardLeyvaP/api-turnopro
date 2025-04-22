@@ -1661,7 +1661,8 @@ class CarController extends Controller
                         'user_id' => $car->user_id,
                         'action_status' => $car->action_status,
                         'action_descriptions' => $car->action_descriptions ?? [],
-                        'change_log' => $car->change_log ?? []
+                        'change_log' => $car->change_log ?? [],
+                        'payment' => $car->payment ?? [],
                     ];
                 })
                 ->sortBy('updated_at')
@@ -1696,13 +1697,13 @@ class CarController extends Controller
                 ->sum('amount');
 
             return response()->json([
-                'cars' => $cars,
-                'box' => $box,
-                'payments' => $payments,
-                'cashierSales' => $cashierSales,
-                'workerPurchases' => $workerPurchases,
-                'bonusPay' => $bonus,
-                'cashierclosebox' => $cashierclosebox
+                'cars' => $cars ?? [],
+                'box' => $box ?? [],
+                'payments' => $payments ?? [],
+                'cashierSales' => $cashierSales ?? [],
+                'workerPurchases' => $workerPurchases ?? [],
+                'bonusPay' => $bonus ?? 0,
+                'cashierclosebox' => $cashierclosebox ?? []
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error("Error al mostrar los carros: " . $th->getMessage());
@@ -3137,10 +3138,10 @@ class CarController extends Controller
                         ]);
                     }
                     // Procesar propina en efectivo
-                    if ($car->tip && $payment->method === 'cash') {
+                    /*if ($car->tip && $payment->method === 'cash') {
 
                         $box->decrement('existence', $car->tip);
-                    }                    
+                    }*/                    
                     $payment->delete();
                 });
             } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {

@@ -63,40 +63,40 @@ class Car extends Model
     ];
 
     protected function comparePayments(array $oldPayments, array $newPayments): string
-{
-    $changes = [];
-    $fieldNames = [
-        'cash' => 'Efectivo',
-        'creditCard' => 'Tarjeta de Crédito',
-        'debit' => 'Tarjeta de Débito',
-        'transfer' => 'Transferencia',
-        'other' => 'Otro método',
-        'cardGift' => 'Tarjeta de Regalo',
-        'tip' => 'Propina',
-        'tipByCash' => 'Método de pago de la propina'
-    ];
+    {
+        $changes = [];
+        $fieldNames = [
+            'cash' => 'Efectivo',
+            'creditCard' => 'Tarjeta de Crédito',
+            'debit' => 'Tarjeta de Débito',
+            'transfer' => 'Transferencia',
+            'other' => 'Otro método',
+            'cardGift' => 'Tarjeta de Regalo',
+            'tip' => 'Propina',
+            'tipByCash' => 'Método de pago de la propina'
+        ];
 
-    foreach ($fieldNames as $field => $name) {
-        $oldValue = $oldPayments[$field] ?? null;
-        $newValue = $newPayments[$field] ?? null;
+        foreach ($fieldNames as $field => $name) {
+            $oldValue = $oldPayments[$field] ?? null;
+            $newValue = $newPayments[$field] ?? null;
 
-        // Solo registrar cambios si hay diferencia
-        if ($oldValue != $newValue) {
-            if (is_numeric($oldValue)) {
-                // Para campos numéricos (montos)
-                $difference = $newValue - $oldValue;
-                if ($difference > 0) {
-                    $changes[] = "$name aumentó de $$oldValue a $$newValue (+$$difference)";
-                } elseif ($difference < 0) {
-                    $changes[] = "$name disminuyó de $$oldValue a $$newValue (-$$" . abs($difference) . ")";
+            // Solo registrar cambios si hay diferencia
+            if ($oldValue != $newValue) {
+                if (is_numeric($oldValue)) {
+                    // Para campos numéricos (montos)
+                    $difference = $newValue - $oldValue;
+                    if ($difference > 0) {
+                        $changes[] = "$name aumentó de $$oldValue a $$newValue (+$$difference)";
+                    } elseif ($difference < 0) {
+                        $changes[] = "$name disminuyó de $$oldValue a $$newValue (-$$" . abs($difference) . ")";
+                    }
+                } else {
+                    // Para campos no numéricos (como tipByCash)
+                    $changes[] = "$name cambió de '{$oldValue}' a '{$newValue}'";
                 }
-            } else {
-                // Para campos no numéricos (como tipByCash)
-                $changes[] = "$name cambió de '{$oldValue}' a '{$newValue}'";
             }
         }
-    }
 
-    return implode('*', $changes);
-}
+        return implode('*', $changes);
+    }
 }
