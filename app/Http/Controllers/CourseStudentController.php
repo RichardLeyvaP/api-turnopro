@@ -78,13 +78,14 @@ class CourseStudentController extends Controller
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
-                'name' => 'required|max:50',
-                //'surname' => 'required|max:50',
-                //'second_surname' => 'required|max:50',
+                'name' => 'required|max:255',
                 'phone' => 'required|max:50',
                 'email' => 'required|max:50',
                 'client_image' => 'nullable',
                 'file' => 'nullable',
+                'reservation_payment' => 'nullable|numeric',
+                'total_payment' => 'nullable|numeric',
+                'enrollment_confirmed' => 'required|numeric',
             ]);
             
             if ($request->hasFile('file')) {
@@ -106,8 +107,6 @@ class CourseStudentController extends Controller
             $student->code = $code;
             $student->qr_url = $qrCodeFilePath;
             $student->name = $data['name'];
-            //$student->surname = $data['surname'];
-            //$student->second_surname = $data['second_surname'];
             $student->email = $data['email'];
             $student->phone = $data['phone'];
             $student->save();
@@ -123,17 +122,38 @@ class CourseStudentController extends Controller
             if ($request->hasFile('file')) {
                 Log::info("tiene un documento");
                $file = $request->file('file')->storeAs('students/pagos',$student->id.'-'.$data['course_id'].'.'.$request->file('file')->extension(),'public');
-               $atributosParaActualizar = [
-              
-                'image_url' => $file,
+               
+            }
+            $atributosParaActualizar = [
+                'reservation_payment' => $data['reservation_payment'],
+                'total_payment' => $data['total_payment'],
+                'enrollment_confirmed' => $data['enrollment_confirmed'],
+                'image_url' => $file ?? '',
             ];
 
             $student->courses()->syncWithoutDetaching([
                 $data['course_id'] => $atributosParaActualizar,
-            ]);  
-            }else {
-                $course->students()->attach($student->id);
-            }
+            ]); 
+
+            $finance = Finance::orderBy('control', 'desc')->first();
+                if($finance)
+                    {
+                        $control = $finance->control+1;
+                    }
+                    else {
+                        $control = 1;
+                    }
+                $finance = new Finance();
+                $finance->control = $control;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $data['total_payment'];
+                $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
+                $finance->enrollment_id = $course->enrollment_id;
+                $finance->type = 'Academia';
+                $finance->revenue_id = 3;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->save();
            // $course->students()->attach($student->id);
             $course->available_slots = $course->available_slots - 1;
             $course->save();
