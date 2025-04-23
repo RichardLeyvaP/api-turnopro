@@ -149,14 +149,13 @@
         </table>
         <table>
             <tr class="section-header">
-                <td colspan="3"><strong>Tipos de Ingresos:</strong></td>
+                <td colspan="4"><strong>Tipos de Ingresos:</strong></td>
             </tr>
             <tr>
+                <td><strong>Prestación de Servicios:</strong>{{ number_format(round($boxcloseData['totalService'], 2), 2) }}</td>
+                <td><strong>Venta de Productos a Clientes:</strong>{{ number_format(round($boxcloseData['totalProduct'], 2), 2) }}</td>
+                <td><strong>Venta de Productos a Profesionales:</strong>{{ number_format(round($boxcloseData['workerpurchase'], 2), 2) }}</td>
                 <td><strong>Propinas:</strong> {{ number_format(round($boxcloseData['totalTip'], 2), 2) }}</td>
-                <td><strong>Venta de Productos:</strong>
-                    {{ number_format(round($boxcloseData['totalProduct'], 2), 2) }}</td>
-                <td><strong>Prestación de Servicios:</strong>
-                    {{ number_format(round($boxcloseData['totalService'], 2), 2) }}</td>
              </tr>
             </table>
             <table>
@@ -165,34 +164,8 @@
                 <th>Datos de la Cajera</th>
             </tr>
             <tr class="section-header">
-                <td colspan="2"><strong>Estado de la caja:</strong></td>
-            </tr>
-            <tr>
-                <td colspan="2"><strong>Fondo Inicio del día:</strong>
-                    {{ number_format(round($boxData['cashFound'], 2), 2) }}</td>
-            </tr>
-            <tr>
-                <td><strong>Efectivo en caja:</strong> {{ number_format(round($boxData['existence'], 2), 2) }}</td>
-                <td><strong>Efectivo en caja:</strong> {{ number_format(round($cashierData['existence'] ?? 0, 2), 2) }}
-                </td>
-            </tr>
-            <tr>
-                <td><strong>Extracción:</strong> {{ number_format(round($boxData['extraction'], 2), 2) }}</td>
-                <td><strong>Extracción:</strong> {{ number_format(round($cashierData['extraction'] ?? 0, 2), 2) }}</td>
-            </tr>
-            <!-- Fila adicional para mostrar la diferencia en la caja si existe
-            @if (isset($cashierData['differenceBox']) && $cashierData['differenceBox'] != 0)
-<tr class="difference-row">
-                    <td class="difference-label">
-                        <strong>Diferencia en Caja:</strong>
-                    </td>
-                    <td class="difference-value">
-                        {{ number_format(round($cashierData['differenceBox'], 2), 2) }}
-                    </td>
-                </tr>
-@endif-->
-            <tr class="section-header">
-                <td colspan="2"><strong>Formas de pago</strong></td>
+                <td><strong>Formas de pago</strong></td>
+                <td><strong>Excepto Venta de Productos a Profesionales</strong></td>
             </tr>
             <tr>
                 <td><strong>Efectivo:</strong> {{ number_format(round($boxcloseData['totalCash'], 2), 2) }}</td>
@@ -228,28 +201,31 @@
                 <td><strong>Otros Métodos:</strong> {{ number_format(round($cashierData['totalOther'] ?? 0, 2), 2) }}
                 </td>
             </tr>
-            <!-- Fila adicional para mostrar la diferencia en la caja si existe
-            @if (isset($cashierData['differencePay']) && $cashierData['differencePay'] != 0)
-<tr class="difference-row">
-                    <td class="difference-label">
-                        <strong>Diferencia en Formas de Pago:</strong>
-                    </td>
-                    <td class="difference-value">
-                        {{ number_format(round($cashierData['differencePay'], 2), 2) }}
-                    </td>
-                </tr>
-@endif-->
-            <tr class="total-row">
-                <td><strong>Total de Bonos:</strong> {{ number_format(round($totalBonus, 2), 2) }}</td>
-                <td><strong>Total de Bonos:</strong> {{ number_format(round($cashierData['totalBonus'] ?? 0, 2), 2) }}
+            <tr class="section-header">
+                <td colspan="2"><strong>Estado de la caja:</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Fondo Inicio del día:</strong>
+                    {{ number_format(round($boxData['cashFound'], 2), 2) }}</td>
+            </tr><tr>
+                <td><strong>Método de Pago Efectivo:</strong> {{ number_format(round($boxcloseData['totalCash'], 2), 2) }}</td>
+                <td><strong></strong></td>
+            </tr>   
+            <tr>
+                <td><strong>Extracción:</strong> {{ number_format(round($boxData['extraction'], 2), 2) }}</td>
+                <td><strong>Extracción:</strong> {{ number_format(round($cashierData['extraction'] ?? 0, 2), 2) }}</td>
+            </tr>
+            <tr>
+                <td><strong>Efectivo en caja:</strong> {{ number_format(round($boxData['existence'], 2), 2) }}</td>
+                <td><strong>Efectivo en caja:</strong> {{ number_format(round($cashierData['existence'] ?? 0, 2), 2) }}
                 </td>
             </tr>
             <tr class="total-row">
-                <td colspan="2"><strong>Total Ingresado:</strong>
+                <td colspan="2"><strong>Total Tipos de Ingreso:</strong>
                     {{ number_format(round($boxcloseData['totalMount'], 2), 2) }}</td>
             </tr>
 
-            @if (isset($cashierData['difference']))
+            @if (isset($cashierData['difference']) && $cashierData['difference'] != 0)
                 @php
                     $diffClass = '';
                     if ($cashierData['difference'] < 0) {

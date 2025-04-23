@@ -56,7 +56,7 @@ class AdvanceController extends Controller
             $advances = Advance::where('branch_id', $validated['branch_id'])
                 ->with(['branch', 'professional'])
                 ->whereDate('paid', 0)
-                //->whereDate('data', '<=', $endDate)
+                ->whereDate('data', $startDate)
                 //->where('status', 'Pendiente')
                 ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Pagado')") // Orden específico
                 ->orderBy('created_at', 'asc') // Luego por fecha más antigua

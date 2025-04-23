@@ -23,7 +23,7 @@ class ChargePermissionController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Matricular estudiante al curso");
+        Log::info("Asignar permiso a cargo");
         Log::info($request);
         try {
             $request->validate([

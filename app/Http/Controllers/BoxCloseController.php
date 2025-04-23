@@ -502,6 +502,7 @@ class BoxCloseController extends Controller
             $cashierData['type'] = 'Diario';
             $cashierData['box_close_id'] = $boxClose->id;
             $cashierData['advancement'] = $editedCloseBox['advancement'];
+            $cashierData['differenceAccounts'] = $editedCloseBox['workerpurchase'];
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
@@ -644,6 +645,7 @@ class BoxCloseController extends Controller
             $cashierData['data'] = Carbon::now();
             $cashierData['type'] = 'Parcial';
             $cashierData['box_close_id'] = $boxClose->id;
+            $cashierData['differenceAccounts'] = $editedCloseBox['workerpurchase'];
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             // Actualizar los registros en la tabla cars
             if (!empty($car_ids)) {
