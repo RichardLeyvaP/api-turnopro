@@ -513,7 +513,7 @@ class AdvanceController extends Controller
             }
             // Actualizar solo el tipo
             $advance->status = $validated['status'];
-            $advance->userId = $userId;
+            $advance->user_id = $userId;
             $advance->save();
 
             // Validar pago si el nuevo tipo es "Pagado"

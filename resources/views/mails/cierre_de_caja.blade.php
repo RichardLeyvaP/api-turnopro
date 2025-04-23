@@ -256,7 +256,7 @@
                     {{ number_format(round($boxcloseData['totalMount'], 2), 2) }}</td>
             </tr>
 
-            @if (isset($cashierData['difference']))
+            @if (isset($cashierData['difference']) && $cashierData['difference'] != 0)
                 @php
                     $diffClass = '';
                     if ($cashierData['difference'] < 0) {

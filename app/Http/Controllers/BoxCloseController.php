@@ -204,7 +204,7 @@ class BoxCloseController extends Controller
                             'user_id' => $boxClose->user_id ?? null,
                             'type' => $boxClose->type,
                             'time' => $boxClose->created_at->format('H:i'),
-                            'advancement' => $boxClose->advancement ?? 0,
+                            'advancement' => $cashierBoxClosing->advancement ?? 0,
                         ];
 
                         $mergedData = array_merge($baseData, $closeData);
@@ -501,6 +501,7 @@ class BoxCloseController extends Controller
             $cashierData['data'] = Carbon::now();
             $cashierData['type'] = 'Diario';
             $cashierData['box_close_id'] = $boxClose->id;
+            $cashierData['advancement'] = $editedCloseBox['advancement'];
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
