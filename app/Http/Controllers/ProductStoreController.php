@@ -254,50 +254,41 @@ class ProductStoreController extends Controller
             Log::info("Entra a buscar los almacenes con los productos pertenecientes en el de una branch");
             if ($data['branch_id'] != 0) {
                 Log::info("No es Administrador");
-                /*$productStore = ProductStore::whereHas('store.branches', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->where('product_exit', '>', 0)->whereHas('product', function ($query) {
-                    $query->where('status_product', 'No en venta'); // Filtro para status_product
-                })->with('product', 'store')->get()->map(function ($query) {
-                    return [
-                        'id' => $query->id,
-                        //'product_quantity' => $query->product_quantity,
-                        'product_exit' => $query->product_exit,
-                        'product_id' => $query->product_id,
-                        'store_id' => $query->store_id,
-                        'stock_depletion' => $query->stock_depletion,
-                        'name' => $query->product->name,
-                        'reference' => $query->product->reference,
-                        'code' => $query->product->code,
-                        'status_product' => $query->product->status_product,
-                        'sale_price' => $query->product->sale_price,
-                        'purchase_price' => $query->product->purchase_price,
-                        'image_product' => $query->product->image_product,
-                        'direccionStore' => $query->store->address,
-                        'storetReference' => $query->store->reference,
-                        'quantity' => 0
-                    ];
-                });*/
                 $productStore = ProductStore::where(function($query) use ($data) {
                     // 1. Almacenes relacionados con la sucursal especificada en $data
                     $query->whereHas('store.branches', function ($q) use ($data) {
                         $q->where('branch_id', $data['branch_id']);
                     });
-                
+                    
                     // 2. O almacenes que solo tienen relación con la sucursal 20
                     $query->orWhereHas('store.branches', function ($q) {
                         $q->where('branch_id', 20);
                     }, '=', 1); // '= 1' asegura que solo tenga esta relación
-                
+                    
                     // 3. O almacenes que no tienen relación con ninguna sucursal
                     $query->orWhereDoesntHave('store.branches');
                 })
                 ->where('product_exit', '>', 0)
-                ->whereHas('product', function ($query) {
-                    $query->where('status_product', 'No en venta');
+                ->where(function($query) use ($data) {
+                    // Aplicar el filtro de status_product solo a:
+                    // 1. Almacenes relacionados con la sucursal especificada
+                    $query->whereHas('store.branches', function ($q) use ($data) {
+                        $q->where('branch_id', $data['branch_id']);
+                    })->whereHas('product', function ($q) {
+                        $q->where('status_product', 'No en venta');
+                    });
+                    
+                    // 2. O a almacenes que solo tienen relación con sucursal 20 (sin filtro de status)
+                    $query->orWhereHas('store.branches', function ($q) {
+                        $q->where('branch_id', 20);
+                    }, '=', 1);
+                    
+                    // 3. O a almacenes sin relación con ninguna sucursal (con filtro de status)
+                    $query->orWhereDoesntHave('store.branches')->whereHas('product', function ($q) {
+                        $q->where('status_product', 'No en venta');
+                    });
                 })
                 ->with(['product', 'store', 'store.branches' => function($q) use ($data) {
-                    // Cargamos las branches relacionadas para poder determinar el branch_id después
                     $q->where('branch_id', $data['branch_id']);
                 }])
                 ->get()
@@ -324,12 +315,12 @@ class ProductStoreController extends Controller
                         'direccionStore' => $item->store->address,
                         'storetReference' => $item->store->reference,
                         'quantity' => 0,
-                        'branch_id' => $branchId // Agregamos el nuevo campo
+                        'branch_id' => $branchId
                     ];
                 });
             } else {
                 $productStore = ProductStore::with('product', 'store')->where('product_exit', '>', 0)->whereHas('product', function ($query) {
-                    $query->where('status_product', 'no en venta'); // Filtro para status_product
+                    $query->where('status_product', 'No en venta'); // Filtro para status_product
                 })->get()->map(function ($query) {
                     return [
                         'id' => $query->id,

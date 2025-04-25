@@ -227,8 +227,7 @@
             </tr>
             <tr class="total-row">
                 <td><strong>Total de Bonos:</strong> {{ number_format(round($totalBonus, 2), 2) }}</td>
-                <td><strong>Total de Bonos:</strong> {{ number_format(round($cashierData['totalBonus'] ?? 0, 2), 2) }}
-                </td>
+                <td><strong></strong></td>
             </tr>
             <tr class="total-row">
                 <td><strong>Total de Adelantos:</strong> {{ number_format(round($boxcloseData['advancement'], 2), 2) }}</td>
