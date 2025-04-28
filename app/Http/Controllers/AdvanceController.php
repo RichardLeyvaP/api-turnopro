@@ -347,8 +347,8 @@ class AdvanceController extends Controller
                         'client' => '',
                         'amount' => $advance->amount,
                         'operation' => 'Aprobada solicitud de adelanto',
-                        'description' => '',
-                        'details' => 'Solicitud de adelanto de ' . $advance->professional->name . ' aprobada para pago en 24hrs correctamente',
+                        'description' => $advance->professional->name,
+                        'details' => 'Solicitud de adelanto aprobada para pago en 24hrs correctamente',
                     ];
 
                     // Guardar traza usando el servicio de trazas
@@ -408,8 +408,8 @@ class AdvanceController extends Controller
                         'client' => '',
                         'amount' => $advance->amount,
                         'operation' => 'Pago solicitud de adelanto',
-                        'description' => '',
-                        'details' => 'Solicitud de adelanto de ' . $advance->professional->name . ' pagada correctamente',
+                        'description' => $advance->professional->name,
+                        'details' => 'Solicitud de adelanto pagada correctamente',
                     ];
 
                     // Guardar traza usando el servicio de trazas

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 
 class CourseStudentController extends Controller
 {
+    protected $token_id = '46s7ZFu650qBRGIdlNjpB8ZsbQqQYDxHliq7R0wZCrgHUIOZ88auQMIa8TSxOLUo';
     /**
      * Display a listing of the resource.
      */
@@ -74,6 +75,10 @@ class CourseStudentController extends Controller
     {
         Log::info("Matricular estudiante al curso");
         Log::info($request);
+        $token_id = $request->query('token_id');
+        if ($token_id != $this->token_id) {
+            return response()->json(['msg' => 'Token inválido'], 403);
+        }
         DB::beginTransaction();
         try {
             $data = $request->validate([

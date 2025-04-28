@@ -492,7 +492,7 @@ class BoxCloseController extends Controller
                 'client' => '',
                 'amount' => $editedCloseBox['totalMount'],
                 'operation' => 'Cierre de Caja Del sistema',
-                'details' => 'Ingreso diario',
+                'details' => 'Cierre de Caja efectuado correctamente',
                 'description' => ''
             ];
             $this->traceService->store($trace);
@@ -636,7 +636,7 @@ class BoxCloseController extends Controller
                 'client' => '',
                 'amount' => $boxClose['totalMount'],
                 'operation' => 'Cierre de Caja Parcial',
-                'details' => 'Ingreso diario Parcial',
+                'details' => 'Cierre de Caja efectuado correctamente',
                 'description' => ''
             ];
             $this->traceService->store($trace);

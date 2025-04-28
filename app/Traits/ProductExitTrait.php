@@ -51,6 +51,24 @@ trait ProductExitTrait
             })
             ->get()->pluck('email')->toArray();
         }        
+        $excludedEmails = [
+            'evylabrada@gmail.com',
+            'Evelyn@klint.cl',
+            'Deylert@klint.cl',
+            'deylert89@gmail.com',
+            'yasmany891230@gmail.com',
+            'evelyn@klint.cl'
+        ];
+
+        $professional = collect($professional)
+        ->filter(function ($email) use ($excludedEmails) {
+            // Validar que sea un email válido y no esté en la lista de excluidos
+            return filter_var($email, FILTER_VALIDATE_EMAIL) && 
+                !in_array($email, $excludedEmails);
+        })
+        ->unique() // Eliminar duplicados
+        ->values() // Reindexar keys
+        ->all();   // Convertir a array
         Log::info('Producto agotandose Almacen-Producto :', ['productStore' => $productstore]);
         Log::info('Comparacion de existencai con stock :',[$productstore->product_exit <= $productstore->stock_depletion]);
         // Verificar si el nuevo valor es menor que 5 y registrar un log

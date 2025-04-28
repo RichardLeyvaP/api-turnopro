@@ -257,29 +257,6 @@
                     </tr>
                 @endif
             @endif
-
-            <!-- Fila adicional para mostrar la diferencia si existe
-            @if (isset($cashierData['difference']) && $cashierData['difference'] != 0)
-<tr class="difference-row">
-                    <td class="difference-label">
-                        <strong>Total de Diferencias:</strong>
-                    </td>
-                    <td class="difference-value">
-                        {{ number_format(round($cashierData['difference'], 2), 2) }}
-                    </td>
-                </tr>
-                @if (isset($cashierData['description']) && $cashierData['description'])
-<tr>
-                    <td colspan="2"><strong>Descripción:</strong></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="padding: 5px; text-align: left; line-height: 1.5; word-wrap: break-word; white-space: normal;">
-                        <strong>Descripción:</strong> {{ $cashierData['description'] ?? 'Sin descripción' }}
-                    </td>
-                </tr>
-@endif
-@endif
-            -->
             <tr>
                 <td colspan="2"><strong>Realizado por:</strong> {{ $nameProfessional }}</td>
             </tr>

@@ -37,6 +37,10 @@
         <td style="padding: 5px; text-align: left; line-height: 1;">Propinas</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalTip'], 2), 2) }}</td>
     </tr>
+    <tr style="border: 1.5px solid black;">
+        <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Total</strong></td>
+        <td style="padding: 5px; text-align: right; line-height: 1;"><strong>{{ number_format(round($data['totalMount'], 2), 2) }}</strong></td>
+    </tr>
 </table>
 <br>
 
@@ -118,7 +122,7 @@
 
 <br>
 
-<!-- Tercera Tabla: Bonos -->
+<!-- Tercera Tabla: Bonos 
 <table width="100%" style="border-collapse: collapse; border: 1.5px solid black;">
     <tr style="background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Totales</strong></td>
@@ -130,7 +134,7 @@
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalMount'], 2), 2) }}</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalMount'] ?? 0, 2), 2) }}</td>
     </tr>
-</table>
+</table>-->
 @if(isset($cashierData['difference']) && $cashierData['difference'] !== null)
     @php
         // Determinar color y estilo según el valor
@@ -173,24 +177,6 @@
         @endif
     </table>
 @endif
-<!-- Diferencia, Descripción y Realizado por 
-@if(isset($cashierData['difference']) && $cashierData['difference'] !== null)
-    <table width="100%" style="border-collapse: collapse; border: 1.5px solid black; margin-top: 20px;">
-        <tr style="border: 2px solid #D32F2F; background-color: #FFEBEE;">
-            <td style="padding: 5px; text-align: left; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;"><strong>Total de Diferencias:</strong></td>
-            <td style="padding: 5px; text-align: right; line-height: 1; color: #D32F2F; font-size: 16px; font-weight: bold;">{{ number_format(round($cashierData['difference'], 2), 2) }}</td>
-        </tr>
-        <tr style="border: 1.5px solid black;">
-            <td style="padding: 5px; text-align: left; line-height: 1;" colspan="2"><strong>Descripción:</strong></td>
-        </tr>
-        <tr style="border: 1.5px solid black;">
-            <td style="padding: 5px; text-align: left; line-height: 1.5; word-wrap: break-word; white-space: normal;" colspan="2">
-                {{ $cashierData['description'] ?? 'Sin descripción' }}
-            </td>
-        </tr>
-    </table>
-@endif
--->
 <table width="100%" style="border-collapse: collapse; border: 1.5px solid black; margin-top: 20px;">
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Realizado por:</strong></td>

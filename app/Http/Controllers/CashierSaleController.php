@@ -89,8 +89,8 @@ class CashierSaleController extends Controller
                     'client' => '',
                     'amount' => $sale_price * $validatedData['cant'],
                     'operation' => 'Venta de Productos',
-                    'details' => 'Vende producto: '.$product->name,
-                    'description' => 'Cantidad vendida '. $validatedData['cant'],
+                    'details' => $validatedData['cant']. ' '.$product->name,
+                    'description' => '',
                 ];
                 $this->traceService->store($trace);
                 

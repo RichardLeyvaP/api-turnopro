@@ -510,8 +510,25 @@ class PaymentController extends Controller
             $payment->save();
 
             CashierSale::whereIn('id', $ids)->update(['pay' => 1]);
-            $cashierSales = CashierSale::whereIn('id', $ids)->get();
+            // Obtenemos todas las ventas con sus relaciones
+            $cashierSales = CashierSale::with('productStore.product')
+            ->whereIn('id', $ids)
+            ->get();
+
+            // Calculamos el total de ganancias
             $win = $cashierSales->sum('price');
+
+            // Procesamos los productos vendidos
+            $productSales = $cashierSales->groupBy(function ($item) {
+            return $item->productStore->product->name ?? 'Producto desconocido';
+            })->map(function ($group) {
+            return $group->sum('cant');
+            });
+
+            // Formateamos el resultado como lo necesitas
+            $formattedProducts = $productSales->map(function ($quantity, $name) {
+                return "$quantity $name";
+            })->implode(', ');
             if($data['cash']){
                 $box = Box::where('branch_id', $branch->id)->whereDate('data', Carbon::now())->first();
                 if (!$box) {                
@@ -530,7 +547,7 @@ class PaymentController extends Controller
                 'client' => '',
                 'amount' => $data['cash']+$data['creditCard']+$data['debit']+$data['transfer']+$data['other']+$data['cardGift']+$data['tip'],
                 'operation' => 'Paga Productos vendidos',
-                'details' => 'Productos vendidos: '.implode(', ', $ids),
+                'details' => $formattedProducts,
                 'description' => '',
             ];
             $this->traceService->store($trace);
