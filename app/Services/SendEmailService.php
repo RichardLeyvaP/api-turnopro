@@ -213,7 +213,7 @@ class SendEmailService {
         $mail->utilidad = $utilidad;
         $mail->professionalBonus = $professionalBonus; // Asegúrate de que tu plantilla maneja este array correctamente
     
-        $this->sendEmail($client_email, $mail, 'Cierre de Caja Mensual');
+        $this->sendEmail($client_email, $mail, 'Pago de bono de productos');
     }
 
     //este configurarlo para el envio de cierre de caja del mes

@@ -1327,310 +1327,7 @@ class BoxCloseController extends Controller
         }
     }
 
-    public function box_close_month_ANTERIOR()
-    {
-        try {
-            // Obtener la fecha actual
-            $now = Carbon::now();
-
-            // Obtener el mes y año del mes anterior
-            //$mesAnterior = $now->month;
-            //$añoAnterior = $now->year;
-            $mesAnterior = $now->subMonth()->month; // Devuelve el mes anterior
-            $añoAnterior = $now->subMonth()->year; // Devuelve el año anterior
-            //$boxCloseData = [];
-            $professionalsData = [];
-
-            $ingreso = 0;
-            $gasto = 0;
-            $branches = Branch::all();
-            foreach ($branches as $branch) {
-                Finance::where('branch_id', $branch->id)
-                    ->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)
-                    ->where('operation', 'Gasto')
-                    ->where('comment', 'like', '%Gasto por pago de bono de productos%')
-                    ->delete();
-                //Retention
-                Retention::where('branch_id', $branch->id)
-                    ->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->where('type', 'Products')->delete();
-
-                ProfessionalPayment::where('branch_id', $branch->id)->whereYear('date', $añoAnterior)->whereMonth('date', $mesAnterior)->where('type', 'Bono productos')->delete();
-
-                $boxCloseData = [];
-                $winProduct = 0;
-                $professionalsData = [];
-                $ingreso = 0;
-                $gasto = 0;
-                $boxClose = BoxClose::whereHas('box', function ($query) use ($branch) {
-                    $query->where('branch_id', $branch->id);
-                })->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->selectRaw('
-                SUM(totalMount) as totalMount,
-                SUM(totalService) as totalService,
-                SUM(totalProduct) as totalProduct,
-                SUM(totalTip) as totalTip,
-                SUM(totalCash) as totalCash,
-                SUM(totalDebit) as totalDebit,
-                SUM(totalCreditCard) as totalCreditCard,
-                SUM(totalTransfer) as totalTransfer,
-                SUM(totalOther) as totalOther,
-                SUM(totalCardGif) as totalCardGif
-            ')->first();
-                /*$boxCloseArray = [
-                    'totalMount' => $boxClose->totalMount ?? 0,
-                    'totalService' => $boxClose->totalService ?? 0,
-                    'totalProduct' => $boxClose->totalProduct ?? 0,
-                    'totalTip' => $boxClose->totalTip ?? 0,
-                    'totalCash' => $boxClose->totalCash ?? 0,
-                    'totalDebit' => $boxClose->totalDebit ?? 0,
-                    'totalCreditCard' => $boxClose->totalCreditCard ?? 0,
-                    'totalTransfer' => $boxClose->totalTransfer ?? 0,
-                    'totalOther' => $boxClose->totalOther ?? 0,
-                    'totalcardGif' => $boxClose->totalcardGif ?? 0,
-                    'branch_name' => $branch->name,
-                    'ingreso' => round($ingreso, 2),
-                    'gasto' => round($gasto, 2),
-                    'utilidad' => round($ingreso - $gasto, 2)
-                ];
-
-                // Agregar al array de resultados
-                $boxCloseData[] = $boxCloseArray;*/
-                $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
-                    $query->where('branch_id', $branch->id);
-                })->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-                })->select('id', 'name', 'surname', 'retention')->get();
-                foreach ($professionals as $professional) {
-                    $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
-                        $query->where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior);
-                    })
-                        ->with(['clientProfessional.client', 'reservation'])
-                        ->whereHas('clientProfessional', function ($query) use ($professional) {
-                            $query->where('professional_id', $professional->id);
-                        })
-                        ->where('pay', 1)
-                        ->get();
-                    $carIdsPay = $cars->pluck('id');
-                    $products = Order::whereIn('car_id', $carIdsPay)
-                        ->where('is_product', 1)
-                        ->groupBy('product_store_id')
-                        ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
-                        ->get();
-                    $venta = $products->sum('total_cant');
-                    $percent_win = $products->sum('total_percent_win');
-                    if ($venta <= 24) {
-                        $winProduct = $percent_win * 0.15;
-                    } else if ($venta > 24 && $venta <= 49) {
-                        $winProduct = $percent_win * 0.25;
-                    } else {
-                        $winProduct = $percent_win * 0.50;
-                    }
-                    Log::info('Bono producto' . $winProduct . $professional->name);
-                    // Agregar los datos del profesional al arreglo solo si $winProduct es mayor que 0
-                    if ($winProduct > 0) {
-                        $retention = $professional->retention;
-                        if ($retention) {
-                            $resultRetention = round($winProduct * $retention / 100, 2);
-                            $winProduct = $winProduct - $resultRetention;
-                            $retention = new Retention();
-                            $retention->branch_id = $branch->id;
-                            $retention->professional_id = $professional->id;
-                            $retention->data = Carbon::now();
-                            $retention->retention = $resultRetention;
-                            $retention->type = 'Products';
-                            $retention->save();
-                        }
-                        $professionalData = [
-                            'name' => $professional->name,
-                            'winProduct' => $winProduct,
-                        ];
-
-                        $finance = Finance::orderBy('control', 'desc')->first();
-                        if ($finance !== null) {
-                            $control = $finance->control + 1;
-                        } else {
-                            $control = 1;
-                        }
-                        Log::info('Bono de Producto' . $winProduct . $professional->name);
-                        //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
-                        //if ($filteredPayments->isEmpty()) {
-                        $professionalPayment = new ProfessionalPayment();
-                        $professionalPayment->branch_id = $branch->id;
-                        $professionalPayment->professional_id = $professional->id;
-                        $professionalPayment->date = Carbon::now();
-                        $professionalPayment->amount = $winProduct;
-                        $professionalPayment->type = 'Bono productos';
-                        $professionalPayment->cant = $venta;
-                        $professionalPayment->save();
-
-
-                        $finance = new Finance();
-                        $finance->control = $control++;
-                        $finance->operation = 'Gasto';
-                        $finance->amount = $winProduct;
-                        $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
-                        $finance->branch_id = $branch->id;
-                        $finance->type = 'Sucursal';
-                        $finance->expense_id = 5;
-                        $finance->data = Carbon::now();
-                        $finance->file = '';
-                        $finance->save();
-                        //}
-
-                        // Agregar los datos del profesional al arreglo general
-                        $professionalsData[] = $professionalData;
-                    }
-                }
-
-                /*$cashiers = Professional::whereHas('branches', function ($query) use ($branch) {
-                    $query->where('branch_id', $branch->id);
-                    })->whereHas('charge', function ($query) {
-                        $query->where('name', 'Cajero (a)');
-                    })->select('id', 'name', 'retention')->get();
-                    foreach ($cashiers as $cashier) {
-                    Log::info('Cajero:'.$cashier->name.'->ID:'.$cashier->id.' de la sucursal'.$branch->name);
-                    $productSales = CashierSale::where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->where('professional_id', $cashier->id)->where('pay', 1)->get();
-                    Log::info('Productos Vendidos');
-                    Log::info($productSales);
-                    //Comprobar venta de productos de los cajeros
-                    $ventaCashier = $productSales->sum('cant');
-                    Log::info('Cantidad Productos Vendidos');
-                    Log::info($ventaCashier);
-                    $percent_winCashier = $productSales->sum('percent_wint');
-                    Log::info('Porciento de Ganancia');
-                    Log::info($percent_winCashier);
-                    if ($ventaCashier <= 24) {
-                        $winProductCashier = $percent_winCashier * 0.15;
-                    } else if ($ventaCashier > 24 && $ventaCashier <= 49) {
-                        $winProductCashier = $percent_winCashier * 0.25;
-                    } else {
-                        $winProductCashier = $percent_winCashier * 0.50;
-                    }
-                    Log::info('Bono producto Cashier'.$winProductCashier.$cashier->name);
-                    // Agregar los datos del profesional al arreglo solo si $winProduct es mayor que 0
-                    if ($winProductCashier > 0) {
-                        $professionalData = [
-                            'name' => $cashier->name,
-                            'winProduct' => $winProductCashier,
-                        ];
-
-                        $finance = Finance::orderBy('control', 'desc')->first();
-                        if ($finance !== null) {
-                            $control = $finance->control + 1;
-                        } else {
-                            $control = 1;
-                        }
-                        Log::info('Bono de Producto Cashier'.$winProductCashier.$cashier->name);
-                        //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
-                        //if ($filteredPayments->isEmpty()) {
-                            $professionalPayment = new ProfessionalPayment();
-                            $professionalPayment->branch_id = $branch->id;
-                            $professionalPayment->professional_id = $cashier->id;
-                            $professionalPayment->date = Carbon::now();
-                            $professionalPayment->amount = $winProductCashier;
-                            $professionalPayment->type = 'Bono productos';
-                            $professionalPayment->cant = $ventaCashier;
-                            $professionalPayment->save();
-        
-        
-                            $finance = new Finance();
-                            $finance->control = $control++;
-                            $finance->operation = 'Gasto';
-                            $finance->amount = $winProductCashier;
-                            $finance->comment = 'Gasto por pago de bono de productos a ' . $cashier->name;
-                            $finance->branch_id = $branch->id;
-                            $finance->type = 'Sucursal';
-                            $finance->expense_id = 5;
-                            $finance->data = Carbon::now();
-                            $finance->file = '';
-                            $finance->save();
-                    }
-                
-                }*/
-
-
-                $finances = Finance::Where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->get();
-                if (!$finances->isEmpty()) {
-
-                    foreach ($finances as $finance) {
-                        if ($finance->operation == 'Gasto') {
-                            $gasto += $finance->amount;
-                        } else {
-                            $ingreso += $finance->amount;
-                        }
-                    }
-                }
-
-                Log::info('Ingreso Sucursal' . $branch->name);
-                Log::info($ingreso);
-                Log::info('Gasto Sucursal' . $branch->name);
-                Log::info($gasto);
-                Log::info("Generar PDF");
-                $boxData = $now->format('Y-m-d');
-                $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensual', ['branchBusinessName' => $branch->business['name'], 'branchName' => $branch->name, 'boxData' => $boxData, 'totalTip' => $boxClose->totalTip, 'totalProduct' => $boxClose->totalProduct, 'totalService' => $boxClose->totalService, 'totalCash' => $boxClose->totalCash, 'totalCreditCard' => $boxClose->totalCreditCard, 'totalDebit' => $boxClose->totalDebit, 'totalTransfer' => $boxClose->totalTransfer, 'totalOther' => $boxClose->totalOther, 'totalMount' => $boxClose->totalMount, 'totalCardGif' => $boxClose->totalCardGif, 'ingreso' =>  round($ingreso, 2), 'gasto' => round($gasto, 2), 'utilidad' => round($ingreso - $gasto, 2), 'professionalBonus' => $professionalsData]);
-                $reporte = $pdf->output();
-                //Aqui hacer la logicac de enviar el correo
-                $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
-                    $query->where('name', 'Administrador')
-                        ->orWhere('name', 'Administrador de Sucursal');
-                })->whereHas('branches', function ($query) use ($branch) {
-                    $query->where('branches.id', $branch->id);
-                })
-                    ->pluck('email');
-                $emailassociated = [];
-                $emailArray = [];
-                $mergedEmails = [];
-                $emailassociated = $branch->associates()->pluck('email');
-                $emailArray = $emailassociated->toArray();
-                $mergedEmails = $emails->merge($emailArray);
-                //  $mergedEmails = ['richardleyvap1991@gmail.com','yasmany891230@gmail.com'];
-                Log::info($mergedEmails);
-                foreach ($mergedEmails as $email) {
-                    try {
-                        $this->sendEmailService->emailBoxClosureMonthly(
-                            $email,
-                            $reporte,
-                            $branch->business['name'],
-                            $branch->name,
-                            $now->format('Y-m-d'),
-                            0,
-                            0,
-                            0,
-                            $boxClose->totalTip,
-                            $boxClose->totalProduct,
-                            $boxClose->totalService,
-                            $boxClose->totalCash,
-                            $boxClose->totalCreditCard,
-                            $boxClose->totalDebit,
-                            $boxClose->totalTransfer,
-                            $boxClose->totalOther,
-                            $boxClose->totalMount,
-                            $boxClose->totalCardGif,
-                            round($ingreso, 2),
-                            round($gasto, 2),
-                            round($ingreso - $gasto, 2),
-                            $professionalsData
-                        );
-                    } catch (\Swift_TransportException $e) {
-                        Log::error("Error al enviar correo a $email: " . $e->getMessage());
-                    } catch (\Exception $e) {
-                        Log::error("Error general al enviar correo a $email: " . $e->getMessage());
-                    }
-                }
-                /*$this->sendEmailService->emailBoxClosureMonthly('yasmany891230@gmail.com', '', $branch->business['name'], $branch->name, $añoAnterior . '-' . $mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2), round($gasto, 2), round($ingreso - $gasto, 2), $professionalsData);*/
-            }
-            return response()->json(['msg' => 'Cierre de caja mensual efectuado correctamente'], 200);
-        } catch (TransportException $e) {
-            Log::info($e);
-            return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-
-            DB::rollback();
-            return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
-        }
-    }
-
-    public function box_close_month(Request $request)
+    public function box_close_month_Anterior(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
 
@@ -1928,6 +1625,199 @@ class BoxCloseController extends Controller
                         Log::error("Error al enviar correo a $email: " . $e->getMessage());
                     } catch (\Exception $e) {
                         Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    }
+                }
+                /*$this->sendEmailService->emailBoxClosureMonthly('yasmany891230@gmail.com', '', $branch->business['name'], $branch->name, $añoAnterior . '-' . $mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2), round($gasto, 2), round($ingreso - $gasto, 2), $professionalsData);*/
+            }
+            return response()->json(['msg' => 'Cierre de caja mensual efectuado correctamente'], 200);
+        } catch (TransportException $e) {
+            Log::info($e);
+            return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
+        }
+    }
+
+    public function box_close_month(Request $request)
+    {
+        $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
+
+        // Log para verificar el valor de código
+
+        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
+            Log::info("Código no coincide");
+            Log::info($codigo);
+            return response()->json(['msg' => 'Código inválido'], 403);
+        }
+        try {
+            // Obtener la fecha actual
+            $now = Carbon::now();
+
+            $mesAnterior = $now->copy()->subMonth()->month;
+            $añoAnterior = $now->copy()->subMonth()->year;
+            //$boxCloseData = [];
+            $professionalsData = [];
+
+            $ingreso = 0;
+            $gasto = 0;
+            $branches = Branch::all();
+            foreach ($branches as $branch) {
+                Finance::where('branch_id', $branch->id)
+                    ->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)
+                    ->where('operation', 'Gasto')
+                    ->where('comment', 'like', '%Gasto por pago de bono de productos%')
+                    ->delete();
+                //Retention
+                Retention::where('branch_id', $branch->id)
+                    ->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior)->where('type', 'Products')->delete();
+
+                ProfessionalPayment::where('branch_id', $branch->id)->whereYear('date', $añoAnterior)->whereMonth('date', $mesAnterior)->where('type', 'Bono productos')->delete();
+
+                $boxCloseData = [];
+                $winProduct = 0;
+                $professionalsData = [];
+                $ingreso = 0;
+                $gasto = 0;
+                $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
+                    $query->where('branch_id', $branch->id);
+                })->whereHas('charge', function ($query) {
+                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                })->select('id', 'name', 'surname', 'retention')->get();
+                foreach ($professionals as $professional) {
+                    $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
+                        $query->where('branch_id', $branch->id)->whereYear('data', $añoAnterior)->whereMonth('data', $mesAnterior);
+                    })
+                        ->with(['clientProfessional.client', 'reservation'])
+                        ->whereHas('clientProfessional', function ($query) use ($professional) {
+                            $query->where('professional_id', $professional->id);
+                        })
+                        ->where('pay', 1)
+                        ->get();
+                    $carIdsPay = $cars->pluck('id');
+                    $products = Order::whereIn('car_id', $carIdsPay)
+                        ->where('is_product', 1)
+                        ->groupBy('product_store_id')
+                        ->selectRaw('product_store_id, SUM(cant) as total_cant, SUM(percent_win) as total_percent_win')
+                        ->get();
+                    $venta = $products->sum('total_cant');
+                    $percent_win = $products->sum('total_percent_win');
+                    if ($venta <= 24) {
+                        $winProduct = $percent_win * 0.15;
+                    } else if ($venta > 24 && $venta <= 49) {
+                        $winProduct = $percent_win * 0.25;
+                    } else {
+                        $winProduct = $percent_win * 0.50;
+                    }
+                    Log::info('Bono producto' . $winProduct . $professional->name);
+                    // Agregar los datos del profesional al arreglo solo si $winProduct es mayor que 0
+                    if ($winProduct > 0) {
+                        $retention = $professional->retention;
+                        if ($retention) {
+                            $resultRetention = round($winProduct * $retention / 100, 2);
+                            $winProduct = $winProduct - $resultRetention;
+                            $retention = new Retention();
+                            $retention->branch_id = $branch->id;
+                            $retention->professional_id = $professional->id;
+                            $retention->data = Carbon::now();
+                            $retention->retention = $resultRetention;
+                            $retention->type = 'Products';
+                            $retention->save();
+                        }
+                        $professionalData = [
+                            'name' => $professional->name,
+                            'winProduct' => $winProduct,
+                        ];
+
+                        $finance = Finance::orderBy('control', 'desc')->first();
+                        if ($finance !== null) {
+                            $control = $finance->control + 1;
+                        } else {
+                            $control = 1;
+                        }
+                        Log::info('Bono de Producto ' . $winProduct.' ' . $professional->name);
+                        //$professionalPayment = ProfessionalPayment::where('branch_id', $branch->id)->where('professional_id', $professional->id)->whereDate('date', Carbon::now())->where('type', 'Bono productos')->first();
+                        //if ($filteredPayments->isEmpty()) {
+                        $professionalPayment = new ProfessionalPayment();
+                        $professionalPayment->branch_id = $branch->id;
+                        $professionalPayment->professional_id = $professional->id;
+                        $professionalPayment->date = Carbon::now();
+                        $professionalPayment->amount = $winProduct;
+                        $professionalPayment->type = 'Bono productos';
+                        $professionalPayment->cant = $venta;
+                        $professionalPayment->save();
+
+
+                        $finance = new Finance();
+                        $finance->control = $control++;
+                        $finance->operation = 'Gasto';
+                        $finance->amount = $winProduct;
+                        $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
+                        $finance->branch_id = $branch->id;
+                        $finance->type = 'Sucursal';
+                        $finance->expense_id = 5;
+                        $finance->data = Carbon::now();
+                        $finance->file = '';
+                        $finance->save();
+                        //}
+
+                        // Agregar los datos del profesional al arreglo general
+                        $professionalsData[] = $professionalData;
+                    }
+                }
+                if (!empty($professionalsData)) {
+                    $boxData = $now->format('Y-m-d');
+                    $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensual', ['branchBusinessName' => $branch->business['name'], 'branchName' => $branch->name, 'boxData' => $boxData, 'professionalBonus' => $professionalsData]);
+                    $reporte = $pdf->output();
+                    //Aqui hacer la logicac de enviar el correo
+                    $emails = Professional::whereHas('charge', function ($query)  use ($branch) {
+                        $query->where('name', 'Administrador')
+                            ->orWhere('name', 'Administrador de Sucursal');
+                    })->whereHas('branches', function ($query) use ($branch) {
+                        $query->where('branches.id', $branch->id);
+                    })
+                        ->pluck('email');
+                    $emailassociated = [];
+                    $emailArray = [];
+                    $mergedEmails = [];
+                    $emailassociated = $branch->associates()->pluck('email');
+                    $emailArray = $emailassociated->toArray();
+                    $mergedEmails = $emails->merge($emailArray);
+                    //$mergedEmails = ['yasmany891230@gmail.com'];
+                    Log::info($mergedEmails);
+                    foreach ($mergedEmails as $email) {
+                        try {
+                            $this->sendEmailService->emailBoxClosureMonthly(
+                                $email,
+                                $reporte,
+                                $branch->business['name'],
+                                $branch->name,
+                                $now->format('Y-m-d'),
+                                0,
+                                0,
+                                0,
+                                0,//$boxClose->totalTip,
+                                0,//$boxClose->totalProduct,
+                                0,//$boxClose->totalService,
+                                0,//$boxClose->totalCash,
+                                0,//$boxClose->totalCreditCard,
+                                0,//$boxClose->totalDebit,
+                                0,//$boxClose->totalTransfer,
+                                0,//$boxClose->totalOther,
+                                0,//$boxClose->totalMount,
+                                0,//$boxClose->totalCardGif,
+                                0,//round($ingreso, 2),
+                                0,//round($gasto, 2),
+                                0,//round($ingreso - $gasto, 2),
+                                $professionalsData
+                            );
+                        } catch (\Swift_TransportException $e) {
+                            Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                        } catch (\Exception $e) {
+                            Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                        }
                     }
                 }
                 /*$this->sendEmailService->emailBoxClosureMonthly('yasmany891230@gmail.com', '', $branch->business['name'], $branch->name, $añoAnterior . '-' . $mesAnterior, 0, 0, 0, $boxClose->totalTip, $boxClose->totalProduct, $boxClose->totalService, $boxClose->totalCash, $boxClose->totalCreditCard, $boxClose->totalDebit, $boxClose->totalTransfer, $boxClose->totalOther, $boxClose->totalMount, $boxClose->totalCardGif, round($ingreso, 2), round($gasto, 2), round($ingreso - $gasto, 2), $professionalsData);*/

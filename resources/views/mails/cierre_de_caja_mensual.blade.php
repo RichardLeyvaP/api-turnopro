@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cierre de Caja Mensual</title>
+    <title>Pago de Bono de Productos a Profesionales</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -69,7 +69,7 @@
 <body>
     <div class="container">
         <div class="header">
-<h2 style="color: white;">Cierre de Caja Mensual</h2>
+<h2 style="color: white;">Pago de Bono de Productos a Profesionales</h2>
             <strong>{{ $branchBusinessName }}</strong><br>
         Sucursal: {{ $branchName }}<br>
         Fecha: {{ $boxData }}<br>
@@ -77,98 +77,7 @@
         <!-- Encabezado -->
 
        <br>
-        <div class="section-header">
-            <h3>Cierre de las Cuentas y Formas de Pago</h3>
-        </div>
-        <table>
-          
-            <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
         
-         <td style="padding: 5px; text-align: left; line-height: 1; color: white;"><strong>Tipos de ingreso</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1; color: white;"><strong>Valor</strong></td>
-    </tr>
-     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Propinas</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalTip, 2), 2) }}</td>
-    </tr>
-        </tr>
-     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Venta de Productos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalProduct, 2), 2) }}</td>
-    </tr>
-     <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Prestación de Servicios</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalService, 2), 2) }}</td>
-    </tr>
-
-        </table>
-        <table>
-            <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
-                  <td style="padding: 5px; text-align: left; line-height: 1;color: white;"><strong>Métodos de pago</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;color: white;"><strong>Valor</strong></td>
-            </tr>
-         
-            
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Efectivo</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalCash, 2), 2) }}</td>
-    </tr>
-                
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Tarjeta de Créditos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalCreditCard, 2), 2) }}</td>
-    </tr>
-
-                
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Débito</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalDebit, 2), 2) }}</td>
-    </tr>
-              
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Transferencia</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalTransfer, 2), 2) }}</td>
-    </tr>
-      
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Total Giftcard</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalGiftcard, 2), 2) }}</td>
-    </tr>
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Otros Métodos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalOther, 2), 2) }}</td>
-    </tr>
-    
-              <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Total Ingresado</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($totalMount, 2), 2) }}</td>
-    </tr>
-    
-           
-           
-            
-        </table>
-        <table>
-               <tr style="background-color: rgba(68, 112, 243, 0.85); border: 1.5px solid black;">
-        
-         <td style="padding: 5px; text-align: left; line-height: 1;color: white;"><strong>Ingreso,Gastos y Utilidad</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;color: white;"><strong>Valor</strong></td>
-    </tr>
-    
-            <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Ingreso</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($ingreso, 2), 2) }}</td>
-    </tr>
-            <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Gasto</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($gasto, 2), 2) }}</td>
-    </tr>
-    
-            <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Utilidad</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($utilidad, 2), 2) }}</td>
-    </tr>
-        </table>
         <div class="section-header">
             <h3>Pago a profesionales por bonos de ventas de producto</h3>
         </div>
@@ -187,9 +96,9 @@
      @endforeach
        
         </table>
-        <div class="footer">
+        <!--<div class="footer">
             <p>Gracias por su colaboración.</p>
-        </div>
+        </div>-->
     </div>
 </body>
 </html>
