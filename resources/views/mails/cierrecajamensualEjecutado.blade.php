@@ -109,18 +109,6 @@
         </td>
     </tr>
     
-    <tr>
-        <td style="padding: 8px; border: 1.5px solid black;">Gastos</td>
-        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
-            {{ number_format(round($editedItem['discounts'], 2), 2) }}
-        </td>
-        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
-            {{ number_format(round($editedItem['spent'], 2), 2) }}
-        </td>
-        <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_spent'] >= 0 ? 'black' : 'red' }};">
-            {{ number_format(round($editedItem['difference_spent'], 2), 2) }}
-        </td>
-    </tr>
     
     <tr>
         <td style="padding: 8px; border: 1.5px solid black;">Utilidad</td>
@@ -136,15 +124,27 @@
     </tr>
     
     <tr>
+        <td style="padding: 8px; border: 1.5px solid black;">Gastos</td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            <!--{{ number_format(round($editedItem['discounts'], 2), 2) }}-->
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
+            {{ number_format(round($editedItem['spent'], 2), 2) }}
+        </td>
+        <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_spent'] >= 0 ? 'black' : 'red' }};">
+            <!--{{ number_format(round($editedItem['difference_spent'], 2), 2) }}-->
+        </td>
+    </tr>
+    <tr>
         <td style="padding: 8px; border: 1.5px solid black;">Retención</td>
         <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
-            {{ number_format(round($editedItem['client_retention'], 2), 2) }}
+            <!--{{ number_format(round($editedItem['client_retention'], 2), 2) }}-->
         </td>
         <td style="padding: 8px; text-align: right; border: 1.5px solid black;">
             {{ number_format(round($editedItem['retention'], 2), 2) }}
         </td>
         <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_retention'] >= 0 ? 'black' : 'red' }};">
-            {{ number_format(round($editedItem['difference_retention'], 2), 2) }}
+            <!--{{ number_format(round($editedItem['difference_retention'], 2), 2) }}-->
         </td>
     </tr>
     
