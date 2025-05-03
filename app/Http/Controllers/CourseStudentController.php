@@ -75,7 +75,7 @@ class CourseStudentController extends Controller
     {
         Log::info("Matricular estudiante al curso");
         Log::info($request);
-        $token_id = $request->query('token_id');
+        $token_id = $request->input('token_id');
         if ($token_id != $this->token_id) {
             return response()->json(['msg' => 'Token inválido'], 403);
         }
@@ -129,37 +129,45 @@ class CourseStudentController extends Controller
                $file = $request->file('file')->storeAs('students/pagos',$student->id.'-'.$data['course_id'].'.'.$request->file('file')->extension(),'public');
                
             }
+            // Determinar el valor para total_payment
+            $totalPayment = isset($data['total_payment']) 
+                ? $data['total_payment'] 
+                : (isset($data['reservation_payment']) ? $data['reservation_payment'] : null);
+
             $atributosParaActualizar = [
-                'reservation_payment' => $data['reservation_payment'],
-                'total_payment' => $data['total_payment'],
-                'enrollment_confirmed' => $data['enrollment_confirmed'],
+                'reservation_payment' => $data['reservation_payment'] ?? null,
+                'total_payment' => $totalPayment,
+                'enrollment_confirmed' => $data['enrollment_confirmed'] ?? false,
                 'image_url' => $file ?? '',
             ];
 
+            // Solo actualizar campos que existen en $data
+            $atributosParaActualizar = array_filter($atributosParaActualizar, function($value, $key) use ($data) {
+                return isset($data[$key]) || $key === 'total_payment'; // Siempre incluimos total_payment
+            }, ARRAY_FILTER_USE_BOTH);
+
             $student->courses()->syncWithoutDetaching([
                 $data['course_id'] => $atributosParaActualizar,
-            ]); 
+            ]);
 
-            $finance = Finance::orderBy('control', 'desc')->first();
-                if($finance)
-                    {
-                        $control = $finance->control+1;
-                    }
-                    else {
-                        $control = 1;
-                    }
+            // Solo crear registro financiero si hay un pago de reserva
+            if (isset($data['reservation_payment']) && $data['reservation_payment']) {
+                $finance = Finance::orderBy('control', 'desc')->first();
+                $control = $finance ? $finance->control + 1 : 1;
+
                 $finance = new Finance();
-                $finance->control = $control;
-                $finance->operation = 'Ingreso';
-                $finance->amount = $data['total_payment'];
-                $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
-                $finance->enrollment_id = $course->enrollment_id;
-                $finance->type = 'Academia';
-                $finance->revenue_id = 3;
-                $finance->data = Carbon::now();                
-                $finance->file = '';
-                $finance->save();
-           // $course->students()->attach($student->id);
+                            $finance->control = $control;
+                            $finance->operation = 'Ingreso';
+                            $finance->amount = $data['reservation_payment'];
+                            $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
+                            $finance->enrollment_id = $course->enrollment_id;
+                            $finance->type = 'Academia';
+                            $finance->revenue_id = 3;
+                            $finance->data = Carbon::now();                
+                            $finance->file = '';
+                            $finance->save();
+            }
+                    // $course->students()->attach($student->id);
             $course->available_slots = $course->available_slots - 1;
             $course->save();
             DB::commit();
