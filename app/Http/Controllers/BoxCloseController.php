@@ -535,7 +535,7 @@ class BoxCloseController extends Controller
             $emailassociated = $branch->associates()->pluck('email');
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
-            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
             //$mergedEmails = ['yasmany891230@gmail.com'];
             Log::info('$mergedEmails correos a enviar cierre de caja');
             Log::info($mergedEmails);
@@ -679,7 +679,7 @@ class BoxCloseController extends Controller
             $emailArray = $emailassociated->toArray();
             $mergedEmails = $emails->merge($emailArray);
             Log::info('$mergedEmails correos a enviar cierre de caja');
-            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
             //$mergedEmails = ['yasmany891230@gmail.com'];
             Log::info($mergedEmails);
             foreach ($mergedEmails as $email) {

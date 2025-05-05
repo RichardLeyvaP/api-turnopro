@@ -78,7 +78,7 @@ trait ProductExitTrait
             Log::info('Producto agotandose Almacen :', ['store' => $store]);
             Log::info('Producto agotandose Branches :', ['branch' => $branches]);
             // Puedes agregar aquí cualquier otra acción que necesites realizar
-            $professional = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            //$professional = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
             foreach ($professional as $email) {
                 try {
                     $sendEmailService->emailStockDepletion($email, $product, $store, $branches, $productstore->product_exit);

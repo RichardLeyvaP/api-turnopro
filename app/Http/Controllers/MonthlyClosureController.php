@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Associated;
 use App\Models\BoxClose;
 use App\Models\Branch;
 use App\Models\Business;
@@ -9,6 +10,7 @@ use App\Models\Finance;
 use Illuminate\Http\Request;
 
 use App\Models\MonthlyClosure;
+use App\Models\Professional;
 use App\Models\Retention;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -314,42 +316,49 @@ class MonthlyClosureController extends Controller
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'isPhpEnabled' => true, 'chroot' => storage_path()])->setPaper('a4', 'patriot')->loadView('mails.cierrecajamensualEjecutado', ['branchBusinessName' => $businessName, 'branchName' => $entityName, 'entityType' => $entityType, 'boxData' => $boxData, 'boxcloseData' => $boxClose, 'editedItem' =>  $editedItem, 'nameProfessional' => $professionalName, 'monthName' => $monthName]);
             $reporte = $pdf->output();
             //Aqui hacer la logicac de enviar el correo
-            /*$emailsQuery = Professional::whereHas('charge', function($query) {
+            $emailsQuery = Professional::whereHas('charge', function($query) {
                 $query->where('name', 'Administrador')
-                    ->orWhere('name', 'Administrador de Sucursal');
+                      ->orWhere('name', 'Administrador de Sucursal');
             });
-
-            // Aplicar filtro por branch o business
+            
             if ($branchId) {
-                // Filtro por branch específica
+                // Filtros para profesionales de la branch específica
                 $emailsQuery->whereHas('branches', function($query) use ($branchId) {
                     $query->where('branches.id', $branchId);
                 });
                 
-                // Emails de asociados de la branch
-                $branch = Branch::find($branchId);
-                $emailassociated = $branch->associates()->pluck('email');
+                // Obtenemos emails de asociados directamente desde la relación
+                $emailAssociated = Associated::whereHas('branches', function($query) use ($branchId) {
+                    $query->where('branches.id', $branchId);
+                })->pluck('email');
+            
             } elseif ($businessId) {
-                // Filtro por todas las branches del business
+                // Filtros para profesionales de todas las branches del business
                 $emailsQuery->whereHas('branches', function($query) use ($businessId) {
                     $query->whereHas('business', function($q) use ($businessId) {
                         $q->where('id', $businessId);
                     });
                 });
                 
-                // Emails de asociados de todas las branches del business
-                $emailassociated = DB::table('branch_associates')
-                    ->join('branches', 'branch_associates.branch_id', '=', 'branches.id')
-                    ->where('branches.business_id', $businessId)
-                    ->pluck('branch_associates.email');
+                // Obtenemos emails de asociados a través de la relación branches->business
+                $emailAssociated = Associated::whereHas('branches', function($query) use ($businessId) {
+                    $query->whereHas('business', function($q) use ($businessId) {
+                        $q->where('id', $businessId);
+                    });
+                })->pluck('email');
             }
 
             // Obtener emails y combinar
-            $emails = $emailsQuery->pluck('email');
-            $emailArray = $emailassociated->toArray();
-            $mergedEmails = $emails->merge($emailArray)->unique();
-            Log::info($mergedEmails);*/
-            $mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
+            $professionalEmails = $emailsQuery->pluck('email');
+            $associateEmails = $emailAssociated->toArray();
+
+            $mergedEmails = $professionalEmails->merge($associateEmails)
+                                            ->unique()
+                                            ->values()
+                                            ->toArray();
+
+            Log::info('Correos para cierre de mes', ['emails' => $mergedEmails]);
+            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
             //$mergedEmails = ['yasmany891230@gmail.com'];
             foreach ($mergedEmails as $email) {
                 try {
