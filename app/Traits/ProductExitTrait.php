@@ -57,7 +57,8 @@ trait ProductExitTrait
             'Deylert@klint.cl',
             'deylert89@gmail.com',
             'yasmany891230@gmail.com',
-            'evelyn@klint.cl'
+            'evelyn@klint.cl',
+            'administracion@klint.cl'
         ];
 
         $professional = collect($professional)
