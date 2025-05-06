@@ -151,14 +151,14 @@ class CourseStudentController extends Controller
             ]);
 
             // Solo crear registro financiero si hay un pago de reserva
-            if (isset($data['reservation_payment']) && $data['reservation_payment']) {
+            //if (isset($data['reservation_payment']) && $data['reservation_payment']) {
                 $finance = Finance::orderBy('control', 'desc')->first();
                 $control = $finance ? $finance->control + 1 : 1;
 
                 $finance = new Finance();
                             $finance->control = $control;
                             $finance->operation = 'Ingreso';
-                            $finance->amount = $data['reservation_payment'];
+                            $finance->amount = $totalPayment;
                             $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
                             $finance->enrollment_id = $course->enrollment_id;
                             $finance->type = 'Academia';
@@ -166,7 +166,7 @@ class CourseStudentController extends Controller
                             $finance->data = Carbon::now();                
                             $finance->file = '';
                             $finance->save();
-            }
+            //}
                     // $course->students()->attach($student->id);
             $course->available_slots = $course->available_slots - 1;
             $course->save();
