@@ -80,7 +80,7 @@ class ProductStoreController extends Controller
             } else {
                 $stores = Store::all('id', 'address', 'reference');
             }
-            $products = Product::all('id', 'name', 'image_product');
+            $products = Product::all('id', 'name', 'image_product', 'purchase_price');
             $branches = Branch::where('business_id', $data['business_id'])->select('id', 'name', 'image_data', 'address')->get();
             return response()->json([
                 'stores' => $stores,
@@ -103,52 +103,57 @@ class ProductStoreController extends Controller
                 'store_id' => 'required|numeric',
                 'product_quantity' => 'required|numeric',
                 'stock_depletion' => 'required|numeric',
-                //'enrollment_id' => 'nullable'
-                //'product_exit' => 'required|numeric',
-                //'number_notification' => 'nullable|numeric'
             ]);
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
             //Log::info($request->has('branch_id'));
-            $productstore = $store->products()->wherePivot('product_id', $product->id)->first();
-            if ($productstore) {
-                //return $productstore->pivot;
-                //$productstore->product_exit += $data['product_quantity'];
-                //$productstore->product_quantity = $data['product_quantity'];
-                //$productstore->save();
-                $existencia = $data['product_quantity'] + $productstore->pivot['product_exit'];
+            //$productstore = $store->products()->wherePivot('product_id', $product->id)->first();
+            /*$productStore = ProductStore::withTrashed()
+            ->where('product_id', $data['product_id'])
+            ->where('store_id', $data['store_id'])
+            ->first();
+            
+            if ($productStore) {
+                $existencia = $data['product_quantity'] + $productStore->pivot['product_exit'];
                 $product->stores()->updateExistingPivot($store->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $existencia, 'stock_depletion' => $data['stock_depletion']]);
             } else {
                 $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
-            }
-            //
-            /*if($request->has('branch_id') && $data['branch_id'] != null){
-            $productStoreBranch = $store->products()
-                ->wherePivot('product_id', $product->id)
-                ->wherePivot('branch_id', $data['branch_id'])
-                ->first();
-            if ($productStoreBranch) {
-                Log::info('tiene valor');
-                
-            } else {
-                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'branch_id' => $data['branch_id']]);
-            }
-            }
-            else{
-                $productStoreAcademy = $store->products()
-                ->wherePivot('product_id', $product->id)
-                ->wherePivot('enrollment_id', $data['enrollment_id'])
-                ->first();
-            if ($productStoreAcademy) {
-                Log::info('tiene valor');
-                $productstore = ProductStore::where('id', $productStoreAcademy->pivot->id)->first();
-                $productstore->product_exit += $data['product_quantity'];
-                $productstore->product_quantity = $data['product_quantity'];
-                $productstore->save();
-            } else {
-                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'enrollment_id' => $data['enrollment_id']]);
-            } 
             }*/
+             // Buscar relación incluyendo eliminados lógicamente
+             $existingRelation = ProductStore::withTrashed()
+             ->where('product_id', $data['product_id'])
+             ->where('store_id', $data['store_id'])
+             ->first();
+
+            if ($existingRelation) {                
+                if ($existingRelation->trashed()) {
+                    Log::info("Relación existía pero estaba eliminada lógicamente. Restaurando...");
+                    
+                    // Actualizar todos los campos incluyendo deleted_at en una sola operación
+                    $existingRelation->restore();
+                    $existingRelation->product_quantity = $data['product_quantity'];
+                    $existingRelation->product_exit = $data['product_quantity'];
+                    $existingRelation->stock_depletion = $data['stock_depletion'];
+                    $existingRelation->save();
+                } else {
+                    Log::info("Relación existe y está activa. Actualizando existencias...");
+                    
+                    // Sumar a la existencia actual
+                    $existingRelation->product_quantity = $data['product_quantity'];
+                    $existingRelation->product_exit += $data['product_quantity'];
+                    $existingRelation->stock_depletion = $data['stock_depletion'];
+                    $existingRelation->save();
+                }
+            } else {
+                Log::info("No existía relación. Creando nueva...");
+                $newRelation = new ProductStore();
+                $newRelation->product_id = $data['product_id'];
+                $newRelation->store_id = $data['store_id'];
+                $newRelation->product_quantity = $data['product_quantity'];
+                $newRelation->product_exit = $data['product_quantity'];
+                $newRelation->stock_depletion = $data['stock_depletion'];
+                $newRelation->save();
+            }
             return response()->json(['msg' => 'Producto asignado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -562,7 +567,9 @@ class ProductStoreController extends Controller
 
             Log::info("Buscando productos de la branch para venta a profesionales");
 
-            $productStores = ProductStore::whereHas('store.branches', function ($query) use ($data) {
+            $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
+                $query->where('status_product', 'En venta');
+            })->whereHas('store.branches', function ($query) use ($data) {
                 $query->where('branches.id', $data['branch_id']);
             })
                 ->where('product_exit', '>', 0)
@@ -810,15 +817,50 @@ class ProductStoreController extends Controller
             }
             //aumentar
             $storeM = Store::find($data['store_idM']);
-            $productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first();
-            if ($productstoreM) {
+            $storeDestino = Store::findOrFail($data['store_idM']);
+            //$productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first();
+            /*if ($productstoreM) {
                 //$existencia = $data['product_quantity'] + $productstoreM->pivot['product_exit'];
                 $existencia = $productstoreM->pivot['product_exit'] + $data['product_quantity'];
                 $storeM->products()->updateExistingPivot($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $existencia]);
             } else {
                 $storeM->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity']]);
                 $productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first();
+            }*/
+
+            $existingRelation = ProductStore::withTrashed()
+                ->where('product_id', $product->id)
+                ->where('store_id', $storeDestino->id)
+                ->first();
+
+            if ($existingRelation) {                
+                if ($existingRelation->trashed()) {
+                    Log::info("El producto ya estaba en el destino, pero estaba eliminado lógicamente.");
+                    
+                    // Restaurar y actualizar valores
+                    $existingRelation->restore();
+                    $existingRelation->product_quantity = $data['product_quantity'];
+                    $existingRelation->product_exit = $data['product_quantity'];
+                    $existingRelation->save();
+                } else {
+                    Log::info("El producto ya estaba en el destino y activo.");
+                    
+                    // Sumar a la existencia actual
+                    $existingRelation->product_exit += $data['product_quantity'];
+                    $existingRelation->save();
+                }
+            } else {
+                Log::info("El producto no existía en el destino, creando nueva relación.");
+                
+                // Crear nueva relación
+                $newRelation = new ProductStore();
+                $newRelation->product_id = $product->id;
+                $newRelation->store_id = $storeDestino->id;
+                $newRelation->product_quantity = $data['product_quantity'];
+                $newRelation->product_exit = $data['product_quantity'];
+                $newRelation->save();
             }
+
 
             //registro de movimiento de productos
 
@@ -830,7 +872,7 @@ class ProductStoreController extends Controller
             $movementprodct->branch_int_id = $data['professional_id'];
             $movementprodct->store_int_id = $data['store_idM'];
             $movementprodct->store_out_exit = $productstore->product_exit - $data['product_quantity'];
-            $movementprodct->store_int_exit = $productstoreM->pivot['product_exit'] + $data['product_quantity'];
+            $movementprodct->store_int_exit = $existingRelation ? $existingRelation->product_exit : $data['product_quantity'];;
             $movementprodct->cant = $data['product_quantity'];
             $movementprodct->save();
             if ($request->has('branch_id')) {

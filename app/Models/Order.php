@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
@@ -17,7 +16,7 @@ class Order extends Model
 
     public function productStore()
     {
-        return $this->belongsTo(ProductStore::class);
+        return $this->belongsTo(ProductStore::class)->withTrashed();
     }
 
     public function car()
@@ -32,7 +31,7 @@ class Order extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     protected $casts = [

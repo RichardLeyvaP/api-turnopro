@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductStore extends Model
 {
     use HasFactory;
+    use SoftDeletes;
     
     public function orders()
     {
@@ -21,7 +23,7 @@ class ProductStore extends Model
 
     public function product()
     {
-    return $this->belongsTo(Product::class);
+    return $this->belongsTo(Product::class)->withTrashed();
     }
 
     public function store()

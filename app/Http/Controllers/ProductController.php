@@ -58,7 +58,7 @@ class ProductController extends Controller
                 'sale_price' => 'nullable',
                 'image_product' => 'nullable',
                 'product_category_id' => 'required|numeric',
-                'worker_discount' => 'required|numeric'
+                'worker_discount' => 'nullable|numeric' // Cambiado de required a nullable
             ]);        
                 
             $product = new Product();            
@@ -70,7 +70,7 @@ class ProductController extends Controller
             $product->purchase_price = $product_data['purchase_price'];
             $product->sale_price = $product_data['sale_price'];
             $product->product_category_id = $product_data['product_category_id'];
-            $product->worker_discount = $product_data['worker_discount'];
+            $product->worker_discount = $product_data['worker_discount']?? 0; 
             $product->save();
 
             $filename = "products/default.jpg";

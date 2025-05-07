@@ -3,11 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
     use HasFactory;
+    use SoftDeletes;
+
+    protected static function booted()
+    {
+        static::deleting(function ($product) {
+            if ($product->isForceDeleting()) {
+                // Eliminación permanente
+                ProductStore::where('product_id', $product->id)
+                    ->forceDelete();
+            } else {
+                // Eliminación lógica
+                ProductStore::where('product_id', $product->id)
+                    ->delete();
+            }
+        });
+
+        /*static::restoring(function ($service) {
+            // Restauración en cascada
+            BranchService::withTrashed()
+                ->where('service_id', $service->id)
+                ->restore();
+        });*/
+    }
 
     public function productCategory()
     {

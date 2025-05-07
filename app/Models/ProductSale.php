@@ -16,7 +16,7 @@ class ProductSale extends Model
 
     public function productStore()
     {
-        return $this->belongsTo(ProductStore::class);
+        return $this->belongsTo(ProductStore::class)->withTrashed();
     }
     public function student()
     {
