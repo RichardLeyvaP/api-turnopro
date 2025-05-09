@@ -263,9 +263,11 @@
                 @endif
             @endif
             
-            <tr>
-                <td colspan="2"><strong>Realizado por:</strong> {{ $nameProfessional }}</td>
-            </tr>
+            @isset($nameProfessional)
+                <tr>
+                    <td colspan="2"><strong>Realizado por:</strong> {{ $nameProfessional }}</td>
+                </tr>
+            @endisset
         </table>
         <div class="footer">
             <p>Gracias por su colaboración.</p>

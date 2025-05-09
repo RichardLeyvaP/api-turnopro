@@ -200,7 +200,11 @@
 <table width="100%" style="border-collapse: collapse; border: 1.5px solid black; margin-top: 20px;">
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Realizado por:</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ $nameProfessional }}</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">
+            @isset($nameProfessional)
+                {{ $nameProfessional }}
+            @endisset
+        </td>
     </tr>
 </table>
 

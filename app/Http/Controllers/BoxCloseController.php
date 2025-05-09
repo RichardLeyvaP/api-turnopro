@@ -2093,13 +2093,29 @@ class BoxCloseController extends Controller
             foreach ($branches as $branch) {
                 DB::beginTransaction();
                 try {
-                    $box = Box::whereDate('data', $yesterday)
+                    
+                    $existingBox = Box::whereDate('data', $yesterday)
                         ->where('branch_id', $branch->id)
                         ->first();
 
-                    if (!$box) {
-                        $box = new Box();
-                        $box->existence = 0; // Ajustar según tu lógica
+                    // Si existe el box, verificamos si tiene BoxClose diario
+                    if ($existingBox) {
+                        $existingBoxClose = BoxClose::where('box_id', $existingBox->id)
+                                                ->where('type', 'Diario')
+                                                ->first();
+
+                        if ($existingBoxClose) {
+                            DB::commit(); // Confirmamos la transacción vacía
+                            Log::info("Sucursal {$branch->name} ya tiene BoxClose diario para {$yesterday}");
+                            continue; // Saltamos al siguiente ciclo
+                        }
+                    }
+
+                    // Si llegamos aquí, proseguimos con la lógica normal
+                    $box = $existingBox ?: new Box();
+                    
+                    if (!$existingBox) {
+                        $box->existence = 0;
                         $box->data = $yesterday;
                         $box->branch_id = $branch->id;
                         $box->save();
