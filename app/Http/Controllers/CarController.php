@@ -3342,14 +3342,14 @@ class CarController extends Controller
                 'client' => $client->name,
                 'amount' => $car->amount,
                 'operation' => 'Hace solicitud de eliminar carro: ' . $car->id,
-                'details' => $request->description,
+                'details' => $request->description ?? ' ',
                 'description' => $professional->name,
                 'car_id' => $data['id']
             ];
             $this->traceService->store($trace);
             $car->addActionDescription(
                 actionType: 'delete',
-                description: $request->description,
+                description: $request->description ?? ' ',
                 nameProfessional: $request->nameProfessional,
                 image: $professionalImage
             );
