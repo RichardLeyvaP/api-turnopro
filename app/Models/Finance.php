@@ -36,6 +36,17 @@ class Finance extends Model
     {
         return $this->belongsTo(Enrollment::class);
     }
+
+    public function professionalPayment()
+    {
+        return $this->belongsTo(ProfessionalPayment::class, 'professional_payment_id');
+    }
+
+    public function operationTip()
+    {
+        return $this->belongsTo(OperationTip::class, 'operation_tip_id');
+    }
+
     protected $casts = [
         'amount' => 'double',
         'control' => 'integer'

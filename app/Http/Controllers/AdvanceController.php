@@ -470,6 +470,65 @@ class AdvanceController extends Controller
         }
     }
 
+    public function update_amount(Request $request)
+    {
+        $user = Auth::user();
+        $userName = $user->name;
+        $userId = $user->id;
+        DB::beginTransaction();
+
+        try {
+            // Validar datos de entrada
+            $validated = $request->validate([
+                'id' => 'required|exists:advances,id',
+                'amount' => 'required|numeric',
+            ]);
+
+            // Obtener el advance existente
+            $advance = Advance::findOrFail($validated['id']);
+
+            // Registrar inicio de operación
+            Log::info('Usuario intenta cambiar tipo de advance', [
+                'user' => $userName,
+                'advance_id' => $validated['id'],
+                'amount' => $advance->amount,
+                'branch_id' => $advance->branch_id,
+                'professional_id' => $advance->professional_id
+            ]);
+            $advance->amount = $validated['amount'];
+            $advance->save();
+            
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $advance,
+                'message' => 'Tipo de advance actualizado exitosamente'
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Advance no encontrado', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Advance no encontrado'
+            ], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar advance', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el advance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function update_admin(Request $request)
     {
         $user = Auth::user();
@@ -595,9 +654,20 @@ class AdvanceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Advance $advance)
+    public function destroy(Request $request)
     {
-        //
+        try {
+            
+            $data = $request->validate([
+                'id' => 'required|numeric|exists:advances,id'
+            ]);
+            Advance::destroy($data['id']);
+
+            return response()->json(['msg' => 'Solicitud de Adelanto eliminada correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => 'Error al eliminar la solicitud de adelanto'], 500);
+        }
     }
 
     public function getCombinedData(Request $request)

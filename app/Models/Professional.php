@@ -62,6 +62,10 @@ class Professional extends Model
         return $this->hasManyThrough(Order::class, BranchServiceProfessional::class);
     }
 
+    public function professionalOrders(){
+        return $this->hasMany(Order::class);
+    }
+
     public function workplaces(){
         return $this->belongsToMany(Workplace::class, 'professional_workplace')->withPivot('data')->withTimestamps();
     }

@@ -64,17 +64,40 @@ class CashierSaleController extends Controller
             
             $productStore = ProductStore::find($validatedData['product_store_id']);
                 $product = $productStore->product()->first();
-                $sale_price = $product->sale_price;
-                $percent_wint = $sale_price - $product->purchase_price;
+                $percent_wint = $product->sale_price - $product->purchase_price;
+            
+            // Obtener la categoría del producto y calcular comisión
+            $category = $product->productCategory; // Asumiendo que existe relación 'category' en el modelo Product
+            $commissionAmount = 0;
+            $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
+
+            Log::info('Categoría obtenida:', [
+                'category_id' => $category ? $category->id : null,
+                'category_name' => $category ? $category->name : null,
+                'gives_commission' => $category ? $category->gives_commission : null,
+                'commission_rate' => $product ? $product->commission_rate : null
+            ]);
+            if ($category && $category->gives_commission && $commissionRate) {
+                $commissionAmount = ($percent_wint * $commissionRate / 100) * $validatedData['cant'];
+                Log::info('Cálculo de comisión:', [
+                    'commission_rate' => $commissionRate,
+                    'commission_amount' => $commissionAmount,
+                    'quantity' => $validatedData['cant']
+                ]);
+            }else {
+                $commissionAmount = 0;
+            }
                     
             $cashierSale = new CashierSale();
             $cashierSale->branch_id = $validatedData['branch_id'];
             $cashierSale->professional_id = $validatedData['professional_id'];
             $cashierSale->product_store_id = $validatedData['product_store_id'];
             $cashierSale->data = Carbon::now();
-            $cashierSale->price = $sale_price * $validatedData['cant'];
+            $cashierSale->price = $product->sale_price * $validatedData['cant'];
             $cashierSale->cant = $validatedData['cant'];
             $cashierSale->percent_wint = $percent_wint * $validatedData['cant'];
+            $cashierSale->commission_amount = $commissionAmount; // Nuevo campo para almacenar la comisión
+            $cashierSale->commission_rate = $commissionRate; // Nuevo campo para almacenar el porcentaje de comisión
             $cashierSale->save();
 
             $productStore->product_quantity = $validatedData['cant'];
@@ -87,7 +110,7 @@ class CashierSaleController extends Controller
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
                     'client' => '',
-                    'amount' => $sale_price * $validatedData['cant'],
+                    'amount' => $product->sale_price * $validatedData['cant'],
                     'operation' => 'Venta de Productos',
                     'details' => $validatedData['cant']. ' '.$product->name,
                     'description' => '',

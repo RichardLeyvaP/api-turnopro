@@ -25,4 +25,9 @@ class OperationTip extends Model
     {
         return $this->hasMany(Car::class, 'operation_tip_id');
     }
+
+    public function finaces()
+    {
+        return $this->hasMany(OperationTip::class, 'operation_tip_id');
+    }
 }

@@ -27,6 +27,7 @@ use App\Models\Retention;
 use App\Models\Service;
 use App\Models\WorkerPurchase;
 use App\Services\CarService;
+use App\Services\ProfessionalPaymentService;
 use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -38,11 +39,13 @@ class CarController extends Controller
 {
     private CarService $carService;
     private TraceService $traceService;
+    private ProfessionalPaymentService $professionalPaymentService;
 
-    public function __construct(CarService $carService, TraceService $traceService)
+    public function __construct(CarService $carService, TraceService $traceService, ProfessionalPaymentService $professionalPaymentService)
     {
         $this->carService = $carService;
         $this->traceService = $traceService;
+        $this->professionalPaymentService = $professionalPaymentService;
     }
 
     public function index()
@@ -1711,8 +1714,6 @@ class CarController extends Controller
         }
     }
 
-
-
     public function branch_cars2(Request $request)
     {
         try {
@@ -2277,9 +2278,16 @@ class CarController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $retention = Professional::where('id', $data['professional_id'])->value('retention');
-
-            $cars = Car::where('professional_payment_id', null)
+            $professional = Professional::where('id', $request->professional_id)->first();
+            $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $data['professional_id'])
+                ->first();
+            
+            $retention = $professional->retention;;
+            $products = $this->professionalPaymentService->calculateProductCommissionsNopay($data, $branchProfessional, $professional);
+            $payments = $this->professionalPaymentService->calculatePayments($data);
+            $cars = $this->professionalPaymentService->getServiceEarningsDetails($data, $retention);
+            /*$cars = Car::where('professional_payment_id', null)
                 ->whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })
@@ -2324,7 +2332,7 @@ class CarController extends Controller
                 })->sortBy(function ($car) {
                     return $car['data']; // Ordena por la propiedad 'reservationData'
                 })
-                ->values(); // Reindexar las claves de la colección;
+                ->values(); // Reindexar las claves de la colección;*/
 
             $cursesProf = CourseProfessional::where('professional_id', $data['professional_id'])->where('pay', 0)->get()->map(function ($courseProf) {
                 $course = $courseProf->course;
@@ -2341,7 +2349,7 @@ class CarController extends Controller
                     'totalPayment' => $totalPayment,
                 ];
             });
-            return response()->json(['cars' => $cars, 'courses' => $cursesProf], 200);
+            return response()->json(['cars' => $cars['detailed_cars'], 'courses' => $cursesProf, 'products' =>$products, 'payments' => $payments], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);

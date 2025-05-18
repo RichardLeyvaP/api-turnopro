@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Advance;
 use App\Models\Car;
 use App\Models\CashierSale;
 use App\Models\CourseProfessional;
 use App\Models\Finance;
+use App\Models\OperationTip;
 use App\Models\Order;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
+use App\Models\Retention;
+use App\Models\WorkerPurchase;
+use App\Services\ProfessionalPaymentService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,6 +24,13 @@ use Illuminate\Validation\ValidationException;
 
 class ProfessionalPaymentController extends Controller
 {
+
+    private ProfessionalPaymentService $professionalPaymentService;
+
+    public function __construct(ProfessionalPaymentService $professionalPaymentService)
+    {
+        $this->professionalPaymentService = $professionalPaymentService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -151,6 +164,152 @@ class ProfessionalPaymentController extends Controller
         }
     }
 
+    public function store_barbero_payment(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric|exists:branches,id',
+                'professional_id' => 'required|numeric|exists:professionals,id',
+                'payments' => 'required|array',
+                'type' => 'required|string',
+                'amountAcadem' => 'nullable|numeric',
+                'typeAcadem' => 'nullable|string',
+            ]);
+
+            Log::info('Datos recibidos para pago a profesional Barbero', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id'],
+                'payments_data' => $data['payments'],
+                'type' => $data['type'],
+                'amountAcadem' => $data['amountAcadem'],
+                'typeAcadem' => $data['typeAcadem']
+            ]);
+
+            $payment = $this->professionalPaymentService->processPayment($data);
+
+            if($data['amountAcadem']){
+                
+                Log::info('entra a pago los cursos');
+                $ids = $request->input('course_ids');
+                $courseProfessional = CourseProfessional::find($ids);
+                $enrollment_id = $courseProfessional->course->enrollment_id;
+                $professionalPayment = new ProfessionalPayment();
+                $professionalPayment->enrollment_id = $enrollment_id;
+                $professionalPayment->professional_id = $data['professional_id'];
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $data['amountAcadem'];
+                $professionalPayment->type = $data['typeAcadem'];
+
+                // Guardar el modelo
+                $professionalPayment->save();
+                $courseProfessional->pay = $professionalPayment->id;
+                $courseProfessional->save();
+
+                $professional = Professional::find($data['professional_id']);
+
+                $finance = Finance::orderBy('control', 'desc')->first();             
+                if($finance !== null)
+                {
+                    $control = $finance->control+1;
+                }
+                else {
+                    $control = 1;
+                }
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Gasto';
+                $finance->amount = $data['amount'];
+                $finance->comment = 'Gasto por pago de curso a '.$professional->name;
+                $finance->enrollment_id = $enrollment_id;
+                $finance->type = 'Academia';
+                $finance->expense_id = 6;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->professional_payment_id = $professionalPayment->id;
+                $finance->save();
+            }
+            
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago registrado exitosamente',
+            ], 201);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error('Error de validación en pago', [
+                'error' => $e->getMessage(),
+                'input' => $request->all()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+            
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Recurso no encontrado'], 404);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al procesar pago', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    public function store_charge_payment(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric|exists:branches,id',
+                'professional_id' => 'required|numeric|exists:professionals,id',
+                'payments' => 'required|array',
+                'type' => 'required|string'
+            ]);
+
+            Log::info('Datos recibidos para pago a profesional Cargos', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id'],
+                'payments_data' => $data['payments'],
+                'type' => $data['type']
+            ]);
+
+            $payment = $this->professionalPaymentService->processPayment($data);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago registrado exitosamente',
+            ], 201);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error('Error de validación en pago', [
+                'error' => $e->getMessage(),
+                'input' => $request->all()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+            
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Recurso no encontrado'], 404);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al procesar pago', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
+    }
+
     public function store_cashier(Request $request)
     {
         try {
@@ -211,6 +370,55 @@ class ProfessionalPaymentController extends Controller
         } catch (\Exception $e) {
             Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function store_cashier_payment(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric|exists:branches,id',
+                'professional_id' => 'required|numeric|exists:professionals,id',
+                'payments' => 'required|array', // Asegura que payments sea un array
+                'type' => 'required|string'
+            ]);
+
+             // Registrar log detallado
+            Log::info('Datos recibidos para pago a profesional cajeros', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id'],
+                'payments_data' => $data['payments'], // Registra toda la estructura de pagos
+                'type' => $data['type'],
+            ]);
+            $payment = $this->professionalPaymentService->processPayment($data);
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pago registrado exitosamente',
+        ], 201);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error('Error de validación en pago', [
+                'error' => $e->getMessage(),
+                'input' => $request->all()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+            
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Recurso no encontrado'], 404);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al procesar pago', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
     
@@ -534,9 +742,55 @@ class ProfessionalPaymentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProfessionalPayment $professionalPayment)
+    public function update(Request $request)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'id' => 'required|numeric|exists:professionals_payments,id',
+                'amount' => 'required|numeric'
+            ]);
+
+             // Registrar log detallado
+            Log::info('Datos recibidos al editar el pago', [
+                'id' => $data['id']
+            ]);
+            $payment = ProfessionalPayment::findOrFail($data['id']);
+                $payment->amount = $data['amount'];
+                $payment->save();
+
+                // 2. Actualizar el monto correspondiente en finances
+                Finance::where('professional_payment_id', $data['id'])
+                    ->update(['amount' => $data['amount']]);
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pago editado exitosamente',
+        ], 201);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error('Error de validación en pago', [
+                'error' => $e->getMessage(),
+                'input' => $request->all()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+            
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Recurso no encontrado'], 404);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al procesar edicion de pago', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
     }
 
     /**
@@ -551,8 +805,9 @@ class ProfessionalPaymentController extends Controller
             // Buscar el pago de profesional a eliminar
             $professionalPayment = ProfessionalPayment::findOrFail($data['id']);
 
+            Finance::where('professional_payment_id', $data['id'])->delete();
             // Buscar y actualizar los carros asociados para establecer el campo professional_payment_id en null
-            Car::where('professional_payment_id', $data['id'])->update(['professional_payment_id' => null]);
+            //Car::where('professional_payment_id', $data['id'])->update(['professional_payment_id' => null]);
 
             // Eliminar el pago de profesional
             $professionalPayment->delete();

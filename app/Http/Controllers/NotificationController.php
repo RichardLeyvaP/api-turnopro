@@ -1023,7 +1023,6 @@ class NotificationController extends Controller
 
         // Obtener resultados
         $pendingCount = $query->count();
-            Log::info('Contar solicitudes pendientes del día actual: ' . $pendingCount);
 
             return response()->json(['notifications' => $notifications, 'solicitudes' => $pendingCount], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {

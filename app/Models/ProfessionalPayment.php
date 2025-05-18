@@ -26,6 +26,11 @@ class ProfessionalPayment extends Model
         return $this->hasMany(Car::class, 'professional_payment_id');
     }
 
+    public function finaces()
+    {
+        return $this->hasMany(Finance::class, 'professional_payment_id');
+    }
+
     public function enrollment()
     {
         return $this->belongsTo(Branch::class, 'enrollment_id');

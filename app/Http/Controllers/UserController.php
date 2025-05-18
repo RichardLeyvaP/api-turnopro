@@ -800,7 +800,7 @@ class UserController extends Controller
                         'nameBusiness' => $business ? $business->name : $branch['nameBusiness'],
                         'imageBusiness' => $business ? $business->image_url : $branch['imageBusiness'],
                         'charge' => $user->professional ? $user->professional->charge->name : null,
-                        'name' => $user->professional ? ($user->professional->name . ' ' . $user->professional->surname) : ($user->client->name . ' ' . $user->client->surname),
+                        'name' => $user->professional ? ($user->professional->name) : ($user->client->name),
                         'charge_id' => $user->professional ? ($user->professional->charge_id) : 0,
                         'professional_id' => $user->professional ? ($user->professional->id) : 0,
                         'image' => $user->professional ? ($user->professional->image_url) : $user->client->client_image,

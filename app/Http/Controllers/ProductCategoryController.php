@@ -66,114 +66,114 @@ class ProductCategoryController extends Controller
     }
 
     public function category_products_branch(Request $request)
-{
-    try {
-        $data = $request->validate([
-            'branch_id' => 'required|numeric',
-            'professional_id' => 'required|numeric',
-            'car_id' => 'required|numeric',
-        ]);
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'car_id' => 'required|numeric',
+            ]);
 
-        $branchId = $data['branch_id'];
-        $statusProduct = 'En venta';
+            $branchId = $data['branch_id'];
+            $statusProduct = 'En venta';
 
-        // Obtener categorías con productos filtrados y sus relaciones necesarias
-        $categories = ProductCategory::whereHas('products.stores.branches', function ($query) use ($branchId) {
-            $query->where('branch_id', $branchId);
-        })->where('name', '!=', 'Bebidas') // Filtra las categorías cuyo nombre sea distinto de "Bebidas"
-        ->with(['products' => function ($query) use ($branchId, $statusProduct) {
-            $query->whereHas('stores.branches', function ($query) use ($branchId) {
+            // Obtener categorías con productos filtrados y sus relaciones necesarias
+            $categories = ProductCategory::whereHas('products.stores.branches', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
-            })->where('status_product', $statusProduct)
-            ->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product']);
-        }])->get(['id', 'name', 'description']);
+            })->where('name', '!=', 'Bebidas') // Filtra las categorías cuyo nombre sea distinto de "Bebidas"
+            ->with(['products' => function ($query) use ($branchId, $statusProduct) {
+                $query->whereHas('stores.branches', function ($query) use ($branchId) {
+                    $query->where('branch_id', $branchId);
+                })->where('status_product', $statusProduct)
+                ->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product']);
+            }])->get(['id', 'name', 'description']);
 
-        // Formatear la respuesta
-        $formattedCategories = $categories->map(function ($category) use ($branchId, $statusProduct) {
-            $productStores = ProductStore::with(['product' => function ($query) use ($statusProduct) {
-                $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
-                      ->where('status_product', '=', $statusProduct);
-            }])
-            ->whereHas('product', function ($query) use ($category, $statusProduct) {
-                $query->where('product_category_id', '=', $category->id)->where('status_product', '=', $statusProduct);
-            })
-            ->whereHas('store.branches', function ($query) use ($branchId) {
-                $query->where('branches.id', '=', $branchId);
-            })
-            ->where('product_exit', '>', 0)
-            ->select(['id', 'product_exit', 'product_id', 'store_id'])
+            // Formatear la respuesta
+            $formattedCategories = $categories->map(function ($category) use ($branchId, $statusProduct) {
+                $productStores = ProductStore::with(['product' => function ($query) use ($statusProduct) {
+                    $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
+                        ->where('status_product', '=', $statusProduct);
+                }])
+                ->whereHas('product', function ($query) use ($category, $statusProduct) {
+                    $query->where('product_category_id', '=', $category->id)->where('status_product', '=', $statusProduct);
+                })
+                ->whereHas('store.branches', function ($query) use ($branchId) {
+                    $query->where('branches.id', '=', $branchId);
+                })
+                ->where('product_exit', '>', 0)
+                ->select(['id', 'product_exit', 'product_id', 'store_id'])
+                ->get();
+
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'description' => $category->description,
+                    'products' => $productStores->map(function ($productStore) {
+                        $product = $productStore->product;
+                        Log::info('Producto'.$product);
+                        if ($product) {
+                            return [
+                                'id' => $productStore->id,
+                                'product_exit' => $productStore->product_exit,
+                                'product_id' => $productStore->product_id,
+                                'name' => $product->name,
+                                'reference' => $product->reference,
+                                'code' => $product->code,
+                                'description' => $product->description,
+                                'status_product' => $product->status_product,
+                                'purchase_price' => $product->purchase_price,
+                                'sale_price' => $product->sale_price,
+                                'image_product' => $product->image_product
+                            ];
+                        }
+                        
+                    })
+                ];
+            });
+
+            $orderServicesDatas = Order::whereHas('car.reservation')
+                ->whereRelation('car', 'id', '=', $data['car_id'])
+                ->where('is_product', 0)
+                ->pluck('branch_service_professional_id');
+
+            $BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })->where('professional_id', $data['professional_id'])
+            ->with(['branchService.service'])
             ->get();
 
-            return [
-                'id' => $category->id,
-                'name' => $category->name,
-                'description' => $category->description,
-                'products' => $productStores->map(function ($productStore) {
-                    $product = $productStore->product;
-                    Log::info('Producto'.$product);
-                    if ($product) {
-                        return [
-                            'id' => $productStore->id,
-                            'product_exit' => $productStore->product_exit,
-                            'product_id' => $productStore->product_id,
-                            'name' => $product->name,
-                            'reference' => $product->reference,
-                            'code' => $product->code,
-                            'description' => $product->description,
-                            'status_product' => $product->status_product,
-                            'purchase_price' => $product->purchase_price,
-                            'sale_price' => $product->sale_price,
-                            'image_product' => $product->image_product
-                        ];
-                    }
-                    
-                })
-            ];
-        });
+            $serviceModels = $BSProfessional->map(function ($branchServiceProfessional) use ($orderServicesDatas) {
+                $service = $branchServiceProfessional->branchService->service;
+                return [
+                    "id" => $branchServiceProfessional->id,
+                    "name" => $service->name,
+                    "simultaneou" => $service->simultaneou,
+                    "price_service" => $service->price_service,
+                    "type_service" => $service->type_service,
+                    "profit_percentaje" => $service->profit_percentaje,
+                    "duration_service" => $service->duration_service,
+                    "image_service" => $service->image_service,
+                    "service_comment" => $service->service_comment,
+                    "cliente" => $orderServicesDatas->contains($branchServiceProfessional->id)
+                ];
+            });
 
-        $orderServicesDatas = Order::whereHas('car.reservation')
-            ->whereRelation('car', 'id', '=', $data['car_id'])
-            ->where('is_product', 0)
-            ->pluck('branch_service_professional_id');
+            $car = Car::find($data['car_id']);
+            if ($car != null) {
+                $services = $car->orders->where('is_product', 0)->count();
+                $products = $car->orders->where('is_product', 1)->sum('cant');
+            }
+            else{
+                $services = 0;
+                $products = 0;
+            }
 
-        $BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
-            $query->where('branch_id', $data['branch_id']);
-        })->where('professional_id', $data['professional_id'])
-          ->with(['branchService.service'])
-          ->get();
-
-        $serviceModels = $BSProfessional->map(function ($branchServiceProfessional) use ($orderServicesDatas) {
-            $service = $branchServiceProfessional->branchService->service;
-            return [
-                "id" => $branchServiceProfessional->id,
-                "name" => $service->name,
-                "simultaneou" => $service->simultaneou,
-                "price_service" => $service->price_service,
-                "type_service" => $service->type_service,
-                "profit_percentaje" => $service->profit_percentaje,
-                "duration_service" => $service->duration_service,
-                "image_service" => $service->image_service,
-                "service_comment" => $service->service_comment,
-                "cliente" => $orderServicesDatas->contains($branchServiceProfessional->id)
-            ];
-        });
-
-        $car = Car::find($data['car_id']);
-        if ($car != null) {
-            $services = $car->orders->where('is_product', 0)->count();
-            $products = $car->orders->where('is_product', 1)->sum('cant');
+            return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels, 'product_select' => intval($products), 'service_select' => intval($services)], 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage()." Error interno del sistema"], 500);
         }
-        else{
-            $services = 0;
-            $products = 0;
-        }
-
-        return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels, 'product_select' => intval($products), 'service_select' => intval($services)], 200, [], JSON_NUMERIC_CHECK);
-    } catch (\Throwable $th) {
-        Log::error($th);
-        return response()->json(['msg' => $th->getMessage()." Error interno del sistema"], 500);
     }
-}
 
     public function store(Request $request)
     {
@@ -184,13 +184,15 @@ class ProductCategoryController extends Controller
              $product_category_data = $request->validate([
                 'name' => 'required|max:50',
                 'description' => 'required|max:220',
-               
-              
+                'gives_commission' => 'required|numeric',
+                //'commission_rate' => 'nullable|numeric',
             ]);
 
             $product_category = new ProductCategory();
             $product_category->name =  $product_category_data['name'];
             $product_category->description =  $product_category_data['description'];
+            $product_category->gives_commission =  $product_category_data['gives_commission'];
+            //$product_category->commission_rate =  $product_category_data['commission_rate'];
        
        
             $product_category->save();
@@ -211,13 +213,16 @@ class ProductCategoryController extends Controller
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'description' => 'required|max:220',
-              
+                'gives_commission' => 'required|numeric',
+                //'commission_rate' => 'nullable|numeric',
               
             ]);
             Log::info($request);
             $product_category = ProductCategory::find( $product_category_data['id']);
             $product_category->name =  $product_category_data['name'];
             $product_category->description =  $product_category_data['description'];
+            $product_category->gives_commission =  $product_category_data['gives_commission'];
+            //$product_category->commission_rate =  $product_category_data['commission_rate'];
           
             $product_category->save();
 

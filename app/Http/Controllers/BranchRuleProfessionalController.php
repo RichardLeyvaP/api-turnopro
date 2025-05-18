@@ -35,8 +35,12 @@ class BranchRuleProfessionalController extends Controller
             ]);
 
             // Obtener los parámetros
+            $timezone = 'America/Santiago';
+            $dateChile = now($timezone)->format('Y-m-d'); // Formato: 2025-05-12
+    
             $branch_id = $request->input('branch_id');
-            $date = $request->input('date');
+            $date = $request->input('date'); // Ignoramos el parámetro del front
+            //$date = $dateChile; // Usamos la fecha de Chile
 
             $convivencias = BranchRuleProfessional::with(['branchRule.rule', 'professional'])
                 ->whereHas('branchRule', function ($query) use ($branch_id) {

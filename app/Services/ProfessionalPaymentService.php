@@ -1,0 +1,1685 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\{
+    Professional,
+    Branch,
+    BranchProfessional,
+    CashierSale,
+    Order,
+    Trace,
+    Car,
+    Advance,
+    Finance,
+    OperationTip,
+    ProfessionalPayment,
+    Retention,
+    WorkerPurchase
+};
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class ProfessionalPaymentService
+{
+    public function calculatePayments(array $data): array
+    {
+        // Obtener información básica
+        $professional = Professional::find($data['professional_id']);
+        $branch = Branch::find($data['branch_id']);
+        $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->first();
+
+        // Valores base
+        $retention = $professional->retention ?? 0;
+        $salary = $branchProfessional->salary ?? 0;
+
+        // 1. Cálculo de comisiones por productos
+        $commissionResult = $this->calculateProductCommissions($data, $branchProfessional, $professional);
+        
+        // 2. Cálculo de propinas
+        $tipsResult = $this->calculateTips($data, $branch, $professional);
+        
+        // 3. Cálculo de adelantos
+        $advancesResult = $this->calculateAdvances($data);
+
+        // 3. Cálculo de compra de productos
+        $workerPurchaseResult = $this->getWorkerPurchases($data);
+  
+        // 3. Cálculo de prestacion de servicios
+        $carsResult = $this->getServiceEarnings($data, $retention);
+
+        $salaryData = [
+            'salary_bruto' => round($salary, 2),
+            'retention_salary' => round($salary * ($retention / 100), 2),
+            'salary_neto' => round($salary - ($salary * ($retention / 100)), 2)
+        ];
+
+        // Cálculo del total neto
+        $totalNeto = $commissionResult['commission_neto'] 
+                   + $tipsResult['tip_neto'] 
+                   + $carsResult['total_neto']
+                   + $salaryData['salary_bruto']
+                   - $workerPurchaseResult['total_purchases'] 
+                   - $advancesResult['total_advance'];
+        // Cálculo del total neto
+        $totalNetoPay = $carsResult['total_neto']
+                   + $salaryData['salary_bruto']
+                   - $workerPurchaseResult['total_purchases'] 
+                   - $advancesResult['total_advance'];
+
+        return [
+            'success' => true,
+            'products' => $commissionResult,
+            'tips' => $tipsResult,
+            'advances' => $advancesResult,
+            'totalNeto' => round($totalNeto, 2),
+            'totalNetoPay' => round($totalNetoPay, 2),
+            'workerPurchases' => $workerPurchaseResult,
+            'cars' => $carsResult,
+            'salary' => $salaryData,
+
+        ];
+    }
+
+    /*protected function calculateProductCommissions(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        // Obtener transacciones
+        $sales = CashierSale::where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->where('paycashier', 0)
+            ->whereNotNull('commission_amount')
+            ->where('commission_amount', '!=', 0)
+            ->orderBy('created_at')
+            ->get(['id', 'created_at', 'cant', 'commission_amount']);
+
+        $orders = Order::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('paycashier', 0)
+            ->where('is_product', 1)
+            ->whereNotNull('commission_amount')
+            ->where('commission_amount', '!=', 0)
+            ->orderBy('created_at')
+            ->get(['id', 'created_at', 'cant', 'commission_amount']);
+
+        $transactions = $sales->concat($orders)->sortBy('created_at');
+
+        // Cálculo de comisiones
+        $totalProductsSold = 0;
+        $totalCommission = 0;
+        $commissionDetails = [];
+
+        foreach ($transactions as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $remainingProducts = $productsInTransaction;
+            $transactionCommission = 0;
+            $transactionDetails = [
+                'transaction_id' => $transaction->id,
+                'type' => $transaction instanceof CashierSale ? 'sale' : 'order',
+                'total_products' => $productsInTransaction,
+                'total_commission' => (float)$transaction->commission_amount,
+                'tiers_applied' => []
+            ];
+
+            while ($remainingProducts > 0) {
+                $currentTier = $this->getCurrentTier($tiers, $totalProductsSold, $remainingProducts);
+                
+                if (!$currentTier) {
+                    $totalProductsSold += $remainingProducts;
+                    break;
+                }
+
+                $productsToCount = $this->calculateProductsInTier(
+                    $currentTier, 
+                    $totalProductsSold, 
+                    $remainingProducts
+                );
+
+                if ($productsToCount > 0) {
+                    $proportion = $productsToCount / $productsInTransaction;
+                    $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
+                    
+                    $transactionCommission += $tierCommission;
+                    $totalProductsSold += $productsToCount;
+                    $remainingProducts -= $productsToCount;
+                    
+                    $transactionDetails['tiers_applied'][] = [
+                        'tier_name' => $currentTier['name'],
+                        'products' => $productsToCount,
+                        'rate' => $currentTier['rate'],
+                        'commission' => $tierCommission,
+                        'accumulated_products' => $totalProductsSold
+                    ];
+                }
+            }
+            
+            $totalCommission += $transactionCommission;
+            $commissionDetails[] = $transactionDetails;
+        }
+
+        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $commissionAfterRetention = $totalCommission - $retentionAmount;
+
+        return [
+            'total_products_sold' => $totalProductsSold,
+            'total_commission' => round($totalCommission, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'commission_neto' => round($commissionAfterRetention, 2),
+            'commission_details' => $commissionDetails,
+            'sales_ids' => $sales->pluck('id')->toArray(),
+            'order_ids' => $orders->pluck('id')->toArray()
+        ];
+    }*/
+    
+
+    protected function calculateProductCommissions(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers (igual que antes)
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        // 1. Obtener TODAS las transacciones para contar productos vendidos
+        $allSales = CashierSale::where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->where('paycashier', 0)
+            ->orderBy('created_at')
+            ->get(['id', 'created_at', 'cant', 'commission_amount']);
+
+        $allOrders = Order::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('paycashier', 0)
+            ->where('is_product', 1)
+            ->orderBy('created_at')
+            ->get(['id', 'created_at', 'cant', 'commission_amount']);
+
+        // 2. Obtener SOLO transacciones con comisión para calcular pagos
+        $commissionSales = $allSales->whereNotNull('commission_amount')
+                                ->where('commission_amount', '!=', 0)
+                                ->values();
+
+        $commissionOrders = $allOrders->whereNotNull('commission_amount')
+                                    ->where('commission_amount', '!=', 0)
+                                    ->values();
+
+        // Combinar resultados
+        $allTransactions = $allSales->concat($allOrders)->sortBy('created_at');
+        $commissionTransactions = $commissionSales->concat($commissionOrders)->sortBy('created_at');
+
+        // Cálculo de productos vendidos (TODOS)
+        $totalProductsSold = $allTransactions->sum('cant');
+
+        // Cálculo de comisiones (SOLO los que tienen commission_amount)
+        $totalCommission = 0;
+        $currentTierIndex = 0;
+        $accumulatedProducts = 0;
+        $commissionDetails = [];
+
+        foreach ($commissionTransactions as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $remainingProducts = $productsInTransaction;
+            $transactionCommission = 0;
+            $transactionDetails = [
+                'transaction_id' => $transaction->id,
+                'type' => $transaction instanceof CashierSale ? 'sale' : 'order',
+                'total_products' => $productsInTransaction,
+                'total_commission' => (float)$transaction->commission_amount,
+                'tiers_applied' => []
+            ];
+
+            while ($remainingProducts > 0) {
+                $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
+                
+                if (!$currentTier) {
+                    $accumulatedProducts += $remainingProducts;
+                    break;
+                }
+
+                $productsToCount = $this->calculateProductsInTier(
+                    $currentTier, 
+                    $accumulatedProducts, 
+                    $remainingProducts
+                );
+
+                if ($productsToCount > 0) {
+                    $proportion = $productsToCount / $productsInTransaction;
+                    $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
+                    
+                    $transactionCommission += $tierCommission;
+                    $accumulatedProducts += $productsToCount;
+                    $remainingProducts -= $productsToCount;
+                    
+                    $transactionDetails['tiers_applied'][] = [
+                        'tier_name' => $currentTier['name'],
+                        'products' => $productsToCount,
+                        'rate' => $currentTier['rate'],
+                        'commission' => $tierCommission,
+                        'accumulated_products' => $accumulatedProducts
+                    ];
+                }
+            }
+            
+            $totalCommission += $transactionCommission;
+            $commissionDetails[] = $transactionDetails;
+        }
+
+        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $commissionAfterRetention = $totalCommission - $retentionAmount;
+
+        return [
+            'total_products_sold' => $totalProductsSold, // Todos los productos
+            'total_commission' => round($totalCommission, 2), // Solo productos con comisión
+            'retention_amount' => round($retentionAmount, 2),
+            'commission_neto' => round($commissionAfterRetention, 2),
+            'commission_details' => $commissionDetails,
+            'sales_ids' => $allSales->pluck('id')->toArray(),
+            'order_ids' => $allOrders->pluck('id')->toArray(),
+            'commission_sales_ids' => $commissionSales->pluck('id')->toArray(), // IDs con comisión
+            'commission_order_ids' => $commissionOrders->pluck('id')->toArray() // IDs con comisión
+        ];
+    }
+
+    protected function calculateTips(array $data, $branch, $professional): array
+    {
+        $tipIds = Trace::where('branch', $branch->name)
+            ->where('cashier', $professional->name)
+            ->where('operation', 'Paga Carro')
+            ->get('details')
+            ->map(function($trace) {
+                if (preg_match('/Carro:\s*(\d+)/', $trace->details, $matches)) {
+                    return (int)$matches[1];
+                }
+                return null;
+            })
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $totalTipBruto = Car::whereIn('id', $tipIds)
+            ->where('operation_tip_id', null)
+            ->where('pay', 1)
+            ->where('tip', '>', 0)
+            ->whereHas('reservation', fn($q) => $q->where('branch_id', $data['branch_id']))
+            ->sum('tip');
+
+        $totalTipCashierBruto = $totalTipBruto * 0.10;
+        //$retentionAmount = $totalTipCashierBruto * ($professional->retention / 100);
+        //$tipAfterRetention = $totalTipCashierBruto - $retentionAmount;
+
+        return [
+            'total_tip' => round($totalTipBruto, 2),
+            'tip_neto' => round($totalTipCashierBruto, 2),
+            'tip_ids' => $tipIds
+        ];
+    }
+
+    public function calculateAdvances(array $data): array
+    {
+        $advancesQuery = Advance::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereIn('status', ['Pagado'])
+            ->whereNull('discount_date');
+
+            Log::info('Adelantos solicitados', [
+                'total_advance_bruto' => $advancesQuery->sum('amount'),
+                'advance_ids' => $advancesQuery->pluck('id')->toArray()
+            ]);
+
+        return [
+            'total_advance' => round($advancesQuery->sum('amount'), 2),
+            'advance_ids' => $advancesQuery->pluck('id')->toArray()
+        ];
+    }
+
+    protected function getCurrentTier(array $tiers, int $totalProductsSold, int $remainingProducts): ?array
+    {
+        foreach ($tiers as $tier) {
+            if ($totalProductsSold < $tier['min']) {
+                if (($totalProductsSold + $remainingProducts) >= $tier['min']) {
+                    return $tier;
+                }
+                continue;
+            }
+            
+            if ($tier['max'] !== null && $totalProductsSold > $tier['max']) {
+                continue;
+            }
+            
+            return $tier;
+        }
+        
+        return null;
+    }
+
+    protected function calculateProductsInTier(array $tier, int $totalProductsSold, int $remainingProducts): int
+    {
+        if ($totalProductsSold < $tier['min']) {
+            return min(
+                $remainingProducts,
+                ($totalProductsSold + $remainingProducts) - $tier['min'] + 1
+            );
+        }
+        
+        return $tier['max'] === null 
+            ? $remainingProducts 
+            : min($remainingProducts, $tier['max'] - $totalProductsSold + 1);
+    }
+
+    public function calculateTipsDetails(array $data, $branch, $professional): array
+    {
+        // Convertir fechas a objetos Carbon
+        $startDate = isset($data['startDate']) 
+            ? \Carbon\Carbon::parse($data['startDate'])->startOfDay()
+            : now()->startOfMonth();
+            
+        $endDate = isset($data['endDate']) 
+            ? \Carbon\Carbon::parse($data['endDate'])->endOfDay()
+            : now()->endOfMonth();
+
+        // 1. Obtener IDs de carros desde las trazas
+        $tipIds = Trace::where('branch', $branch->name)
+            ->where('cashier', $professional->name)
+            ->where('operation', 'Paga Carro')
+            ->whereBetween('data', [$startDate, $endDate])
+            ->get('details')
+            ->map(fn($trace) => preg_match('/Carro:\s*(\d+)/', $trace->details, $matches) ? (int)$matches[1] : null)
+            ->filter()
+            ->values()
+            ->toArray();
+
+        if (empty($tipIds)) {
+            return [
+                'total_tip' => 0,
+                'tip_neto' => 0,
+                'tip_ids' => [],
+                'cars' => [],
+            ];
+        }
+
+        // 2. Consulta única optimizada
+        $cars = Car::whereIn('id', $tipIds)
+            ->where('pay', 1)
+            ->where('tip', '>', 0)
+            ->whereHas('reservation', function($q) use ($data, $startDate, $endDate) {
+                $q->where('branch_id', $data['branch_id'])
+                ->whereBetween('data', [$startDate, $endDate]);
+            })
+            ->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])
+            ->get();
+
+        // 3. Procesamiento de resultados
+        $processedCars = $cars->map(function ($car) {
+            $tipCashier = $car->tip * 0.10;
+            $tipCoffe = $car->tip * 0.10;
+            $professional = $car->clientProfessional->professional;
+            $client = $car->clientProfessional->client;
+
+            return [
+                'id' => $car->id,
+                'professional_id' => $professional->id,
+                'clientName' => $client->name,
+                'client_image' => $client->client_image ?: 'comments/default.jpg',
+                'professionalName' => $professional->name,
+                'image_url' => $professional->image_url,
+                'branch_id' => $car->reservation->branch_id,
+                'data' => $car->reservation->data,
+                'tip' => round($car->tip, 2),
+                'tipCashier' => round($tipCashier, 2),
+                'tipCoffe' => round($tipCoffe, 2),
+                'created_at' => $car->created_at->format('Y-m-d H:i:s')
+            ];
+        });
+
+        // 4. Calcular totales
+        $totalTipBruto = $cars->sum('tip');
+        $totalTipCashierBruto = $totalTipBruto * 0.10;
+
+        return [
+            'total_tip' => round($totalTipBruto, 2),
+            'tip_neto' => round($totalTipCashierBruto, 2),
+            'tip_ids' => $tipIds,
+            'cars' => $processedCars,
+        ];
+    }
+
+    public function calculateTipsLastMoth(array $data, $branch, $professional): array
+    {
+        // Obtener el rango de fechas del mes anterior
+        $previousMonthStart = now()->subMonth()->startOfMonth();
+        $previousMonthEnd = now()->subMonth()->endOfMonth();
+
+        // 1. Obtener IDs de carros desde las trazas del mes anterior
+        $tipIds = Trace::where('branch', $branch->name)
+            ->where('cashier', $professional->name)
+            ->where('operation', 'Paga Carro')
+            ->whereBetween('data', [$previousMonthStart, $previousMonthEnd])
+            ->get('details')
+            ->map(fn($trace) => preg_match('/Carro:\s*(\d+)/', $trace->details, $matches) ? (int)$matches[1] : null)
+            ->filter()
+            ->values()
+            ->toArray();
+
+        if (empty($tipIds)) {
+            return [
+                'total_tip' => 0,
+                'tip_neto' => 0,
+                'tip_ids' => [],
+               ];
+        }
+
+        // 2. Consulta única optimizada que obtiene los datos y calcula los totales
+        $cars = Car::whereIn('id', $tipIds)
+            ->where('pay', 1)
+            ->where('tip', '>', 0)
+            ->whereHas('reservation', function($q) use ($data, $previousMonthStart, $previousMonthEnd) {
+                $q->where('branch_id', $data['branch_id'])
+                ->where('data', '>=', $previousMonthStart->format('Y-m-d'))
+                ->where('data', '<=', $previousMonthEnd->format('Y-m-d'));
+            })
+            ->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])
+            ->get();
+
+        // 3. Procesamiento de resultados
+        /*$processedCars = $cars->map(function ($car) {
+            $tipCashier = $car->tip * 0.10;
+            $tipCoffe = $car->tip * 0.10;
+            $professional = $car->clientProfessional->professional;
+            $client = $car->clientProfessional->client;
+
+            return [
+                'id' => $car->id,
+                'professional_id' => $professional->id,
+                'clientName' => $client->name,
+                'client_image' => $client->client_image ?: 'comments/default.jpg',
+                'professionalName' => $professional->name,
+                'image_url' => $professional->image_url,
+                'branch_id' => $car->reservation->branch_id,
+                'data' => $car->reservation->data,
+                'tip' => round($car->tip, 2),
+                'tipCashier' => round($tipCashier, 2),
+                'tipCoffe' => round($tipCoffe, 2),
+                'created_at' => $car->created_at->format('Y-m-d H:i:s')
+            ];
+        });*/
+
+        // 4. Calcular totales a partir de los datos ya obtenidos
+        $totalTipBruto = $cars->sum('tip');
+        $totalTipCashierBruto = $totalTipBruto * 0.10;
+
+        return [
+            'total_tip' => round($totalTipBruto, 2),
+            'tip_neto' => round($totalTipCashierBruto, 2),
+            'tip_ids' => $tipIds,
+        ];
+    }
+
+    public function calculateAdvancesDetails(array $data): array
+    {
+        $referenceDate = now();
+        // Calcular períodos basados en la misma referencia
+        $currentMonthStart = $referenceDate->copy()->startOfMonth();
+        $previousMonthStart = $referenceDate->copy()->subMonth()->startOfMonth();
+        $previousMonthEnd = $referenceDate->copy()->subMonth()->endOfMonth();
+
+        // Consulta base reusable
+        $baseQuery = function ($query) use ($data) {
+            return $query->where('branch_id', $data['branch_id'])
+                ->where('professional_id', $data['professional_id'])
+                ->whereIn('status', ['Pagado']);
+        };
+
+        // Adelantos del mes actual
+        $currentMonthAdvances = $baseQuery(clone Advance::query())
+            ->where('data', '>=', $currentMonthStart)
+            ->get();
+
+        // Adelantos del mes anterior
+        $previousMonthAdvances = $baseQuery(clone Advance::query())
+            ->whereBetween('data', [$previousMonthStart, $previousMonthEnd])
+            ->get();
+
+        return [
+            'current_month' => [
+                'total' => $currentMonthAdvances->sum('amount'),
+                'advances' => $currentMonthAdvances,
+                'advance_ids' => $currentMonthAdvances->pluck('id')->toArray()
+            ],
+            'previous_month' => [
+                'total' => $previousMonthAdvances->sum('amount'),
+                'advances' => $previousMonthAdvances,
+                'advance_ids' => $previousMonthAdvances->pluck('id')->toArray()
+            ],
+        ];
+    }
+
+    public function calculateProductCommissionsWithDetails(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        // Determinar rango de fechas
+        $startDate = isset($data['startDate']) 
+            ? Carbon::parse($data['startDate'])->startOfDay()
+            : Carbon::now()->startOfMonth();
+        
+        $endDate = isset($data['endDate']) 
+            ? Carbon::parse($data['endDate'])->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Obtener todas las transacciones con relaciones necesarias y filtrado por fecha
+        $allSales = CashierSale::with('productStore.product')
+            ->where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        $allOrders = Order::with(['productStore.product', 'car'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('is_product', 1)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        // Filtrar transacciones con comisión
+        $commissionSales = $allSales->whereNotNull('commission_amount')
+                                ->where('commission_amount', '!=', 0)
+                                ->values();
+
+        $commissionOrders = $allOrders->whereNotNull('commission_amount')
+                                    ->where('commission_amount', '!=', 0)
+                                    ->values();
+
+        // Mapear productos vendidos con detalles
+        $mappedProducts = collect();
+
+        // Mapear CashierSales
+        foreach ($allSales as $sale) {
+            $productName = 'Producto no disponible';
+            $productImage = 'products/default.jpg';
+            
+            // Verificar si existe la relación productStore y product
+            if ($sale->productStore && $sale->productStore->product) {
+                $productName = $sale->productStore->product->name;
+                $productImage = $sale->productStore->product->image_product ?? $productImage;
+            }
+            $mappedProducts->push([
+                'id' => $sale->id,
+                'price' => round($sale->price, 2),
+                'pay' => $sale->pay,
+                'cant' => $sale->cant,
+                'name' => $productName,
+                'image_product' => $productImage,
+                'type' => 'cashier_sale',
+                'has_commission' => !is_null($sale->commission_amount) && $sale->commission_amount != 0,
+                'commission_amount' => $sale->commission_amount ? round($sale->commission_amount, 2) : 0,
+                'created_at' => Carbon::parse($sale->created_at)->format('Y-m-d H:i:s'),
+                'data' => Carbon::parse($sale->data)->format('Y-m-d')
+            ]);
+        }
+
+        // Mapear Orders
+        foreach ($allOrders as $order) {
+            $productName = 'Producto no disponible';
+            $productImage = 'products/default.jpg';
+            
+            // Verificar si existe el producto directamente
+            if ($order->productStore && $order->productStore->product) {
+                $productName = $sale->productStore->product->name;
+                $productImage = $sale->productStore->product->image_product ?? $productImage;
+            }
+
+            $mappedProducts->push([
+                'id' => $order->id,
+                'price' => round($order->price, 2),
+                'pay' => $order->car->pay ?? 0,
+                'cant' => $order->cant,
+                'name' => $productName,
+                'image_product' => $productImage,
+                'type' => 'order',
+                'has_commission' => !is_null($order->commission_amount) && $order->commission_amount != 0,
+                'commission_amount' => $order->commission_amount ? round($order->commission_amount, 2) : 0,
+                'created_at' => Carbon::parse($order->created_at)->format('Y-m-d H:i:s'),
+                'data' => Carbon::parse($order->data)->format('Y-m-d')
+            ]);
+        }
+        $groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
+            return $item['name']; // Agrupar por nombre y precio
+        }])->map(function ($dateGroup) {
+            return $dateGroup->map(function ($productGroup) {
+                // Tomar el primer producto como base
+                $firstProduct = $productGroup->first();
+                
+                // Sumar las cantidades
+                $totalQuantity = $productGroup->sum('cant');
+
+                // Sumar los Precios
+                $totalPrice = $productGroup->sum('price');
+                
+                // Sumar las comisiones (si aplica)
+                $totalCommission = $productGroup->sum('commission_amount');
+                
+                return [
+                    'id' => $firstProduct['id'],
+                    'price' => $totalPrice,
+                    'pay' => $firstProduct['pay'],
+                    'cant' => $totalQuantity,
+                    'name' => $firstProduct['name'],
+                    'image_product' => $firstProduct['image_product'],
+                    'type' => $firstProduct['type'],
+                    'has_commission' => $firstProduct['has_commission'],
+                    'commission_amount' => round($totalCommission, 2),
+                    'created_at' => $firstProduct['created_at'],
+                    'data' => $firstProduct['data']
+                ];
+            });
+        });
+        
+        // Reorganizar la estructura para mantener consistencia con el formato original
+        $finalProducts = collect();
+        foreach ($groupedProducts as $date => $products) {
+            foreach ($products as $product) {
+                $finalProducts->push($product);
+            }
+        }
+        
+        // Ordenar por fecha
+        $finalProducts = $finalProducts->sortBy('data')->values();
+        // Ordenar productos por fecha
+        $mappedProducts = $mappedProducts->sortBy('created_at')->values();
+        
+
+        // Cálculo de comisiones (solo para transacciones con comisión)
+        $totalCommission = 0;
+        $accumulatedProducts = 0;
+        $commissionDetails = [];
+
+        foreach ($commissionSales->concat($commissionOrders)->sortBy('created_at') as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $remainingProducts = $productsInTransaction;
+            $transactionCommission = 0;
+            $transactionDetails = [
+                'transaction_id' => $transaction->id,
+                'type' => $transaction instanceof CashierSale ? 'cashier_sale' : 'order',
+                'total_products' => $productsInTransaction,
+                'total_commission' => (float)$transaction->commission_amount,
+                'tiers_applied' => [],
+                'date' => $transaction->created_at->format('Y-m-d')
+            ];
+
+            while ($remainingProducts > 0) {
+                $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
+                
+                if (!$currentTier) {
+                    $accumulatedProducts += $remainingProducts;
+                    break;
+                }
+
+                $productsToCount = $this->calculateProductsInTier(
+                    $currentTier, 
+                    $accumulatedProducts, 
+                    $remainingProducts
+                );
+
+                if ($productsToCount > 0) {
+                    $proportion = $productsToCount / $productsInTransaction;
+                    $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
+                    
+                    $transactionCommission += $tierCommission;
+                    $accumulatedProducts += $productsToCount;
+                    $remainingProducts -= $productsToCount;
+                    
+                    $transactionDetails['tiers_applied'][] = [
+                        'tier_name' => $currentTier['name'],
+                        'products' => $productsToCount,
+                        'rate' => $currentTier['rate'],
+                        'commission' => $tierCommission,
+                        'accumulated_products' => $accumulatedProducts
+                    ];
+                }
+            }
+            
+            $totalCommission += $transactionCommission;
+            $commissionDetails[] = $transactionDetails;
+        }
+
+        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $commissionAfterRetention = $totalCommission - $retentionAmount;
+
+        return [
+            'total_products_sold' => $mappedProducts->sum('cant'),
+            'total_commission' => round($totalCommission, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'commission_neto' => round($commissionAfterRetention, 2),
+            'commission_details' => $commissionDetails,
+            'products_sold' => $finalProducts,
+            'sales_ids' => $allSales->pluck('id')->toArray(),
+            'order_ids' => $allOrders->pluck('id')->toArray(),
+            'commission_sales_ids' => $commissionSales->pluck('id')->toArray(),
+            'commission_order_ids' => $commissionOrders->pluck('id')->toArray()
+        ];
+    }
+
+    public function calculateProductCommissionsNopay(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        // Determinar rango de fechas
+        $startDate = isset($data['startDate']) 
+            ? Carbon::parse($data['startDate'])->startOfDay()
+            : Carbon::now()->startOfMonth();
+        
+        $endDate = isset($data['endDate']) 
+            ? Carbon::parse($data['endDate'])->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Obtener todas las transacciones con relaciones necesarias y filtrado por fecha
+        $allSales = CashierSale::with('productStore.product')
+            ->where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        $allOrders = Order::with(['productStore.product', 'car'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('is_product', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        // Filtrar transacciones con comisión
+        $commissionSales = $allSales->whereNotNull('commission_amount')
+                                ->where('commission_amount', '!=', 0)
+                                ->values();
+
+        $commissionOrders = $allOrders->whereNotNull('commission_amount')
+                                    ->where('commission_amount', '!=', 0)
+                                    ->values();
+
+        // Mapear productos vendidos con detalles
+        $mappedProducts = collect();
+
+        // Mapear CashierSales
+        foreach ($allSales as $sale) {
+            $productName = 'Producto no disponible';
+            $productImage = 'products/default.jpg';
+            
+            // Verificar si existe la relación productStore y product
+            if ($sale->productStore && $sale->productStore->product) {
+                $productName = $sale->productStore->product->name;
+                $productImage = $sale->productStore->product->image_product ?? $productImage;
+            }
+            $mappedProducts->push([
+                'id' => $sale->id,
+                'price' => round($sale->price, 2),
+                'percent_win' => round($sale->percent_win, 2),
+                'pay' => $sale->pay,
+                'cant' => $sale->cant,
+                'name' => $productName,
+                'image_product' => $productImage,
+                'type' => 'cashier_sale',
+                'has_commission' => !is_null($sale->commission_amount) && $sale->commission_amount != 0,
+                'commission_amount' => $sale->commission_amount ? round($sale->commission_amount, 2) : 0,
+                'created_at' => Carbon::parse($sale->created_at)->format('Y-m-d H:i:s'),
+                'data' => Carbon::parse($sale->data)->format('Y-m-d')
+            ]);
+        }
+
+        // Mapear Orders
+        foreach ($allOrders as $order) {
+            $productName = 'Producto no disponible';
+            $productImage = 'products/default.jpg';
+            
+            // Verificar si existe el producto directamente
+            if ($order->productStore && $order->productStore->product) {
+                $productName = $sale->productStore->product->name;
+                $productImage = $sale->productStore->product->image_product ?? $productImage;
+            }
+
+            $mappedProducts->push([
+                'id' => $order->id,
+                'price' => round($order->price, 2),
+                'percent_win' => round($order->percent_win, 2),
+                'pay' => $order->car->pay ?? 0,
+                'cant' => $order->cant,
+                'name' => $productName,
+                'image_product' => $productImage,
+                'type' => 'order',
+                'has_commission' => !is_null($order->commission_amount) && $order->commission_amount != 0,
+                'commission_amount' => $order->commission_amount ? round($order->commission_amount, 2) : 0,
+                'created_at' => Carbon::parse($order->created_at)->format('Y-m-d H:i:s'),
+                'data' => Carbon::parse($order->data)->format('Y-m-d')
+            ]);
+        }
+        $groupedProducts = $mappedProducts->groupBy('name')->map(function ($productGroup) {
+            $firstProduct = $productGroup->first();
+            
+            // Sumar las cantidades
+            $totalQuantity = $productGroup->sum('cant');
+            
+            // Sumar los precios (total vendido)
+            $totalPercentWin = $productGroup->sum('percent_win');
+
+            $totalPrice = $productGroup->sum('price');
+            
+            
+            // Sumar las comisiones
+            $totalCommission = $productGroup->sum('commission_amount');
+            
+            return [
+                'id' => $firstProduct['id'],
+                'price' => round($totalPrice, 2), // Precio unitario promedio
+                'percent_win' => round($totalPercentWin, 2), // Total vendido (precio*cantidad)
+                'pay' => $firstProduct['pay'],
+                'cant' => $totalQuantity,
+                'name' => $firstProduct['name'],
+                'image_product' => $firstProduct['image_product'],
+                'type' => $firstProduct['type'],
+                'has_commission' => $firstProduct['has_commission'],
+                'commission_amount' => round($totalCommission, 2),
+                'created_at' => $firstProduct['created_at'],
+                'data' => $productGroup->pluck('data')->unique()->values()
+            ];
+        })->values();
+        
+        // Ordenar por nombre del producto
+        $finalProducts = $groupedProducts->sortBy('name')->values();
+        /*$groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
+            return $item['name']; // Agrupar por nombre y precio
+        }])->map(function ($dateGroup) {
+            return $dateGroup->map(function ($productGroup) {
+                // Tomar el primer producto como base
+                $firstProduct = $productGroup->first();
+                
+                // Sumar las cantidades
+                $totalQuantity = $productGroup->sum('cant');
+
+                // Sumar los Precios
+                $totalPrice = $productGroup->sum('price');
+                
+                // Sumar las comisiones (si aplica)
+                $totalCommission = $productGroup->sum('commission_amount');
+                
+                return [
+                    'id' => $firstProduct['id'],
+                    'price' => $totalPrice,
+                    'pay' => $firstProduct['pay'],
+                    'cant' => $totalQuantity,
+                    'name' => $firstProduct['name'],
+                    'image_product' => $firstProduct['image_product'],
+                    'type' => $firstProduct['type'],
+                    'has_commission' => $firstProduct['has_commission'],
+                    'commission_amount' => round($totalCommission, 2),
+                    'created_at' => $firstProduct['created_at'],
+                    'data' => $firstProduct['data']
+                ];
+            });
+        });
+        
+        // Reorganizar la estructura para mantener consistencia con el formato original
+        $finalProducts = collect();
+        foreach ($groupedProducts as $date => $products) {
+            foreach ($products as $product) {
+                $finalProducts->push($product);
+            }
+        }
+        
+        // Ordenar por fecha
+        $finalProducts = $finalProducts->sortBy('data')->values();*/
+        // Ordenar productos por fecha
+        $mappedProducts = $mappedProducts->sortBy('created_at')->values();
+        
+
+        // Cálculo de comisiones (solo para transacciones con comisión)
+        $totalCommission = 0;
+        $accumulatedProducts = 0;
+        $commissionDetails = [];
+
+        foreach ($commissionSales->concat($commissionOrders)->sortBy('created_at') as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $remainingProducts = $productsInTransaction;
+            $transactionCommission = 0;
+            $transactionDetails = [
+                'transaction_id' => $transaction->id,
+                'type' => $transaction instanceof CashierSale ? 'cashier_sale' : 'order',
+                'total_products' => $productsInTransaction,
+                'total_commission' => (float)$transaction->commission_amount,
+                'tiers_applied' => [],
+                'date' => $transaction->created_at->format('Y-m-d')
+            ];
+
+            while ($remainingProducts > 0) {
+                $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
+                
+                if (!$currentTier) {
+                    $accumulatedProducts += $remainingProducts;
+                    break;
+                }
+
+                $productsToCount = $this->calculateProductsInTier(
+                    $currentTier, 
+                    $accumulatedProducts, 
+                    $remainingProducts
+                );
+
+                if ($productsToCount > 0) {
+                    $proportion = $productsToCount / $productsInTransaction;
+                    $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
+                    
+                    $transactionCommission += $tierCommission;
+                    $accumulatedProducts += $productsToCount;
+                    $remainingProducts -= $productsToCount;
+                    
+                    $transactionDetails['tiers_applied'][] = [
+                        'tier_name' => $currentTier['name'],
+                        'products' => $productsToCount,
+                        'rate' => $currentTier['rate'],
+                        'commission' => $tierCommission,
+                        'accumulated_products' => $accumulatedProducts
+                    ];
+                }
+            }
+            
+            $totalCommission += $transactionCommission;
+            $commissionDetails[] = $transactionDetails;
+        }
+
+        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $commissionAfterRetention = $totalCommission - $retentionAmount;
+
+        return [
+            'total_products_sold' => $mappedProducts->sum('cant'),
+            'total_commission' => round($totalCommission, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'commission_neto' => round($commissionAfterRetention, 2),
+            'commission_details' => $commissionDetails,
+            'products_sold' => $finalProducts,
+            'sales_ids' => $allSales->pluck('id')->toArray(),
+            'order_ids' => $allOrders->pluck('id')->toArray(),
+            'commission_sales_ids' => $commissionSales->pluck('id')->toArray(),
+            'commission_order_ids' => $commissionOrders->pluck('id')->toArray()
+        ];
+    }
+
+    public function getWorkerPurchases(array $data): array
+    {
+        $purchasesQuery = WorkerPurchase::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->where('status', 1) // Status 1 indica compras aprobadas/pagadas
+            ->whereNull('discount_date'); // Solo compras no descontadas aún
+
+        $totalPurchases = $purchasesQuery->sum('total');
+        $purchaseIds = $purchasesQuery->pluck('id')->toArray();
+
+        Log::info('Compras de productos del trabajador', [
+            'total_purchases' => $totalPurchases,
+            'purchase_ids' => $purchaseIds,
+        ]);
+
+        return [
+            'total_purchases' => round($totalPurchases, 2),
+            'purchase_ids' => $purchaseIds,
+        ];
+    }
+
+    public function getServiceEarnings(array $data, ?float $retention = null): array
+    {
+        // Obtener carros no pagados aún
+        $cars = Car::with(['reservation', 'clientProfessional'])
+            ->where('professional_payment_id', null)
+            ->whereHas('reservation', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })
+            ->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })
+            ->where('pay', 1)
+            ->get();
+
+        $carIds = $cars->pluck('id')->toArray();
+
+        // Calcular propinas (80% para el profesional)
+        $tips = $cars->sum('tip');
+        $totalTips = $tips * 0.80;
+
+        // Calcular ganancias por servicios
+        $orders = Order::whereIn('car_id', $carIds)
+            ->where('is_product', 0)
+            ->get();
+
+        $totalServicesBruto = $orders->sum('percent_win');
+        
+        // Aplicar retención si existe
+        $retentionAmount = $retention ? ($totalServicesBruto * $retention / 100) : 0;
+        $totalServicesNeto = $totalServicesBruto - $retentionAmount;
+
+        Log::info('Ganancias atención de clientes', [
+            'total_services_bruto' => $totalServicesBruto,
+            'total_services_neto' => $totalServicesNeto,
+            'retention_amount' => $retentionAmount,
+            'total_tips' => $totalTips,
+            'tips' => $tips,
+            'total_combined' => $totalServicesBruto + $tips,
+            'total_neto' => $totalServicesNeto + $totalTips,
+            'car_ids' => $carIds
+        ]);
+
+        return [
+            'total_tips' => round($totalTips, 2),
+            'tips' => round($tips, 2),
+            'total_services_bruto' => round($totalServicesBruto, 2),
+            'total_services_neto' => round($totalServicesNeto, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'car_ids' => $carIds,
+            'total_combined' => round($totalServicesBruto + $tips, 2),
+            'total_neto' => round($totalServicesNeto + $totalTips, 2),
+        ];
+    }
+
+    public function getServiceEarningsDetails(array $data, ?float $retention = null): array
+    {
+        // Obtener carros no pagados aún con todas las relaciones necesarias
+        $cars = Car::with([
+                'reservation', 
+                'clientProfessional.client',
+            ])
+            ->where('professional_payment_id', null)
+            ->whereHas('reservation', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']);
+            })
+            ->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('professional_id', $data['professional_id']);
+            })
+            ->where('pay', 1)
+            ->get();
+
+        $carIds = $cars->pluck('id')->toArray();
+
+        // Calcular propinas (80% para el profesional)
+        $tips = $cars->sum('tip');
+        $totalTips = $tips * 0.80;
+
+        // Calcular ganancias por servicios
+        $orders = Order::whereIn('car_id', $carIds)
+            ->where('is_product', 0)
+            ->get();
+
+        $totalServicesBruto = $orders->sum('percent_win');
+        
+        // Aplicar retención si existe
+        $retentionAmount = $retention ? ($totalServicesBruto * $retention / 100) : 0;
+        $totalServicesNeto = $totalServicesBruto - $retentionAmount;
+
+        // Mapear los datos detallados de cada carro
+        $detailedCars = $cars->map(function ($car) use ($retention) {
+            $serviceOrders = $car->orders->where('is_product', 0);
+            $productOrders = Order::where('car_id', $car->id)
+                                ->where('is_product', 1)
+                                ->get();
+            
+            $metaCounterServ = $serviceOrders->sum(function ($order) {
+                return $order->meta == 1 ? 1 : 0;
+            });
+
+            $client = $car->clientProfessional->client;
+            $carRetention = $retention ? ($serviceOrders->sum('percent_win') * $retention) / 100 : 0;
+            $amountServ = $serviceOrders->sum('percent_win');
+
+            return [
+                'id' => $car->id,
+                'professional_id' => $car->clientProfessional->professional_id,
+                'clientName' => $client->name . ' ' . $client->surname,
+                'client_image' => $client->client_image ? $client->client_image . '?$' . now() : 'comments/default.jpg',
+                'branch_id' => $car->reservation->branch_id,
+                'data' => $car->reservation->data,
+                'attendedClient' => 1,
+                'services' => $serviceOrders->count(),
+                'products' => $productOrders->sum('cant'),
+                'totalServices' => round(($amountServ - $carRetention), 2),
+                'clientAleator' => $car->select_professional,
+                'amountGenerate' => round($car->amount, 2),
+                'tip' => $car->tip * 0.80,
+                'meta' => ($serviceOrders->count() == 1 && $amountServ == 0) ? 'Si' : 'No',
+                'metaService' => $metaCounterServ > 0 ? 'SI' : 'NO',
+                'selectable' => ($serviceOrders->count() == 1 && $amountServ == 0 && ($car->tip * 0.80) <= 0) ? false : true
+            ];
+        })->sortBy('data')->values();
+
+        Log::info('Ganancias atención de clientes', [
+            'total_services_bruto' => $totalServicesBruto,
+            'total_services_neto' => $totalServicesNeto,
+            'retention_amount' => $retentionAmount,
+            'total_tips' => $totalTips,
+            'tips' => $tips,
+            'total_combined' => $totalServicesBruto + $tips,
+            'total_neto' => $totalServicesNeto + $totalTips,
+            'car_ids' => $carIds
+        ]);
+
+        return [
+            'tips' => round($tips, 2),
+            'total_tips' => round($totalTips, 2),
+            'total_services_bruto' => round($totalServicesBruto, 2),
+            'total_services_neto' => round($totalServicesNeto, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'car_ids' => $carIds,
+            'total_combined' => round($totalServicesBruto + $tips, 2),
+            'total_neto' => round($totalServicesNeto + $totalTips, 2),
+            'detailed_cars' => $detailedCars
+        ];
+    }
+
+    public function processPayment(array $data)
+    {
+        return DB::transaction(function () use ($data) {
+            $professional = Professional::findOrFail($data['professional_id']);
+            
+            $this->processWorkerPurchases($data);
+            $this->processAdvances($data);
+            
+            if ($this->hasProductCommissions($data)) {
+                $this->processProductCommissions($data, $professional);
+            }
+            
+            if ($this->hasTips($data)) {
+                $this->processTips($data, $professional);
+            }
+            
+            if ($this->hasSalaryPayment($data)) {
+                $this->processSalaryPayment($data, $professional);
+            }
+
+            if($this->hasCarPayments($data)) {
+                $this->processCarPayments($data, $professional);
+            }
+            
+            return $data;
+        });
+    }
+
+    protected function processWorkerPurchases($data)
+    {
+        if (!empty($data['payments']['workerPurchases']['purchase_ids'])) {
+            WorkerPurchase::whereIn('id', $data['payments']['workerPurchases']['purchase_ids'])
+                        ->update(['discount_date' => Carbon::now()]);
+        }
+    }
+
+    protected function processAdvances($data)
+    {
+        if (!empty($data['payments']['advances']['advance_ids'])) {
+            Advance::whereIn('id', $data['payments']['advances']['advance_ids'])
+                        ->update(['discount_date' => Carbon::now()]);
+        }
+    }
+
+    protected function hasProductCommissions($data)
+    {
+        return $data['payments']['products']['commission_neto'] > 0;
+    }
+
+    protected function processProductCommissions($data, $professional)
+    {
+        $professionalPayment = new ProfessionalPayment();
+        $professionalPayment->branch_id = $data['branch_id'];
+        $professionalPayment->professional_id = $data['professional_id'];
+        $professionalPayment->date = Carbon::now();
+        $professionalPayment->amount = $data['payments']['products']['commission_neto'];
+        $professionalPayment->type = 'Bono productos';
+        $professionalPayment->cant = $data['payments']['products']['total_products_sold'];
+        $professionalPayment->save();
+
+        $retention = new Retention();
+        $retention->branch_id = $data['branch_id'];
+        $retention->professional_id = $data['professional_id'];
+        $retention->data = Carbon::now();
+        $retention->retention = $data['payments']['products']['retention_amount'];
+        $retention->type = 'Products';
+        $retention->save();
+    
+        if (!empty($data['payments']['products']['sales_ids'])) {
+            CashierSale::whereIn('id', $data['payments']['products']['sales_ids'])
+                    ->update(['paycashier' => $professionalPayment->id]);
+        }
+
+        if (!empty($data['payments']['products']['order_ids'])) {
+            Order::whereIn('id', $data['payments']['products']['order_ids'])
+                ->update(['paycashier' => $professionalPayment->id]);
+        }
+
+        $finance = Finance::orderBy('control', 'desc')->first();         
+        if($finance !== null) {
+            $control = $finance->control+1;
+        } else {
+            $control = 1;
+        }
+        
+        $finance = new Finance();
+        $finance->control = $control++;
+        $finance->operation = 'Gasto';
+        $finance->amount = $data['payments']['products']['commission_neto'];
+        $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
+        $finance->branch_id = $data['branch_id'];
+        $finance->type = 'Sucursal';
+        $finance->expense_id = 5;
+        $finance->data = Carbon::now();
+        $finance->professional_payment_id = $professionalPayment->id;
+        $finance->file = '';
+        $finance->save();
+
+        $data['payments']['totalNeto'] -= $data['payments']['products']['commission_neto'];
+    }
+
+    protected function hasTips($data)
+    {
+        return $data['payments']['tips']['tip_neto'] > 0;
+    }
+
+    protected function processTips($data, $professional)
+    {
+        $operationTip = new OperationTip();
+        $operationTip->branch_id = $data['branch_id'];
+        $operationTip->professional_id = $data['professional_id'];
+        $operationTip->date = Carbon::now();
+        $operationTip->amount = $data['payments']['tips']['tip_neto'];
+        $operationTip->type = 'Pago Comision de Propinas';
+        $operationTip->coffe_percent = $data['payments']['tips']['tip_neto'];
+        $operationTip->save();
+
+        if (!empty($data['payments']['tips']['tip_ids'])) {
+            Car::whereIn('id', $data['payments']['tips']['tip_ids'])
+                ->update(['operation_tip_id' => $operationTip->id]);
+        }
+
+        $finance = Finance::orderBy('control', 'desc')->first();
+                    
+        if($finance !== null) {
+            $control = $finance->control+1;
+        } else {
+            $control = 1;
+        }
+        
+        $finance = new Finance();
+        $finance->control = $control++;
+        $finance->operation = 'Gasto';
+        $finance->amount = $data['payments']['tips']['tip_neto'];
+        $finance->comment = 'Gasto por pago de 10% de propinas a cajero (a) '.$professional->name;
+        $finance->branch_id = $data['branch_id'];
+        $finance->type = 'Sucursal';
+        $finance->expense_id = 4;
+        $finance->data = Carbon::now(); 
+        $finance->operation_tip_id = $operationTip->id;               
+        $finance->file = '';
+        $finance->save();
+        
+        $data['payments']['totalNeto'] -= $data['payments']['tips']['tip_neto'];
+    }
+    protected function hasSalaryPayment($data)
+    {
+        return $data['payments']['totalNetoPay'] > 0 && $data['payments']['salary']['salary_bruto'] > 0;
+    }
+    protected function processSalaryPayment($data, $professional)
+    {
+        $professionalPaymentSalary = new ProfessionalPayment();
+        $professionalPaymentSalary->branch_id = $data['branch_id'];
+        $professionalPaymentSalary->professional_id = $data['professional_id'];
+        $professionalPaymentSalary->date = Carbon::now();
+        $professionalPaymentSalary->amount = $data['payments']['totalNetoPay'];
+        $professionalPaymentSalary->type = 'Mes';
+        $professionalPaymentSalary->save();
+
+        /*$retention = new Retention();
+        $retention->branch_id = $data['branch_id'];
+        $retention->professional_id = $data['professional_id'];
+        $retention->data = Carbon::now();
+        $retention->retention = $data['payments']['salary']['retention_salary'];
+        $retention->type = 'Salary';
+        $retention->save();*/
+
+        $finance = Finance::orderBy('control', 'desc')->first();
+                    
+        if($finance !== null) {
+            $control = $finance->control+1;
+        } else {
+            $control = 1;
+        }
+        
+        $finance = new Finance();
+        $finance->control = $control;
+        $finance->operation = 'Gasto';
+        $finance->amount = $data['payments']['totalNetoPay'];
+        $finance->comment = 'Gasto por pago a '.$professional->name;
+        $finance->branch_id = $data['branch_id'];
+        $finance->type = 'Sucursal';
+        $finance->expense_id = 4;
+        $finance->data = Carbon::now();                
+        $finance->file = '';
+        $finance->professional_payment_id = $professionalPaymentSalary->id;               
+        $finance->save();
+    }
+
+    protected function hasCarPayments($data)
+    {
+        return $data['payments']['cars']['total_neto'] > 0 && $data['payments']['totalNetoPay'] > 0;
+    }
+
+    protected function processCarPayments($data, $professional)
+    {
+        $professionalPaymentBarbero = new ProfessionalPayment();
+        $professionalPaymentBarbero->branch_id = $data['branch_id'];
+        $professionalPaymentBarbero->professional_id = $data['professional_id'];
+        $professionalPaymentBarbero->date = Carbon::now();
+        $professionalPaymentBarbero->amount = $data['payments']['totalNetoPay'];
+        $professionalPaymentBarbero->type = "Mes";
+        $professionalPaymentBarbero->save();
+
+        if (!empty($data['payments']['cars']['car_ids'])) {
+            Car::whereIn('id', $data['payments']['cars']['car_ids'])
+                ->update(['professional_payment_id' => $professionalPaymentBarbero->id]);
+        }
+
+        $finance = Finance::orderBy('control', 'desc')->first();         
+        if($finance !== null) {
+            $control = $finance->control+1;
+        } else {
+            $control = 1;
+        }
+        
+        $finance = new Finance();
+        $finance->control = $control;
+        $finance->operation = 'Gasto';
+        $finance->amount = $data['payments']['totalNetoPay'];
+        $finance->comment = 'Gasto por pago a '.$professional->name;
+        $finance->branch_id = $data['branch_id'];
+        $finance->type = 'Sucursal';
+        $finance->expense_id = 4;
+        $finance->data = Carbon::now();                
+        $finance->file = '';
+        $finance->professional_payment_id = $professionalPaymentBarbero->id;
+        $finance->save();
+    }
+    /*public function paymentProfessional($data){
+        $professional = Professional::findOrFail($data['professional_id']);
+            if (!empty($data['payments']['workerPurchases']['purchase_ids'])) {
+                WorkerPurchase::whereIn('id', $data['payments']['workerPurchases']['purchase_ids'])
+                            ->update(['discount_date' => Carbon::now()]);
+            }
+
+            if (!empty($data['payments']['advances']['advance_ids'])) {
+                Advance::whereIn('id', $data['payments']['advances']['advance_ids'])
+                            ->update(['discount_date' => Carbon::now()]);
+            }
+            
+            if($data['payments']['products']['commission_neto'] > 0){
+                $professionalPayment = new ProfessionalPayment();
+                $professionalPayment->branch_id = $data['branch_id'];
+                $professionalPayment->professional_id = $data['professional_id'];
+                $professionalPayment->date = Carbon::now();
+                $professionalPayment->amount = $data['payments']['products']['commission_neto'];
+                $professionalPayment->type = 'Bono productos';
+                $professionalPayment->cant = $data['payments']['products']['total_products_sold'];
+                $professionalPayment->save();
+
+                $retention = new Retention();
+                $retention->branch_id = $data['branch_id'];
+                $retention->professional_id = $data['professional_id'];
+                $retention->data = Carbon::now();
+                $retention->retention = $data['payments']['products']['retention_amount'];
+                $retention->type = 'Products';
+                $retention->save();
+            
+                
+                // 2. Actualizar ventas (CashierSales)
+                if (!empty($data['payments']['products']['sales_ids'])) {
+                    CashierSale::whereIn('id', $data['payments']['products']['sales_ids'])
+                            ->update(['paycashier' => $professionalPayment->id]);
+                }
+
+                // 3. Actualizar órdenes
+                if (!empty($data['payments']['products']['order_ids'])) {
+                    Order::whereIn('id', $data['payments']['products']['order_ids'])
+                        ->update(['paycashier' => $professionalPayment->id]);
+                }
+
+                $finance = Finance::orderBy('control', 'desc')->first();         
+                if($finance !== null)
+                {
+                    $control = $finance->control+1;
+                }
+                else {
+                    $control = 1;
+                }
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Gasto';
+                $finance->amount = $data['payments']['products']['commission_neto'];
+                $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
+                $finance->branch_id = $data['branch_id'];
+                $finance->type = 'Sucursal';
+                $finance->expense_id = 5;
+                $finance->data = Carbon::now();
+                $finance->professional_payment_id = $professionalPayment->id;
+                $finance->file = '';
+                $finance->save();
+
+                $data['payments']['totalNeto'] -= $data['payments']['products']['commission_neto'];
+                }
+
+            if($data['payments']['tips']['tip_neto'] > 0){
+                $operationTip = new OperationTip();
+                $operationTip->branch_id = $data['branch_id'];
+                $operationTip->professional_id = $data['professional_id'];
+                $operationTip->date = Carbon::now();
+                $operationTip->amount = $data['payments']['tips']['tip_neto'];
+                $operationTip->type = 'Pago Comision de Propinas';
+                $operationTip->coffe_percent = $data['payments']['tips']['tip_neto'];
+                // Guardar el modelo
+                $operationTip->save();
+
+                if (!empty($data['payments']['tips']['tip_ids'])) {
+                    Car::whereIn('id', $data['payments']['tips']['tip_ids'])
+                      ->update(['operation_tip_id' => $operationTip->id]);
+                }
+                $finance = Finance::orderBy('control', 'desc')->first();
+                            
+                if($finance !== null)
+                {
+                    $control = $finance->control+1;
+                }
+                else {
+                    $control = 1;
+                }
+                Log::info($control);
+                $finance = new Finance();
+                $finance->control = $control++;
+                $finance->operation = 'Gasto';
+                $finance->amount = $data['payments']['tips']['tip_neto'];
+                $finance->comment = 'Gasto por pago de 10% de propinas a cajero (a) '.$professional->name;
+                $finance->branch_id = $data['branch_id'];
+                $finance->type = 'Sucursal';
+                $finance->expense_id = 4;
+                $finance->data = Carbon::now(); 
+                $finance->operation_tip_id = $operationTip->id;               
+                $finance->file = '';
+                $finance->save();
+                $data['payments']['totalNeto'] -= $data['payments']['tips']['tip_neto'];
+            }
+            if($data['payments']['totalNeto'] > 0){
+                $professionalPaymentSalary = new ProfessionalPayment();
+                $professionalPaymentSalary->branch_id = $data['branch_id'];
+                $professionalPaymentSalary->professional_id = $data['professional_id'];
+                $professionalPaymentSalary->date = Carbon::now();
+                $professionalPaymentSalary->amount = $data['payments']['totalNeto'];
+                $professionalPaymentSalary->type = 'Mes';
+                $professionalPaymentSalary->save();
+
+                $retention = new Retention();
+                $retention->branch_id = $data['branch_id'];
+                $retention->professional_id = $data['professional_id'];
+                $retention->data = Carbon::now();
+                $retention->retention = $data['payments']['salary']['retention_salary'];
+                $retention->type = 'Salary';
+                $retention->save();
+
+                $finance = Finance::orderBy('control', 'desc')->first();
+                            
+                if($finance !== null)
+                {
+                    $control = $finance->control+1;
+                }
+                else {
+                    $control = 1;
+                }
+                $finance = new Finance();
+                $finance->control = $control;
+                $finance->operation = 'Gasto';
+                $finance->amount = $data['payments']['totalNeto'];
+                $finance->comment = 'Gasto por pago a cajero (a) '.$professional->name;
+                $finance->branch_id = $data['branch_id'];
+                $finance->type = 'Sucursal';
+                $finance->expense_id = 4;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->professional_payment_id = $professionalPaymentSalary->id;               
+                $finance->save();
+            }
+            if ($data['payments']['cars']['total_neto']) {
+                $professionalPaymentBarbero = new ProfessionalPayment();
+                $professionalPaymentBarbero->branch_id = $data['branch_id'];
+                $professionalPaymentBarbero->professional_id = $data['professional_id'];
+                $professionalPaymentBarbero->date = Carbon::now();
+                $professionalPaymentBarbero->amount = $data['payments']['cars']['total_neto'];
+                $professionalPaymentBarbero->type = "Mes";
+
+                // Guardar el modelo
+                $professionalPaymentBarbero->save();
+                if (!empty($data['payments']['cars']['car_ids'])) {
+                    Car::whereIn('id', $data['payments']['cars']['car_ids'])
+                    ->update(['professional_payment_id' => $professionalPaymentBarbero->id]);
+                }
+
+                $finance = Finance::orderBy('control', 'desc')->first();         
+                if($finance !== null)
+                {
+                    $control = $finance->control+1;
+                }
+                else {
+                    $control = 1;
+                }
+                $finance = new Finance();
+                $finance->control = $control;
+                $finance->operation = 'Gasto';
+                $finance->amount = $data['payments']['cars']['total_neto'];
+                $finance->comment = 'Gasto por pago a '.$professional->name;
+                $finance->branch_id = $data['branch_id'];
+                $finance->type = 'Sucursal';
+                $finance->expense_id = 4;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->professional_payment_id = $professionalPaymentBarbero->id;
+                $finance->save();
+            }
+        return $data;
+    }*/
+}

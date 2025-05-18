@@ -2,22 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Advance;
 use App\Models\Branch;
+use App\Models\BranchProfessional;
 use App\Models\Car;
 use App\Models\CashierSale;
 use App\Models\Finance;
 use App\Models\OperationTip;
+use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
 use App\Models\Trace;
+use App\Models\WorkerPurchase;
+use App\Services\ProfessionalPaymentService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+
+use function PHPSTORM_META\type;
 
 class OperationTipController extends Controller
 {
+    private ProfessionalPaymentService $professionalPaymentService;
+
+    public function __construct(ProfessionalPaymentService $professionalPaymentService)
+    {
+        $this->professionalPaymentService = $professionalPaymentService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -372,13 +388,21 @@ class OperationTipController extends Controller
     {
         try {
             $data = $request->validate([
-                'branch_id' => 'required|numeric'
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric|exists:professionals,id'
             ]);
               Log::info('Estas son las trazas');
             $cashier = Professional::where('id', $request->professional_id)->first();
             $nameCashier = $cashier->name;
             $branch = Branch::where('id', $data['branch_id'])->first();
+
+            // Obtener el salario del profesional en esta sucursal
+            $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+                ->where('professional_id', $data['professional_id'])
+                ->first();
+            $products = $this->professionalPaymentService->calculateProductCommissionsNopay($data, $branchProfessional, $cashier);
             $nameBranch = $branch->name;
+
             $traces = Trace::where('branch', $nameBranch)
                 ->where('cashier', $nameCashier)
                 ->where('operation', 'Paga Carro')
@@ -438,10 +462,103 @@ class OperationTipController extends Controller
                     'image_product' => $product['image_product']
                 ];
             }
-            return response()->json(['cars' => $cars, 'sales' => $sales], 200);
+
+            $payments = $this->professionalPaymentService->calculatePayments($data);
+
+            return response()->json(['cars' => $cars, 'sales' => $products, 'payments' => $payments], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+        }
+    }
+
+    public function cashier_car_salary_notpay(Request $request)
+    {
+        try {
+            Log::info('Iniciando Solicitud de adelantos', ['request' => $request->all()]);
+            $data = $request->validate([
+                'branch_id' => 'required|numeric|exists:branches,id',
+                'professional_id' => 'required|numeric|exists:professionals,id',
+                'charge' => 'nullable|string',
+            ]);
+            $payments = $this->professionalPaymentService->calculatePayments($data);
+            Log::info('Respuesta del ProfessionalPaymentService', [
+                'response' => $payments
+            ]);
+            // Obtener información del cajero, sucursal y su salario en esa sucursal
+            Log::info('Buscando información del profesional y sucursal');
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $branch = Branch::where('id', $data['branch_id'])->first();
+
+            
+            Log::info('Información del profesional', ['name' => $professional->name]);
+            Log::info('Información de la sucursal', ['name' => $branch->name]);
+                       
+
+        Log::info('Resumen de cálculos', [
+            'totales_brutos' => [
+                //'sales' => $totalSalesBruto,
+                'tips' => $payments['tips']['tip_neto'],
+                'advances' => $payments['advances']['total_advance'],
+                'purchases' => $payments['workerPurchases']['total_purchases'],
+                //'orders' => $totalOrdersCommissionBruto,
+                'products' => $payments['products']['total_commission'],
+                'salary' => $payments['salary']['salary_bruto'],
+                'services' => $payments['cars']['total_combined']
+            ],
+            'totales_netos' => [
+                //'sales' => $totalSalesNeto,
+                'tips' => $payments['tips']['tip_neto'],
+                'advances' => $payments['advances']['total_advance'],
+                'purchases' => $payments['workerPurchases']['total_purchases'],
+                //'orders' => $totalOrdersCommissionNeto,
+                'products' => $payments['products']['commission_neto'],
+                'salary' => $payments['salary']['salary_neto'],
+                'services' => $payments['cars']['total_neto']
+            ],
+            'retencion_total' => [
+                //'sales' => $totalSalesBruto - $totalSalesNeto,
+                'tips' => $payments['tips']['tip_neto'],
+                'advances' => $payments['advances']['total_advance'],
+                'purchases' => $payments['workerPurchases']['total_purchases'],
+                //'orders' => $totalOrdersCommissionBruto - $totalOrdersCommissionNeto,
+                'products' => $payments['products']['retention_amount'],
+                'salary' => $payments['salary']['retention_salary'],
+                'services' => $payments['cars']['total_neto']
+            ]
+        ]);
+        
+
+        return response()->json([
+            // Totales
+            //'total_sales' => round($totalSalesNeto, 2),
+            'total_tip_cashier' => $payments['tips']['tip_neto'],
+            'total_advance' => $payments['advances']['total_advance'],
+            'total_pruchase' => $payments['workerPurchases']['total_purchases'],
+            'salary' => $payments['salary']['salary_neto'],
+            'retention_salary' => $payments['salary']['retention_salary'],
+            //'total_orders' => round($totalOrdersCommissionNeto, 2),
+            'total_services' => $payments['cars']['total_neto'],
+            'retention_services' => $payments['cars']['retention_amount'],
+            'total_tip_car' => $payments['cars']['total_tips'],
+            'total' => $payments['totalNeto'],
+            'total_products' => $payments['products']['commission_neto'],
+            'total_retention_products' => $payments['products']['retention_amount'],
+
+            
+            // IDs
+            'sales_ids' => $payments['products']['sales_ids'],
+            'tip_ids' => $payments['tips']['tip_ids'],
+            'advance_ids' => $payments['advances']['advance_ids'],
+            'purchase_ids' => $payments['workerPurchases']['purchase_ids'],
+            'order_ids' => $payments['products']['order_ids'],
+            'car_ids' => $payments['cars']['car_ids'],
+        ], 200);
+
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
 
@@ -555,6 +672,306 @@ class OperationTipController extends Controller
         } catch (\Exception $e) {
             Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    //Métodos dashboard no Administrador
+    public function calculate(Request $request)
+    {
+        // Validación de entrada
+        $validator = Validator::make($request->all(), [
+            'professional_id' => [
+                'required',
+                'integer',
+                Rule::exists('professionals', 'id')
+            ],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')
+            ]
+        ], [
+            'professional_id.exists' => 'El profesional no existe',
+            'branch_id.exists' => 'La sucursal no existe'
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Validación fallida para cálculo de pagos', [
+                'errors' => $validator->errors()->all(),
+                'input' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $data = $validator->validated();
+            
+            Log::info('Iniciando cálculo de pagos', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id']
+            ]);
+
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $branch = Branch::where('id', $data['branch_id'])->first();
+
+            // Llamar al servicio
+            $result = $this->professionalPaymentService->calculatePayments($data);
+            
+            Log::info('Cálculo de pagos completado exitosamente', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id'],
+                'total_neto' => $result['total_neto'] ?? null
+            ]);
+
+            // Obtener el rango de fechas del mes anterior
+            $previousMonthStart = now()->subMonth()->startOfMonth();
+            $previousMonthEnd = now()->subMonth()->endOfMonth();
+            
+           // Consulta optimizada para pagos del mes anterior
+            /*$payments = ProfessionalPayment::where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->whereIn('type', ['Pago venta de Productos', 'Pago Comision de Propinas'])
+            ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
+            ->get(['id', 'amount', 'date', 'type']); // Asegúrate de incluir 'type' en el select
+
+            // Calcular totales usando colecciones
+            $paymentGroups = $payments->groupBy('type');
+
+            $totalProductPayments = $paymentGroups->get('Pago venta de Productos', collect())->sum('amount');
+            $totalTipPayments = $paymentGroups->get('Pago Comision de Propinas', collect())->sum('amount');*/
+            // 1. Pagos de Productos (de ProfessionalPayment)
+            $productPayments = ProfessionalPayment::where('professional_id', $data['professional_id'])
+                ->where('branch_id', $data['branch_id'])
+                ->where('type', 'Pago venta de Productos')
+                ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
+                ->get(['id', 'amount', 'date', 'type']);
+
+            $totalProductPayments = $productPayments->sum('amount');
+
+            // 2. Pagos de Propinas (de OperationTip)
+            $tipPayments = OperationTip::where('professional_id', $data['professional_id'])
+                ->where('branch_id', $data['branch_id'])
+                ->where('type', 'Pago Comision de Propinas')
+                ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
+                ->get(['id', 'amount', 'date']);
+
+            $totalTipPayments = $tipPayments->sum('amount');
+                        if (!$totalTipPayments) {
+                            $resultTips = $this->professionalPaymentService->calculateTipsLastMoth($data, $branch, $professional);
+                            $totalTipPayments = $resultTips['tip_neto'];
+                        }
+
+            $advances = $this->professionalPaymentService->calculateAdvancesDetails($data);
+
+            return response()->json(['payments' => $result, 'total_product_ant' => $totalProductPayments, 'total_tip_ant' => $totalTipPayments, 'advances' => $advances]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al calcular pagos', [
+                'professional_id' => $request->input('professional_id'),
+                'branch_id' => $request->input('branch_id'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al calcular los pagos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function professional_branch_products(Request $request)
+    {
+        // Validación de entrada
+        // Validación de entrada
+        $validator = Validator::make($request->all(), [
+            'professional_id' => [
+                'required',
+                'integer',
+                Rule::exists('professionals', 'id')
+            ],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')
+            ],
+            'startDate' => [
+                'nullable',
+                'date',
+                'date_format:Y-m-d',
+                'before_or_equal:endDate'
+            ],
+            'endDate' => [
+                'nullable',
+                'date',
+                'date_format:Y-m-d',
+                'after_or_equal:startDate'
+            ],
+            'charge' => [
+                'nullable',
+                'string',
+                Rule::exists('charges', 'name')
+            ]
+        ], [
+            'professional_id.exists' => 'El profesional no existe',
+            'branch_id.exists' => 'La sucursal no existe',
+            'charge.exists' => 'El cargo no existe',
+            'startDate.date' => 'La fecha de inicio debe ser una fecha válida',
+            'startDate.date_format' => 'La fecha de inicio debe tener el formato YYYY-MM-DD',
+            'startDate.before_or_equal' => 'La fecha de inicio debe ser anterior o igual a la fecha fin',
+            'endDate.date' => 'La fecha fin debe ser una fecha válida',
+            'endDate.date_format' => 'La fecha fin debe tener el formato YYYY-MM-DD',
+            'endDate.after_or_equal' => 'La fecha fin debe ser posterior o igual a la fecha de inicio'
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Validación fallida para cálculo de pagos', [
+                'errors' => $validator->errors()->all(),
+                'input' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $data = $validator->validated();
+            
+            Log::info('Mostrando datos de venta de productos', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id'],
+                'startDate' => $data['startDate'] ?? null,
+                'endDate' => $data['endDate'] ?? null,
+                'charge' => $data['charge'] ?? null
+            ]);
+
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $branch = Branch::where('id', $data['branch_id'])->first();
+            $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->first();
+            // Llamar al servicio
+            $result = $this->professionalPaymentService->calculateProductCommissionsWithDetails($data, $branchProfessional, $professional);
+            
+            
+
+            return response()->json(['products' => $result]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al mostrar datos de venta de productos', [
+                'professional_id' => $request->input('professional_id'),
+                'branch_id' => $request->input('branch_id'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del sistema',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function professional_branch_tips(Request $request)
+    {
+        // Validación de entrada
+        $validator = Validator::make($request->all(), [
+            'professional_id' => [
+                'required',
+                'integer',
+                Rule::exists('professionals', 'id')
+            ],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')
+            ],
+            'startDate' => [
+                'nullable',
+                'date',
+                'date_format:Y-m-d',
+                'before_or_equal:endDate'
+            ],
+            'endDate' => [
+                'nullable',
+                'date',
+                'date_format:Y-m-d',
+                'after_or_equal:startDate'
+            ],
+            'charge' => [
+                'nullable',
+                'string',
+                Rule::exists('charges', 'name')
+            ]
+        ], [
+            'professional_id.exists' => 'El profesional no existe',
+            'branch_id.exists' => 'La sucursal no existe',
+            'charge.exists' => 'El cargo no existe',
+            'startDate.date' => 'La fecha de inicio debe ser una fecha válida',
+            'startDate.date_format' => 'La fecha de inicio debe tener el formato YYYY-MM-DD',
+            'startDate.before_or_equal' => 'La fecha de inicio debe ser anterior o igual a la fecha fin',
+            'endDate.date' => 'La fecha fin debe ser una fecha válida',
+            'endDate.date_format' => 'La fecha fin debe tener el formato YYYY-MM-DD',
+            'endDate.after_or_equal' => 'La fecha fin debe ser posterior o igual a la fecha de inicio'
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Validación fallida para cálculo de pagos', [
+                'errors' => $validator->errors()->all(),
+                'input' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $data = $validator->validated();
+            
+            Log::info('Mostrando datos de comision de propinas', [
+                'professional_id' => $data['professional_id'],
+                'branch_id' => $data['branch_id'],
+                'startDate' => $data['startDate'] ?? null,
+                'endDate' => $data['endDate'] ?? null,
+                'charge' => $data['charge'] ?? null
+            ]);
+
+            $professional = Professional::where('id', $data['professional_id'])->first();
+            $branch = Branch::where('id', $data['branch_id'])->first();
+
+            // Llamar al servicio
+            $result = $this->professionalPaymentService->calculateTipsDetails($data, $branch, $professional);
+            
+            
+
+            return response()->json(['tips' => $result]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al mostrar datos de comision de propinas', [
+                'professional_id' => $request->input('professional_id'),
+                'branch_id' => $request->input('branch_id'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del sistema',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

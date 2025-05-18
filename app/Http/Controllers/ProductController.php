@@ -58,7 +58,8 @@ class ProductController extends Controller
                 'sale_price' => 'nullable',
                 'image_product' => 'nullable',
                 'product_category_id' => 'required|numeric',
-                'worker_discount' => 'nullable|numeric' // Cambiado de required a nullable
+                'worker_discount' => 'nullable|numeric', // Cambiado de required a nullable
+                'commission_rate' => 'nullable|numeric'
             ]);        
                 
             $product = new Product();            
@@ -71,6 +72,7 @@ class ProductController extends Controller
             $product->sale_price = $product_data['sale_price'];
             $product->product_category_id = $product_data['product_category_id'];
             $product->worker_discount = $product_data['worker_discount']?? 0; 
+            $product->commission_rate =  $product_data['commission_rate']?? 0;
             $product->save();
 
             $filename = "products/default.jpg";
@@ -453,7 +455,8 @@ class ProductController extends Controller
                 'sale_price' => 'nullable',
                 'image_product' => 'nullable',
                 'product_category_id' => 'required|numeric',
-                'worker_discount' => 'required|numeric'
+                'worker_discount' => 'required|numeric',
+                'commission_rate' => 'nullable|numeric',
             ]);
 
             $product = Product::find($product_data['id']);
@@ -475,6 +478,7 @@ class ProductController extends Controller
             $product->sale_price = $product_data['sale_price'];
             $product->product_category_id = $product_data['product_category_id'];
             $product->worker_discount = $product_data['worker_discount'];
+            $product->commission_rate =  $product_data['commission_rate']?? 0;
             $product->save();
 
             return response()->json(['msg' => 'Producto actualizado correctamente'], 200);

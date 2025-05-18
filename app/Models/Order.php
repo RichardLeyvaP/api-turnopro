@@ -34,6 +34,16 @@ class Order extends Model
         return $this->belongsTo(Product::class)->withTrashed();
     }
 
+    public function professional()
+    {
+        return $this->belongsTo(Professional::class)->withTrashed();
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     protected $casts = [
         'is_product' => 'integer',
         'price' => 'double',

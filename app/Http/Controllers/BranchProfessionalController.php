@@ -31,7 +31,7 @@ class BranchProfessionalController extends Controller
         }
     }
 
-    public function store(Request $request)
+    /*public function store(Request $request)
     {
         Log::info("Asignar professionals a una sucursal");
         Log::info($request);
@@ -54,6 +54,70 @@ class BranchProfessionalController extends Controller
             Log::error($th);
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al asignar el professional a esta sucursal'], 500);
+        }
+    }*/
+
+    public function store(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'ponderation' => 'nullable',
+                'limit' => 'nullable',
+                'mountpay' => 'nullable',
+                'salary' => 'nullable|numeric',
+                'tier1_min_sales' => 'required|integer|min:0',
+                'tier1_commission_rate' => 'required|numeric|min:0|max:100',
+                'tier2_min_sales' => 'required|integer|min:0',
+                'tier2_commission_rate' => 'required|numeric|min:0|max:100',
+                'tier3_min_sales' => 'required|integer|min:0',
+                'tier3_commission_rate' => 'required|numeric|min:0|max:100'
+            ]);
+
+            // Validación de secuencia de niveles (solo si no son cero)
+            if ($data['tier1_min_sales'] > 0 && $data['tier2_min_sales'] > 0) {
+                if ($data['tier1_min_sales'] >= $data['tier2_min_sales']) {
+                    return response()->json(['msg' => 'El piso del Nivel 1 debe ser menor al Nivel 2'], 422);
+                }
+            }
+
+            if ($data['tier2_min_sales'] > 0 && $data['tier3_min_sales'] > 0) {
+                if ($data['tier2_min_sales'] >= $data['tier3_min_sales']) {
+                    return response()->json(['msg' => 'El piso del Nivel 2 debe ser menor al Nivel 3'], 422);
+                }
+            }
+
+            $branch = Branch::find($data['branch_id']);
+            $professional = Professional::find($data['professional_id']);
+
+            $attachData = [
+                'ponderation' => $data['ponderation'],
+                'limit' => $data['limit'],
+                'mountpay' => $data['mountpay'],
+                'salary' => $data['salary'],
+                'tier1_min_sales' => $data['tier1_min_sales'],
+                'tier1_commission_rate' => $data['tier1_commission_rate'],
+                'tier2_min_sales' => $data['tier2_min_sales'],
+                'tier2_commission_rate' => $data['tier2_commission_rate'],
+                'tier3_min_sales' => $data['tier3_min_sales'],
+                'tier3_commission_rate' => $data['tier3_commission_rate']
+            ];
+
+            // Limpiar campos nulos
+            $attachData = array_filter($attachData, function($value) {
+                return $value !== null;
+            });
+
+            $branch->professionals()->attach($professional->id, $attachData);
+
+            DB::commit();
+            return response()->json(['msg' => 'Professional asignado correctamente a la sucursal'], 200);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            Log::error($th);
+            return response()->json(['msg' => 'Error al asignar el professional: ' . $th->getMessage()], 500);
         }
     }
 
@@ -111,7 +175,7 @@ class BranchProfessionalController extends Controller
         }
     }
     
-     public function branch_professionals(Request $request)
+    public function branch_professionals(Request $request)
     {
         try {
             Log::info("Dado una branch devuelve los professionales que trabajan en ella");
@@ -133,7 +197,14 @@ class BranchProfessionalController extends Controller
                     'name' => $branchprofessional['professional']['name'],
                     'image_url' => $branchprofessional['professional']['image_url'].'?$'.$now,
                     'charge' => $branchprofessional['professional']['charge']['name'],
-                ];
+                    'salary' => $branchprofessional['salary'],
+                    'tier1_min_sales' => $branchprofessional['tier1_min_sales'] ?? 0,
+                    'tier1_commission_rate' => $branchprofessional['tier1_commission_rate'] ?? 0,
+                    'tier2_min_sales' => $branchprofessional['tier2_min_sales'] ?? 0,
+                    'tier2_commission_rate' => $branchprofessional['tier2_commission_rate'] ?? 0,
+                    'tier3_min_sales' => $branchprofessional['tier3_min_sales'] ?? 0,
+                    'tier3_commission_rate' => $branchprofessional['tier3_commission_rate'] ?? 0,
+                    ];
             }
             return response()->json(['professionals' => $data], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
@@ -387,6 +458,26 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /*public function update(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'ponderation' => 'nullable',
+                'limit' => 'nullable',
+                'mountpay' => 'nullable',
+                'salary' => 'nullable|numeric'
+            ]);
+            $branch = Branch::find($data['branch_id']);
+            $professional = Professional::find($data['professional_id']);
+            $branch->professionals()->updateExistingPivot($professional->id, ['ponderation' => $data['ponderation'], 'limit' => $data['limit'], 'mountpay' => $data['mountpay'], 'salary' => $data['salary']]);
+            return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
+        }
+    }*/
     public function update(Request $request)
     {
         try {
@@ -395,18 +486,58 @@ class BranchProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'ponderation' => 'nullable',
                 'limit' => 'nullable',
-                'mountpay' => 'nullable'
+                'mountpay' => 'nullable',
+                'salary' => 'nullable|numeric',
+                'tier1_min_sales' => 'required|integer|min:0',
+                'tier1_commission_rate' => 'required|numeric|min:0|max:100',
+                'tier2_min_sales' => 'required|integer|min:0',
+                'tier2_commission_rate' => 'required|numeric|min:0|max:100',
+                'tier3_min_sales' => 'required|integer|min:0',
+                'tier3_commission_rate' => 'required|numeric|min:0|max:100'
             ]);
+
+            // Validación de secuencia de niveles (solo si no son cero)
+            if ($data['tier1_min_sales'] > 0 && $data['tier2_min_sales'] > 0) {
+                if ($data['tier1_min_sales'] >= $data['tier2_min_sales']) {
+                    return response()->json(['msg' => 'El piso del Nivel 1 debe ser menor al Nivel 2'], 400);
+                }
+            }
+
+            if ($data['tier2_min_sales'] > 0 && $data['tier3_min_sales'] > 0) {
+                if ($data['tier2_min_sales'] >= $data['tier3_min_sales']) {
+                    return response()->json(['msg' => 'El piso del Nivel 2 debe ser menor al Nivel 3'], 400);
+                }
+            }
+
             $branch = Branch::find($data['branch_id']);
             $professional = Professional::find($data['professional_id']);
-            $branch->professionals()->updateExistingPivot($professional->id, ['ponderation' => $data['ponderation'], 'limit' => $data['limit'], 'mountpay' => $data['mountpay']]);
-            return response()->json(['msg' => 'Professionals reasignado correctamente'], 200);
+            
+            $updateData = [
+                'ponderation' => $data['ponderation'],
+                'limit' => $data['limit'],
+                'mountpay' => $data['mountpay'],
+                'salary' => $data['salary'],
+                'tier1_min_sales' => $data['tier1_min_sales'],
+                'tier1_commission_rate' => $data['tier1_commission_rate'],
+                'tier2_min_sales' => $data['tier2_min_sales'],
+                'tier2_commission_rate' => $data['tier2_commission_rate'],
+                'tier3_min_sales' => $data['tier3_min_sales'],
+                'tier3_commission_rate' => $data['tier3_commission_rate']
+            ];
+
+            // Limpiar campos nulos
+            $updateData = array_filter($updateData, function($value) {
+                return $value !== null;
+            });
+
+            $branch->professionals()->updateExistingPivot($professional->id, $updateData);
+
+            return response()->json(['msg' => 'Professional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
+            return response()->json(['msg' => 'Error al actualizar el professional: ' . $th->getMessage()], 500);
         }
     }
-
     
      public function update_state_ANTERIOR(Request $request)
     {

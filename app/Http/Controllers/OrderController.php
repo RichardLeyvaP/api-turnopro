@@ -98,7 +98,30 @@ class OrderController extends Controller
 
             ]);
             $data['cant'] = 1;
+            $car = Car::find($data['car_id']);            
+            $branch = Branch::where('id', $request->branch_id)->first();
+            $user = Auth::user();
+            $professional_id = $user->professional ? $user->professional->id : null;
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
+                $productStore = ProductStore::find($data['product_id']);
+                $product = $productStore->product;
+                $category = $product->productCategory;
+                $percent_wint = $product->sale_price - $product->purchase_price;
+                
+                $commissionAmount = 0;
+                $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
+                
+                if ($category && $category->gives_commission && $commissionRate) {
+                    $commissionAmount = ($percent_wint * $commissionRate / 100) * $data['cant'];
+                }else {
+                    $commissionAmount = 0;
+                }
+                
+                // Agregar campos de comisión a los datos antes de crear la orden
+                $data['commission_rate'] = $commissionRate;
+                $data['commission_amount'] = $commissionAmount;
+                $data['professional_id'] = $professional_id;
+                $data['branch_id'] = $branch->id;
                 $order = $this->orderService->product_order_store($data);
              }
             if ($data['product_id'] == 0 && $data['type'] == 'service') {
@@ -189,8 +212,29 @@ class OrderController extends Controller
             $clientName = $car->clientProfessional->client->name;
             $user = Auth::user();
             $professionalName = $user->professional ? $user->professional->name : $user->name;
+            $professional_id = $user->professional ? $user->professional->id : null;
             $professionalImage = $user->professional->image_url?? 'professionals/default.jpg';
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
+                $productStore = ProductStore::find($data['product_id']);
+                $product = $productStore->product;
+                $category = $product->productCategory;
+                
+                $percent_wint = $product->sale_price - $product->purchase_price;
+                
+                $commissionAmount = 0;
+                $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
+                
+                if ($category && $category->gives_commission && $commissionRate) {
+                    $commissionAmount = ($percent_wint * $commissionRate / 100) * $data['cant'];
+                }else {
+                    $commissionAmount = 0;
+                }
+                
+                // Agregar campos de comisión a los datos antes de crear la orden
+                $data['commission_rate'] = $commissionRate;
+                $data['commission_amount'] = $commissionAmount;
+                $data['professional_id'] = $professional_id;
+                $data['branch_id'] = $branch->id;
                 $order = $this->orderService->product_order_store($data);
                 $trace = [
                     'branch' => $branch->name,

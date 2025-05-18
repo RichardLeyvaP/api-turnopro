@@ -285,7 +285,11 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/professional-payment-show-apk', [ProfessionalPaymentController::class, 'show_apk']);
     Route::get('/professional-payment-periodo', [ProfessionalPaymentController::class, 'show_periodo']);
     Route::post('/professional-payment', [ProfessionalPaymentController::class, 'store']);
+    Route::post('/professional-payment-update', [ProfessionalPaymentController::class, 'update']);
+    Route::post('/professional-payment-barbero', [ProfessionalPaymentController::class, 'store_barbero_payment']);
+    Route::post('/professional-payment-charge', [ProfessionalPaymentController::class, 'store_charge_payment']);
     Route::post('/professional-payment-cashier', [ProfessionalPaymentController::class, 'store_cashier']);
+    Route::post('/professional-payment-cashier-mounth', [ProfessionalPaymentController::class, 'store_cashier_payment']);
     Route::post('/professional-payment-destroy', [ProfessionalPaymentController::class, 'destroy']);
     Route::get('/branch-payment-show', [ProfessionalPaymentController::class, 'branch_payment_show']); //devolver de una branch los pagos realizado a los professionals
     Route::get('/professional-win-year', [ProfessionalPaymentController::class, 'professional_win_year']); //devolver las ganancias de un professional en un año dado
@@ -555,6 +559,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/product-category-show', [ProductCategoryController::class, 'show']);
     Route::post('/product-category', [ProductCategoryController::class, 'store']);
     Route::put('/product-category', [ProductCategoryController::class, 'update']);
+    Route::post('/product-category-update', [ProductCategoryController::class, 'update']);
     Route::post('/product-category-destroy', [ProductCategoryController::class, 'destroy']);
     Route::get('/category_branch', [ProductCategoryController::class, 'category_branch']); //devolver las categorías de lso productos que existen en una branch
     Route::get('/category-products-branch', [ProductCategoryController::class, 'category_products_branch']); //devolver las categorías con los productos que existen en una branch
@@ -715,6 +720,10 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/operation-tip-show', [OperationTipController::class, 'operation_tip_show']); //devolver de una branch los pagos realizado a los cajeros
     Route::get('/operation-tip-periodo', [OperationTipController::class, 'operation_tip_periodo']); //devolver de una branch los pagos realizado a los cajeros en un periodo dado
     Route::get('/cashier-car-notpay', [OperationTipController::class, 'cashier_car_notpay']); //Detalles del carro y cajero(a)s
+    Route::post('/cashier-car-salary', [OperationTipController::class, 'cashier_car_salary_notpay']); //Detalles del carro y cajero(a)s
+    Route::post('/calculate-payments', [OperationTipController::class, 'calculate']); //Ruta para dashboar de cajeros
+    Route::get('/professional-branch-products', [OperationTipController::class, 'professional_branch_products']); //Ruta para Ver los productos vendidos por periodos
+    Route::get('/professional-branch-tips', [OperationTipController::class, 'professional_branch_tips']); //Ruta para Ver los productos vendidos por periodos
 
     //Assistant
     Route::get('/professional-branch-notif-queque', [AssistantController::class, 'professional_branch_notif_queque']); //dado un professional devolver la cola del dia y las notificaciones
@@ -750,7 +759,9 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/get-combined-data', [AdvanceController::class, 'getCombinedData']);
     Route::post('/advance', [AdvanceController::class, 'store']);
     Route::post('/advance-update', [AdvanceController::class, 'update']);
+    Route::post('/advance-update-amount', [AdvanceController::class, 'update_amount']);
     Route::post('/advance-update-admin', [AdvanceController::class, 'update_admin']);
+    Route::post('/advance-destroy', [AdvanceController::class, 'destroy']);
 
     //Worker_purchase
     //Route::get('/advance-branch-pendents', [AdvanceController::class, 'branchPendentAdvances']);
