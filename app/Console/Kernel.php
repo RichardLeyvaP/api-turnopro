@@ -184,7 +184,7 @@ class Kernel extends ConsoleKernel
         })->dailyAt('02:00'); // tarea a las 02:00 AM
 
         // Definir la quinta tarea-correo de cierre de caja mensual
-        $schedule->call(function () {
+        /*$schedule->call(function () {
             $codigoGlobal = $this->codigoGlobal;
          //   Log::info('Iniciando la quinta tarea programada.correo de cierre de caja mensual');
             // Crear un cliente HTTP
@@ -202,8 +202,26 @@ class Kernel extends ConsoleKernel
             } catch (Exception $e) {
              //   Log::error('Excepción al hacer la solicitud a /closebox-month: ' . $e->getMessage());
             }
-        })->monthlyOn(1, '04:00'); // Tarea mensual el día 1 a las 4:00 AM
+        })->monthlyOn(1, '04:00'); // Tarea mensual el día 1 a las 4:00 AM*/
+        $schedule->call(function () {
+            $codigoGlobal = $this->codigoGlobal;
+            // Log::info('Iniciando la quinta tarea programada.correo de cierre de caja mensual');
+            // Crear un cliente HTTP
+            $client = new Client();
+            try {
+                // Hacer una solicitud GET a la tercera ruta completa de la API
+                $response = $client->get('https://api2.simplifies.cl/api/payment-utomatically?codigo=' . urlencode($codigoGlobal));
 
+                // Verificar la respuesta
+                if ($response->getStatusCode() == 200) {
+                    // Log::info('La solicitud a /closebox-month se ejecutó correctamente.');
+                } else {
+                    // Log::error('Error al ejecutar la solicitud a /closebox-month: ' . $response->getStatusCode());
+                }
+            } catch (Exception $e) {
+                // Log::error('Excepción al hacer la solicitud a /closebox-month: ' . $e->getMessage());
+            }
+        })->lastDayOfMonth()->at('23:00');
 
         //
         //

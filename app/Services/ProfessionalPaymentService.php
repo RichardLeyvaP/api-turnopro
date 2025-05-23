@@ -311,8 +311,8 @@ class ProfessionalPaymentService
             $totalCommission += $transactionCommission;
             $commissionDetails[] = $transactionDetails;
         }
-
-        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $retentionRate = $professional->retention ?? 0;
+        $retentionAmount = $totalCommission * ($retentionRate / 100);
         $commissionAfterRetention = $totalCommission - $retentionAmount;
 
         return [
@@ -330,6 +330,7 @@ class ProfessionalPaymentService
 
     protected function calculateTips(array $data, $branch, $professional): array
     {
+
         $tipIds = Trace::where('branch', $branch->name)
             ->where('cashier', $professional->name)
             ->where('operation', 'Paga Carro')
@@ -364,6 +365,7 @@ class ProfessionalPaymentService
 
     public function calculateAdvances(array $data): array
     {
+        Log::info('Adelantos');
         $advancesQuery = Advance::where('branch_id', $data['branch_id'])
             ->where('professional_id', $data['professional_id'])
             ->whereIn('status', ['Pagado'])
@@ -815,8 +817,8 @@ class ProfessionalPaymentService
             $totalCommission += $transactionCommission;
             $commissionDetails[] = $transactionDetails;
         }
-
-        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $retentionRate = $professional->retention ?? 0;
+        $retentionAmount = $totalCommission * ($retentionRate / 100);
         $commissionAfterRetention = $totalCommission - $retentionAmount;
 
         return [
@@ -1084,8 +1086,8 @@ class ProfessionalPaymentService
             $totalCommission += $transactionCommission;
             $commissionDetails[] = $transactionDetails;
         }
-
-        $retentionAmount = $totalCommission * ($professional->retention / 100);
+        $retentionRate = $professional->retention ?? 0;
+        $retentionAmount = $totalCommission * ($retentionRate / 100);
         $commissionAfterRetention = $totalCommission - $retentionAmount;
 
         return [
@@ -1104,6 +1106,7 @@ class ProfessionalPaymentService
 
     public function getWorkerPurchases(array $data): array
     {
+        Log::info('Compra de productos');
         $purchasesQuery = WorkerPurchase::where('branch_id', $data['branch_id'])
             ->where('professional_id', $data['professional_id'])
             ->where('status', 1) // Status 1 indica compras aprobadas/pagadas
@@ -1125,6 +1128,7 @@ class ProfessionalPaymentService
 
     public function getServiceEarnings(array $data, ?float $retention = null): array
     {
+        Log::info('Ganancias de prestación de servicios');
         // Obtener carros no pagados aún
         $cars = Car::with(['reservation', 'clientProfessional'])
             ->where('professional_payment_id', null)
@@ -1272,6 +1276,9 @@ class ProfessionalPaymentService
 
     public function processPayment(array $data)
     {
+        $data['paymentDate'] = isset($data['paymentDate']) 
+        ? Carbon::parse($data['paymentDate']) 
+        : Carbon::now();
         return DB::transaction(function () use ($data) {
             $professional = Professional::findOrFail($data['professional_id']);
             
@@ -1302,7 +1309,7 @@ class ProfessionalPaymentService
     {
         if (!empty($data['payments']['workerPurchases']['purchase_ids'])) {
             WorkerPurchase::whereIn('id', $data['payments']['workerPurchases']['purchase_ids'])
-                        ->update(['discount_date' => Carbon::now()]);
+                        ->update(['discount_date' => $data['paymentDate']]);
         }
     }
 
@@ -1310,7 +1317,7 @@ class ProfessionalPaymentService
     {
         if (!empty($data['payments']['advances']['advance_ids'])) {
             Advance::whereIn('id', $data['payments']['advances']['advance_ids'])
-                        ->update(['discount_date' => Carbon::now()]);
+                        ->update(['discount_date' => $data['paymentDate']]);
         }
     }
 
@@ -1324,7 +1331,7 @@ class ProfessionalPaymentService
         $professionalPayment = new ProfessionalPayment();
         $professionalPayment->branch_id = $data['branch_id'];
         $professionalPayment->professional_id = $data['professional_id'];
-        $professionalPayment->date = Carbon::now();
+        $professionalPayment->date = $data['paymentDate'];
         $professionalPayment->amount = $data['payments']['products']['commission_neto'];
         $professionalPayment->type = 'Bono productos';
         $professionalPayment->cant = $data['payments']['products']['total_products_sold'];
@@ -1333,7 +1340,7 @@ class ProfessionalPaymentService
         $retention = new Retention();
         $retention->branch_id = $data['branch_id'];
         $retention->professional_id = $data['professional_id'];
-        $retention->data = Carbon::now();
+        $retention->data = $data['paymentDate'];
         $retention->retention = $data['payments']['products']['retention_amount'];
         $retention->type = 'Products';
         $retention->save();
@@ -1363,7 +1370,7 @@ class ProfessionalPaymentService
         $finance->branch_id = $data['branch_id'];
         $finance->type = 'Sucursal';
         $finance->expense_id = 5;
-        $finance->data = Carbon::now();
+        $finance->data = $data['paymentDate'];
         $finance->professional_payment_id = $professionalPayment->id;
         $finance->file = '';
         $finance->save();
@@ -1381,7 +1388,7 @@ class ProfessionalPaymentService
         $operationTip = new OperationTip();
         $operationTip->branch_id = $data['branch_id'];
         $operationTip->professional_id = $data['professional_id'];
-        $operationTip->date = Carbon::now();
+        $operationTip->date = $data['paymentDate'];
         $operationTip->amount = $data['payments']['tips']['tip_neto'];
         $operationTip->type = 'Pago Comision de Propinas';
         $operationTip->coffe_percent = $data['payments']['tips']['tip_neto'];
@@ -1408,7 +1415,7 @@ class ProfessionalPaymentService
         $finance->branch_id = $data['branch_id'];
         $finance->type = 'Sucursal';
         $finance->expense_id = 4;
-        $finance->data = Carbon::now(); 
+        $finance->data = $data['paymentDate']; 
         $finance->operation_tip_id = $operationTip->id;               
         $finance->file = '';
         $finance->save();
@@ -1424,7 +1431,7 @@ class ProfessionalPaymentService
         $professionalPaymentSalary = new ProfessionalPayment();
         $professionalPaymentSalary->branch_id = $data['branch_id'];
         $professionalPaymentSalary->professional_id = $data['professional_id'];
-        $professionalPaymentSalary->date = Carbon::now();
+        $professionalPaymentSalary->date = $data['paymentDate'];
         $professionalPaymentSalary->amount = $data['payments']['totalNetoPay'];
         $professionalPaymentSalary->type = 'Mes';
         $professionalPaymentSalary->save();
@@ -1453,7 +1460,7 @@ class ProfessionalPaymentService
         $finance->branch_id = $data['branch_id'];
         $finance->type = 'Sucursal';
         $finance->expense_id = 4;
-        $finance->data = Carbon::now();                
+        $finance->data = $data['paymentDate'];                
         $finance->file = '';
         $finance->professional_payment_id = $professionalPaymentSalary->id;               
         $finance->save();
@@ -1469,7 +1476,7 @@ class ProfessionalPaymentService
         $professionalPaymentBarbero = new ProfessionalPayment();
         $professionalPaymentBarbero->branch_id = $data['branch_id'];
         $professionalPaymentBarbero->professional_id = $data['professional_id'];
-        $professionalPaymentBarbero->date = Carbon::now();
+        $professionalPaymentBarbero->date = $data['paymentDate'];
         $professionalPaymentBarbero->amount = $data['payments']['totalNetoPay'];
         $professionalPaymentBarbero->type = "Mes";
         $professionalPaymentBarbero->save();
@@ -1494,7 +1501,7 @@ class ProfessionalPaymentService
         $finance->branch_id = $data['branch_id'];
         $finance->type = 'Sucursal';
         $finance->expense_id = 4;
-        $finance->data = Carbon::now();                
+        $finance->data = $data['paymentDate'];                
         $finance->file = '';
         $finance->professional_payment_id = $professionalPaymentBarbero->id;
         $finance->save();

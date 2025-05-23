@@ -80,7 +80,7 @@ class ProductStoreController extends Controller
             } else {
                 $stores = Store::all('id', 'address', 'reference');
             }
-            $products = Product::all('id', 'name', 'image_product', 'purchase_price');
+            $products = Product::all('id', 'name', 'image_product', 'purchase_price', 'sale_price');
             $branches = Branch::where('business_id', $data['business_id'])->select('id', 'name', 'image_data', 'address')->get();
             return response()->json([
                 'stores' => $stores,

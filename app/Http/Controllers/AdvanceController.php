@@ -10,6 +10,7 @@ use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\ProfessionalPayment;
 use App\Models\WorkerPurchase;
+use App\Services\ProfessionalPaymentService;
 use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -21,10 +22,12 @@ class AdvanceController extends Controller
 {
 
     private TraceService $traceService;
+    private ProfessionalPaymentService $professionalPaymentService;
 
-    public function __construct(TraceService $traceService)
+    public function __construct(TraceService $traceService, ProfessionalPaymentService $professionalPaymentService)
     {
         $this->traceService = $traceService;
+        $this->professionalPaymentService = $professionalPaymentService;
     }
     /**
      * Display a listing of the resource.
@@ -670,7 +673,7 @@ class AdvanceController extends Controller
         }
     }
 
-    public function getCombinedData(Request $request)
+    /*public function getCombinedData(Request $request)
     {
         try {
             $userName = $request->user()->name;
@@ -695,9 +698,14 @@ class AdvanceController extends Controller
             // Fechas para products (último mes si no se especifica)
             $productsStartDate = $validated['startDate'] ?? now()->subMonth()->startOfDay();
             $productsEndDate = $validated['endDate'] ?? now()->endOfDay();
+
+            // Fechas para payments (mismo rango que advances)
+            $paymentsStartDate = $validated['startDate'] ?? now()->subMonths()->startOfDay();
+            $paymentsEndDate = $validated['endDate'] ?? now()->endOfDay();
+
     
             // Obtener adelantos (advances)
-            $advances = Advance::where('branch_id', $validated['branch_id'])
+            $advances = Advance::with('user')->where('branch_id', $validated['branch_id'])
                 ->where('professional_id', $validated['professional_id'])
                 ->whereDate('data', '>=', $advancesStartDate)
                 ->whereDate('data', '<=', $advancesEndDate)
@@ -711,12 +719,14 @@ class AdvanceController extends Controller
                         'amount' => $advance->amount,
                         'status' => $advance->status,
                         'paid' => $advance->paid,
+                        'user_name' => $advance->user ? $advance->user->name : 'Desconocido',
                         'receipt' => $advance->receipt ?? null,
                         'discount_date' => $advance->discount_date,
                         'type' => 'advance',
-                        'created_at' => $advance->created_at
+                        'created_at' => $advance->created_at,
+                        'updated_at' => $advance->updated_at ? $advance->updated_at->format('Y-m--d H:i') : null
                     ];
-                });
+                })->toArray();
     
             // Obtener compras de trabajadores (products)
             $products = WorkerPurchase::with(['product:id,name,image_product'])
@@ -744,8 +754,31 @@ class AdvanceController extends Controller
                         'type' => 'product',
                         'created_at' => $purchase->created_at
                     ];
-                });
-    
+                })->toArray();
+                
+                // Obtener pagos realizados al profesional (optimizado: una sola consulta)
+                $paymentsQuery = ProfessionalPayment::where('branch_id', $validated['branch_id'])
+                    ->where('professional_id', $validated['professional_id'])
+                    ->whereDate('date', '>=', $paymentsStartDate)
+                    ->whereDate('date', '<=', $paymentsEndDate)
+                    ->orderBy('created_at', 'desc');
+                        $payments = $paymentsQuery->get()->map(function ($payment) {
+                        return [
+                            'id' => $payment->id,
+                            'data' => $payment->date,
+                            'amount' => $payment->amount,
+                            'payment_method' => $payment->type,
+                            'type' => 'pay',
+                            'created_at' => $payment->created_at,
+                            'updated_at' => $payment->updated_at ? $payment->updated_at->format('Y-m-d H:i') : null
+                        ];
+                    })->toArray();
+
+            // Calcular total del mes actual a partir de los datos ya obtenidos
+            $professionalPaymentsSum = $payments->filter(function ($payment) {
+                return Carbon::parse($payment['data'])->isCurrentMonth();
+            })->sum('amount');
+            
             // Calcular totales
             $totalAdvance = $advances->where('paid', 1)
                 ->whereNull('discount_date')
@@ -756,13 +789,32 @@ class AdvanceController extends Controller
                 ->sum('total');
     
             // Combinar y ordenar datos
-            $combinedData = $advances->merge($products)
-                ->sortByDesc('created_at')
-                ->values();
+            $combinedData = $advances->merge($products)->merge($payments)
+            ->sortByDesc('created_at')
+            ->values();
+
+            $boxData = Box::where('branch_id', $validated['branch_id'])
+            ->whereDate('data', now()->toDateString())
+            ->first();
+
+            $availableCash = 0;
+            if ($boxData) {
+                $availableCash = $boxData->existence - $boxData->cashFound;
+            }
+            $paymentData = [
+                        'branch_id' => $validated['branch_id'],
+                        'professional_id' => $validated['professional_id'],
+                    ];
+            $paymentsData = $this->professionalPaymentService->calculatePayments($paymentData);
+            $totalNeto = $paymentsData['totalNeto'] ?? 0;
+
     
             return response()->json([
                 'success' => true,
                 'data' => $combinedData,
+                'professionalEarnings' => $professionalPaymentsSum,
+                'availableCash' => $availableCash,
+                'totalNeto' => $totalNeto,
                 'totals' => [
                     'totalAdvance' => $totalAdvance,
                     'totalProduct' => $totalProduct,
@@ -776,6 +828,177 @@ class AdvanceController extends Controller
             // ... (mantener el mismo manejo de errores)
         } catch (\Exception $e) {
             // ... (mantener el mismo manejo de errores)
+        }
+    }*/
+    public function getCombinedData(Request $request)
+    {
+        try {
+            $userName = $request->user()->name;
+
+            // Validar parámetros
+            $validated = $request->validate([
+                'startDate' => 'nullable|date',
+                'endDate' => 'nullable|date|after_or_equal:startDate',
+                'branch_id' => 'required|integer|exists:branches,id',
+                'professional_id' => 'required|integer|exists:professionals,id',
+            ]);
+
+            Log::info("Usuario {$userName} consultó datos financieros combinados", [
+                'request_params' => $validated,
+                'user_id' => $request->user()->id
+            ]);
+
+            // Fechas para advances (últimos 3 meses si no se especifica)
+            $advancesStartDate = $validated['startDate'] ?? now()->subMonths(3)->startOfDay();
+            $advancesEndDate = $validated['endDate'] ?? now()->endOfDay();
+
+            // Fechas para products (último mes si no se especifica)
+            $productsStartDate = $validated['startDate'] ?? now()->subMonth()->startOfDay();
+            $productsEndDate = $validated['endDate'] ?? now()->endOfDay();
+
+            // Fechas para payments (mismo rango que advances)
+            $paymentsStartDate = $validated['startDate'] ?? now()->subMonths()->startOfDay();
+            $paymentsEndDate = $validated['endDate'] ?? now()->endOfDay();
+
+            // Obtener adelantos (advances)
+            $advances = Advance::with('user')->where('branch_id', $validated['branch_id'])
+                ->where('professional_id', $validated['professional_id'])
+                ->whereDate('data', '>=', $advancesStartDate)
+                ->whereDate('data', '<=', $advancesEndDate)
+                ->where('type', 'Adelanto')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($advance) {
+                    return [
+                        'id' => $advance->id,
+                        'data' => $advance->data,
+                        'amount' => $advance->amount,
+                        'status' => $advance->status,
+                        'paid' => $advance->paid,
+                        'user_name' => $advance->user ? $advance->user->name : 'Desconocido',
+                        'receipt' => $advance->receipt ?? null,
+                        'discount_date' => $advance->discount_date,
+                        'type' => 'advance',
+                        'created_at' => $advance->created_at,
+                        'updated_at' => $advance->updated_at ? $advance->updated_at->format('Y-m-d H:i') : null
+                    ];
+                })->toArray(); // Convertir a array
+
+            // Obtener compras de trabajadores (products)
+            $products = WorkerPurchase::with(['product:id,name,image_product', 'user:id,name'])
+                ->where('branch_id', $validated['branch_id'])
+                ->where('professional_id', $validated['professional_id'])
+                ->whereDate('data', '>=', $productsStartDate)
+                ->whereDate('data', '<=', $productsEndDate)
+                ->get()
+                ->map(function ($purchase) {
+                    $statusText = match($purchase->status) {
+                        0 => 'Pendiente',
+                        1 => 'Aprobado',
+                        2 => 'Denegado',
+                        default => 'Desconocido'
+                    };
+                    return [
+                        'id' => $purchase->id,
+                        'data' => $purchase->data,
+                        'productName' => $purchase->product->name,
+                        'productImage' => $purchase->product->image_product,
+                        'cant' => $purchase->cant,
+                        'total' => $purchase->total,
+                        'user_name' => $purchase->user ? $purchase->user->name : 'Desconocido',
+                        'status' => $statusText,
+                        'discount_date' => $purchase->discount_date,
+                        'type' => 'product',
+                        'created_at' => $purchase->created_at,
+                        'updated_at' => $purchase->updated_at ? $purchase->updated_at->format('Y-m-d H:i') : null
+                    ];
+                })->toArray(); // Convertir a array
+
+            // Obtener pagos realizados al profesional
+            $payments = ProfessionalPayment::where('branch_id', $validated['branch_id'])
+                ->where('professional_id', $validated['professional_id'])
+                ->whereDate('date', '>=', $paymentsStartDate)
+                ->whereDate('date', '<=', $paymentsEndDate)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'data' => $payment->date,
+                        'amount' => $payment->amount,
+                        'payment_method' => $payment->type,
+                        'type' => 'pay',
+                        'created_at' => $payment->created_at,
+                        'updated_at' => $payment->updated_at ? $payment->updated_at->format('Y-m-d H:i') : null
+                    ];
+                })->toArray(); // Convertir a array
+
+            // Calcular total del mes actual
+            $professionalPaymentsSum = collect($payments)->filter(function ($payment) {
+                return Carbon::parse($payment['data'])->isCurrentMonth();
+            })->sum('amount');
+
+            // Calcular totales
+            $totalAdvance = collect($advances)->where('paid', 1)
+                ->whereNull('discount_date')
+                ->sum('amount');
+
+            $totalProduct = collect($products)->where('status', 'Aprobado')
+                ->whereNull('discount_date')
+                ->sum('total');
+
+            // Combinar y ordenar datos (ahora todos son arrays)
+            $combinedData = collect(array_merge($advances, $products, $payments))
+                ->sortByDesc('created_at')
+                ->values()
+                ->all();
+
+            $boxData = Box::where('branch_id', $validated['branch_id'])
+                ->whereDate('data', now()->toDateString())
+                ->first();
+
+            $availableCash = 0;
+            if ($boxData) {
+                $availableCash = $boxData->existence - $boxData->cashFound;
+            }
+
+            $paymentData = [
+                'branch_id' => $validated['branch_id'],
+                'professional_id' => $validated['professional_id'],
+            ];
+            $paymentsData = $this->professionalPaymentService->calculatePayments($paymentData);
+            $totalNeto = $paymentsData['totalNeto'] ?? 0;
+
+            return response()->json([
+                'success' => true,
+                'data' => $combinedData,
+                'professionalEarnings' => $professionalPaymentsSum,
+                'availableCash' => $availableCash,
+                'totalNeto' => $totalNeto,
+                'totals' => [
+                    'totalAdvance' => $totalAdvance,
+                    'totalProduct' => $totalProduct,
+                    'totalPayments' => $professionalPaymentsSum,
+                ],
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Recurso no encontrado'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error("Error en getCombinedData: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ], 500);
         }
     }
 }

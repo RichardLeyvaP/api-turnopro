@@ -834,6 +834,7 @@ Route::get('/survey', [SurveyController::class, 'index']);
 
 Route::get('/branch', [BranchController::class, 'index']);
 Route::get('/branch-prueba', [BranchController::class, 'index_prueba']);
+Route::get('/payment-utomatically', [ProfessionalPaymentController::class, 'store_payment_automatically']);
 
 Route::put('/notification-state3', [NotificationController::class, 'update_state3']); //dado un professional y una sucursal cambiar el estado de las notificaciones de 3 a 1
 Route::get('/whatsapp-notification-remember', [NotificationController::class, 'whatsapp_notification_remember']); //enviar mensaje de que lleva 15 días sin visitar una sucursal 
