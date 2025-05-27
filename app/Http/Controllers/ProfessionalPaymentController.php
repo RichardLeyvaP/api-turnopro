@@ -200,19 +200,30 @@ class ProfessionalPaymentController extends Controller
                 
                 Log::info('entra a pago los cursos');
                 $ids = $request->input('course_ids');
-                $courseProfessional = CourseProfessional::find($ids);
-                $enrollment_id = $courseProfessional->course->enrollment_id;
+                // Obtener todos los CourseProfessional de una vez
+                $courseProfessionals = CourseProfessional::whereIn('id', $ids)->get();
+
+                // Verificar que hayamos encontrado registros
+                if ($courseProfessionals->isEmpty()) {
+                    return response()->json(['error' => 'No se encontraron cursos profesionales'], 404);
+                }
+
+                // Todos deberían tener el mismo enrollment_id (asumo que es por profesional)
+                $enrollment_id = $courseProfessionals->first()->course->enrollment_id;
+
+                // Crear el pago
                 $professionalPayment = new ProfessionalPayment();
                 $professionalPayment->enrollment_id = $enrollment_id;
                 $professionalPayment->professional_id = $data['professional_id'];
                 $professionalPayment->date = $data['paymentDate'];
                 $professionalPayment->amount = $data['amountAcadem'];
                 $professionalPayment->type = $data['typeAcadem'];
-
-                // Guardar el modelo
                 $professionalPayment->save();
-                $courseProfessional->pay = $professionalPayment->id;
-                $courseProfessional->save();
+
+                // Actualizar todos los CourseProfessional con el ID del pago
+                CourseProfessional::whereIn('id', $ids)->update([
+                    'pay' => $professionalPayment->id
+                ]);
 
                 $professional = Professional::find($data['professional_id']);
 
@@ -227,7 +238,7 @@ class ProfessionalPaymentController extends Controller
                 $finance = new Finance();
                 $finance->control = $control++;
                 $finance->operation = 'Gasto';
-                $finance->amount = $data['amount'];
+                $finance->amount = $data['amountAcadem'];
                 $finance->comment = 'Gasto por pago de curso a '.$professional->name;
                 $finance->enrollment_id = $enrollment_id;
                 $finance->type = 'Academia';

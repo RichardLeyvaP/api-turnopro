@@ -265,30 +265,33 @@ class WorkerPurchaseController extends Controller
                 'professional_id' => 'required|integer|exists:professionals,id',
                 'products' => 'required|array|min:1',
                 'products.*.id' => 'required|integer|exists:product_store,id',
-                'products.*.cant' => 'required|integer|min:1'
+                'products.*.cant' => 'sometimes|integer|min:1' // Cambiado de required a sometimes
             ]);
 
             $workerPurchases = [];
             $branch = Branch::where('id', $validatedData['branch_id'])->first();
             $professional = Professional::where('id', $validatedData['professional_id'])->first();
+            
             // Validar stock primero (preventivo)
             foreach ($validatedData['products'] as $item) {
+                $cant = $item['cant'] ?? 1; // Establecer valor por defecto 1 si no viene
                 $productStore = ProductStore::find($item['id']);
-                if ($productStore->product_exit < $item['cant']) {
+                if ($productStore->product_exit < $cant) {
                     throw new \Exception("No hay suficiente stock para el producto ID: {$productStore->product_id}");
                 }
             }
 
             // Procesar cada producto
             foreach ($validatedData['products'] as $item) {
+                $cant = $item['cant'] ?? 1; // Establecer valor por defecto 1 si no viene
                 $productStore = ProductStore::with('product')->find($item['id']);
                 $product = $productStore->product;
 
                 // Calcular valores
                 $worker_discount = $product->worker_discount ?? 10;
                 $discounted_price = $product->sale_price * (1 - ($worker_discount / 100));
-                $total = $discounted_price * $item['cant'];
-                $percent_wint = ($discounted_price - $product->purchase_price) * $item['cant'];
+                $total = $discounted_price * $cant;
+                $percent_wint = ($discounted_price - $product->purchase_price) * $cant;
 
                 $workerPurchase = new WorkerPurchase();
                 $workerPurchase->branch_id = $validatedData['branch_id'];
@@ -297,7 +300,7 @@ class WorkerPurchaseController extends Controller
                 $workerPurchase->data = Carbon::now();
                 $workerPurchase->price = $product->sale_price;
                 $workerPurchase->discount = $worker_discount;
-                $workerPurchase->cant = $item['cant'];
+                $workerPurchase->cant = $cant;
                 $workerPurchase->total = $total;
                 $workerPurchase->percent_wint = $percent_wint;
                 $workerPurchase->status = 0; // Pendiente por defecto
@@ -306,7 +309,7 @@ class WorkerPurchaseController extends Controller
                 $notification = new Notification();
                 $notification->professional_id = $validatedData['professional_id'];
                 $notification->tittle = 'Solicitud de Compra de producto';
-                $notification->description = 'Profesional ' . $professional->name . ' solicita comprar' . $item['cant'] . $product->name;
+                $notification->description = 'Profesional ' . $professional->name . ' solicita comprar ' . $cant . ' ' . $product->name;
                 $notification->type = 'Cajera';
                 $branch->notifications()->save($notification);
 

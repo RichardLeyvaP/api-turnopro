@@ -861,7 +861,7 @@ class AdvanceController extends Controller
             $paymentsEndDate = $validated['endDate'] ?? now()->endOfDay();
 
             // Obtener adelantos (advances)
-            $advances = Advance::with('user')->where('branch_id', $validated['branch_id'])
+            $advances = Advance::with('user.professional')->where('branch_id', $validated['branch_id'])
                 ->where('professional_id', $validated['professional_id'])
                 ->whereDate('data', '>=', $advancesStartDate)
                 ->whereDate('data', '<=', $advancesEndDate)
@@ -875,17 +875,20 @@ class AdvanceController extends Controller
                         'amount' => $advance->amount,
                         'status' => $advance->status,
                         'paid' => $advance->paid,
-                        'user_name' => $advance->user ? $advance->user->name : 'Desconocido',
+                        'user_name' => $advance->user && $advance->user->professional 
+                         ? $advance->user->professional->name 
+                         : 'Desconocido',
                         'receipt' => $advance->receipt ?? null,
                         'discount_date' => $advance->discount_date,
                         'type' => 'advance',
                         'created_at' => $advance->created_at,
-                        'updated_at' => $advance->updated_at ? $advance->updated_at->format('Y-m-d H:i') : null
+                        'updated_at' => $advance->updated_at ? $advance->updated_at->format('Y-m-d') : "",
+                        'time' => $advance->updated_at ? $advance->updated_at->format('H:i') : ""
                     ];
                 })->toArray(); // Convertir a array
 
             // Obtener compras de trabajadores (products)
-            $products = WorkerPurchase::with(['product:id,name,image_product', 'user:id,name'])
+            $products = WorkerPurchase::with(['product:id,name,image_product', 'user.professional'])
                 ->where('branch_id', $validated['branch_id'])
                 ->where('professional_id', $validated['professional_id'])
                 ->whereDate('data', '>=', $productsStartDate)
@@ -905,12 +908,15 @@ class AdvanceController extends Controller
                         'productImage' => $purchase->product->image_product,
                         'cant' => $purchase->cant,
                         'total' => $purchase->total,
-                        'user_name' => $purchase->user ? $purchase->user->name : 'Desconocido',
+                        'user_name' => $purchase->user && $purchase->user->professional 
+                         ? $purchase->user->professional->name 
+                         : 'Desconocido',
                         'status' => $statusText,
                         'discount_date' => $purchase->discount_date,
                         'type' => 'product',
                         'created_at' => $purchase->created_at,
-                        'updated_at' => $purchase->updated_at ? $purchase->updated_at->format('Y-m-d H:i') : null
+                        'updated_at' => $purchase->updated_at ? $purchase->updated_at->format('Y-m-d') : "",
+                        'time' => $purchase->updated_at ? $purchase->updated_at->format('H:i') : ""
                     ];
                 })->toArray(); // Convertir a array
 
@@ -929,7 +935,8 @@ class AdvanceController extends Controller
                         'payment_method' => $payment->type,
                         'type' => 'pay',
                         'created_at' => $payment->created_at,
-                        'updated_at' => $payment->updated_at ? $payment->updated_at->format('Y-m-d H:i') : null
+                        'updated_at' => $payment->updated_at ? $payment->updated_at->format('Y-m-d') : "",
+                        'time' => $payment->updated_at ? $payment->updated_at->format('H:i') : ""
                     ];
                 })->toArray(); // Convertir a array
 
@@ -971,7 +978,9 @@ class AdvanceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $combinedData,
+                'data' => $advances,
+                'payments' => $payments,
+                'products' => $products,
                 'professionalEarnings' => $professionalPaymentsSum,
                 'availableCash' => $availableCash,
                 'totalNeto' => $totalNeto,

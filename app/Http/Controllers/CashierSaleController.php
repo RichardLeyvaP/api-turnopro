@@ -77,15 +77,13 @@ class CashierSaleController extends Controller
                 'gives_commission' => $category ? $category->gives_commission : null,
                 'commission_rate' => $product ? $product->commission_rate : null
             ]);
-            if ($category && $category->gives_commission && $commissionRate) {
-                $commissionAmount = ($percent_wint * $commissionRate / 100) * $validatedData['cant'];
+            if ($category && $category->gives_commission) {
+                $commissionAmount = $percent_wint * $validatedData['cant'];
                 Log::info('Cálculo de comisión:', [
                     'commission_rate' => $commissionRate,
                     'commission_amount' => $commissionAmount,
                     'quantity' => $validatedData['cant']
                 ]);
-            }else {
-                $commissionAmount = 0;
             }
                     
             $cashierSale = new CashierSale();

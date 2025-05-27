@@ -47,8 +47,9 @@ class OrderService {
                  $order->cant = $data['cant'];               
                  $order->request_delete = false;
                  $order->percent_win = $percent_wint*$data['cant'];
-                 $order->commission_rate = $data['commission_rate'];
-                 $order->commission_amount = $data['commission_amount'];
+                 // Manejar campos opcionales de comisión
+                $order->commission_rate = $data['commission_rate'] ?? null; // Valor por defecto 0 si no existe
+                $order->commission_amount = $data['commission_amount'] ?? 0; // Valor por defecto 0 si no existe
                  $order->branch_id = $data['branch_id'];
                  $order->professional_id = $data['professional_id'];
                  $order->save();

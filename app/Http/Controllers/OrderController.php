@@ -102,6 +102,7 @@ class OrderController extends Controller
             $branch = Branch::where('id', $request->branch_id)->first();
             $user = Auth::user();
             $professional_id = $user->professional ? $user->professional->id : null;
+            Log::info("Professional_id al comprar el producto: " . $professional_id);
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 $productStore = ProductStore::find($data['product_id']);
                 $product = $productStore->product;
@@ -109,12 +110,10 @@ class OrderController extends Controller
                 $percent_wint = $product->sale_price - $product->purchase_price;
                 
                 $commissionAmount = 0;
-                $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
+                $commissionRate = $product->commission_rate ? $product->commission_rate : null;
                 
-                if ($category && $category->gives_commission && $commissionRate) {
-                    $commissionAmount = ($percent_wint * $commissionRate / 100) * $data['cant'];
-                }else {
-                    $commissionAmount = 0;
+                if ($category && $category->gives_commission) {
+                    $commissionAmount = $percent_wint * $data['cant'];
                 }
                 
                 // Agregar campos de comisión a los datos antes de crear la orden
@@ -151,6 +150,26 @@ class OrderController extends Controller
             ]);
             //$productsArray = [];
             $data['cant'] = 1;
+            $branch = Branch::where('id', $request->branch_id)->first();
+            $user = Auth::user();
+            $professional_id = $user->professional ? $user->professional->id : null;
+             $productStore = ProductStore::find($data['product_id']);
+                $product = $productStore->product;
+                $category = $product->productCategory;
+                $percent_wint = $product->sale_price - $product->purchase_price;
+                
+                $commissionAmount = 0;
+                $commissionRate = $product->commission_rate ? $product->commission_rate : null;
+                
+                if ($category && $category->gives_commission) {
+                    $commissionAmount = $percent_wint * $data['cant'];
+                }
+                
+                // Agregar campos de comisión a los datos antes de crear la orden
+                $data['commission_rate'] = $commissionRate;
+                $data['commission_amount'] = $commissionAmount;
+                $data['professional_id'] = $professional_id;
+                $data['branch_id'] = $branch->id;
             $order = $this->orderService->product_order_store($data);
                 $productStores = ProductStore::with(['product' => function ($query) use ($data) {
                     $query->select(['id', 'name', 'reference', 'code', 'description', 'status_product', 'purchase_price', 'sale_price', 'image_product'])
@@ -222,12 +241,10 @@ class OrderController extends Controller
                 $percent_wint = $product->sale_price - $product->purchase_price;
                 
                 $commissionAmount = 0;
-                $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
+                $commissionRate = $product->commission_rate ? $product->commission_rate : null;
                 
-                if ($category && $category->gives_commission && $commissionRate) {
-                    $commissionAmount = ($percent_wint * $commissionRate / 100) * $data['cant'];
-                }else {
-                    $commissionAmount = 0;
+                if ($category && $category->gives_commission) {
+                    $commissionAmount = $percent_wint * $data['cant'];
                 }
                 
                 // Agregar campos de comisión a los datos antes de crear la orden

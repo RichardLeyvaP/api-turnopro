@@ -1814,8 +1814,8 @@ class CarController extends Controller
                         'product' => $products,
                         'service' => $services,
                         'technical_assistance' => $car->technical_assistance * 5000,
-                        'clientName' => $client->name . ' ' . $client->surname,
-                        'professionalName' => $professional->name . ' ' . $professional->surname,
+                        'clientName' => $client->name,
+                        'professionalName' => $professional->name,
                         'client_image' => $client->client_image,
                         'professional_id' => $professional->id,
                         'image_url' => $professional->image_url,
@@ -1872,11 +1872,12 @@ class CarController extends Controller
                 $branch = Branch::where('id', $data['branch_id'])->first();
                 $cars = Car::whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
-                })->where('active', 3)->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->orderByDesc('updated_at')->get()->map(function ($car) use ($branch) {
+                })->whereIn('active', [2, 3])->with(['clientProfessional.client', 'clientProfessional.professional', 'payment'])->orderByDesc('updated_at')->get()->map(function ($car) use ($branch) {
                     $client = $car->clientProfessional->client;
                     $professional = $car->clientProfessional->professional;
                     $products = $car->orders->where('is_product', 1)->sum('price');
                     $services = $car->orders->where('is_product', 0)->sum('price');
+                    $branch = Branch::where('id', $car->reservation->branch_id)->first();
                     return [
                         'id' => $car->id,
                         'client_professional_id' => $car->client_professional_id,
@@ -1887,12 +1888,14 @@ class CarController extends Controller
                         'product' => $products,
                         'service' => $services,
                         'technical_assistance' => $car->technical_assistance * 5000,
-                        'clientName' => $client->name . ' ' . $client->surname,
-                        'professionalName' => $professional->name . ' ' . $professional->surname,
+                        'clientName' => $client->name,
+                        'professionalName' => $professional->name,
                         'client_image' => $client->client_image,
                         'professional_id' => $professional->id,
                         'image_url' => $professional->image_url,
-                        'nameBranch' => $branch->name
+                        'nameBranch' => $branch->name,
+                        'action_descriptions' => $car->action_descriptions ?? [],
+                        'change_log' => $car->change_log ?? []
                     ];
                     //}
                 })->sortBy('state')->values();
@@ -1909,9 +1912,9 @@ class CarController extends Controller
                         'id' => $order['id'],
                         'car_id' => $order['car_id'],
                         'price' => $order['price'],
-                        'professionalName' => $professional['name'] . ' ' . $professional['surname'],
+                        'professionalName' => $professional['name'],
                         'image_url' => $professional['image_url'],
-                        'clientName' => $client['name'] . ' ' . $client['surname'],
+                        'clientName' => $client['name'],
                         'client_image' => $client['client_image'],
                         'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
                         'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
@@ -2349,7 +2352,8 @@ class CarController extends Controller
                     'totalPayment' => $totalPayment,
                 ];
             });
-            return response()->json(['cars' => $cars['detailed_cars'], 'courses' => $cursesProf, 'products' =>$products, 'payments' => $payments], 200);
+            $coursesIds = $cursesProf->pluck('id')->toArray();
+            return response()->json(['cars' => $cars['detailed_cars'], 'courses' => $cursesProf, 'coursesIds' => $coursesIds,'products' =>$products, 'payments' => $payments], 200);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
