@@ -152,8 +152,8 @@ class CourseStudentController extends Controller
 
             // Solo crear registro financiero si hay un pago de reserva
             //if (isset($data['reservation_payment']) && $data['reservation_payment']) {
-                $finance = Finance::orderBy('control', 'desc')->first();
-                $control = $finance ? $finance->control + 1 : 1;
+                $financeControl = Finance::orderBy('control', 'desc')->first();
+                $control = $financeControl ? $financeControl->control + 1 : 1;
 
                 $finance = new Finance();
                             $finance->control = $control;

@@ -41,4 +41,14 @@ class Client extends Model
     {
         return $this->belongsToMany(Survey::class, 'client_survey')->withTimestamps();
     }
+
+    public function parent()
+    {
+        return $this->belongsTo(Client::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Client::class, 'parent_id');
+    }
 }

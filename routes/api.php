@@ -199,6 +199,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/branch-reservations-periodo', [ReservationController::class, 'branch_reservations_periodo']); //dado una branch devolver las reservacioes
     Route::get('/professional_reservationDate', [ReservationController::class, 'professional_reservationDate']);
     Route::post('/reservation_store', [ReservationController::class, 'reservation_store']); //Hacer una reservation en una fecha dada
+    Route::post('/reservation-store-tottem', [ReservationController::class, 'reservation_store_tottem']); //Hacer una reservation en una fecha dada por el tottem
     Route::get('/update-confirmation-code', [ReservationController::class, 'update_confirmation_code']); //Dado un code y actualizar la confirmation
     Route::get('/update-confirmation-client', [ReservationController::class, 'update_confirmation_client']); //Dado una reservacion anunciar la llegada
     Route::get('/reservation-notconfirm', [ReservationController::class, 'reserve_noconfirm']); //Reservas no confirmadas, eliminarlas, tarea programada

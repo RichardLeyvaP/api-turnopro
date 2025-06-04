@@ -200,7 +200,7 @@ class ProfessionalPaymentService
     }*/
     
 
-    protected function calculateProductCommissions(array $data, $branchProfessional, $professional): array
+    /*protected function calculateProductCommissions(array $data, $branchProfessional, $professional): array
     {
         // Configuración de tiers (igual que antes)
         $tiers = [
@@ -226,22 +226,33 @@ class ProfessionalPaymentService
 
         usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
 
-        // 1. Obtener TODAS las transacciones para contar productos vendidos
-        $allSales = CashierSale::where('professional_id', $data['professional_id'])
+         $startDate = isset($data['startDate']) 
+            ? Carbon::parse($data['startDate'])->startOfDay()
+            : Carbon::now()->startOfMonth();
+        
+        $endDate = isset($data['endDate']) 
+            ? Carbon::parse($data['endDate'])->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Obtener transacciones (se mantiene igual)
+        $allSales = CashierSale::with('productStore.product')
+            ->where('professional_id', $data['professional_id'])
             ->where('branch_id', $data['branch_id'])
             ->where('pay', 1)
             ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
             ->orderBy('created_at')
-            ->get(['id', 'created_at', 'cant', 'commission_amount']);
+            ->get();
 
-        $allOrders = Order::where('branch_id', $data['branch_id'])
+        $allOrders = Order::with(['productStore.product', 'car'])
+            ->where('branch_id', $data['branch_id'])
             ->where('professional_id', $data['professional_id'])
             ->whereHas('car', fn($q) => $q->where('pay', 1))
-            ->where('paycashier', 0)
             ->where('is_product', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
             ->orderBy('created_at')
-            ->get(['id', 'created_at', 'cant', 'commission_amount']);
-
+            ->get();
         // 2. Obtener SOLO transacciones con comisión para calcular pagos
         $commissionSales = $allSales->whereNotNull('commission_amount')
                                 ->where('commission_amount', '!=', 0)
@@ -258,7 +269,6 @@ class ProfessionalPaymentService
         // Cálculo de productos vendidos (TODOS)
         $totalProductsSold = $allTransactions->sum('cant');
 
-        // Cálculo de comisiones (SOLO los que tienen commission_amount)
         $totalCommission = 0;
         $currentTierIndex = 0;
         $accumulatedProducts = 0;
@@ -276,6 +286,20 @@ class ProfessionalPaymentService
                 'tiers_applied' => []
             ];
 
+            // FIRST - Handle products that don't qualify for commission
+            if ($accumulatedProducts < $tiers[0]['min']) {
+                $nonCommissionProducts = min(
+                    $tiers[0]['min'] - $accumulatedProducts - 1,
+                    $remainingProducts
+                );
+                
+                if ($nonCommissionProducts > 0) {
+                    $accumulatedProducts += $nonCommissionProducts;
+                    $remainingProducts -= $nonCommissionProducts;
+                }
+            }
+
+            // THEN - Process products that do qualify for commission
             while ($remainingProducts > 0) {
                 $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
                 
@@ -325,6 +349,164 @@ class ProfessionalPaymentService
             'order_ids' => $allOrders->pluck('id')->toArray(),
             'commission_sales_ids' => $commissionSales->pluck('id')->toArray(), // IDs con comisión
             'commission_order_ids' => $commissionOrders->pluck('id')->toArray() // IDs con comisión
+        ];
+    }*/
+
+    protected function calculateProductCommissions(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers (igual que antes)
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        $startDate = isset($data['startDate']) 
+            ? Carbon::parse($data['startDate'])->startOfDay()
+            : Carbon::now()->startOfMonth();
+        
+        $endDate = isset($data['endDate']) 
+            ? Carbon::parse($data['endDate'])->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Obtener transacciones
+        $allSales = CashierSale::with('productStore.product')
+            ->where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        $allOrders = Order::with(['productStore.product', 'car'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('is_product', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        // Combinar TODAS las transacciones (sin filtrar por comisión)
+$allTransactions = $allSales->concat($allOrders)->sortBy('created_at');
+
+// Cálculo de productos vendidos (TODOS)
+$totalProductsSold = $allTransactions->sum('cant');
+
+$totalCommission = 0;
+$accumulatedProducts = 0;
+$commissionDetails = [];
+$nonCommissionProductsTotal = 0; // Contador de productos sin comisión
+
+foreach ($allTransactions as $transaction) {
+    $productsInTransaction = (int)$transaction->cant;
+    $transactionCommission = 0;
+    $nonCommissionProducts = 0;
+    $hasCommission = !is_null($transaction->commission_amount) && $transaction->commission_amount != 0;
+    
+    $transactionDetails = [
+        'transaction_id' => $transaction->id,
+        'type' => $transaction instanceof CashierSale ? 'sale' : 'order',
+        'total_products' => $productsInTransaction,
+        'has_commission' => $hasCommission,
+        'total_commission' => $hasCommission ? (float)$transaction->commission_amount : 0,
+        'tiers_applied' => [],
+        'non_commission_products' => 0
+    ];
+
+    // Solo procesar comisión si la transacción tiene comisión
+    if ($hasCommission) {
+        // Procesar cada producto individualmente
+        for ($i = 1; $i <= $productsInTransaction; $i++) {
+            $currentProductNumber = $accumulatedProducts + 1;
+            
+            // Determinar si el producto actual genera comisión
+            if ($currentProductNumber < $tiers[0]['min']) {
+                $nonCommissionProducts++;
+                $accumulatedProducts++;
+                continue;
+            }
+
+            // Obtener el tier actual para este producto
+            $currentTier = $this->getTierForProduct($tiers, $currentProductNumber);
+            
+            if (!$currentTier) {
+                $accumulatedProducts++;
+                continue;
+            }
+
+            // Calcular comisión para este producto individual
+            $productCommission = ($transaction->commission_amount / $productsInTransaction) * ($currentTier['rate'] / 100);
+            $transactionCommission += $productCommission;
+            $accumulatedProducts++;
+
+            // Agrupar por tier para el reporte
+            $tierKey = $currentTier['name'];
+            $foundTier = false;
+            
+            foreach ($transactionDetails['tiers_applied'] as &$appliedTier) {
+                if ($appliedTier['tier_name'] === $tierKey) {
+                    $appliedTier['products']++;
+                    $appliedTier['commission'] += $productCommission;
+                    $foundTier = true;
+                    break;
+                }
+            }
+            
+            if (!$foundTier) {
+                $transactionDetails['tiers_applied'][] = [
+                    'tier_name' => $currentTier['name'],
+                    'products' => 1,
+                    'rate' => $currentTier['rate'],
+                    'commission' => $productCommission,
+                    'accumulated_products' => $accumulatedProducts
+                ];
+            }
+        }
+    } else {
+        // Si no tiene comisión, simplemente contamos los productos
+        $nonCommissionProducts = $productsInTransaction;
+    }
+    
+    $transactionDetails['non_commission_products'] = $nonCommissionProducts;
+    $nonCommissionProductsTotal += $nonCommissionProducts;
+    $totalCommission += $transactionCommission;
+    $commissionDetails[] = $transactionDetails;
+}
+
+        $retentionRate = $professional->retention ?? 0;
+        $retentionAmount = $totalCommission * ($retentionRate / 100);
+        $commissionAfterRetention = $totalCommission - $retentionAmount;
+
+        return [
+            'total_products_sold' => $totalProductsSold,
+            'total_commission' => round($totalCommission, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'commission_neto' => round($commissionAfterRetention, 2),
+            'commission_details' => $commissionDetails,
+            'sales_ids' => $allSales->pluck('id')->toArray(),
+            'order_ids' => $allOrders->pluck('id')->toArray(),
+            'commission_sales_ids' => $allSales->pluck('id')->toArray(),
+            'commission_order_ids' => $allOrders->pluck('id')->toArray()
         ];
     }
 
@@ -382,39 +564,6 @@ class ProfessionalPaymentService
         ];
     }
 
-    protected function getCurrentTier(array $tiers, int $totalProductsSold, int $remainingProducts): ?array
-    {
-        foreach ($tiers as $tier) {
-            if ($totalProductsSold < $tier['min']) {
-                if (($totalProductsSold + $remainingProducts) >= $tier['min']) {
-                    return $tier;
-                }
-                continue;
-            }
-            
-            if ($tier['max'] !== null && $totalProductsSold > $tier['max']) {
-                continue;
-            }
-            
-            return $tier;
-        }
-        
-        return null;
-    }
-
-    protected function calculateProductsInTier(array $tier, int $totalProductsSold, int $remainingProducts): int
-    {
-        if ($totalProductsSold < $tier['min']) {
-            return min(
-                $remainingProducts,
-                ($totalProductsSold + $remainingProducts) - $tier['min'] + 1
-            );
-        }
-        
-        return $tier['max'] === null 
-            ? $remainingProducts 
-            : min($remainingProducts, $tier['max'] - $totalProductsSold + 1);
-    }
 
     public function calculateTipsDetails(array $data, $branch, $professional): array
     {
@@ -602,10 +751,55 @@ class ProfessionalPaymentService
             ],
         ];
     }
-
-    public function calculateProductCommissionsWithDetails(array $data, $branchProfessional, $professional): array
+ 
+    protected function getCurrentTier(array $tiers, int $totalProductsSold, int $remainingProducts): ?array
     {
-        // Configuración de tiers
+        foreach ($tiers as $tier) {
+            if ($totalProductsSold < $tier['min']) {
+                if (($totalProductsSold + $remainingProducts) >= $tier['min']) {
+                    return $tier;
+                }
+                continue;
+            }
+            
+            if ($tier['max'] !== null && $totalProductsSold > $tier['max']) {
+                continue;
+            }
+            
+            return $tier;
+        }
+        
+        return null;
+    }
+
+    protected function calculateProductsInTier(array $tier, int $totalProductsSold, int $remainingProducts): int
+    {
+        // Si estamos antes del mínimo del tier
+        if ($totalProductsSold < $tier['min']) {
+            $neededToReachTier = $tier['min'] - $totalProductsSold;
+            
+            // Si no alcanzamos el mínimo con los productos restantes
+            if ($remainingProducts < $neededToReachTier) {
+                return 0;
+            }
+            
+            // Calculamos cuántos productos caen en este tier
+            $productsInTier = $remainingProducts - $neededToReachTier + 1;
+            return min($remainingProducts, $productsInTier);
+        }
+        
+        // Si estamos dentro del tier
+        if ($tier['max'] === null) {
+            return $remainingProducts;
+        } else {
+            $availableInTier = $tier['max'] - $totalProductsSold + 1;
+            return min($remainingProducts, $availableInTier);
+        }
+    }
+
+    /*public function calculateProductCommissionsWithDetails(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers (se mantiene igual)
         $tiers = [
             [
                 'name' => 'tier1',
@@ -627,9 +821,11 @@ class ProfessionalPaymentService
             ]
         ];
 
+        Log::info(['tiers' => $tiers]);
+
         usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
 
-        // Determinar rango de fechas
+        // Determinar rango de fechas (se mantiene igual)
         $startDate = isset($data['startDate']) 
             ? Carbon::parse($data['startDate'])->startOfDay()
             : Carbon::now()->startOfMonth();
@@ -638,7 +834,7 @@ class ProfessionalPaymentService
             ? Carbon::parse($data['endDate'])->endOfDay()
             : Carbon::now()->endOfMonth();
 
-        // Obtener todas las transacciones con relaciones necesarias y filtrado por fecha
+        // Obtener transacciones (se mantiene igual)
         $allSales = CashierSale::with('productStore.product')
             ->where('professional_id', $data['professional_id'])
             ->where('branch_id', $data['branch_id'])
@@ -656,7 +852,7 @@ class ProfessionalPaymentService
             ->orderBy('created_at')
             ->get();
 
-        // Filtrar transacciones con comisión
+        // Filtrar transacciones con comisión (igual que antes)
         $commissionSales = $allSales->whereNotNull('commission_amount')
                                 ->where('commission_amount', '!=', 0)
                                 ->values();
@@ -665,19 +861,111 @@ class ProfessionalPaymentService
                                     ->where('commission_amount', '!=', 0)
                                     ->values();
 
-        // Mapear productos vendidos con detalles
+        // Primero calculamos todas las comisiones por transacción
+        $transactionsWithCommissions = [];
+        $accumulatedProducts = 0;
+        $totalCommission = 0;
+
+        foreach ($commissionSales->concat($commissionOrders)->sortBy('created_at') as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $remainingProducts = $productsInTransaction;
+            $transactionCommission = 0;
+            $tiersApplied = [];
+            
+            // Primero procesamos los productos que no generan comisión
+            $nonCommissionProducts = 0;
+            if ($accumulatedProducts < $tiers[0]['min']) {
+                $nonCommissionProducts = min(
+                    $tiers[0]['min'] - $accumulatedProducts - 1, // Restamos 1 para incluir el que alcanza el mínimo
+                    $remainingProducts
+                );
+                
+                if ($nonCommissionProducts > 0) {
+                    $accumulatedProducts += $nonCommissionProducts;
+                    $remainingProducts -= $nonCommissionProducts;
+                }
+            }
+
+            Log::info('accumulatedProducts', ['accumulatedProducts' => $accumulatedProducts]);
+            
+            // Luego procesamos los productos que sí generan comisión
+            while ($remainingProducts > 0) {
+                $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
+                Log::info('currebTier', ['currentier' => $currentTier]);
+                
+                if (!$currentTier) {
+                    $accumulatedProducts += $remainingProducts;
+                    break;
+                }
+
+                $productsToCount = $this->calculateProductsInTier(
+                    $currentTier, 
+                    $accumulatedProducts, 
+                    $remainingProducts
+                );
+
+                if ($productsToCount <= 0) {
+                    $accumulatedProducts += $remainingProducts;
+                    break;
+                }
+
+                $proportion = $productsToCount / $productsInTransaction;
+                $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
+                
+                $transactionCommission += $tierCommission;
+                $accumulatedProducts += $productsToCount;
+                $remainingProducts -= $productsToCount;
+                
+                $tiersApplied[] = [
+                    'tier_name' => $currentTier['name'],
+                    'products' => $productsToCount,
+                    'rate' => $currentTier['rate'],
+                    'commission' => $tierCommission,
+                    'commission_neto' => $tierCommission
+                ];
+            }
+            
+            $transactionsWithCommissions[$transaction->id] = [
+                'total_commission' => $transactionCommission,
+                'tiers_applied' => $tiersApplied,
+                'non_commission_products' => $nonCommissionProducts
+            ];
+            $totalCommission += $transactionCommission;
+        }
+
+        // Aplicar retención a cada transacción y tier
+        $retentionRate = $professional->retention ?? 0;
+        
+        foreach ($transactionsWithCommissions as &$transaction) {
+            foreach ($transaction['tiers_applied'] as &$tier) {
+                $tierRetention = $tier['commission'] * ($retentionRate / 100);
+                $tier['commission_neto'] = $tier['commission'] - $tierRetention;
+                $tier['retention_amount'] = $tierRetention;
+            }
+            unset($tier); // Romper la referencia
+            
+            // Actualizar total de la transacción después de retención
+            $transaction['total_commission_neto'] = array_sum(array_column($transaction['tiers_applied'], 'commission_neto'));
+        }
+        unset($transaction); // Romper la referencia
+
+        // Ahora mapeamos todos los productos incluyendo la comisión neta
         $mappedProducts = collect();
 
-        // Mapear CashierSales
         foreach ($allSales as $sale) {
             $productName = 'Producto no disponible';
             $productImage = 'products/default.jpg';
             
-            // Verificar si existe la relación productStore y product
             if ($sale->productStore && $sale->productStore->product) {
                 $productName = $sale->productStore->product->name;
                 $productImage = $sale->productStore->product->image_product ?? $productImage;
             }
+            
+            $commissionInfo = $transactionsWithCommissions[$sale->id] ?? null;
+            $professionalCommissionNet = $commissionInfo['total_commission_neto'] ?? 0;
+            $professionalCommissionBruto = $commissionInfo ? array_sum(array_column($commissionInfo['tiers_applied'], 'commission')) : 0;
+            $retentionAmount = $professionalCommissionBruto - $professionalCommissionNet;
+            
             $mappedProducts->push([
                 'id' => $sale->id,
                 'price' => round($sale->price, 2),
@@ -688,22 +976,30 @@ class ProfessionalPaymentService
                 'type' => 'cashier_sale',
                 'has_commission' => !is_null($sale->commission_amount) && $sale->commission_amount != 0,
                 'commission_amount' => $sale->commission_amount ? round($sale->commission_amount, 2) : 0,
+                'professional_commission' => round($professionalCommissionNet, 2), // Valor NETO después de retención
+                'professional_commission_bruto' => round($professionalCommissionBruto, 2), // Valor BRUTO antes de retención
+                'retention_amount' => round($retentionAmount, 2),
+                'commission_per_unit' => $sale->cant > 0 ? round($professionalCommissionNet / $sale->cant, 2) : 0,
+                'commission_tiers' => $commissionInfo['tiers_applied'] ?? [],
                 'created_at' => Carbon::parse($sale->created_at)->format('Y-m-d H:i:s'),
                 'data' => Carbon::parse($sale->data)->format('Y-m-d')
             ]);
         }
 
-        // Mapear Orders
         foreach ($allOrders as $order) {
             $productName = 'Producto no disponible';
             $productImage = 'products/default.jpg';
             
-            // Verificar si existe el producto directamente
             if ($order->productStore && $order->productStore->product) {
-                $productName = $sale->productStore->product->name;
-                $productImage = $sale->productStore->product->image_product ?? $productImage;
+                $productName = $order->productStore->product->name;
+                $productImage = $order->productStore->product->image_product ?? $productImage;
             }
 
+            $commissionInfo = $transactionsWithCommissions[$order->id] ?? null;
+            $professionalCommissionNet = $commissionInfo['total_commission_neto'] ?? 0;
+            $professionalCommissionBruto = $commissionInfo ? array_sum(array_column($commissionInfo['tiers_applied'], 'commission')) : 0;
+            $retentionAmount = $professionalCommissionBruto - $professionalCommissionNet;
+            
             $mappedProducts->push([
                 'id' => $order->id,
                 'price' => round($order->price, 2),
@@ -714,25 +1010,57 @@ class ProfessionalPaymentService
                 'type' => 'order',
                 'has_commission' => !is_null($order->commission_amount) && $order->commission_amount != 0,
                 'commission_amount' => $order->commission_amount ? round($order->commission_amount, 2) : 0,
+                'professional_commission' => round($professionalCommissionNet, 2), // Valor NETO después de retención
+                'professional_commission_bruto' => round($professionalCommissionBruto, 2), // Valor BRUTO antes de retención
+                'retention_amount' => round($retentionAmount, 2),
+                'commission_per_unit' => $order->cant > 0 ? round($professionalCommissionNet / $order->cant, 2) : 0,
+                'commission_tiers' => $commissionInfo['tiers_applied'] ?? [],
                 'created_at' => Carbon::parse($order->created_at)->format('Y-m-d H:i:s'),
                 'data' => Carbon::parse($order->data)->format('Y-m-d')
             ]);
         }
+
+        // Agrupamiento por fecha y producto
         $groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
-            return $item['name']; // Agrupar por nombre y precio
-        }])->map(function ($dateGroup) {
+            return $item['name'];
+        }])->map(function ($dateGroup) use ($retentionRate) {
             return $dateGroup->map(function ($productGroup) {
-                // Tomar el primer producto como base
                 $firstProduct = $productGroup->first();
                 
-                // Sumar las cantidades
                 $totalQuantity = $productGroup->sum('cant');
-
-                // Sumar los Precios
                 $totalPrice = $productGroup->sum('price');
-                
-                // Sumar las comisiones (si aplica)
                 $totalCommission = $productGroup->sum('commission_amount');
+                $totalProfessionalCommissionNet = $productGroup->sum('professional_commission');
+                $totalProfessionalCommissionBruto = $productGroup->sum('professional_commission_bruto');
+                $totalRetention = $productGroup->sum('retention_amount');
+                
+                // Combinar tiers
+                $combinedTiers = [];
+                foreach ($productGroup as $product) {
+                    foreach ($product['commission_tiers'] as $tier) {
+                        $found = false;
+                        foreach ($combinedTiers as &$combinedTier) {
+                            if ($combinedTier['tier_name'] === $tier['tier_name']) {
+                                $combinedTier['products'] += $tier['products'];
+                                $combinedTier['commission'] += $tier['commission'];
+                                $combinedTier['commission_neto'] += $tier['commission_neto'];
+                                $combinedTier['retention_amount'] += $tier['retention_amount'];
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if (!$found) {
+                            $combinedTiers[] = [
+                                'tier_name' => $tier['tier_name'],
+                                'products' => $tier['products'],
+                                'rate' => $tier['rate'],
+                                'commission' => $tier['commission'],
+                                'commission_neto' => $tier['commission_neto'],
+                                'retention_amount' => $tier['retention_amount']
+                            ];
+                        }
+                    }
+                }
                 
                 return [
                     'id' => $firstProduct['id'],
@@ -744,13 +1072,18 @@ class ProfessionalPaymentService
                     'type' => $firstProduct['type'],
                     'has_commission' => $firstProduct['has_commission'],
                     'commission_amount' => round($totalCommission, 2),
+                    'professional_commission' => round($totalProfessionalCommissionNet, 2), // NETO
+                    'professional_commission_bruto' => round($totalProfessionalCommissionBruto, 2), // BRUTO
+                    'retention_amount' => round($totalRetention, 2),
+                    'commission_per_unit' => $totalQuantity > 0 ? round($totalProfessionalCommissionNet / $totalQuantity, 2) : 0,
+                    'commission_tiers' => $combinedTiers,
                     'created_at' => $firstProduct['created_at'],
                     'data' => $firstProduct['data']
                 ];
             });
         });
         
-        // Reorganizar la estructura para mantener consistencia con el formato original
+        // Reorganizar la estructura
         $finalProducts = collect();
         foreach ($groupedProducts as $date => $products) {
             foreach ($products as $product) {
@@ -760,82 +1093,573 @@ class ProfessionalPaymentService
         
         // Ordenar por fecha
         $finalProducts = $finalProducts->sortBy('data')->values();
-        // Ordenar productos por fecha
-        $mappedProducts = $mappedProducts->sortBy('created_at')->values();
-        
 
-        // Cálculo de comisiones (solo para transacciones con comisión)
-        $totalCommission = 0;
-        $accumulatedProducts = 0;
-        $commissionDetails = [];
-
-        foreach ($commissionSales->concat($commissionOrders)->sortBy('created_at') as $transaction) {
-            $productsInTransaction = (int)$transaction->cant;
-            $remainingProducts = $productsInTransaction;
-            $transactionCommission = 0;
-            $transactionDetails = [
-                'transaction_id' => $transaction->id,
-                'type' => $transaction instanceof CashierSale ? 'cashier_sale' : 'order',
-                'total_products' => $productsInTransaction,
-                'total_commission' => (float)$transaction->commission_amount,
-                'tiers_applied' => [],
-                'date' => $transaction->created_at->format('Y-m-d')
-            ];
-
-            while ($remainingProducts > 0) {
-                $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
-                
-                if (!$currentTier) {
-                    $accumulatedProducts += $remainingProducts;
-                    break;
-                }
-
-                $productsToCount = $this->calculateProductsInTier(
-                    $currentTier, 
-                    $accumulatedProducts, 
-                    $remainingProducts
-                );
-
-                if ($productsToCount > 0) {
-                    $proportion = $productsToCount / $productsInTransaction;
-                    $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
-                    
-                    $transactionCommission += $tierCommission;
-                    $accumulatedProducts += $productsToCount;
-                    $remainingProducts -= $productsToCount;
-                    
-                    $transactionDetails['tiers_applied'][] = [
-                        'tier_name' => $currentTier['name'],
-                        'products' => $productsToCount,
-                        'rate' => $currentTier['rate'],
-                        'commission' => $tierCommission,
-                        'accumulated_products' => $accumulatedProducts
-                    ];
-                }
-            }
-            
-            $totalCommission += $transactionCommission;
-            $commissionDetails[] = $transactionDetails;
-        }
-        $retentionRate = $professional->retention ?? 0;
-        $retentionAmount = $totalCommission * ($retentionRate / 100);
-        $commissionAfterRetention = $totalCommission - $retentionAmount;
+        // Calcular totales globales
+        $totalCommissionBruto = $finalProducts->sum('professional_commission_bruto');
+        $totalRetention = $finalProducts->sum('retention_amount');
+        $totalCommissionNeto = $finalProducts->sum('professional_commission');
 
         return [
             'total_products_sold' => $mappedProducts->sum('cant'),
-            'total_commission' => round($totalCommission, 2),
-            'retention_amount' => round($retentionAmount, 2),
-            'commission_neto' => round($commissionAfterRetention, 2),
-            'commission_details' => $commissionDetails,
+            'total_commission' => round($totalCommissionBruto, 2),
+            'retention_amount' => round($totalRetention, 2),
+            'commission_neto' => round($totalCommissionNeto, 2),
             'products_sold' => $finalProducts,
             'sales_ids' => $allSales->pluck('id')->toArray(),
             'order_ids' => $allOrders->pluck('id')->toArray(),
             'commission_sales_ids' => $commissionSales->pluck('id')->toArray(),
             'commission_order_ids' => $commissionOrders->pluck('id')->toArray()
         ];
+    }*/
+
+    public function calculateProductCommissionsWithDetails(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers (se mantiene igual)
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        // Determinar rango de fechas
+        $startDate = isset($data['startDate']) 
+            ? Carbon::parse($data['startDate'])->startOfDay()
+            : Carbon::now()->startOfMonth();
+        
+        $endDate = isset($data['endDate']) 
+            ? Carbon::parse($data['endDate'])->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Obtener transacciones
+        $allSales = CashierSale::with('productStore.product')
+            ->where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        $allOrders = Order::with(['productStore.product', 'car'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('is_product', 1)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        /*// Filtrar transacciones con comisión
+        $commissionSales = $allSales->whereNotNull('commission_amount')
+                                ->where('commission_amount', '!=', 0)
+                                ->values();
+
+        $commissionOrders = $allOrders->whereNotNull('commission_amount')
+                                    ->where('commission_amount', '!=', 0)
+                                    ->values();
+
+        // Nuevo cálculo por producto individual
+        $transactionsWithCommissions = [];
+        $accumulatedProducts = 0;
+        $totalCommission = 0;
+
+        foreach ($commissionSales->concat($commissionOrders)->sortBy('created_at') as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $transactionCommission = 0;
+            $tiersApplied = [];
+            $nonCommissionProducts = 0;
+
+            // Procesar cada producto individualmente
+            for ($i = 1; $i <= $productsInTransaction; $i++) {
+                $currentProductNumber = $accumulatedProducts + 1; // +1 porque empezamos desde 0
+                
+                // Determinar si el producto actual genera comisión
+                if ($currentProductNumber < $tiers[0]['min']) {
+                    $nonCommissionProducts++;
+                    $accumulatedProducts++;
+                    continue;
+                }
+
+                // Obtener el tier actual para este producto
+                $currentTier = $this->getTierForProduct($tiers, $currentProductNumber);
+                
+                if (!$currentTier) {
+                    $accumulatedProducts++;
+                    continue;
+                }
+
+                // Calcular comisión para este producto individual
+                $productCommission = ($transaction->commission_amount / $productsInTransaction) * ($currentTier['rate'] / 100);
+                $transactionCommission += $productCommission;
+                $accumulatedProducts++;
+
+                // Agrupar por tier para el reporte
+                $tierKey = $currentTier['name'];
+                if (!isset($tiersApplied[$tierKey])) {
+                    $tiersApplied[$tierKey] = [
+                        'tier_name' => $currentTier['name'],
+                        'products' => 0,
+                        'rate' => $currentTier['rate'],
+                        'commission' => 0,
+                        'commission_neto' => 0
+                    ];
+                }
+                
+                $tiersApplied[$tierKey]['products']++;
+                $tiersApplied[$tierKey]['commission'] += $productCommission;
+            }
+            
+            $transactionsWithCommissions[$transaction->id] = [
+                'total_commission' => $transactionCommission,
+                'tiers_applied' => array_values($tiersApplied),
+                'non_commission_products' => $nonCommissionProducts
+            ];
+            $totalCommission += $transactionCommission;
+        }*/
+        // Nuevo cálculo por producto individual
+        $transactionsWithCommissions = [];
+        $accumulatedProducts = 0;
+        $totalCommission = 0;
+        $totalProducts = 0; // Contador para todos los productos
+
+        // Usamos todas las transacciones, no solo las con comisión
+        foreach ($allSales->concat($allOrders)->sortBy('created_at') as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $transactionCommission = 0;
+            $tiersApplied = [];
+            $nonCommissionProducts = 0;
+            $hasCommission = $transaction->commission_amount && $transaction->commission_amount != 0;
+
+            // Procesar cada producto individualmente
+            for ($i = 1; $i <= $productsInTransaction; $i++) {
+                $currentProductNumber = $accumulatedProducts + 1;
+                $totalProducts++; // Contamos todos los productos
+                
+                // Solo procesamos comisión si la transacción tiene comisión
+                if ($hasCommission) {
+                    // Determinar si el producto actual genera comisión
+                    if ($currentProductNumber < $tiers[0]['min']) {
+                        $nonCommissionProducts++;
+                        $accumulatedProducts++;
+                        continue;
+                    }
+
+                    // Obtener el tier actual para este producto
+                    $currentTier = $this->getTierForProduct($tiers, $currentProductNumber);
+                    
+                    if (!$currentTier) {
+                        $accumulatedProducts++;
+                        continue;
+                    }
+
+                    // Calcular comisión para este producto individual
+                    $productCommission = ($transaction->commission_amount / $productsInTransaction) * ($currentTier['rate'] / 100);
+                    $transactionCommission += $productCommission;
+                    $accumulatedProducts++;
+
+                    // Agrupar por tier para el reporte
+                    $tierKey = $currentTier['name'];
+                    if (!isset($tiersApplied[$tierKey])) {
+                        $tiersApplied[$tierKey] = [
+                            'tier_name' => $currentTier['name'],
+                            'products' => 0,
+                            'rate' => $currentTier['rate'],
+                            'commission' => 0,
+                            'commission_neto' => 0
+                        ];
+                    }
+                    
+                    $tiersApplied[$tierKey]['products']++;
+                    $tiersApplied[$tierKey]['commission'] += $productCommission;
+                } else {
+                    $nonCommissionProducts++;
+                }
+            }
+            
+            $transactionsWithCommissions[$transaction->id] = [
+                'total_commission' => $transactionCommission,
+                'tiers_applied' => array_values($tiersApplied),
+                'non_commission_products' => $nonCommissionProducts,
+                'total_products' => $productsInTransaction // Guardamos el total de productos en esta transacción
+            ];
+            $totalCommission += $transactionCommission;
+        }
+
+        // Aplicar retención a cada transacción y tier
+        $retentionRate = $professional->retention ?? 0;
+        
+        foreach ($transactionsWithCommissions as &$transaction) {
+            foreach ($transaction['tiers_applied'] as &$tier) {
+                $tierRetention = $tier['commission'] * ($retentionRate / 100);
+                $tier['commission_neto'] = $tier['commission'] - $tierRetention;
+                $tier['retention_amount'] = $tierRetention;
+            }
+            unset($tier); // Romper la referencia
+            
+            $transaction['total_commission_neto'] = array_sum(array_column($transaction['tiers_applied'], 'commission_neto'));
+        }
+        unset($transaction); // Romper la referencia
+
+        // Mapear todos los productos incluyendo la comisión neta
+        $mappedProducts = collect();
+
+        foreach ($allSales as $sale) {
+            $this->mapProductData($sale, $transactionsWithCommissions, $mappedProducts, 'cashier_sale');
+        }
+
+        foreach ($allOrders as $order) {
+            $this->mapProductData($order, $transactionsWithCommissions, $mappedProducts, 'order');
+        }
+
+        // Agrupamiento por fecha y producto
+        $groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
+            return $item['name'];
+        }])->map(function ($dateGroup) {
+            return $dateGroup->map(function ($productGroup) {
+                return $this->combineProductGroup($productGroup);
+            });
+        });
+        
+        // Reorganizar la estructura
+        $finalProducts = collect();
+        foreach ($groupedProducts as $date => $products) {
+            foreach ($products as $product) {
+                $finalProducts->push($product);
+            }
+        }
+        
+        // Ordenar por fecha
+        $finalProducts = $finalProducts->sortBy('data')->values();
+
+        // Calcular totales globales
+        $totalCommissionBruto = $finalProducts->sum('professional_commission_bruto');
+        $totalRetention = $finalProducts->sum('retention_amount');
+        $totalCommissionNeto = $finalProducts->sum('professional_commission');
+
+        return [
+            'total_products_sold' => $mappedProducts->sum('cant'),
+            'total_commission' => round($totalCommissionBruto, 2),
+            'retention_amount' => round($totalRetention, 2),
+            'commission_neto' => round($totalCommissionNeto, 2),
+            'products_sold' => $finalProducts,
+            'sales_ids' => $allSales->pluck('id')->toArray(),
+            'order_ids' => $allOrders->pluck('id')->toArray(),
+            'commission_sales_ids' => $allSales->pluck('id')->toArray(),
+            'commission_order_ids' => $allOrders->pluck('id')->toArray()
+        ];
+    }
+
+    // Métodos auxiliares
+
+    protected function getTierForProduct($tiers, $productNumber)
+    {
+        foreach ($tiers as $tier) {
+            if ($productNumber < $tier['min']) {
+                continue;
+            }
+
+            if ($tier['max'] === null || $productNumber <= $tier['max']) {
+                return $tier;
+            }
+        }
+
+        return null;
+    }
+
+    protected function mapProductData($item, $transactionsWithCommissions, &$mappedProducts, $type)
+    {
+        $productName = 'Producto no disponible';
+        $productImage = 'products/default.jpg';
+        
+        if ($item->productStore && $item->productStore->product) {
+            $productName = $item->productStore->product->name;
+            $productImage = $item->productStore->product->image_product ?? $productImage;
+        }
+        
+        $commissionInfo = $transactionsWithCommissions[$item->id] ?? null;
+        $professionalCommissionNet = $commissionInfo['total_commission_neto'] ?? 0;
+        $professionalCommissionBruto = $commissionInfo ? array_sum(array_column($commissionInfo['tiers_applied'], 'commission')) : 0;
+        $retentionAmount = $professionalCommissionBruto - $professionalCommissionNet;
+        
+        $mappedProducts->push([
+            'id' => $item->id,
+            'price' => round($item->price, 2),
+            'pay' => $type === 'order' ? ($item->car->pay ?? 0) : $item->pay,
+            'cant' => $item->cant,
+            'name' => $productName,
+            'image_product' => $productImage,
+            'type' => $type,
+            'has_commission' => !is_null($item->commission_amount) && $item->commission_amount != 0,
+            'commission_amount' => $item->commission_amount ? round($item->commission_amount, 2) : 0,
+            'professional_commission' => round($professionalCommissionNet, 2),
+            'professional_commission_bruto' => round($professionalCommissionBruto, 2),
+            'retention_amount' => round($retentionAmount, 2),
+            'commission_per_unit' => $item->cant > 0 ? round($professionalCommissionNet / $item->cant, 2) : 0,
+            'commission_tiers' => $commissionInfo['tiers_applied'] ?? [],
+            'created_at' => Carbon::parse($item->created_at)->format('Y-m-d H:i:s'),
+            'data' => Carbon::parse($item->data)->format('Y-m-d')
+        ]);
+    }
+
+    protected function combineProductGroup($productGroup)
+    {
+        $firstProduct = $productGroup->first();
+        
+        $combinedData = [
+            'id' => $firstProduct['id'],
+            'price' => $productGroup->sum('price'),
+            'pay' => $firstProduct['pay'],
+            'cant' => $productGroup->sum('cant'),
+            'name' => $firstProduct['name'],
+            'image_product' => $firstProduct['image_product'],
+            'type' => $firstProduct['type'],
+            'has_commission' => $firstProduct['has_commission'],
+            'commission_amount' => round($productGroup->sum('commission_amount'), 2),
+            'professional_commission' => round($productGroup->sum('professional_commission'), 2),
+            'professional_commission_bruto' => round($productGroup->sum('professional_commission_bruto'), 2),
+            'retention_amount' => round($productGroup->sum('retention_amount'), 2),
+            'commission_per_unit' => $productGroup->sum('cant') > 0 
+                ? round($productGroup->sum('professional_commission') / $productGroup->sum('cant'), 2) 
+                : 0,
+            'created_at' => $firstProduct['created_at'],
+            'data' => $firstProduct['data']
+        ];
+
+        // Combinar tiers
+        $combinedTiers = [];
+        foreach ($productGroup as $product) {
+            foreach ($product['commission_tiers'] as $tier) {
+                $found = false;
+                foreach ($combinedTiers as &$combinedTier) {
+                    if ($combinedTier['tier_name'] === $tier['tier_name']) {
+                        $combinedTier['products'] += $tier['products'];
+                        $combinedTier['commission'] += $tier['commission'];
+                        $combinedTier['commission_neto'] += $tier['commission_neto'];
+                        $combinedTier['retention_amount'] += $tier['retention_amount'];
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $combinedTiers[] = $tier;
+                }
+            }
+        }
+        
+        $combinedData['commission_tiers'] = $combinedTiers;
+
+        return $combinedData;
     }
 
     public function calculateProductCommissionsNopay(array $data, $branchProfessional, $professional): array
+    {
+        // Configuración de tiers (se mantiene igual)
+        $tiers = [
+            [
+                'name' => 'tier1',
+                'min' => (int)$branchProfessional->tier1_min_sales,
+                'max' => (int)$branchProfessional->tier2_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier1_commission_rate
+            ],
+            [
+                'name' => 'tier2',
+                'min' => (int)$branchProfessional->tier2_min_sales,
+                'max' => (int)$branchProfessional->tier3_min_sales - 1,
+                'rate' => (float)$branchProfessional->tier2_commission_rate
+            ],
+            [
+                'name' => 'tier3',
+                'min' => (int)$branchProfessional->tier3_min_sales,
+                'max' => null,
+                'rate' => (float)$branchProfessional->tier3_commission_rate
+            ]
+        ];
+
+        usort($tiers, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        // Determinar rango de fechas
+        $startDate = isset($data['startDate']) 
+            ? Carbon::parse($data['startDate'])->startOfDay()
+            : Carbon::now()->startOfMonth();
+        
+        $endDate = isset($data['endDate']) 
+            ? Carbon::parse($data['endDate'])->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Obtener transacciones
+        $allSales = CashierSale::with('productStore.product')
+            ->where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('pay', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        $allOrders = Order::with(['productStore.product', 'car'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->whereHas('car', fn($q) => $q->where('pay', 1))
+            ->where('is_product', 1)
+            ->where('paycashier', 0)
+            ->whereBetween('data', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+       // Obtener TODAS las transacciones sin filtrar por comisión
+        $allTransactions = $allSales->concat($allOrders)->sortBy('created_at');
+
+        // Variables para el cálculo
+        $transactionsWithCommissions = [];
+        $accumulatedProducts = 0;
+        $totalCommission = 0;
+        $totalProductsSold = 0; // Contador para todos los productos vendidos
+
+        foreach ($allTransactions as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $transactionCommission = 0;
+            $tiersApplied = [];
+            $nonCommissionProducts = 0;
+            $hasCommission = !is_null($transaction->commission_amount) && $transaction->commission_amount != 0;
+
+            // Procesar cada producto individualmente
+            for ($i = 1; $i <= $productsInTransaction; $i++) {
+                $currentProductNumber = $accumulatedProducts + 1;
+                $totalProductsSold++; // Contamos TODOS los productos
+
+                // Solo procesamos comisión si la transacción tiene comisión
+                if ($hasCommission) {
+                    // Determinar si el producto actual genera comisión
+                    if ($currentProductNumber < $tiers[0]['min']) {
+                        $nonCommissionProducts++;
+                        $accumulatedProducts++;
+                        continue;
+                    }
+
+                    // Obtener el tier actual para este producto
+                    $currentTier = $this->getTierForProduct($tiers, $currentProductNumber);
+                    
+                    if (!$currentTier) {
+                        $accumulatedProducts++;
+                        continue;
+                    }
+
+                    // Calcular comisión para este producto individual
+                    $productCommission = ($transaction->commission_amount / $productsInTransaction) * ($currentTier['rate'] / 100);
+                    $transactionCommission += $productCommission;
+                    $accumulatedProducts++;
+
+                    // Agrupar por tier para el reporte
+                    $tierKey = $currentTier['name'];
+                    if (!isset($tiersApplied[$tierKey])) {
+                        $tiersApplied[$tierKey] = [
+                            'tier_name' => $currentTier['name'],
+                            'products' => 0,
+                            'rate' => $currentTier['rate'],
+                            'commission' => 0,
+                            'commission_neto' => 0
+                        ];
+                    }
+                    
+                    $tiersApplied[$tierKey]['products']++;
+                    $tiersApplied[$tierKey]['commission'] += $productCommission;
+                } else {
+                    $nonCommissionProducts++;
+                }
+            }
+            
+            $transactionsWithCommissions[$transaction->id] = [
+                'total_commission' => $transactionCommission,
+                'tiers_applied' => array_values($tiersApplied),
+                'non_commission_products' => $nonCommissionProducts,
+                'total_products' => $productsInTransaction, // Total de productos en esta transacción
+                'has_commission' => $hasCommission // Indica si la transacción tenía comisión
+            ];
+            
+            $totalCommission += $transactionCommission;
+        }
+
+
+        // Aplicar retención a cada transacción y tier
+        $retentionRate = $professional->retention ?? 0;
+        
+        foreach ($transactionsWithCommissions as &$transaction) {
+            foreach ($transaction['tiers_applied'] as &$tier) {
+                $tierRetention = $tier['commission'] * ($retentionRate / 100);
+                $tier['commission_neto'] = $tier['commission'] - $tierRetention;
+                $tier['retention_amount'] = $tierRetention;
+            }
+            unset($tier); // Romper la referencia
+            
+            $transaction['total_commission_neto'] = array_sum(array_column($transaction['tiers_applied'], 'commission_neto'));
+        }
+        unset($transaction); // Romper la referencia
+
+        // Mapear todos los productos incluyendo la comisión neta
+        $mappedProducts = collect();
+
+        foreach ($allSales as $sale) {
+            $this->mapProductData($sale, $transactionsWithCommissions, $mappedProducts, 'cashier_sale');
+        }
+
+        foreach ($allOrders as $order) {
+            $this->mapProductData($order, $transactionsWithCommissions, $mappedProducts, 'order');
+        }
+
+        // Agrupamiento por fecha y producto
+        $groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
+            return $item['name'];
+        }])->map(function ($dateGroup) {
+            return $dateGroup->map(function ($productGroup) {
+                return $this->combineProductGroup($productGroup);
+            });
+        });
+        
+        // Reorganizar la estructura
+        $finalProducts = collect();
+        foreach ($groupedProducts as $date => $products) {
+            foreach ($products as $product) {
+                $finalProducts->push($product);
+            }
+        }
+        
+        // Ordenar por fecha
+        $finalProducts = $finalProducts->sortBy('data')->values();
+
+        // Calcular totales globales
+        $totalCommissionBruto = $finalProducts->sum('professional_commission_bruto');
+        $totalRetention = $finalProducts->sum('retention_amount');
+        $totalCommissionNeto = $finalProducts->sum('professional_commission');
+
+        return [
+            'total_products_sold' => $mappedProducts->sum('cant'),
+            'total_commission' => round($totalCommissionBruto, 2),
+            'retention_amount' => round($totalRetention, 2),
+            'commission_neto' => round($totalCommissionNeto, 2),
+            'products_sold' => $finalProducts,
+            'sales_ids' => $allSales->pluck('id')->toArray(),
+            'order_ids' => $allOrders->pluck('id')->toArray(),
+            'commission_sales_ids' => $allSales->pluck('id')->toArray(),
+            'commission_order_ids' => $allOrders->pluck('id')->toArray()
+        ];
+    }
+    /*public function calculateProductCommissionsNopay(array $data, $branchProfessional, $professional): array
     {
         // Configuración de tiers
         $tiers = [
@@ -899,158 +1723,32 @@ class ProfessionalPaymentService
                                     ->where('commission_amount', '!=', 0)
                                     ->values();
 
-        // Mapear productos vendidos con detalles
-        $mappedProducts = collect();
-
-        // Mapear CashierSales
-        foreach ($allSales as $sale) {
-            $productName = 'Producto no disponible';
-            $productImage = 'products/default.jpg';
-            
-            // Verificar si existe la relación productStore y product
-            if ($sale->productStore && $sale->productStore->product) {
-                $productName = $sale->productStore->product->name;
-                $productImage = $sale->productStore->product->image_product ?? $productImage;
-            }
-            $mappedProducts->push([
-                'id' => $sale->id,
-                'price' => round($sale->price, 2),
-                'percent_win' => round($sale->percent_win, 2),
-                'pay' => $sale->pay,
-                'cant' => $sale->cant,
-                'name' => $productName,
-                'image_product' => $productImage,
-                'type' => 'cashier_sale',
-                'has_commission' => !is_null($sale->commission_amount) && $sale->commission_amount != 0,
-                'commission_amount' => $sale->commission_amount ? round($sale->commission_amount, 2) : 0,
-                'created_at' => Carbon::parse($sale->created_at)->format('Y-m-d H:i:s'),
-                'data' => Carbon::parse($sale->data)->format('Y-m-d')
-            ]);
-        }
-
-        // Mapear Orders
-        foreach ($allOrders as $order) {
-            $productName = 'Producto no disponible';
-            $productImage = 'products/default.jpg';
-            
-            // Verificar si existe el producto directamente
-            if ($order->productStore && $order->productStore->product) {
-                $productName = $sale->productStore->product->name;
-                $productImage = $sale->productStore->product->image_product ?? $productImage;
-            }
-
-            $mappedProducts->push([
-                'id' => $order->id,
-                'price' => round($order->price, 2),
-                'percent_win' => round($order->percent_win, 2),
-                'pay' => $order->car->pay ?? 0,
-                'cant' => $order->cant,
-                'name' => $productName,
-                'image_product' => $productImage,
-                'type' => 'order',
-                'has_commission' => !is_null($order->commission_amount) && $order->commission_amount != 0,
-                'commission_amount' => $order->commission_amount ? round($order->commission_amount, 2) : 0,
-                'created_at' => Carbon::parse($order->created_at)->format('Y-m-d H:i:s'),
-                'data' => Carbon::parse($order->data)->format('Y-m-d')
-            ]);
-        }
-        $groupedProducts = $mappedProducts->groupBy('name')->map(function ($productGroup) {
-            $firstProduct = $productGroup->first();
-            
-            // Sumar las cantidades
-            $totalQuantity = $productGroup->sum('cant');
-            
-            // Sumar los precios (total vendido)
-            $totalPercentWin = $productGroup->sum('percent_win');
-
-            $totalPrice = $productGroup->sum('price');
-            
-            
-            // Sumar las comisiones
-            $totalCommission = $productGroup->sum('commission_amount');
-            
-            return [
-                'id' => $firstProduct['id'],
-                'price' => round($totalPrice, 2), // Precio unitario promedio
-                'percent_win' => round($totalPercentWin, 2), // Total vendido (precio*cantidad)
-                'pay' => $firstProduct['pay'],
-                'cant' => $totalQuantity,
-                'name' => $firstProduct['name'],
-                'image_product' => $firstProduct['image_product'],
-                'type' => $firstProduct['type'],
-                'has_commission' => $firstProduct['has_commission'],
-                'commission_amount' => round($totalCommission, 2),
-                'created_at' => $firstProduct['created_at'],
-                'data' => $productGroup->pluck('data')->unique()->values()
-            ];
-        })->values();
-        
-        // Ordenar por nombre del producto
-        $finalProducts = $groupedProducts->sortBy('name')->values();
-        /*$groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
-            return $item['name']; // Agrupar por nombre y precio
-        }])->map(function ($dateGroup) {
-            return $dateGroup->map(function ($productGroup) {
-                // Tomar el primer producto como base
-                $firstProduct = $productGroup->first();
-                
-                // Sumar las cantidades
-                $totalQuantity = $productGroup->sum('cant');
-
-                // Sumar los Precios
-                $totalPrice = $productGroup->sum('price');
-                
-                // Sumar las comisiones (si aplica)
-                $totalCommission = $productGroup->sum('commission_amount');
-                
-                return [
-                    'id' => $firstProduct['id'],
-                    'price' => $totalPrice,
-                    'pay' => $firstProduct['pay'],
-                    'cant' => $totalQuantity,
-                    'name' => $firstProduct['name'],
-                    'image_product' => $firstProduct['image_product'],
-                    'type' => $firstProduct['type'],
-                    'has_commission' => $firstProduct['has_commission'],
-                    'commission_amount' => round($totalCommission, 2),
-                    'created_at' => $firstProduct['created_at'],
-                    'data' => $firstProduct['data']
-                ];
-            });
-        });
-        
-        // Reorganizar la estructura para mantener consistencia con el formato original
-        $finalProducts = collect();
-        foreach ($groupedProducts as $date => $products) {
-            foreach ($products as $product) {
-                $finalProducts->push($product);
-            }
-        }
-        
-        // Ordenar por fecha
-        $finalProducts = $finalProducts->sortBy('data')->values();*/
-        // Ordenar productos por fecha
-        $mappedProducts = $mappedProducts->sortBy('created_at')->values();
-        
-
-        // Cálculo de comisiones (solo para transacciones con comisión)
-        $totalCommission = 0;
+        // Primero calculamos todas las comisiones por transacción
+        $transactionsWithCommissions = [];
         $accumulatedProducts = 0;
-        $commissionDetails = [];
+        $totalCommission = 0;
 
         foreach ($commissionSales->concat($commissionOrders)->sortBy('created_at') as $transaction) {
             $productsInTransaction = (int)$transaction->cant;
             $remainingProducts = $productsInTransaction;
             $transactionCommission = 0;
-            $transactionDetails = [
-                'transaction_id' => $transaction->id,
-                'type' => $transaction instanceof CashierSale ? 'cashier_sale' : 'order',
-                'total_products' => $productsInTransaction,
-                'total_commission' => (float)$transaction->commission_amount,
-                'tiers_applied' => [],
-                'date' => $transaction->created_at->format('Y-m-d')
-            ];
-
+            $tiersApplied = [];
+            
+            // Primero procesamos los productos que no generan comisión
+            $nonCommissionProducts = 0;
+            if ($accumulatedProducts < $tiers[0]['min']) {
+                $nonCommissionProducts = min(
+                    $tiers[0]['min'] - $accumulatedProducts - 1, // Restamos 1 para incluir el que alcanza el mínimo
+                    $remainingProducts
+                );
+                
+                if ($nonCommissionProducts > 0) {
+                    $accumulatedProducts += $nonCommissionProducts;
+                    $remainingProducts -= $nonCommissionProducts;
+                }
+            }
+            
+            // Luego procesamos los productos que sí generan comisión
             while ($remainingProducts > 0) {
                 $currentTier = $this->getCurrentTier($tiers, $accumulatedProducts, $remainingProducts);
                 
@@ -1065,44 +1763,213 @@ class ProfessionalPaymentService
                     $remainingProducts
                 );
 
-                if ($productsToCount > 0) {
-                    $proportion = $productsToCount / $productsInTransaction;
-                    $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
-                    
-                    $transactionCommission += $tierCommission;
-                    $accumulatedProducts += $productsToCount;
-                    $remainingProducts -= $productsToCount;
-                    
-                    $transactionDetails['tiers_applied'][] = [
-                        'tier_name' => $currentTier['name'],
-                        'products' => $productsToCount,
-                        'rate' => $currentTier['rate'],
-                        'commission' => $tierCommission,
-                        'accumulated_products' => $accumulatedProducts
-                    ];
+                if ($productsToCount <= 0) {
+                    $accumulatedProducts += $remainingProducts;
+                    break;
                 }
+
+                $proportion = $productsToCount / $productsInTransaction;
+                $tierCommission = $transaction->commission_amount * $proportion * ($currentTier['rate'] / 100);
+                
+                $transactionCommission += $tierCommission;
+                $accumulatedProducts += $productsToCount;
+                $remainingProducts -= $productsToCount;
+                
+                $tiersApplied[] = [
+                    'tier_name' => $currentTier['name'],
+                    'products' => $productsToCount,
+                    'rate' => $currentTier['rate'],
+                    'commission' => $tierCommission,
+                    'commission_neto' => $tierCommission
+                ];
             }
             
+            $transactionsWithCommissions[$transaction->id] = [
+                'total_commission' => $transactionCommission,
+                'tiers_applied' => $tiersApplied,
+                'non_commission_products' => $nonCommissionProducts
+            ];
             $totalCommission += $transactionCommission;
-            $commissionDetails[] = $transactionDetails;
         }
+
+        // Aplicar retención a cada transacción y tier
         $retentionRate = $professional->retention ?? 0;
-        $retentionAmount = $totalCommission * ($retentionRate / 100);
-        $commissionAfterRetention = $totalCommission - $retentionAmount;
+        
+        foreach ($transactionsWithCommissions as &$transaction) {
+            foreach ($transaction['tiers_applied'] as &$tier) {
+                $tierRetention = $tier['commission'] * ($retentionRate / 100);
+                $tier['commission_neto'] = $tier['commission'] - $tierRetention;
+                $tier['retention_amount'] = $tierRetention;
+            }
+            unset($tier); // Romper la referencia
+            
+            // Actualizar total de la transacción después de retención
+            $transaction['total_commission_neto'] = array_sum(array_column($transaction['tiers_applied'], 'commission_neto'));
+        }
+        unset($transaction); // Romper la referencia
+
+        // Ahora mapeamos todos los productos incluyendo la comisión neta
+        $mappedProducts = collect();
+
+        foreach ($allSales as $sale) {
+            $productName = 'Producto no disponible';
+            $productImage = 'products/default.jpg';
+            
+            if ($sale->productStore && $sale->productStore->product) {
+                $productName = $sale->productStore->product->name;
+                $productImage = $sale->productStore->product->image_product ?? $productImage;
+            }
+            
+            $commissionInfo = $transactionsWithCommissions[$sale->id] ?? null;
+            $professionalCommissionNet = $commissionInfo['total_commission_neto'] ?? 0;
+            $professionalCommissionBruto = $commissionInfo ? array_sum(array_column($commissionInfo['tiers_applied'], 'commission')) : 0;
+            $retentionAmount = $professionalCommissionBruto - $professionalCommissionNet;
+            
+            $mappedProducts->push([
+                'id' => $sale->id,
+                'price' => round($sale->price, 2),
+                'pay' => $sale->pay,
+                'cant' => $sale->cant,
+                'name' => $productName,
+                'image_product' => $productImage,
+                'type' => 'cashier_sale',
+                'has_commission' => !is_null($sale->commission_amount) && $sale->commission_amount != 0,
+                'commission_amount' => $sale->commission_amount ? round($sale->commission_amount, 2) : 0,
+                'professional_commission' => round($professionalCommissionNet, 2), // Valor NETO después de retención
+                'professional_commission_bruto' => round($professionalCommissionBruto, 2), // Valor BRUTO antes de retención
+                'retention_amount' => round($retentionAmount, 2),
+                'commission_per_unit' => $sale->cant > 0 ? round($professionalCommissionNet / $sale->cant, 2) : 0,
+                'commission_tiers' => $commissionInfo['tiers_applied'] ?? [],
+                'created_at' => Carbon::parse($sale->created_at)->format('Y-m-d H:i:s'),
+                'data' => Carbon::parse($sale->data)->format('Y-m-d')
+            ]);
+        }
+
+        foreach ($allOrders as $order) {
+            $productName = 'Producto no disponible';
+            $productImage = 'products/default.jpg';
+            
+            if ($order->productStore && $order->productStore->product) {
+                $productName = $order->productStore->product->name;
+                $productImage = $order->productStore->product->image_product ?? $productImage;
+            }
+
+            $commissionInfo = $transactionsWithCommissions[$order->id] ?? null;
+            $professionalCommissionNet = $commissionInfo['total_commission_neto'] ?? 0;
+            $professionalCommissionBruto = $commissionInfo ? array_sum(array_column($commissionInfo['tiers_applied'], 'commission')) : 0;
+            $retentionAmount = $professionalCommissionBruto - $professionalCommissionNet;
+            
+            $mappedProducts->push([
+                'id' => $order->id,
+                'price' => round($order->price, 2),
+                'pay' => $order->car->pay ?? 0,
+                'cant' => $order->cant,
+                'name' => $productName,
+                'image_product' => $productImage,
+                'type' => 'order',
+                'has_commission' => !is_null($order->commission_amount) && $order->commission_amount != 0,
+                'commission_amount' => $order->commission_amount ? round($order->commission_amount, 2) : 0,
+                'professional_commission' => round($professionalCommissionNet, 2), // Valor NETO después de retención
+                'professional_commission_bruto' => round($professionalCommissionBruto, 2), // Valor BRUTO antes de retención
+                'retention_amount' => round($retentionAmount, 2),
+                'commission_per_unit' => $order->cant > 0 ? round($professionalCommissionNet / $order->cant, 2) : 0,
+                'commission_tiers' => $commissionInfo['tiers_applied'] ?? [],
+                'created_at' => Carbon::parse($order->created_at)->format('Y-m-d H:i:s'),
+                'data' => Carbon::parse($order->data)->format('Y-m-d')
+            ]);
+        }
+
+        // Agrupamiento por fecha y producto
+        $groupedProducts = $mappedProducts->groupBy(['data', function ($item) {
+            return $item['name'];
+        }])->map(function ($dateGroup) use ($retentionRate) {
+            return $dateGroup->map(function ($productGroup) {
+                $firstProduct = $productGroup->first();
+                
+                $totalQuantity = $productGroup->sum('cant');
+                $totalPrice = $productGroup->sum('price');
+                $totalCommission = $productGroup->sum('commission_amount');
+                $totalProfessionalCommissionNet = $productGroup->sum('professional_commission');
+                $totalProfessionalCommissionBruto = $productGroup->sum('professional_commission_bruto');
+                $totalRetention = $productGroup->sum('retention_amount');
+                
+                // Combinar tiers
+                $combinedTiers = [];
+                foreach ($productGroup as $product) {
+                    foreach ($product['commission_tiers'] as $tier) {
+                        $found = false;
+                        foreach ($combinedTiers as &$combinedTier) {
+                            if ($combinedTier['tier_name'] === $tier['tier_name']) {
+                                $combinedTier['products'] += $tier['products'];
+                                $combinedTier['commission'] += $tier['commission'];
+                                $combinedTier['commission_neto'] += $tier['commission_neto'];
+                                $combinedTier['retention_amount'] += $tier['retention_amount'];
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if (!$found) {
+                            $combinedTiers[] = [
+                                'tier_name' => $tier['tier_name'],
+                                'products' => $tier['products'],
+                                'rate' => $tier['rate'],
+                                'commission' => $tier['commission'],
+                                'commission_neto' => $tier['commission_neto'],
+                                'retention_amount' => $tier['retention_amount']
+                            ];
+                        }
+                    }
+                }
+                
+                return [
+                    'id' => $firstProduct['id'],
+                    'price' => $totalPrice,
+                    'pay' => $firstProduct['pay'],
+                    'cant' => $totalQuantity,
+                    'name' => $firstProduct['name'],
+                    'image_product' => $firstProduct['image_product'],
+                    'type' => $firstProduct['type'],
+                    'has_commission' => $firstProduct['has_commission'],
+                    'commission_amount' => round($totalCommission, 2),
+                    'professional_commission' => round($totalProfessionalCommissionNet, 2), // NETO
+                    'professional_commission_bruto' => round($totalProfessionalCommissionBruto, 2), // BRUTO
+                    'retention_amount' => round($totalRetention, 2),
+                    'commission_per_unit' => $totalQuantity > 0 ? round($totalProfessionalCommissionNet / $totalQuantity, 2) : 0,
+                    'commission_tiers' => $combinedTiers,
+                    'created_at' => $firstProduct['created_at'],
+                    'data' => $firstProduct['data']
+                ];
+            });
+        });
+        
+        // Reorganizar la estructura
+        $finalProducts = collect();
+        foreach ($groupedProducts as $date => $products) {
+            foreach ($products as $product) {
+                $finalProducts->push($product);
+            }
+        }
+        
+        // Ordenar por fecha
+        $finalProducts = $finalProducts->sortBy('data')->values();
+
+        // Calcular totales globales
+        $totalCommissionBruto = $finalProducts->sum('professional_commission_bruto');
+        $totalRetention = $finalProducts->sum('retention_amount');
+        $totalCommissionNeto = $finalProducts->sum('professional_commission');
 
         return [
             'total_products_sold' => $mappedProducts->sum('cant'),
-            'total_commission' => round($totalCommission, 2),
-            'retention_amount' => round($retentionAmount, 2),
-            'commission_neto' => round($commissionAfterRetention, 2),
-            'commission_details' => $commissionDetails,
+            'total_commission' => round($totalCommissionBruto, 2),
+            'retention_amount' => round($totalRetention, 2),
+            'commission_neto' => round($totalCommissionNeto, 2),
             'products_sold' => $finalProducts,
             'sales_ids' => $allSales->pluck('id')->toArray(),
             'order_ids' => $allOrders->pluck('id')->toArray(),
             'commission_sales_ids' => $commissionSales->pluck('id')->toArray(),
             'commission_order_ids' => $commissionOrders->pluck('id')->toArray()
         ];
-    }
+    }*/
 
     public function getWorkerPurchases(array $data): array
     {

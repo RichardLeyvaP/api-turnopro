@@ -387,10 +387,9 @@ class ReservationController extends Controller
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
                 'email_client' => 'nullable',
-                'phone_client' => 'required',
+                'phone_client' => 'nullable',
                 'name_client' => 'required',
-                'client_id' => 'nullable',
-                //'second_surname' => 'required',
+                'client_id' => 'nullable'
             ]);            
             $servs = $request->input('services');
             Log::info($request);
@@ -447,7 +446,7 @@ class ReservationController extends Controller
                         return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
                     }
                 }
-	}
+	        }
             
             $id_client = 0;
             $code = '';
@@ -502,6 +501,11 @@ class ReservationController extends Controller
                     //$client->client_image = 'clients/default_profile.jpg';
                     $client->save();
                     $id_client = $client->id;
+                    /*if (isset($data['incognito']) && $data['incognito'] == 1) {
+                        Log::info("Es incognito");
+                       $userNew->delete();
+                       $client->delete();
+                    }*/
 
                     Log::info("Id que tiene");
                     Log::info($id_client);
@@ -584,11 +588,246 @@ class ReservationController extends Controller
                     'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
                     'code_reserva' => $code
                 ];
-   Log::info("OKOKOK");
+        Log::info("OKOKOK");
 
                 Log::info($data);
-                SendEmailJob::dispatch($data);
+                //SendEmailJob::dispatch($data);
             }
+                DB::commit();
+            return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
+        } catch (TransportException $e) {
+            Log::error($e);
+            DB::rollback();
+            return response()->json(['msg' => 'La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico '], 422);
+        } catch (\Throwable $th) {
+            Log::error($th);
+
+            DB::rollback();
+            return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
+        }
+    }
+
+    public function reservation_store_tottem(Request $request)
+    {
+        Log::info("Guardar Reservacion Tottem");
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'start_time' => 'required',
+                'data' => 'required|date',
+                'branch_id' => 'required|numeric',
+                'professional_id' => 'required|numeric',
+                'email_client' => 'nullable',
+                'phone_client' => 'nullable',
+                'name_client' => 'required',
+                'client_id' => 'nullable',
+                'incognito' => 'nullable|in:0,1',
+                'editedPhather' => 'nullable|array',
+            ]);            
+            $servs = $request->input('services');
+            Log::info($request);
+            if ($request->has('select_professional')) {
+                $data['select_professional'] = $request->select_professional;
+                // Actualiza el campo 'living' a NULL para el branch_id dado
+                BranchProfessional::where('branch_id', $data['branch_id'])
+                ->update(['living' => NULL]);
+                $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+                Log::info('Professionales recalculando el orden para cliente:'.$data['name_client']);
+                Log::info($professionals);
+                if ($professionals) {
+                    $data['professional_id'] = $professionals[0]['id'];
+                    $data['start_time'] = $professionals[0]['start_time'];
+                }
+            } else {
+                $data['select_professional'] = 1;
+            }
+            if ($request->has('from_home')) {
+                $data['from_home'] = $request->from_home;
+            } 
+            else {
+                $data['from_home'] = 1;
+                $reservationIntervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
+                Log::info('Horarios del barbero');
+                Log::info($reservationIntervals);
+                // Verificar si el array tiene un número impar de elementos
+                if (count($reservationIntervals) % 2 !== 0) {
+                    // Duplicar el último elemento
+                    $reservationIntervals[] = end($reservationIntervals);
+                }
+                $reservation_intervals = array_chunk($reservationIntervals, 2);
+                $reservation_intervals = array_map(function ($chunk) {
+                    return [
+                        'start' => Carbon::parse($chunk[0]),
+                        'end' => Carbon::parse($chunk[1]),
+                    ];
+                }, $reservation_intervals);
+                // Nuevo intervalo propuesto
+                $new_start = Carbon::parse($data['start_time']);
+                $total_time = Service::whereIn('id', $servs)->sum('duration_service');
+                $new_end = $new_start->copy()->addMinutes($total_time);
+
+                // Verificar solapamientos
+                foreach ($reservation_intervals as $interval) {
+                    $existing_start = $interval['start'];
+                    $existing_end = $interval['end'];
+
+                    if (
+                        $new_start->between($existing_start, $existing_end, false) || // Inicio dentro del rango existente
+                        $new_end->between($existing_start, $existing_end, false) ||  // Fin dentro del rango existente
+                        ($new_start->lessThanOrEqualTo($existing_start) && $new_end->greaterThanOrEqualTo($existing_end)) // Cubre un intervalo existente
+                    ) {
+                        return response()->json(['msg' => 'El rango seleccionado ha sido reservado'], 201);
+                    }
+                }
+	        }
+            
+            $id_client = 0;
+            $code = '';
+            $reservation = [];
+            //1-Verificar que el usuario no este registrado
+            if ($data['client_id'] != 0) {
+                $id_client = $data['client_id'];
+                $clientExist = Client::where('id', $data['client_id'])->first();
+                Log::info('Cliente Existente');
+                Log::info($clientExist);
+                if ($clientExist != null) {
+                    $clientExist->email = $data['email_client'];
+                    $clientExist->save();                    
+                    $userExist = $clientExist->user;
+                    Log::info('User Existente');
+                    Log::info($userExist);
+                    $userExist->email = $data['email_client'];
+                    $userExist->save();
+                }
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+            }
+            else {
+                if (!is_null($data['editedPhather']['parent_id']) || $data['editedPhather']['parent_id'] != 0) {
+                    Log::info('No esta registrado el padre');
+                    Log::info($data['editedPhather']['parent_name']);
+                    $userNewParent = User::create([
+                        'name' => $data['editedPhather']['parent_name'],
+                        'email' => $data['editedPhather']['parent_email'],
+                        'password' => Hash::make($data['editedPhather']['parent_phone'].''.$data['editedPhather']['parent_name'])
+                    ]);
+
+                    $clientParent = new Client();
+                    $clientParent->name = $data['editedPhather']['parent_name'];
+                    $clientParent->email = $data['editedPhather']['parent_email'];
+                    $clientParent->phone = $data['editedPhather']['parent_phone'];
+                    $clientParent->user_id = $userNewParent->id;
+                    $clientParent->save();  
+                    $data['editedPhather']['parent_id'] = $clientParent->id;
+
+                }
+                    Log::info("Si no existe registrarlo");
+                    $userNew = User::create([
+                        'name' => $data['name_client'],
+                        'email' => $data['email_client'],
+                        'password' => Hash::make($data['phone_client'].''.$data['name_client'])
+                    ]);
+                    $client = new Client();
+                    $client->name = $data['name_client'];
+                    //$client->surname = $data['surname_client'];
+                    //$client->second_surname = $data['second_surname'];
+                    $client->email = $data['email_client'];
+                    $client->phone = $data['phone_client'];
+                    $client->user_id = $userNew->id;
+                    $client->parent_id = $data['editedPhather']['parent_id'];
+                    $client->save();
+                    $id_client = $client->id;
+                    if (isset($data['incognito']) && $data['incognito'] == 1) {
+                        Log::info("Es incognito");
+                       $userNew->delete();
+                       $client->delete();
+                    }
+
+                    Log::info("Id que tiene");
+                    Log::info($id_client);
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+                //}
+            }
+            
+            // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
+            Log::info("5.comparando fechas");
+
+
+            $fechaHoy = Carbon::today();
+            // Obtener la fecha formateada como 'YYYY-MM-DD'
+            $fechaFormateada = $fechaHoy->toDateString();
+            Log::info($data['data']);
+            Log::info($fechaFormateada);
+
+            if (($data['data'] == $fechaFormateada)) {
+                Log::info("5.las fechas son iguales");
+                $this->reservation_tail();
+                Log::info("5.actualice la cola");
+            }
+            //crear la notificacion
+            if ($data['from_home'] == 0 && $data['select_professional'] == 1) {
+                $notification = new Notification();
+                $notification->professional_id = $data['professional_id'];
+                $notification->branch_id = $data['branch_id'];
+                $notification->tittle = 'Nuevo cliente en cola';
+                $notification->description = 'Tienes un nuevo cliente en cola';
+                $notification->type = 'Barbero';
+                $notification->save();
+            }
+            if ($data['from_home'] == 0 && $data['select_professional'] == 0){
+                // Convierte start_time a un objeto Carbon para la fecha de hoy
+             $startDateTime = Carbon::createFromFormat('H:i', $data['start_time']);
+
+             // Obtén la hora actual
+             $now = Carbon::now();
+ 
+             // Calcula la diferencia en minutos entre la hora actual y el start_time
+             $diffInMinutes = $startDateTime->diffInMinutes($now, false);
+ 
+             // Si la diferencia es menor o igual a 3 minutos y positiva (o cero), ejecuta alguna acción
+             if ($diffInMinutes >= 0 && $diffInMinutes <= 3) {
+                 // Realiza alguna acción
+                 $notification = new Notification();
+                    $notification->professional_id = $data['professional_id'];
+                    $notification->branch_id = $data['branch_id'];
+                    $notification->tittle = 'Nuevo cliente en cola';
+                    $notification->description = 'Tienes un nuevo cliente en cola';
+                    $notification->type = 'Barbero';
+                    $notification->save();
+             }
+            }
+            
+            /*if ($data['from_home'] == 1) {
+                $code = $reservation->code;
+                //optener nombre del professional
+                $professional = Professional::find($data['professional_id']);
+                $name = $professional->name;
+                //todo *************** llamando al servicio de envio de email *******************
+                //$this->sendEmailService->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+                //SendEmailJob::dispatch()->confirmReservation($data['data'], $data['start_time'], $id_client, $data['branch_id'], null, $name);
+                if ($reservation != null) {
+                    $id = $reservation->id;
+                } else {
+                    $id = 0;
+                }
+                Log::info('Id de la reservacion');
+                Log::info($id);
+                $data = [
+                    'confirm_reservation' => true, // Indica que es una confirmación de reserva
+                    'data_reservation' => $data['data'], // Datos de la reserva
+                    'start_time' => $data['start_time'], // Hora de inicio
+                    'client_id' => $id_client, // ID del cliente
+                    'branch_id' => $data['branch_id'], // ID de la sucursal
+                    'type' => null, // Tipo (en este caso, se deja como null)
+                    'name_professional' => $name, // Nombre del profesional
+                    'recipient' => null, // Destinatario (en este caso, se deja como null),                
+                    'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
+                    'code_reserva' => $code
+                ];
+                Log::info("OKOKOK");
+
+                Log::info($data);
+                //SendEmailJob::dispatch($data);
+            }*/
                 DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {

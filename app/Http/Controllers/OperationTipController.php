@@ -788,8 +788,7 @@ class OperationTipController extends Controller
 
     public function professional_branch_products(Request $request)
     {
-        // Validación de entrada
-        // Validación de entrada
+         // Validación de entrada
         $validator = Validator::make($request->all(), [
             'professional_id' => [
                 'required',
@@ -801,17 +800,16 @@ class OperationTipController extends Controller
                 'integer',
                 Rule::exists('branches', 'id')
             ],
-            'startDate' => [
-                'nullable',
-                'date',
-                'date_format:Y-m-d',
-                'before_or_equal:endDate'
+            'year' => [
+                'required',
+                'integer',
+                'min:2000',
             ],
-            'endDate' => [
-                'nullable',
-                'date',
-                'date_format:Y-m-d',
-                'after_or_equal:startDate'
+            'month' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:12'
             ],
             'charge' => [
                 'nullable',
@@ -822,12 +820,13 @@ class OperationTipController extends Controller
             'professional_id.exists' => 'El profesional no existe',
             'branch_id.exists' => 'La sucursal no existe',
             'charge.exists' => 'El cargo no existe',
-            'startDate.date' => 'La fecha de inicio debe ser una fecha válida',
-            'startDate.date_format' => 'La fecha de inicio debe tener el formato YYYY-MM-DD',
-            'startDate.before_or_equal' => 'La fecha de inicio debe ser anterior o igual a la fecha fin',
-            'endDate.date' => 'La fecha fin debe ser una fecha válida',
-            'endDate.date_format' => 'La fecha fin debe tener el formato YYYY-MM-DD',
-            'endDate.after_or_equal' => 'La fecha fin debe ser posterior o igual a la fecha de inicio'
+            'year.required' => 'El año es requerido',
+            'year.integer' => 'El año debe ser un número entero',
+            'year.min' => 'El año debe ser mayor o igual a 2000',
+            'month.required' => 'El mes es requerido',
+            'month.integer' => 'El mes debe ser un número entero',
+            'month.min' => 'El mes debe ser mayor o igual a 1',
+            'month.max' => 'El mes debe ser menor o igual a 12'
         ]);
 
         if ($validator->fails()) {
@@ -846,11 +845,19 @@ class OperationTipController extends Controller
         try {
             $data = $validator->validated();
             
+            // Calcular fechas basadas en año y mes
+            $startDate = Carbon::create($data['year'], $data['month'], 1)->startOfMonth();
+            $endDate = Carbon::create($data['year'], $data['month'], 1)->endOfMonth();
+            
+            // Agregar fechas al array de datos para el servicio
+            $data['startDate'] = $startDate->format('Y-m-d');
+            $data['endDate'] = $endDate->format('Y-m-d');
+
             Log::info('Mostrando datos de venta de productos', [
                 'professional_id' => $data['professional_id'],
                 'branch_id' => $data['branch_id'],
-                'startDate' => $data['startDate'] ?? null,
-                'endDate' => $data['endDate'] ?? null,
+                'year' => $data['year'],
+                'month' => $data['month'],
                 'charge' => $data['charge'] ?? null
             ]);
 
@@ -884,7 +891,6 @@ class OperationTipController extends Controller
 
     public function professional_branch_tips(Request $request)
     {
-        // Validación de entrada
         $validator = Validator::make($request->all(), [
             'professional_id' => [
                 'required',
@@ -896,17 +902,16 @@ class OperationTipController extends Controller
                 'integer',
                 Rule::exists('branches', 'id')
             ],
-            'startDate' => [
-                'nullable',
-                'date',
-                'date_format:Y-m-d',
-                'before_or_equal:endDate'
+            'year' => [
+                'required',
+                'integer',
+                'min:2000',
             ],
-            'endDate' => [
-                'nullable',
-                'date',
-                'date_format:Y-m-d',
-                'after_or_equal:startDate'
+            'month' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:12'
             ],
             'charge' => [
                 'nullable',
@@ -917,13 +922,15 @@ class OperationTipController extends Controller
             'professional_id.exists' => 'El profesional no existe',
             'branch_id.exists' => 'La sucursal no existe',
             'charge.exists' => 'El cargo no existe',
-            'startDate.date' => 'La fecha de inicio debe ser una fecha válida',
-            'startDate.date_format' => 'La fecha de inicio debe tener el formato YYYY-MM-DD',
-            'startDate.before_or_equal' => 'La fecha de inicio debe ser anterior o igual a la fecha fin',
-            'endDate.date' => 'La fecha fin debe ser una fecha válida',
-            'endDate.date_format' => 'La fecha fin debe tener el formato YYYY-MM-DD',
-            'endDate.after_or_equal' => 'La fecha fin debe ser posterior o igual a la fecha de inicio'
+            'year.required' => 'El año es requerido',
+            'year.integer' => 'El año debe ser un número entero',
+            'year.min' => 'El año debe ser mayor o igual a 2000',
+            'month.required' => 'El mes es requerido',
+            'month.integer' => 'El mes debe ser un número entero',
+            'month.min' => 'El mes debe ser mayor o igual a 1',
+            'month.max' => 'El mes debe ser menor o igual a 12'
         ]);
+
 
         if ($validator->fails()) {
             Log::warning('Validación fallida para cálculo de pagos', [
@@ -940,7 +947,13 @@ class OperationTipController extends Controller
 
         try {
             $data = $validator->validated();
+            // Calcular fechas basadas en año y mes
+            $startDate = Carbon::create($data['year'], $data['month'], 1)->startOfMonth();
+            $endDate = Carbon::create($data['year'], $data['month'], 1)->endOfMonth();
             
+            // Agregar fechas al array de datos para el servicio
+            $data['startDate'] = $startDate->format('Y-m-d');
+            $data['endDate'] = $endDate->format('Y-m-d');
             Log::info('Mostrando datos de comision de propinas', [
                 'professional_id' => $data['professional_id'],
                 'branch_id' => $data['branch_id'],

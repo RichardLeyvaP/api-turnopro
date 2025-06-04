@@ -50,7 +50,7 @@ class ClientController extends Controller
 
   
     
-      public function client_branch_ANTERIOR(Request $request)
+    public function client_branch_ANTERIOR(Request $request)
     {
         try {
 
@@ -259,7 +259,7 @@ class ClientController extends Controller
 
 
     
-      public function client_autocomplete1_ANTERIOR(Request $request)
+    public function client_autocomplete1_ANTERIOR(Request $request)
     {
         try {
             $data = $request->validate([
@@ -355,7 +355,7 @@ class ClientController extends Controller
         }
     }
     
-       public function client_autocomplete1(Request $request)
+    public function client_autocomplete1(Request $request)
     {
         try {
             $data = $request->validate([
@@ -653,7 +653,7 @@ class ClientController extends Controller
         }
     }
     
-      public function destroy(Request $request)
+    public function destroy(Request $request)
     {
         try {
 
@@ -957,8 +957,6 @@ class ClientController extends Controller
         }
     }
 
-
-
     public function client_email_phoneAnteriorrrr(Request $request)
     {
         try {
@@ -1040,4 +1038,97 @@ class ClientController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
+
+    /*public function handleClientIncognito(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => [
+                'required',
+                'string',
+                'max:255'
+            ]
+        ], [
+            'name.required' => 'El nombre es requerido',
+            'name.string' => 'El nombre debe ser texto',
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Validación fallida para creación de cliente', [
+                'errors' => $validator->errors()->all(),
+                'input' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $name = $request->input('name');
+
+            // Buscar client incluyendo eliminados
+            $client = Client::withTrashed()
+                    ->where('name', 'like', $name)
+                    ->first();
+
+            if (!$client) {
+                Log::info("Client no encontrado, creando nuevos registros", ['name' => $name]);
+
+                // Generar datos de prueba chilenos si no se proporcionaron
+                $cleanName = preg_replace('/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/', '', $name);
+                $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.cl';
+                $phone = '+569' . rand(10000000, 99999999);
+
+                // 1. Crear User con soft delete
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'password' => Hash::make($phone . $name)
+                ]);
+                $user->delete(); // Soft delete inmediato
+
+                // 2. Crear Client con soft delete
+                    $client = new Client();
+                    $client->name = $name;
+                    $client->email = $email;
+                    $client->phone = $phone;
+                    $client->user_id = $user->id;
+                    $client->client_image = 'clients/default_profile.jpg';
+                    $client->save();
+                $client->delete(); // Soft delete inmediato
+
+                Log::info("Nuevos registros creados y marcados como eliminados", [
+                    'user_id' => $user->id,
+                    'client_id' => $client->id,
+                    'email' => $email,
+                    'phone' => $phone
+                ]);
+            } else {
+                // Si existe, obtener el user relacionado (incluyendo eliminados)
+                $user = User::withTrashed()->find($client->user_id);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $client->wasRecentlyCreated ? 'Cliente creado exitosamente' : 'Cliente encontrado',
+                     'user' => $user,
+                    'client' => $client
+            ]);
+
+        } catch (Exception $e) {
+            Log::error("Error en handleClientRequest", [
+                'name' => $request->input('name'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el cliente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }*/
 }
