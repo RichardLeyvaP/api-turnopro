@@ -47,6 +47,11 @@ class Finance extends Model
         return $this->belongsTo(OperationTip::class, 'operation_tip_id');
     }
 
+    public function courseStudent()
+    {
+        return $this->belongsTo(CourseStudent::class);
+    }
+
     protected $casts = [
         'amount' => 'double',
         'control' => 'integer'

@@ -19,5 +19,10 @@ class CourseStudent extends Model
     return $this->belongsTo(Course::class);
     }
 
+    public function finances()
+    {
+        return $this->hasMany(Finance::class);
+    }
+
     protected $table = "course_student";
 }

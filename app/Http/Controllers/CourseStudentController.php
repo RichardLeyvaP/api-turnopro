@@ -134,7 +134,30 @@ class CourseStudentController extends Controller
                 ? $data['total_payment'] 
                 : (isset($data['reservation_payment']) ? $data['reservation_payment'] : null);
 
-            $atributosParaActualizar = [
+                // Asociar estudiante al curso usando Eloquent
+                $courseStudent = new CourseStudent();
+                $courseStudent->course_id = $data['course_id'];
+                $courseStudent->student_id = $student->id;
+                $courseStudent->reservation_payment = $data['reservation_payment'] ?? null;
+                $courseStudent->total_payment = $totalPayment;
+                $courseStudent->enrollment_confirmed = $data['enrollment_confirmed'] ?? false;
+                $courseStudent->image_url = $file ?? '';
+                $courseStudent->save();
+
+                // Crear registro financiero
+                $finance = new Finance();
+                $finance->control = Finance::max('control') + 1;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $totalPayment;
+                $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
+                $finance->enrollment_id = $course->enrollment_id;
+                $finance->type = 'Academia';
+                $finance->revenue_id = 3;
+                $finance->data = Carbon::now();                
+                $finance->file = '';
+                $finance->course_student_id = $courseStudent->id; // Usamos el ID del modelo recién creado
+                $finance->save();
+            /*$atributosParaActualizar = [
                 'reservation_payment' => $data['reservation_payment'] ?? null,
                 'total_payment' => $totalPayment,
                 'enrollment_confirmed' => $data['enrollment_confirmed'] ?? false,
@@ -165,7 +188,7 @@ class CourseStudentController extends Controller
                             $finance->revenue_id = 3;
                             $finance->data = Carbon::now();                
                             $finance->file = '';
-                            $finance->save();
+                            $finance->save();*/
             //}
                     // $course->students()->attach($student->id);
             $course->available_slots = $course->available_slots - 1;
@@ -299,9 +322,44 @@ class CourseStudentController extends Controller
                 $data['course_id'] => $atributosParaActualizar,
             ]); 
 
+            // Obtener la relación course_student actualizada
+        $courseStudent = DB::table('course_student')
+                         ->where('course_id', $data['course_id'])
+                         ->where('student_id', $data['student_id'])
+                         ->first();
+
             //agregar a Finanzas
            $course = Course::find($data['course_id']);  
-           //$finance = Finance::where('enrollment_id', $course->enrollment_id)orderBy('control', 'desc')->first();
+           $financeCourse = Finance::where('course_student_id', $courseStudent->id)->first();
+
+            if ($financeCourse) {
+                // Si existe y el monto es diferente, actualizar
+                if ($financeCourse->amount != $data['total_payment']) {
+                    Log::info('Actualizando registro financiero existente');
+                    $financeCourse->amount = $data['total_payment'];
+                    $financeCourse->comment = 'Actualización de matrícula de estudiante en curso '.$course->name;
+                    //$financeCourse->data = Carbon::now();
+                    $financeCourse->save();
+                } else {
+                    Log::info('Monto no ha cambiado, no se actualiza registro financiero');
+                }
+            } else {
+                // Si no existe, crear nuevo registro
+                Log::info('Creando nuevo registro financiero');
+                $finance = new Finance();
+                $finance->control = Finance::max('control') + 1;
+                $finance->operation = 'Ingreso';
+                $finance->amount = $data['total_payment'];
+                $finance->comment = 'Ingreso por matrícula de estudiante en curso '.$course->name;
+                $finance->enrollment_id = $course->enrollment_id;
+                $finance->type = 'Academia';
+                $finance->revenue_id = 3;
+                $finance->data = Carbon::now();
+                $finance->file = '';
+                $finance->course_student_id = $courseStudent->id;
+                $finance->save();
+            }
+           /*//$finance = Finance::where('enrollment_id', $course->enrollment_id)orderBy('control', 'desc')->first();
             //return $course->enrollment_id;       
             /*$finance = Finance::where('enrollment_id', $course->enrollment_id)->where('revenue_id', 3)->whereDate('data', Carbon::now())->first();
             if($finance){
@@ -322,7 +380,7 @@ class CourseStudentController extends Controller
             }
             else{*/
                 //Log::info('no existe');
-                $finance = Finance::orderBy('control', 'desc')->first();
+                /*$finance = Finance::orderBy('control', 'desc')->first();
                 if($finance)
                     {
                         $control = $finance->control+1;
@@ -340,7 +398,7 @@ class CourseStudentController extends Controller
                 $finance->revenue_id = 3;
                 $finance->data = Carbon::now();                
                 $finance->file = '';
-                $finance->save();
+                $finance->save();*/
             //}
 
             return response()->json(['msg' => 'Estudiante actualizado correctamente'], 200);
