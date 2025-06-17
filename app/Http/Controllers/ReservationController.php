@@ -702,7 +702,7 @@ class ReservationController extends Controller
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
             else {
-                if (!is_null($data['editedPhather']['parent_id']) || $data['editedPhather']['parent_id'] != 0) {
+                if (empty($data['editedPhather']['parent_id'])) {
                     Log::info('No esta registrado el padre');
                     Log::info($data['editedPhather']['parent_name']);
                     $userNewParent = User::create([

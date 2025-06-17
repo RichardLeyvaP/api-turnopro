@@ -36,7 +36,7 @@ class RecordController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Guardar");
+        Log::info("Guardar Hora de entrada");
         Log::info($request);
         DB::beginTransaction();
         try {
@@ -71,13 +71,29 @@ class RecordController extends Controller
                 // Guardar los cambios
                 $branchProfessional->save();
 
+                $professional = Professional::find($data['professional_id']);
+                $charge = $professional->charge->name;
+                if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
+                            //return $user->professional->branchRules->where('branch_id', $request->branch_id);
+                           $professionalRules = $professional->branchRules()
+                            ->where('branch_id', $request->branch_id)
+                            ->get()->map->pivot->where('data', Carbon::now()->toDateString());
+                            if ($professionalRules->isEmpty()) {
+                                $branchRules = Branch::find($request->branch_id);
+                            //$professional = Professional::find($user->professional->id);
+                            Log::info($professionalRules);
+                                $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
+                                Log::info($branchRulesId);
+                                $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
+                            }
+                        }//if del cargo
+
             if (!$record) {
                 // Obtener el nombre del día en español
                 $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
                 $startTime = Schedule::where('branch_id', $data['branch_id'])
                     ->where('day', $nombreDia)
                     ->value('start_time');
-
                 if ($startTime) {
                     $startTimeCarbon = Carbon::createFromFormat('H:i:s', $startTime);
                     $currentTime = Carbon::now();

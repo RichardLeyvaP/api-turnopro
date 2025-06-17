@@ -345,6 +345,7 @@ class BranchRuleProfessionalController extends Controller
     {
         try {
             Log::info("Entra a buscar el estado de las rules de un  professional");
+            Log::info($request->all());
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'branch_id'  => 'required|numeric'

@@ -486,7 +486,7 @@ class UserController extends Controller
                             ];
                         })->values()->first();
 
-                        $charge = $professional->charge->name;
+                        /*$charge = $professional->charge->name;
                         if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                            $professionalRules = $professional->branchRules()
@@ -500,7 +500,7 @@ class UserController extends Controller
                                 Log::info($branchRulesId);
                                 $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
                             }
-                        }//if del cargo
+                        }//if del cargo*/
                     }//if de la sucursal
 
                     $token = $user->createToken('auth_token')->plainTextToken;
@@ -588,7 +588,7 @@ class UserController extends Controller
                             ];
                         })->values()->first();
 
-                        $charge = $professional->charge->name;
+                        /*$charge = $professional->charge->name;
                         if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                            $professionalRules = $professional->branchRules()
@@ -602,7 +602,7 @@ class UserController extends Controller
                                 Log::info($branchRulesId);
                                 $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
                             }
-                        }//if del cargo
+                        }//if del cargo*/
                     }//if de la sucursal
 
                     $token = $user->createToken('auth_token')->plainTextToken;

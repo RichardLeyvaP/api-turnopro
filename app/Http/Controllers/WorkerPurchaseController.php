@@ -359,6 +359,7 @@ class WorkerPurchaseController extends Controller
             $purchases = WorkerPurchase::with(['professional:id,name,image_url', 'product:id,name,image_product'])
                 ->where('branch_id', $validated['branch_id'])
                 ->whereDate('data', $data)
+                ->orderByDesc('id') // Ordenar por ID de forma descendente
                 ->get()
                 ->map(function ($purchase) {
                     return [
