@@ -702,50 +702,67 @@ class ReservationController extends Controller
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
             }
             else {
-                if (empty($data['editedPhather']['parent_id'])) {
-                    Log::info('No esta registrado el padre');
-                    Log::info($data['editedPhather']['parent_name']);
-                    $userNewParent = User::create([
-                        'name' => $data['editedPhather']['parent_name'],
-                        'email' => $data['editedPhather']['parent_email'],
-                        'password' => Hash::make($data['editedPhather']['parent_phone'].''.$data['editedPhather']['parent_name'])
+                // Para clientes nuevos
+                if ($data['incognito'] == 1) {
+                    // Lógica específica para incógnitos
+                    $userNew = User::create([
+                        'name' => $data['name_client'] ?? 'Cliente Incógnito',
+                        'email' => $data['email_client'] ?? 'incognito'.time().'@example.com',
+                        'password' => Hash::make($data['phone_client'].''.$data['name_client'])
                     ]);
+                    
+                    $client = new Client();
+                    $client->name = $data['name_client'];
+                    $client->email = $data['email_client'];
+                    $client->phone = $data['phone_client'];
+                    $client->user_id = $userNew->id;
+                    // No asignamos parent_id para incógnitos
+                    $client->save();
+                    
+                    $id_client = $client->id;
+                    
+                    // Eliminar registros si es incógnito
+                    $userNew->delete();
+                    $client->delete();
+                    
+                    $reservation = $this->reservationService->store($data, $servs, $id_client);
+                } else {
+                    // Lógica para clientes normales (no incógnitos)
+                    if (!empty($data['editedPhather']['parent_id'])) {
+                        // Solo crear padre si no es incógnito
+                        $userNewParent = User::create([
+                            'name' => $data['editedPhather']['parent_name'],
+                            'email' => $data['editedPhather']['parent_email'],
+                            'password' => Hash::make($data['editedPhather']['parent_phone'].''.$data['editedPhather']['parent_name'])
+                        ]);
 
-                    $clientParent = new Client();
-                    $clientParent->name = $data['editedPhather']['parent_name'];
-                    $clientParent->email = $data['editedPhather']['parent_email'];
-                    $clientParent->phone = $data['editedPhather']['parent_phone'];
-                    $clientParent->user_id = $userNewParent->id;
-                    $clientParent->save();  
-                    $data['editedPhather']['parent_id'] = $clientParent->id;
-
-                }
-                    Log::info("Si no existe registrarlo");
+                        $clientParent = new Client();
+                        $clientParent->name = $data['editedPhather']['parent_name'];
+                        $clientParent->email = $data['editedPhather']['parent_email'];
+                        $clientParent->phone = $data['editedPhather']['parent_phone'];
+                        $clientParent->user_id = $userNewParent->id;
+                        $clientParent->save();  
+                        $data['editedPhather']['parent_id'] = $clientParent->id;
+                    }
+                    
+                    // Crear el cliente normal
                     $userNew = User::create([
                         'name' => $data['name_client'],
                         'email' => $data['email_client'],
                         'password' => Hash::make($data['phone_client'].''.$data['name_client'])
                     ]);
+                    
                     $client = new Client();
                     $client->name = $data['name_client'];
-                    //$client->surname = $data['surname_client'];
-                    //$client->second_surname = $data['second_surname'];
                     $client->email = $data['email_client'];
                     $client->phone = $data['phone_client'];
                     $client->user_id = $userNew->id;
-                    $client->parent_id = $data['editedPhather']['parent_id'];
+                    $client->parent_id = $data['editedPhather']['parent_id'] ?? null;
                     $client->save();
                     $id_client = $client->id;
-                    if (isset($data['incognito']) && $data['incognito'] == 1) {
-                        Log::info("Es incognito");
-                       $userNew->delete();
-                       $client->delete();
-                    }
-
-                    Log::info("Id que tiene");
-                    Log::info($id_client);
+                    
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
-                //}
+                }
             }
             
             // SI la fecha con la que se registró es igual a la fecha de hoy llamar actualizar la cola del dia de hoy
