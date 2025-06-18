@@ -51,22 +51,26 @@ class ProfessionalPaymentService
         // 3. Cálculo de prestacion de servicios
         $carsResult = $this->getServiceEarnings($data, $retention);
 
+        $existingPayments = $this->getExistingPayments($data);
+
         $salaryData = [
             'salary_bruto' => round($salary, 2),
             'retention_salary' => round($salary * ($retention / 100), 2),
-            'salary_neto' => round($salary - ($salary * ($retention / 100)), 2)
+            'salary_neto' => round($salary - ($salary * ($retention / 100)), 2),
+            'already_paid' => $existingPayments > 0 // Flag para saber si ya tiene pagos
         ];
+
 
         // Cálculo del total neto
         $totalNeto = $commissionResult['commission_neto'] 
                    + $tipsResult['tip_neto'] 
                    + $carsResult['total_neto']
-                   + $salaryData['salary_bruto']
+                   + ($existingPayments > 0 ? 0 : $salaryData['salary_bruto']) // Aquí está el cambio
                    - $workerPurchaseResult['total_purchases'] 
                    - $advancesResult['total_advance'];
         // Cálculo del total neto
         $totalNetoPay = $carsResult['total_neto']
-                   + $salaryData['salary_bruto']
+                   + ($existingPayments > 0 ? 0 : $salaryData['salary_bruto']) // Aquí está el cambio
                    - $workerPurchaseResult['total_purchases'] 
                    - $advancesResult['total_advance'];
 
@@ -84,6 +88,28 @@ class ProfessionalPaymentService
         ];
     }
 
+    protected function getExistingPayments(array $data): float
+    {
+        // Obtener el primer y último día del mes actual
+        $firstDayOfMonth = now()->firstOfMonth()->format('Y-m-d');
+        $lastDayOfMonth = now()->lastOfMonth()->format('Y-m-d');
+
+        // Suma de pagos en ProfessionalPayment (Bono productos + Mes)
+        $professionalPayments = ProfessionalPayment::where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->whereIn('type', ['Bono productos', 'Mes'])
+            ->whereBetween('date', [$firstDayOfMonth, $lastDayOfMonth])
+            ->sum('amount');
+
+        // Suma de propinas en OperationTip
+        $tips = OperationTip::where('professional_id', $data['professional_id'])
+            ->where('branch_id', $data['branch_id'])
+            ->where('type', 'Pago Comision de Propinas')
+            ->whereBetween('date', [$firstDayOfMonth, $lastDayOfMonth])
+            ->sum('amount');
+
+        return $professionalPayments + $tips;
+    }
     /*protected function calculateProductCommissions(array $data, $branchProfessional, $professional): array
     {
         // Configuración de tiers
@@ -407,91 +433,91 @@ class ProfessionalPaymentService
             ->get();
 
         // Combinar TODAS las transacciones (sin filtrar por comisión)
-$allTransactions = $allSales->concat($allOrders)->sortBy('created_at');
+        $allTransactions = $allSales->concat($allOrders)->sortBy('created_at');
 
-// Cálculo de productos vendidos (TODOS)
-$totalProductsSold = $allTransactions->sum('cant');
+        // Cálculo de productos vendidos (TODOS)
+        $totalProductsSold = $allTransactions->sum('cant');
 
-$totalCommission = 0;
-$accumulatedProducts = 0;
-$commissionDetails = [];
-$nonCommissionProductsTotal = 0; // Contador de productos sin comisión
+        $totalCommission = 0;
+        $accumulatedProducts = 0;
+        $commissionDetails = [];
+        $nonCommissionProductsTotal = 0; // Contador de productos sin comisión
 
-foreach ($allTransactions as $transaction) {
-    $productsInTransaction = (int)$transaction->cant;
-    $transactionCommission = 0;
-    $nonCommissionProducts = 0;
-    $hasCommission = !is_null($transaction->commission_amount) && $transaction->commission_amount != 0;
-    
-    $transactionDetails = [
-        'transaction_id' => $transaction->id,
-        'type' => $transaction instanceof CashierSale ? 'sale' : 'order',
-        'total_products' => $productsInTransaction,
-        'has_commission' => $hasCommission,
-        'total_commission' => $hasCommission ? (float)$transaction->commission_amount : 0,
-        'tiers_applied' => [],
-        'non_commission_products' => 0
-    ];
-
-    // Solo procesar comisión si la transacción tiene comisión
-    if ($hasCommission) {
-        // Procesar cada producto individualmente
-        for ($i = 1; $i <= $productsInTransaction; $i++) {
-            $currentProductNumber = $accumulatedProducts + 1;
+        foreach ($allTransactions as $transaction) {
+            $productsInTransaction = (int)$transaction->cant;
+            $transactionCommission = 0;
+            $nonCommissionProducts = 0;
+            $hasCommission = !is_null($transaction->commission_amount) && $transaction->commission_amount != 0;
             
-            // Determinar si el producto actual genera comisión
-            if ($currentProductNumber < $tiers[0]['min']) {
-                $nonCommissionProducts++;
-                $accumulatedProducts++;
-                continue;
-            }
+            $transactionDetails = [
+                'transaction_id' => $transaction->id,
+                'type' => $transaction instanceof CashierSale ? 'sale' : 'order',
+                'total_products' => $productsInTransaction,
+                'has_commission' => $hasCommission,
+                'total_commission' => $hasCommission ? (float)$transaction->commission_amount : 0,
+                'tiers_applied' => [],
+                'non_commission_products' => 0
+            ];
 
-            // Obtener el tier actual para este producto
-            $currentTier = $this->getTierForProduct($tiers, $currentProductNumber);
-            
-            if (!$currentTier) {
-                $accumulatedProducts++;
-                continue;
-            }
+            // Solo procesar comisión si la transacción tiene comisión
+            if ($hasCommission) {
+                // Procesar cada producto individualmente
+                for ($i = 1; $i <= $productsInTransaction; $i++) {
+                    $currentProductNumber = $accumulatedProducts + 1;
+                    
+                    // Determinar si el producto actual genera comisión
+                    if ($currentProductNumber < $tiers[0]['min']) {
+                        $nonCommissionProducts++;
+                        $accumulatedProducts++;
+                        continue;
+                    }
 
-            // Calcular comisión para este producto individual
-            $productCommission = ($transaction->commission_amount / $productsInTransaction) * ($currentTier['rate'] / 100);
-            $transactionCommission += $productCommission;
-            $accumulatedProducts++;
+                    // Obtener el tier actual para este producto
+                    $currentTier = $this->getTierForProduct($tiers, $currentProductNumber);
+                    
+                    if (!$currentTier) {
+                        $accumulatedProducts++;
+                        continue;
+                    }
 
-            // Agrupar por tier para el reporte
-            $tierKey = $currentTier['name'];
-            $foundTier = false;
-            
-            foreach ($transactionDetails['tiers_applied'] as &$appliedTier) {
-                if ($appliedTier['tier_name'] === $tierKey) {
-                    $appliedTier['products']++;
-                    $appliedTier['commission'] += $productCommission;
-                    $foundTier = true;
-                    break;
+                    // Calcular comisión para este producto individual
+                    $productCommission = ($transaction->commission_amount / $productsInTransaction) * ($currentTier['rate'] / 100);
+                    $transactionCommission += $productCommission;
+                    $accumulatedProducts++;
+
+                    // Agrupar por tier para el reporte
+                    $tierKey = $currentTier['name'];
+                    $foundTier = false;
+                    
+                    foreach ($transactionDetails['tiers_applied'] as &$appliedTier) {
+                        if ($appliedTier['tier_name'] === $tierKey) {
+                            $appliedTier['products']++;
+                            $appliedTier['commission'] += $productCommission;
+                            $foundTier = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!$foundTier) {
+                        $transactionDetails['tiers_applied'][] = [
+                            'tier_name' => $currentTier['name'],
+                            'products' => 1,
+                            'rate' => $currentTier['rate'],
+                            'commission' => $productCommission,
+                            'accumulated_products' => $accumulatedProducts
+                        ];
+                    }
                 }
+            } else {
+                // Si no tiene comisión, simplemente contamos los productos
+                $nonCommissionProducts = $productsInTransaction;
             }
             
-            if (!$foundTier) {
-                $transactionDetails['tiers_applied'][] = [
-                    'tier_name' => $currentTier['name'],
-                    'products' => 1,
-                    'rate' => $currentTier['rate'],
-                    'commission' => $productCommission,
-                    'accumulated_products' => $accumulatedProducts
-                ];
-            }
+            $transactionDetails['non_commission_products'] = $nonCommissionProducts;
+            $nonCommissionProductsTotal += $nonCommissionProducts;
+            $totalCommission += $transactionCommission;
+            $commissionDetails[] = $transactionDetails;
         }
-    } else {
-        // Si no tiene comisión, simplemente contamos los productos
-        $nonCommissionProducts = $productsInTransaction;
-    }
-    
-    $transactionDetails['non_commission_products'] = $nonCommissionProducts;
-    $nonCommissionProductsTotal += $nonCommissionProducts;
-    $totalCommission += $transactionCommission;
-    $commissionDetails[] = $transactionDetails;
-}
 
         $retentionRate = $professional->retention ?? 0;
         $retentionAmount = $totalCommission * ($retentionRate / 100);
@@ -2190,59 +2216,68 @@ foreach ($allTransactions as $transaction) {
 
     protected function hasProductCommissions($data)
     {
-        return $data['payments']['products']['commission_neto'] > 0;
+        $products = $data['payments']['products'];
+        return $products['commission_neto'] > 0 || $products['retention_amount'] > 0;
     }
 
     protected function processProductCommissions($data, $professional)
     {
+         $payments = $data['payments'];
+    $productsData = $payments['products'];
+
+    // Registrar retención (si existe)
+    if ($productsData['retention_amount'] > 0) {
+        $retention = new Retention();
+        $retention->branch_id = $data['branch_id'];
+        $retention->professional_id = $data['professional_id'];
+        $retention->date = $data['paymentDate'];
+        $retention->retention = $productsData['retention_amount'];
+        $retention->type = 'Products';
+        $retention->save();
+    }
+
+    // Registrar pago y movimiento financiero solo si hay comisión neta
+    if ($productsData['commission_neto'] > 0) {
+        // 1. Registrar pago al profesional
         $professionalPayment = new ProfessionalPayment();
         $professionalPayment->branch_id = $data['branch_id'];
         $professionalPayment->professional_id = $data['professional_id'];
         $professionalPayment->date = $data['paymentDate'];
-        $professionalPayment->amount = $data['payments']['products']['commission_neto'];
+        $professionalPayment->amount = $productsData['commission_neto'];
         $professionalPayment->type = 'Bono productos';
-        $professionalPayment->cant = $data['payments']['products']['total_products_sold'];
+        $professionalPayment->cant = $productsData['total_products_sold'];
         $professionalPayment->save();
 
-        $retention = new Retention();
-        $retention->branch_id = $data['branch_id'];
-        $retention->professional_id = $data['professional_id'];
-        $retention->data = $data['paymentDate'];
-        $retention->retention = $data['payments']['products']['retention_amount'];
-        $retention->type = 'Products';
-        $retention->save();
-    
-        if (!empty($data['payments']['products']['sales_ids'])) {
-            CashierSale::whereIn('id', $data['payments']['products']['sales_ids'])
-                    ->update(['paycashier' => $professionalPayment->id]);
-        }
-
-        if (!empty($data['payments']['products']['order_ids'])) {
-            Order::whereIn('id', $data['payments']['products']['order_ids'])
-                ->update(['paycashier' => $professionalPayment->id]);
-        }
-
+        // 3. Registrar movimiento financiero
         $finance = Finance::orderBy('control', 'desc')->first();         
-        if($finance !== null) {
-            $control = $finance->control+1;
-        } else {
-            $control = 1;
-        }
-        
+        $control = $finance ? $finance->control + 1 : 1;
+
         $finance = new Finance();
-        $finance->control = $control++;
+        $finance->control = $control;
         $finance->operation = 'Gasto';
-        $finance->amount = $data['payments']['products']['commission_neto'];
+        $finance->amount = $productsData['commission_neto'];
         $finance->comment = 'Gasto por pago de bono de productos a ' . $professional->name;
         $finance->branch_id = $data['branch_id'];
         $finance->type = 'Sucursal';
         $finance->expense_id = 5;
-        $finance->data = $data['paymentDate'];
+        $finance->date = $data['paymentDate'];
         $finance->professional_payment_id = $professionalPayment->id;
         $finance->file = '';
         $finance->save();
 
-        $data['payments']['totalNeto'] -= $data['payments']['products']['commission_neto'];
+        // 4. Ajustar totalNeto
+        $data['payments']['totalNeto'] -= $productsData['commission_neto'];
+    }
+    // 2. Actualizar sales/orders asociadas
+        if (!empty($productsData['sales_ids'])) {
+            CashierSale::whereIn('id', $productsData['sales_ids'])
+                ->update(['paycashier' => $professionalPayment->id]);
+        }
+
+        if (!empty($productsData['order_ids'])) {
+            Order::whereIn('id', $productsData['order_ids'])
+                ->update(['paycashier' => $professionalPayment->id]);
+        }
     }
 
     protected function hasTips($data)

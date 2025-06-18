@@ -729,6 +729,9 @@ class OperationTipController extends Controller
             ]);
 
             // Obtener el rango de fechas del mes anterior
+            // Rangos de fechas
+        $currentMonthStart = now()->startOfMonth();
+        $currentMonthEnd = now()->endOfMonth();
             $previousMonthStart = now()->subMonth()->startOfMonth();
             $previousMonthEnd = now()->subMonth()->endOfMonth();
             
@@ -765,10 +768,21 @@ class OperationTipController extends Controller
                             $resultTips = $this->professionalPaymentService->calculateTipsLastMoth($data, $branch, $professional);
                             $totalTipPayments = $resultTips['tip_neto'];
                         }
+            // 2. Pagos del mes actual (sin filtro por tipo)
+            $currentMonthPayments = ProfessionalPayment::where('professional_id', $data['professional_id'])
+                ->where('branch_id', $data['branch_id'])
+                ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
+                 ->sum('amount');
+
+            // 3. Pagos del mes anterior (sin filtro por tipo)
+            $previousMonthPayments = ProfessionalPayment::where('professional_id', $data['professional_id'])
+                ->where('branch_id', $data['branch_id'])
+                ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
+                 ->sum('amount');
 
             $advances = $this->professionalPaymentService->calculateAdvancesDetails($data);
 
-            return response()->json(['payments' => $result, 'total_product_ant' => $totalProductPayments, 'total_tip_ant' => $totalTipPayments, 'advances' => $advances]);
+            return response()->json(['payments' => $result, 'total_product_ant' => $totalProductPayments, 'total_tip_ant' => $totalTipPayments, 'advances' => $advances, 'current_charged' => $currentMonthPayments, 'previous_charged' => $previousMonthPayments]);
 
         } catch (\Exception $e) {
             Log::error('Error al calcular pagos', [

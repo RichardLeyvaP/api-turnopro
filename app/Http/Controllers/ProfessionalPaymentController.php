@@ -249,6 +249,7 @@ class ProfessionalPaymentController extends Controller
                 $finance->save();
             }
             
+            $data = $this->adjustNetPayments($data);
             $payment = $this->professionalPaymentService->processPayment($data);
             
             DB::commit();
@@ -304,7 +305,7 @@ class ProfessionalPaymentController extends Controller
                 'type' => $data['type'],
                 'paymentDate' => $data['paymentDate'],
             ]);
-
+            $data = $this->adjustNetPayments($data);
 
             $payment = $this->professionalPaymentService->processPayment($data);
 
@@ -401,6 +402,53 @@ class ProfessionalPaymentController extends Controller
         }
     }
 
+    protected function adjustNetPayments(array $data): array
+    {
+        $payments = $data['payments'];
+        
+        // 1. Calcular base disponible y deducciones
+        $availableBase = ($payments['salary']['already_paid'] ? 0 : $payments['salary']['salary_bruto']) 
+                    + ($payments['cars']['total_neto'] ?? 0);
+        
+        $totalDeductions = ($payments['advances']['total_advance'] ?? 0) 
+                        + ($payments['workerPurchases']['total_purchases'] ?? 0);
+        
+        // 2. Calcular excedente (si lo hay)
+        $excess = max(0, $totalDeductions - $availableBase);
+        
+        // 3. Ajustar comisiones y propinas si hay excedente
+        if ($excess > 0) {
+            $commissionNeto = $payments['products']['commission_neto'] ?? 0;
+            $tipNeto = $payments['tips']['tip_neto'] ?? 0;
+            $totalBonuses = $commissionNeto + $tipNeto;
+            
+            if ($totalBonuses > 0) {
+                // Calcular proporciones
+                $commissionRatio = $commissionNeto / $totalBonuses;
+                $tipsRatio = $tipNeto / $totalBonuses;
+                
+                // Ajustar valores netos (sin permitir negativos)
+                $payments['products']['commission_neto'] = max(0, $commissionNeto - ($excess * $commissionRatio));
+                $payments['tips']['tip_neto'] = max(0, $tipNeto - ($excess * $tipsRatio));
+                
+                // Actualizar el array de datos
+                $data['payments'] = $payments;
+                
+                // Registrar ajuste realizado
+                Log::info('Ajuste aplicado a valores netos', [
+                    'excess' => $excess,
+                    'commission_neto_original' => $commissionNeto,
+                    'commission_neto_ajustado' => $payments['products']['commission_neto'],
+                    'tip_neto_original' => $tipNeto,
+                    'tip_neto_ajustado' => $payments['tips']['tip_neto'],
+                    'professional_id' => $data['professional_id']
+                ]);
+            }
+        }
+        
+        return $data;
+    }
+
     public function store_cashier_payment(Request $request)
     {
         DB::beginTransaction();
@@ -425,6 +473,10 @@ class ProfessionalPaymentController extends Controller
                 'type' => $data['type'],
                 'paymentDate' => $data['paymentDate'],
             ]);
+
+            // Aplicar ajuste a valores netos
+        $data = $this->adjustNetPayments($data);
+            
             $payment = $this->professionalPaymentService->processPayment($data);
         DB::commit();
 
@@ -641,9 +693,11 @@ class ProfessionalPaymentController extends Controller
                     $paymentsData = $this->professionalPaymentService->calculatePayments($paymentData);
 
                     // Solo procesar si hay cantidad a pagar
-                    if ($paymentsData['totalNetoPay'] != 0) {
+                    if ($paymentsData['totalNetoPay'] >= 0) {
                         $paymentData['payments'] = $paymentsData;
-                        $processResult = $this->professionalPaymentService->processPayment($paymentData);
+                         // Aplicar ajuste a valores netos
+                        $data = $this->adjustNetPayments($paymentData);
+                        $processResult = $this->professionalPaymentService->processPayment($data);
                         
                         $result = [
                             'professional_id' => $professionalId,
