@@ -734,20 +734,6 @@ class OperationTipController extends Controller
         $currentMonthEnd = now()->endOfMonth();
             $previousMonthStart = now()->subMonth()->startOfMonth();
             $previousMonthEnd = now()->subMonth()->endOfMonth();
-            
-           // Consulta optimizada para pagos del mes anterior
-            /*$payments = ProfessionalPayment::where('professional_id', $data['professional_id'])
-            ->where('branch_id', $data['branch_id'])
-            ->whereIn('type', ['Pago venta de Productos', 'Pago Comision de Propinas'])
-            ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
-            ->get(['id', 'amount', 'date', 'type']); // Asegúrate de incluir 'type' en el select
-
-            // Calcular totales usando colecciones
-            $paymentGroups = $payments->groupBy('type');
-
-            $totalProductPayments = $paymentGroups->get('Pago venta de Productos', collect())->sum('amount');
-            $totalTipPayments = $paymentGroups->get('Pago Comision de Propinas', collect())->sum('amount');*/
-            // 1. Pagos de Productos (de ProfessionalPayment)
             $productPayments = ProfessionalPayment::where('professional_id', $data['professional_id'])
                 ->where('branch_id', $data['branch_id'])
                 ->where('type', 'Pago venta de Productos')
@@ -782,7 +768,14 @@ class OperationTipController extends Controller
 
             $advances = $this->professionalPaymentService->calculateAdvancesDetails($data);
 
-            return response()->json(['payments' => $result, 'total_product_ant' => $totalProductPayments, 'total_tip_ant' => $totalTipPayments, 'advances' => $advances, 'current_charged' => $currentMonthPayments, 'previous_charged' => $previousMonthPayments]);
+            $resultTips = $this->professionalPaymentService->calculateTipsDetails($data, $branch, $professional);
+            $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
+            ->where('professional_id', $data['professional_id'])
+            ->first();
+             $resultProducts = $this->professionalPaymentService->calculateProductCommissionsWithDetails($data, $branchProfessional, $professional);
+
+
+            return response()->json(['payments' => $result, 'total_product_ant' => $totalProductPayments, 'total_product_act' => $resultProducts['commission_neto'], 'total_tip_ant' => $totalTipPayments, 'total_tip_act' => $resultTips['tip_neto'], 'advances' => $advances, 'current_charged' => $currentMonthPayments, 'previous_charged' => $previousMonthPayments]);
 
         } catch (\Exception $e) {
             Log::error('Error al calcular pagos', [
