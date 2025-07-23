@@ -105,7 +105,7 @@
             {{ number_format(round($editedItem['system_incomes'], 2), 2) }}
         </td>
         <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_incomes'] >= 0 ? 'black' : 'red' }};">
-            {{ number_format(round($editedItem['difference_incomes'], 2), 2) }}
+            <!--{{ number_format(round($editedItem['difference_incomes'], 2), 2) }}-->
         </td>
     </tr>
     
@@ -119,7 +119,7 @@
             {{ number_format(round($editedItem['utility'], 2), 2) }}
         </td>
         <td style="padding: 8px; text-align: right; border: 1.5px solid black; color: {{ $editedItem['difference_utility'] >= 0 ? 'black' : 'red' }};">
-            {{ number_format(round($editedItem['difference_utility'], 2), 2) }}
+            <!--{{ number_format(round($editedItem['difference_utility'], 2), 2) }}-->
         </td>
     </tr>
     
@@ -152,7 +152,7 @@
     @if($editedItem['differences'] != 0)
     <tr>
         <td colspan="4" style="padding: 8px; border: 1.5px solid black; background-color: rgba(0, 0, 0, 0.05); text-align: left; font-weight: bold; color: {{ $editedItem['differences'] >= 0 ? 'black' : 'red' }};">
-            Diferencia Total en las Utilidades: {{ number_format(round($editedItem['differences'], 2), 2) }}
+            Diferencia Total de : {{ number_format(round($editedItem['differences'], 2), 2) }}
         </td>
     </tr>
     <tr>

@@ -1820,6 +1820,7 @@ class CarController extends Controller
                         'professional_id' => $professional->id,
                         'image_url' => $professional->image_url,
                         'nameBranch' => $branch->name,
+                        'professionalRole' => $professional->getRoleForBranch($branch->id),
                         'action_descriptions' => $car->action_descriptions ?? [],
                         'change_log' => $car->change_log ?? []
                     ];
@@ -1846,7 +1847,8 @@ class CarController extends Controller
                         'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
                         'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
                         'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service'],
-                        'nameBranch' => $branch->name
+                        'nameBranch' => $branch->name,
+                        'professionalRole' => $professional->getRoleForBranch($branch->id)
                     ];
                 }
                 $cashierData = [];
@@ -1865,6 +1867,7 @@ class CarController extends Controller
                             'cant' => $cashierSale['cant'],
                             'image_product' => $product['image_product'],
                             'nameBranch' => $branch['name'],
+                            'professionalRole' => $professional->getRoleForBranch($branch->id)
                         ];
                     }
                 }
@@ -1894,6 +1897,7 @@ class CarController extends Controller
                         'professional_id' => $professional->id,
                         'image_url' => $professional->image_url,
                         'nameBranch' => $branch->name,
+                        'professionalRole' => $professional->getRoleForBranch($branch->id),
                         'action_descriptions' => $car->action_descriptions ?? [],
                         'change_log' => $car->change_log ?? []
                     ];
@@ -1919,7 +1923,8 @@ class CarController extends Controller
                         'category' => $order['is_product'] ? $product['productCategory']['name'] : $service['type_service'],
                         'name' => $order['is_product'] ? $product['name'] : $service['branchService']['service']['name'],
                         'image' => $order['is_product'] ? $product['image_product'] : $service['branchService']['service']['image_service'],
-                        'nameBranch' => $branch->name
+                        'nameBranch' => $branch->name,
+                        'professionalRole' => $professional->getRoleForBranch($branch->id)
                     ];
                 }
                 $cashierData = [];
@@ -1938,6 +1943,7 @@ class CarController extends Controller
                             'cant' => $cashierSale['cant'],
                             'image_product' => $product['image_product'],
                             'nameBranch' => $branch['name'],
+                            'professionalRole' => $professional->getRoleForBranch($branch->id)
                         ];
                     }
                 }

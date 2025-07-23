@@ -410,10 +410,12 @@ class BranchProfessionalController extends Controller
             $diaIngles = $diasSemanaIngles[$dia];
             Log::info('$diaIngles seleccionados');
             Log::info($diaIngles);
-            $fecha = $this->siguienteFechaDiaSemana($fechaActual, $diaIngles);
-            if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
+            $fecha = [];
+            //$fecha = $this->siguienteFechaDiaSemana($fechaActual, $diaIngles);
+             $fecha = Carbon::now()->next($diaIngles);
+            /*if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
                 $fecha->addWeek();
-            }
+            }*/
             while ($fecha->year <= $añoLimite) { // Verificar todo el año
                 $fechas[] = $fecha->format('Y-m-d');
                 $fecha->addWeek(); // Avanzar una semana

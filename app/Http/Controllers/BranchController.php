@@ -8,6 +8,7 @@ use App\Models\Comment;
 use App\Models\Product;
 use App\Models\Trace;
 use App\Services\BranchService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -347,5 +348,78 @@ class BranchController extends Controller
         }
     }
 
-    
+   public function getBranchesWithServicesAndProfessionals()
+{
+    try {
+        $branches = Branch::where('id', '!=', 20)->with([
+            'services' => function($query) {
+                $query->select(['services.id', 'services.name', 'services.price_service', 'services.image_service', 'services.service_comment']);
+            },
+            'professionals.branchServices.service' => function($query) {
+                $query->select(['services.id', 'services.name']);
+            },
+            'professionals' => function($query) {
+                $query->select(['professionals.id', 'professionals.name', 'professionals.email', 'professionals.phone', 'professionals.image_url']);
+            }
+        ])->select(['id', 'name', 'phone', 'address', 'image_data'])->get();
+
+        $mappedBranches = $branches->map(function($branch) {
+            return [
+                'sucursal' => [
+                    'id' => $branch->id,
+                    'nombre' => $branch->name,
+                    'telefono' => $branch->phone,
+                    'direccion' => $branch->address,
+                    'imagen' => $branch->image_data
+                ],
+                'servicios' => $branch->services->map(function($service) {
+                    return [
+                        'id' => $service->id,
+                        'nombre' => $service->name,
+                        'precio' => $service->price_service,
+                        'imagen' => $service->image_service,
+                        'comentario' => $service->service_comment
+                    ];
+                }),
+                'profesionales' => $branch->professionals
+                    ->filter(fn($professional) => $professional->branchServices->isNotEmpty())
+                    ->map(function($professional) {
+                        return [
+                            'id' => $professional->id,
+                            'nombre' => $professional->name,
+                            'email' => $professional->email,
+                            'telefono' => $professional->phone,
+                            'imagen' => $professional->image_url,
+                            'servicios_que_realiza' => $professional->branchServices
+                                ->map(fn($branchService) => [
+                                    'id' => $branchService->service->id,
+                                    'nombre' => $branchService->service->name
+                                ])
+                        ];
+                    })->values()
+            ];
+        });
+
+        // Generar PDF con opciones personalizadas como tú lo haces
+        $pdf = Pdf::setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'isPhpEnabled' => true,
+                'chroot' => storage_path()
+            ])
+            ->setPaper('a4', 'portrait')
+            ->loadView('mails.services_pdf', [
+                'branches' => $mappedBranches
+            ]);
+
+        return $pdf->download('sucursales_servicios_profesionales.pdf');
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al generar el PDF',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 }

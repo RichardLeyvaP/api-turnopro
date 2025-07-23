@@ -13,6 +13,14 @@ class Professional extends Model
     use HasRelationships;
     use SoftDeletes;
 
+    public function getRoleForBranch($branchId = null)
+    {
+        // Si el cargo está directamente relacionado al profesional
+        return $this->charge ? $this->charge->name : null;
+        
+        // O si necesitas considerar también la sucursal (branch)
+        // return $this->charge ? $this->charge->name : 'Sin cargo asignado';
+    }
     public function business()
     {
         return $this->hasMany(Business::class, 'professional_id');

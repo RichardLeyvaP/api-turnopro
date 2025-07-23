@@ -469,7 +469,9 @@ class BoxCloseController extends Controller
                 $box->save(); // Guardar los cambios en $box
             }
             //end Recalcular Bonos
-
+            if (!isset($editedCloseBox['workerpurchase'])) {
+                $editedCloseBox['workerpurchase'] = 0; // Asigna 0 si no existe
+            }
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -503,7 +505,7 @@ class BoxCloseController extends Controller
             $cashierData['box_close_id'] = $boxClose->id;
             $cashierData['advancement'] = $editedCloseBox['advancement'];
             $cashierData['differenceAccounts'] = $editedCloseBox['workerpurchase'];
-            $cashierData['totalCash'] = ($cashierData['existence'] + $editedCloseBox['advancement'] + $totalBonus) - $cashierData['extraction'];
+            $cashierData['totalCash'] = ($cashierData['existence'] + $editedCloseBox['advancement'] + $totalBonus) - ($cashierData['extraction'] ?? 0);
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
@@ -565,6 +567,143 @@ class BoxCloseController extends Controller
         }
     }
 
+   /*public function store(Request $request)
+{
+    try {
+        Log::info("Generación de PDF de cierre de caja con fecha específica");
+        
+        // Validación de datos
+        $validated = $request->validate([
+            'editedCloseBox' => 'required|array',
+            'cashierData' => 'required|array',
+            'branch_id' => 'required|integer|exists:branches,id',
+            'nameProfessional' => 'required|string',
+            'closure_date' => 'required|date',
+        ]);
+
+        // Obtener datos de la sucursal
+        $branch = Branch::with('business')->findOrFail($validated['branch_id']);
+        $closureDate = Carbon::parse($validated['closure_date']);
+
+        // Preparar datos para la vista (formato que esperan tus plantillas)
+        $boxcloseData = (object)$validated['editedCloseBox'];
+        $cashierData = (object)$validated['cashierData'];
+        
+        // Asegurar que los detalles sean un array
+        if (isset($cashierData->details)) {
+            $cashierData->details = (array)$cashierData->details;
+        } else {
+            $cashierData->details = [];
+        }
+
+        // Estructura de datos para la vista (compatible con tus plantillas)
+        $dataForView = [
+            'branch' => $branch, // Objeto completo para compatibilidad
+            'box' => [
+                'data' => $closureDate->format('d/m/Y'),
+                'cashFound' => $cashierData->cashFound ?? 0,
+                'existence' => $boxcloseData->existence ?? 0,
+                'extraction' => $cashierData->extraction ?? 0
+            ],
+            'data' => [ // Compatible con cierrecaja.blade.php
+                'totalService' => $boxcloseData->totalService ?? 0,
+                'totalProduct' => $boxcloseData->totalProduct ?? 0,
+                'workerpurchase' => $boxcloseData->workerpurchase ?? 0,
+                'totalTip' => $boxcloseData->totalTip ?? 0,
+                'totalCash' => $boxcloseData->totalCash ?? 0,
+                'totalCreditCard' => $boxcloseData->totalCreditCard ?? 0,
+                'totalDebit' => $boxcloseData->totalDebit ?? 0,
+                'totalTransfer' => $boxcloseData->totalTransfer ?? 0,
+                'totalCardGif' => $boxcloseData->totalCardGif ?? 0,
+                'totalOther' => $boxcloseData->totalOther ?? 0,
+                'totalMount' => $boxcloseData->totalMount ?? 0,
+                'advancement' => $boxcloseData->advancement ?? 0
+            ],
+            'cashierData' => [
+                'totalCash' => $cashierData->totalCash ?? 0,
+                'totalService' => $cashierData->totalService ?? 0,
+                'totalProduct' => $cashierData->totalProduct ?? 0,
+                'totalTransfer' => $cashierData->totalTransfer ?? 0,
+                'totalCardGif' => $cashierData->totalCardGif ?? 0,
+                'totalOther' => $cashierData->totalOther ?? 0,
+                'extraction' => $cashierData->extraction ?? 0,
+                'existence' => $cashierData->existence ?? 0,
+                'difference' => $cashierData->difference ?? 0,
+                'description' => $cashierData->description ?? null,
+                'details' => $cashierData->details
+            ],
+            'totalBonus' => $boxcloseData->totalBonus ?? 0,
+            'nameProfessional' => $validated['nameProfessional'],
+            'editedCloseBox' => $boxcloseData, // Para compatibilidad
+            'closure_date' => $closureDate // Para compatibilidad
+        ];
+
+        // Generar PDF usando la plantilla existente
+        $pdf = Pdf::setOptions([
+            'isHtml5ParserEnabled' => true, 
+            'isRemoteEnabled' => true, 
+            'isPhpEnabled' => true, 
+            'chroot' => storage_path(),
+            'defaultFont' => 'sans-serif'
+        ])->setPaper('a4', 'portrait')->loadView('mails.cierrecaja', $dataForView);
+
+        $reporte = $pdf->output();
+
+        // Configurar correos (ejemplo)
+        $mergedEmails = ['yasmany891230@gmail.com']; // Debería venir de configuración
+        
+        Log::info('Enviando PDF a correos: ' . implode(', ', $mergedEmails));
+        
+        foreach ($mergedEmails as $email) {
+            Mail::send([], [], function ($message) use (
+                $email, 
+                $reporte, 
+                $branch, 
+                $closureDate,
+                $boxcloseData,
+                $cashierData,
+                $dataForView
+            ) {
+                $message->to($email)
+                        ->subject('Cierre de Caja - ' . $branch->name . ' - ' . $closureDate->format('d/m/Y'))
+                        ->attachData($reporte, 'cierre_caja_' . $closureDate->format('Y-m-d') . '.pdf', [
+                            'mime' => 'application/pdf',
+                        ]);
+            });
+        }
+
+        return response()->json([
+            'success' => true,
+            'msg' => 'PDF generado y enviado correctamente',
+            'closure_date' => $closureDate->format('Y-m-d'),
+            'branch_name' => $branch->name
+        ], 200);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        Log::error("Sucursal no encontrada: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'msg' => 'La sucursal especificada no existe',
+            'error' => $e->getMessage()
+        ], 404);
+    } catch (\Swift_TransportException $e) {
+        Log::error("Error de transporte al enviar correo: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'msg' => 'PDF generado correctamente pero error al enviar el correo electrónico',
+            'closure_date' => $closureDate->format('Y-m-d') ?? 'Fecha no disponible',
+            'error' => $e->getMessage()
+        ], 200);
+    } catch (\Throwable $th) {
+        Log::error('Error en store: ' . $th->getMessage());
+        return response()->json([
+            'success' => false,
+            'msg' => 'Error al generar el PDF: ' . $th->getMessage(),
+            'error' => $th->getMessage(),
+            'closure_date' => $closureDate->format('Y-m-d') ?? 'Fecha no disponible'
+        ], 500);
+    }
+}*/
     public function store_cashier(Request $request)
     {
         DB::beginTransaction();
@@ -613,7 +752,9 @@ class BoxCloseController extends Controller
             }
             $branch = Branch::where('id', $request->branch_id)->with('business')->first();
             $boxClose = new BoxClose();
-
+            if (!isset($editedCloseBox['workerpurchase'])) {
+                $editedCloseBox['workerpurchase'] = 0; // Asigna 0 si no existe
+            }
             Log::info($box->id);
             $boxClose->box_id = $box->id;
             $boxClose->totalMount = $editedCloseBox['totalMount'];
@@ -647,7 +788,7 @@ class BoxCloseController extends Controller
             $cashierData['type'] = 'Parcial';
             $cashierData['box_close_id'] = $boxClose->id;
             $cashierData['differenceAccounts'] = $editedCloseBox['workerpurchase'];
-            $cashierData['totalCash'] = ($cashierData['existence'] - $cashierData['extraction']);
+            $cashierData['totalCash'] = ($cashierData['existence'] - ($cashierData['extraction'] ?? 0));
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             // Actualizar los registros en la tabla cars
             if (!empty($car_ids)) {

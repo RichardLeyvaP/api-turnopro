@@ -110,7 +110,7 @@ class ProductCategoryController extends Controller
                     'description' => $category->description,
                     'products' => $productStores->map(function ($productStore) {
                         $product = $productStore->product;
-                        Log::info('Producto'.$product);
+                        //Log::info('Producto'.$product);
                         if ($product) {
                             return [
                                 'id' => $productStore->id,
@@ -156,7 +156,7 @@ class ProductCategoryController extends Controller
                     "service_comment" => $service->service_comment,
                     "cliente" => $orderServicesDatas->contains($branchServiceProfessional->id)
                 ];
-            });
+            })->sortByDesc('cliente')->values();
 
             $car = Car::find($data['car_id']);
             if ($car != null) {

@@ -101,6 +101,7 @@ Route::get('qrCode', [UserController::class, 'qrCode']);
 Route::get('qrCode-otros', [UserController::class, 'qrCodeOtros']);
 Route::get('reactive-password', [UserController::class, 'reactive_password']);
 Route::get('change_password', [UserController::class, 'change_password']);
+Route::get('/branches-with-data', [BranchController::class, 'getBranchesWithServicesAndProfessionals']);
 
 
 Route::group(['middleware' => ["auth:sanctum"]], function () {
