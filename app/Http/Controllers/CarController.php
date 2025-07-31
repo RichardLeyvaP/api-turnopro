@@ -773,15 +773,14 @@ class CarController extends Controller
             ]);
             $startOfMonth = now()->startOfMonth()->toDateString();
             $endOfMonth = now()->endOfMonth()->toDateString();
-            $inicio_mes_anterior = Carbon::now()->subMonth()->startOfMonth();
+            $inicio_mes_anterior = now()->startOfMonth()->subMonth();
+            $final_mes_anterior = now()->startOfMonth()->subMonth()->endOfMonth();
             $ingreso = 0;
             $gasto = 0;
             $ingresoA = 0;
             $gastoA = 0;
             $utilidadServices = 0;
             $utilidadServicesA = 0;
-            // Obtener la fecha de finalización del mes anterior
-            $final_mes_anterior = Carbon::now()->subMonth()->endOfMonth();
             if ($data['branch_id'] != 0) {
                 Log::info("branch");
                 $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
