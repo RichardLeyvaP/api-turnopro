@@ -15,6 +15,7 @@ use App\Models\Tail;
 use App\Models\Comment;
 use App\Models\Notification;
 use App\Models\ProfessionalWorkPlace;
+use App\Models\Service;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -469,7 +470,10 @@ class TailService
                     'description' => $service->service_comment
                 ];
             })->values();
-
+            $dataClient = [
+                'client_id' => $client->id
+            ];
+            $history = $this->client_history($dataClient);
             return [
                 'reservation_id' => $reservation->id,
                 'car_id' => $reservation->car_id,
@@ -492,8 +496,8 @@ class TailService
                     'total_services' => $services->count(),
                     'select_professional' => intval($reservation->car->select_professional),
                     'telefone_client' => $client->phone ? strval($client->phone) : '',
-                    'services' => $services
-
+                    'services' => $services,
+                    'history' => $history
                 ];
             })->values();
             if ($tails->isNotEmpty() && $tails->first()['attended'] == 0) {
@@ -515,6 +519,113 @@ class TailService
                 }
             }
             return $tails;
+    }
+
+    private function client_history($data)
+    {
+        $fiel = null;
+        $frecuencia = null;
+        $cantMaxService = 0;
+        $client = Client::find($data['client_id']);
+        $result = [
+            'clientName' => $client->name,
+            'professionalName' => "Ninguno",
+            'branchName' => '',
+            'image_data' => '',
+            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now()->format('Y-m-d') : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
+            'image_url' => '',
+            'cantVisit' => 0,
+            'endLook' => '',
+            'lastDate' => '',
+            'frecuencia' => "No Frecuente",
+            'services' =>  [],
+        ];
+
+        Log::info("client_history 2.1");
+        $reservations = Reservation::whereHas('car', function ($query) use ($data) {
+            $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($data) {
+                $query->where('client_id', $data['client_id']);
+            });
+        })->orderByDesc('data')->limit(12)->get();
+
+        if ($reservations->isEmpty()) {
+            return $result;
+        }
+
+        $countReservations = $reservations->count();
+        if ($countReservations >= 12) {
+            $currentYear = Carbon::now()->year;
+
+            $fiel = $reservations->filter(function ($reservation) use ($currentYear) {
+                return Carbon::parse($reservation->data)->year == $currentYear;
+            })->count();
+            if ($fiel >= 12) {
+                $frecuencia = "Fiel";
+            }
+        } elseif ($countReservations >= 3) {
+            $frecuencia = "Frecuente";
+        } else {
+            $frecuencia = "No Frecuente";
+        }
+        Log::info("client_history 5.1");
+
+        $reservationids = $reservations->pluck('car_id')->take(3);
+        Log::info("client_history 6.1");
+        $services = Service::withCount(['orders' => function ($query) use ($data, $reservationids) {
+            $query->whereIn('car_id', $reservationids)->where('is_product', 0);
+        }])->orderByDesc('orders_count')->get()->where('orders_count', '>', 0);
+        /*$reservation2 = $reservations->filter(function ($reservation) {
+                return $reservation->confirmation == 2;
+            })->sortByDesc('data'); // Ordena después de filtrar*/
+        $reservationids2 = $reservations->pluck('car_id')->take(3);
+   
+        $comment = Comment::whereHas('clientProfessional', function ($query) use ($data) {
+            $query->where('client_id', $data['client_id']);
+        })->orderByDesc('data')->orderByDesc('updated_at')->first();
+        //if ($reservations !== null && !$reservations->isEmpty()) {
+        Log::info('Tiene Reserva');
+        if ($reservations->isEmpty()) {
+            $branch = [];
+            $professional = [];
+            $reservation = [];
+        } else {
+            $reservation = $reservations->first();
+            $branch = $reservation->branch;
+            $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
+        }
+        $result = [
+            'clientName' => $client->name,
+            'professionalName' => $professional ? $professional->name : '',
+            'branchName' => $branch ? $branch->name : '',
+            'image_data' => $branch ? $branch->image_data : 'branches/default.jpg',
+            'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
+            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now()->format('Y-m-d') : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
+            'cantVisit' => $reservations->count(),
+            'endLook' => $comment ? $comment->look : null,
+            'lastDate' => $reservation ? $reservation->data : '',
+            'frecuencia' => $frecuencia,
+            'services' => $services->map(function ($service) use ($cantMaxService) {
+                return [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'simultaneou' => $service->simultaneou,
+                    'price_service' => $service->price_service,
+                    'type_service' => $service->type_service,
+                    'profit_percentaje' => $service->profit_percentaje,
+                    'duration_service' => $service->duration_service,
+                    'image_service' => $service->image_service,
+                    'service_comment' => $service->service_comment,
+                    'cant' => $service->orders_count
+                ];
+            }),
+            'cantMaxService' => $services->max('orders_count')
+        ];
+        /*} else {
+            return  $result;
+        }*/
+
+        Log::info("client_history 7.1");
+        return $result;
     }
     
      public function tail_branch_professional_ANTERIOR_OPTIMIZADO($branch_id, $professional_id)
