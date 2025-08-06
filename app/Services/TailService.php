@@ -497,7 +497,13 @@ class TailService
                     'select_professional' => intval($reservation->car->select_professional),
                     'telefone_client' => $client->phone ? strval($client->phone) : '',
                     'services' => $services,
-                    'history' => $history
+                   'url_image_barber' => $history['image_url'] ?: "comments/default_profile.jpg",
+                    'frecuencia' => $history['frecuencia'] ?: "No Frecuente",
+                    'cant_visit' => $history['cantVisit'] ?: 0,
+                    'professional_name' => $history['professionalName'] ?: "Desconocido",
+                    'history_service' => $history['services'],
+
+
                 ];
             })->values();
             if ($tails->isNotEmpty() && $tails->first()['attended'] == 0) {
@@ -520,7 +526,7 @@ class TailService
             }
             return $tails;
     }
-
+    
     private function client_history($data)
     {
         $fiel = null;
