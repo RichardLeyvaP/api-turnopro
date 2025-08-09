@@ -35,7 +35,8 @@ class Professional extends Model
     }
 
     public function branchServiceProfessionals(){
-        return $this->hasMany(BranchServiceProfessional::class);
+        return $this->hasMany(BranchServiceProfessional::class)
+                ->whereNull('deleted_at');
     }
 
     public function user()

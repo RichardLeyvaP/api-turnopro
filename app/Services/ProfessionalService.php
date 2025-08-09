@@ -672,9 +672,12 @@ class ProfessionalService
         if (Carbon::now()->addMinutes($totalTiempo) >  Carbon::parse($closingTime)) {
             return $availableProfessionals = [];
         } else {
-            $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
-                $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
-            }, '=', count($services))
+            $professionals1 = Professional::whereHas('branchServiceProfessionals', function ($query) use ($services, $branch_id) {
+                    $query->whereHas('branchService', function ($q) use ($services, $branch_id) {
+                        $q->whereIn('service_id', $services)
+                        ->where('branch_id', $branch_id);
+                    });
+                }, '=', count($services))
                 ->whereHas('charge', function ($query) {
                     $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
                 })

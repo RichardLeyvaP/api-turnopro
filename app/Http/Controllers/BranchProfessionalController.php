@@ -243,11 +243,12 @@ class BranchProfessionalController extends Controller
             ]);
             $services = $request->input('services');
             $professionals = [];
-            $professionals1 = Professional::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->whereHas('branchServices', function ($query) use ($services, $data) {
-                $query->whereIn('service_id', $services)->where('branch_id', $data['branch_id']);
-            }, '=', count($services))->whereHas('charge', function ($query) {
+            $professionals1 = Professional::whereHas('branchServiceProfessionals', function ($query) use ($services, $data) {
+                    $query->whereHas('branchService', function ($q) use ($services, $data) {
+                        $q->whereIn('service_id', $services)
+                        ->where('branch_id', $data['branch_id']);
+                    });
+                }, '=', count($services))->whereHas('charge', function ($query) {
                 $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
             })->with('branches')->select('id', 'name', 'surname', 'second_surname', 'image_url', 'state')->get()->map(function ($professional) use ($data) {
                 $pivot = $professional->branches()->where('branch_id', $data['branch_id'])->first();

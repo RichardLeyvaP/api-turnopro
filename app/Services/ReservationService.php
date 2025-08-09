@@ -67,7 +67,7 @@ class ReservationService
                 }*/
             Log::info("Crear ordenes");
             Log::info('$branchServiceProfessional->percent');
-            Log::info($branchServiceProfessional->percent);
+            //Log::info($branchServiceProfessional->percent);
             $percent = $branchServiceProfessional->percent ? $branchServiceProfessional->percent : 1;
             Log::info('$percent');
             Log::info($percent);
