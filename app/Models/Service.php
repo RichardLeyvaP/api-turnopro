@@ -15,23 +15,17 @@ class Service extends Model
     protected static function booted()
     {
         static::deleting(function ($service) {
-            // Eliminación lógica en cascada para branch_service
             if ($service->isForceDeleting()) {
-                // Eliminación permanente
-                BranchService::where('service_id', $service->id)
-                    ->forceDelete();
+                // Eliminación permanente: cargar y forzar eliminación
+                $service->branchServices->each->forceDelete();
             } else {
-                // Eliminación lógica
-                BranchService::where('service_id', $service->id)
-                    ->delete();
+                // Eliminación lógica: cargar y eliminar suavemente
+                $service->branchServices->each->delete();
             }
         });
 
         /*static::restoring(function ($service) {
-            // Restauración en cascada
-            BranchService::withTrashed()
-                ->where('service_id', $service->id)
-                ->restore();
+            $service->branchServices->each->restore();
         });*/
     }
     

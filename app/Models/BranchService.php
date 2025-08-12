@@ -21,6 +21,11 @@ class BranchService extends Model
          return $this->belongsToMany(Professional::class, 'branch_service_professional')->withPivot('percent', 'type_service','id', 'meta')->withTimestamps();
     }
 
+    public function professionals1()
+    {
+        return $this->hasMany(BranchServiceProfessional::class, 'branch_service_id');
+    }
+
     public function branchServiceProfessionals()
     {
          return $this->hasMany(BranchServiceProfessional::class)->withTrashed();
@@ -36,7 +41,7 @@ class BranchService extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    protected static function booted()
+    /*protected static function booted()
     {
         static::deleting(function ($branchService) {
             // Eliminación lógica en cascada
@@ -56,6 +61,28 @@ class BranchService extends Model
             BranchServiceProfessional::withTrashed()
                 ->where('branch_service_id', $branchService->id)
                 ->restore();
+        });*/
+    //}*/
+    protected static function booted()
+    {
+        static::deleting(function ($branchService) {
+            if ($branchService->isForceDeleting()) {
+                // Eliminación permanente
+                $branchService->professionals1->each->forceDelete();
+            } else {
+                // Eliminación lógica + meta = 0
+                foreach ($branchService->professionals1 as $bsp) {
+                    // $bsp es una instancia de BranchServiceProfessional
+                    $bsp->meta = 0;
+                    $bsp->save(); // Esto ahora sí es válido
+                }
+                // Ahora eliminamos lógicamente los registros
+                $branchService->professionals1->each->delete();
+            }
+        });
+
+        /*static::restoring(function ($branchService) {
+            $branchService->professionals->each->restore();
         });*/
     }
         //para decirle a q table debe administrar

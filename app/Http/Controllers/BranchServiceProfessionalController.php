@@ -63,18 +63,30 @@ class BranchServiceProfessionalController extends Controller
             ]);
             $metaData = [];
             $assignedServices = BranchServiceProfessional::with(['branchService.service'])
-                ->whereHas('branchService.branch', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })
-                ->where('professional_id', $data['professional_id'])
-                ->get(['branch_service_id', 'type_service', 'percent', 'meta']);
+            ->whereNull('deleted_at') // Solo no eliminados
+            ->whereHas('branchService', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id'])
+                    ->whereNull('deleted_at'); // Asegurar que el BranchService no esté eliminado
+            })
+             ->whereHas('branchService.service', function ($query) {
+                $query->whereNull('services.deleted_at');
+            })
+            ->where('professional_id', $data['professional_id'])
+            ->get(['branch_service_id', 'type_service', 'percent', 'meta']);
 
             $unassignedServiceIds = BranchService::whereNotIn('id', $assignedServices->pluck('branch_service_id')->toArray())
                 ->where('branch_id', $data['branch_id'])
+                ->whereNull('deleted_at')
+                ->whereHas('service', function ($query) {
+                $query->whereNull('deleted_at'); // Solo si el servicio está activo
+                })
                 ->pluck('id');
 
             $unassignedServices = BranchService::whereIn('id', $unassignedServiceIds)
-                ->with('service')
+                ->with(['service' => function ($q) {
+                    $q->whereNull('deleted_at'); // Opcional: si Service también tiene SoftDeletes
+                }])
+                ->whereNull('deleted_at')
                 ->get()
                 ->map(function ($branchService) {
                     $service = $branchService->service;

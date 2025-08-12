@@ -243,31 +243,39 @@ class BranchProfessionalController extends Controller
             ]);
             $services = $request->input('services');
             $professionals = [];
-            $professionals1 = Professional::whereHas('branchServiceProfessionals', function ($query) use ($services, $data) {
-                    $query->whereHas('branchService', function ($q) use ($services, $data) {
-                        $q->whereIn('service_id', $services)
-                        ->where('branch_id', $data['branch_id']);
-                    });
-                }, '=', count($services))->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-            })->with('branches')->select('id', 'name', 'surname', 'second_surname', 'image_url', 'state')->get()->map(function ($professional) use ($data) {
+            $professionals1 = Professional::whereHas('branches', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id']); // ✅ Profesional asignado a la sucursal
+            })
+            ->whereHas('branchServiceProfessionals', function ($query) use ($services, $data) {
+                $query->whereHas('branchService', function ($q) use ($services, $data) {
+                    $q->whereIn('service_id', $services)
+                      ->where('branch_id', $data['branch_id']); // servicio en la misma sucursal
+                });
+            }, '=', count($services)) // ✅ Tiene exactamente los servicios solicitados
+            ->whereHas('charge', function ($query) {
+                $query->where('name', 'Barbero')
+                      ->orWhere('name', 'Barbero y Encargado');
+            })
+            ->with('branches') // sigue cargando todas las sucursales (para usar en map)
+            ->select('id', 'name', 'surname', 'second_surname', 'image_url', 'state')
+            ->get()
+            ->map(function ($professional) use ($data) {
                 $pivot = $professional->branches()->where('branch_id', $data['branch_id'])->first();
 
-                if ($pivot != null) {
-                    $ponderation = $pivot->pivot->ponderation;
-                } else {
-                    $ponderation = 100;
-                }
+                $ponderation = $pivot ? $pivot->pivot->ponderation : 100;
+
                 return [
                     'id' => $professional->id,
                     'name' => $professional->name,
                     'surname' => $professional->surname,
                     'second_surname' => $professional->second_surname,
-                    'image_url' => $professional->image_url . '?$' . Carbon::now(),
+                    'image_url' => $professional->image_url . '?' . Carbon::now()->timestamp, // evitar caché
                     'ponderation' => $ponderation,
                     'state' => $professional->state,
                 ];
-            })->sortBy('ponderation')->values();
+            })
+            ->sortBy('ponderation')
+            ->values();
 
             foreach ($professionals1 as $professional1) {
                 $vacation = [];
