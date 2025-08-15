@@ -696,7 +696,7 @@ class AdvanceController extends Controller
             $advancesEndDate = $validated['endDate'] ?? now()->endOfDay();
     
             // Fechas para products (último mes si no se especifica)
-            $productsStartDate = $validated['startDate'] ?? now()->subMonth()->startOfDay();
+            $productsStartDate = $defaultStartDate;
             $productsEndDate = $validated['endDate'] ?? now()->endOfDay();
 
             // Fechas para payments (mismo rango que advances)
@@ -847,18 +847,21 @@ class AdvanceController extends Controller
                 'request_params' => $validated,
                 'user_id' => $request->user()->id
             ]);
-
+            $now = now();
+            // Rango predeterminado: últimos 30 días (desde 30 días atrás hasta hoy)
+            $defaultStartDate = $now->copy()->subDays(30)->startOfDay(); // 30 días atrás a las 00:00
+            $defaultEndDate = $now->copy()->endOfDay(); // Hoy a las 23:59:59
             // Fechas para advances (últimos 3 meses si no se especifica)
-            $advancesStartDate = $validated['startDate'] ?? now()->subMonths(3)->startOfDay();
-            $advancesEndDate = $validated['endDate'] ?? now()->endOfDay();
+            $advancesStartDate = $defaultStartDate;
+            $advancesEndDate = $defaultEndDate;
 
             // Fechas para products (último mes si no se especifica)
-            $productsStartDate = $validated['startDate'] ?? now()->subMonth()->startOfDay();
-            $productsEndDate = $validated['endDate'] ?? now()->endOfDay();
+            $productsStartDate = $defaultStartDate;
+            $productsEndDate = $defaultEndDate;
 
             // Fechas para payments (mismo rango que advances)
-            $paymentsStartDate = $validated['startDate'] ?? now()->subMonths()->startOfDay();
-            $paymentsEndDate = $validated['endDate'] ?? now()->endOfDay();
+            $paymentsStartDate = $defaultStartDate;
+            $paymentsEndDate = $defaultEndDate;
 
             // Obtener adelantos (advances)
             $advances = Advance::with('user.professional')->where('branch_id', $validated['branch_id'])
@@ -951,7 +954,7 @@ class AdvanceController extends Controller
                 ->sum('amount');
 
             $totalProduct = collect($products)->where('status', 'Aprobado')
-                ->whereNull('discount_date')
+                //->whereNull('discount_date')
                 ->sum('total');
 
             // Combinar y ordenar datos (ahora todos son arrays)

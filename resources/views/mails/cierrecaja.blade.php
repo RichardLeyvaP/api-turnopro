@@ -98,7 +98,7 @@
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Fondo inicio del día</td>
         <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($box['cashFound'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">-</td>
+        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['cashFound'], 2), 2) }}</td>
     </tr>
     <tr style="border: 1.5px solid black;">
         <td style="padding: 5px; text-align: left; line-height: 1;">Método de Pago Efectivo</td>

@@ -202,7 +202,8 @@
                 <td colspan="2"><strong>Estado de la caja:</strong></td>
             </tr>
             <tr>
-                <td colspan="2"><strong>Fondo Inicio del día:</strong>{{ number_format(round($boxData['cashFound'], 2), 2) }}</td>
+                <td><strong>Fondo Inicio del día:</strong>{{ number_format(round($boxData['cashFound'], 2), 2) }}</td>
+                <td><strong>Fondo Inicio del día:</strong> {{ number_format(round($cashierData['cashFound'], 2), 2) }}</td>
             </tr> 
             <tr>
                 <td><strong>Método de Pago Efectivo:</strong> {{ number_format(round($boxcloseData['totalCash'], 2), 2) }}</td>

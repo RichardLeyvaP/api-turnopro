@@ -215,7 +215,8 @@ class BoxCloseController extends Controller
                                 'cashier_user_id' => $cashierBoxClosing->user_id ?? null,
                                 'cashier_total' => $cashierBoxClosing->total ?? 0,
                                 'cashier_existence' => $cashierBoxClosing->existence ?? 0,
-                                'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
+                                'cashier_existence' => $cashierBoxClosing->existence ?? 0,
+                                'cashier_cashFound' => $cashierBoxClosing->cashFound ?? 0,
                                 'cashier_totalService' => $cashierBoxClosing->totalService ?? 0,
                                 'cashier_totalProduct' => $cashierBoxClosing->totalProduct ?? 0,
                                 'cashier_totaCash' => $cashierBoxClosing->totalCash ?? 0,
@@ -505,7 +506,7 @@ class BoxCloseController extends Controller
             $cashierData['box_close_id'] = $boxClose->id;
             $cashierData['advancement'] = $editedCloseBox['advancement'];
             $cashierData['differenceAccounts'] = $editedCloseBox['workerpurchase'];
-            $cashierData['totalCash'] = ($cashierData['existence'] + $editedCloseBox['advancement'] + $totalBonus) - ($cashierData['extraction'] ?? 0);
+            //$cashierData['totalCash'] = ($cashierData['existence'] + $editedCloseBox['advancement'] + $totalBonus) - ($cashierData['extraction'] ?? 0);
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             if (!empty($car_ids)) {
                 Car::whereIn('id', $car_ids)
@@ -788,7 +789,7 @@ class BoxCloseController extends Controller
             $cashierData['type'] = 'Parcial';
             $cashierData['box_close_id'] = $boxClose->id;
             $cashierData['differenceAccounts'] = $editedCloseBox['workerpurchase'];
-            $cashierData['totalCash'] = ($cashierData['existence'] - ($cashierData['extraction'] ?? 0));
+            //$cashierData['totalCash'] = ($cashierData['existence'] - ($cashierData['extraction'] ?? 0));
             $boxCloseCashier = $this->cashierBoxClosingService->upsertCashierBoxClosing($cashierData);
             // Actualizar los registros en la tabla cars
             if (!empty($car_ids)) {
