@@ -896,6 +896,7 @@ class AdvanceController extends Controller
                 ->where('professional_id', $validated['professional_id'])
                 ->whereDate('data', '>=', $productsStartDate)
                 ->whereDate('data', '<=', $productsEndDate)
+                ->orderBy('created_at', 'desc') // Ordena del más reciente al más antiguo
                 ->get()
                 ->map(function ($purchase) {
                     $statusText = match($purchase->status) {
