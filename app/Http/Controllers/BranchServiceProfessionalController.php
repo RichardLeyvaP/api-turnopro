@@ -171,12 +171,21 @@ class BranchServiceProfessionalController extends Controller
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
             ]);
-            $serviceModels = BranchServiceProfessional::with(['branchService.service'])
-                ->whereHas('branchService.branch', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })
-                ->where('professional_id', $data['professional_id'])
-                ->get(['branch_service_id', 'type_service', 'percent', 'id']);
+            $serviceModels = BranchServiceProfessional::with([
+            'branchService' => [
+                'service' // Cargamos el servicio, pero lo filtraremos en el whereHas
+            ]
+            ])
+            ->where('professional_id', $data['professional_id'])
+            ->whereNull('branch_service_professional.deleted_at') // No eliminado lógicamente
+            ->whereHas('branchService', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id'])
+                    ->whereNull('branch_service.deleted_at') // branch_service no eliminado
+                    ->whereHas('service', function ($q) {
+                        $q->whereNull('services.deleted_at'); // servicio no eliminado
+                    });
+            })
+            ->get(['branch_service_id', 'type_service', 'percent', 'id']);
 
             $formattedData = [];
             foreach ($serviceModels as $branchservprof) {

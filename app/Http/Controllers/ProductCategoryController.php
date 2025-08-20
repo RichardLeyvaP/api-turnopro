@@ -67,6 +67,8 @@ class ProductCategoryController extends Controller
 
     public function category_products_branch(Request $request)
     {
+        Log::info('category_products_branch-Entra a ver los servicios que realiza el professional y los reservados por el cliente y los productos disponibles');
+        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -136,10 +138,23 @@ class ProductCategoryController extends Controller
                 ->where('is_product', 0)
                 ->pluck('branch_service_professional_id');
 
-            $BSProfessional = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            })->where('professional_id', $data['professional_id'])
-            ->with(['branchService.service'])
+            $BSProfessional = BranchServiceProfessional::with([
+                'branchService' => function ($query) {
+                    $query->whereNull('branch_service.deleted_at'); // Evita branch_services eliminados
+                },
+                'branchService.service' => function ($query) {
+                    $query->whereNull('services.deleted_at'); // Evita services eliminados
+                }
+            ])
+            ->where('professional_id', $data['professional_id'])
+            ->whereNull('branch_service_professional.deleted_at') // Evita B.S.P. eliminados
+            ->whereHas('branchService', function ($query) use ($data) {
+                $query->where('branch_id', $data['branch_id'])
+                    ->whereNull('branch_service.deleted_at') // B.S. activo
+                    ->whereHas('service', function ($q) {
+                        $q->whereNull('services.deleted_at'); // S. activo
+                    });
+            })
             ->get();
 
             $serviceModels = $BSProfessional->map(function ($branchServiceProfessional) use ($orderServicesDatas) {
