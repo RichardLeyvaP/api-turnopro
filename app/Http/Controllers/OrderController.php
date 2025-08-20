@@ -225,7 +225,7 @@ class OrderController extends Controller
 
             ]);
             Log::info('$data');
-        Log::info($data);
+            Log::info($data);
             $car = Car::find($data['car_id']);            
             $branch = Branch::where('id', $request->branch_id)->first();
             $clientName = $car->clientProfessional->client->name;

@@ -215,7 +215,7 @@ class BoxCloseController extends Controller
                                 'cashier_user_id' => $cashierBoxClosing->user_id ?? null,
                                 'cashier_total' => $cashierBoxClosing->total ?? 0,
                                 'cashier_existence' => $cashierBoxClosing->existence ?? 0,
-                                'cashier_existence' => $cashierBoxClosing->existence ?? 0,
+                                'cashier_extraction' => $cashierBoxClosing->extraction ?? 0,
                                 'cashier_cashFound' => $cashierBoxClosing->cashFound ?? 0,
                                 'cashier_totalService' => $cashierBoxClosing->totalService ?? 0,
                                 'cashier_totalProduct' => $cashierBoxClosing->totalProduct ?? 0,
