@@ -77,6 +77,7 @@ class ReservationService
             $order->product_store_id = null;
             $order->branch_service_professional_id = $branch_service_professional_id;
             $order->data = $data['data'];
+            $order->branch_id = $data['branch_id'];
             $order->is_product = false;
             //logica de porciento de ganancia
             $order->percent_win = $service->price_service * $percent/100;

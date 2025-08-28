@@ -727,19 +727,20 @@ class ReservationController extends Controller
                     
                     $reservation = $this->reservationService->store($data, $servs, $id_client);
                 } else {
+                    
                     // Lógica para clientes normales (no incógnitos)
-                    if (!empty($data['editedPhather']['parent_id'])) {
+                    if (empty($data['editedPhather']['parent_id']) && !empty($data['editedPhather']['parent_name'])) {
                         // Solo crear padre si no es incógnito
                         $userNewParent = User::create([
                             'name' => $data['editedPhather']['parent_name'],
-                            'email' => $data['editedPhather']['parent_email'],
+                            'email' => $data['editedPhather']['parent_email']?? null,
                             'password' => Hash::make($data['editedPhather']['parent_phone'].''.$data['editedPhather']['parent_name'])
                         ]);
 
                         $clientParent = new Client();
                         $clientParent->name = $data['editedPhather']['parent_name'];
-                        $clientParent->email = $data['editedPhather']['parent_email'];
-                        $clientParent->phone = $data['editedPhather']['parent_phone'];
+                        $clientParent->email = $data['editedPhather']['parent_email']?? null;
+                        $clientParent->phone = $data['editedPhather']['parent_phone']?? null;
                         $clientParent->user_id = $userNewParent->id;
                         $clientParent->save();  
                         $data['editedPhather']['parent_id'] = $clientParent->id;

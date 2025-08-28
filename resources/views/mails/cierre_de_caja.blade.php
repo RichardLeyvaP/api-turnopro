@@ -179,7 +179,7 @@
             </tr>
             <tr>
                 <td><strong>Débito:</strong> {{ number_format(round($boxcloseData['totalDebit'], 2), 2) }}</td>
-                <td><strong>Trajeta producto:</strong> {{ number_format(round($cashierData['totalProduct'] ?? 0, 2), 2) }}</td>
+                <td><strong>Tarjeta producto:</strong> {{ number_format(round($cashierData['totalProduct'] ?? 0, 2), 2) }}</td>
             </tr>
             <tr>
                 <td><strong>Transferencia:</strong>{{ number_format(round($boxcloseData['totalTransfer'] ?? 0, 2), 2) }}

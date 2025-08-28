@@ -444,6 +444,9 @@ class ProductController extends Controller
 
             Log::info("Editar");
             Log::info($request);
+            $request->merge([
+    'commission_rate' => $request->commission_rate === 'null' ? null : $request->commission_rate
+]);
             $product_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|min:3',

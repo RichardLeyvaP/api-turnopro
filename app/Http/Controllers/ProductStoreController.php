@@ -97,28 +97,17 @@ class ProductStoreController extends Controller
     {
         Log::info("Asignar Productos a un almacen");
         Log::info($request);
+        
         try {
             $data = $request->validate([
                 'product_id' => 'required|numeric',
                 'store_id' => 'required|numeric',
                 'product_quantity' => 'required|numeric',
-                'stock_depletion' => 'required|numeric',
+                'stock_depletion' => 'nullable|numeric',
             ]);
+            $data['stock_depletion'] = $data['stock_depletion'] ?? 0;
             $product = Product::find($data['product_id']);
             $store = Store::find($data['store_id']);
-            //Log::info($request->has('branch_id'));
-            //$productstore = $store->products()->wherePivot('product_id', $product->id)->first();
-            /*$productStore = ProductStore::withTrashed()
-            ->where('product_id', $data['product_id'])
-            ->where('store_id', $data['store_id'])
-            ->first();
-            
-            if ($productStore) {
-                $existencia = $data['product_quantity'] + $productStore->pivot['product_exit'];
-                $product->stores()->updateExistingPivot($store->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $existencia, 'stock_depletion' => $data['stock_depletion']]);
-            } else {
-                $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
-            }*/
              // Buscar relación incluyendo eliminados lógicamente
              $existingRelation = ProductStore::withTrashed()
              ->where('product_id', $data['product_id'])
@@ -582,7 +571,7 @@ class ProductStoreController extends Controller
                         'product_exit' => $productStore->product_exit,
                         'name' => $product->name . ' (' . 'Almacén: ' . $productStore->store->address . ')',
                         'image_product' => $product->image_product,
-                        'price' => $product->sale_price,
+                        'price' => $product->sale_price ?? 0,
                         'worker_discount' => $product->worker_discount ?? 10, // Valor por defecto 10% si no está definido
                         'worker_price' => $product->sale_price * (1 - ($product->worker_discount ?? 10) / 100) // Precio con descuento aplicado
                     ];

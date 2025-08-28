@@ -125,7 +125,8 @@ class BoxController extends Controller
     {
         try {
             DB::beginTransaction();
-            Log::info("Editar");
+            Log::info("Editar la caja (store)");
+            Log::info($request->all());
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'cashFound' => 'nullable|numeric',
@@ -142,11 +143,21 @@ class BoxController extends Controller
                 $box->existence = $data['cashFound'];
                 $box->extraction = $data['extraction'];
             }else{                         
-                $box->existence += $data['cashFound'] - $data['extraction'];               
+                $existence = 0;
+                if($data['cashFound'] != 0){
+                    $existence = $box->existence - $box->cashFound + $data['cashFound'];
+                  }
+                 else{
+                     $existence = $box->existence;
+                 }
+                
+                // extraction es un nuevo monto retirado (no total)
+                $box->existence = $existence - $data['extraction'];
+                //$box->existence += $data['cashFound'] - $data['extraction'];               
                 $box->extraction = $box->extraction + $data['extraction'];
             }
             $box->branch_id = $branch->id;
-            $box->cashFound += $data['cashFound'];
+            $box->cashFound = $data['cashFound'];
             $box->data = Carbon::now();
             $box->save();
             if($data['extraction'] != 0){
@@ -252,7 +263,17 @@ class BoxController extends Controller
                 $box->existence = $data['cashFound'];
                 $box->extraction = $data['extraction'];
             }else{                         
-                $box->existence += $data['cashFound'] - $data['extraction'];               
+               $existence = 0;
+                if($data['cashFound'] != 0){
+                    $existence = $box->existence - $box->cashFound + $data['cashFound'];
+                  }
+                 else{
+                     $existence = $box->existence;
+                 }
+                
+                // extraction es un nuevo monto retirado (no total)
+                $box->existence = $existence - $data['extraction'];
+                //$box->existence += $data['cashFound'] - $data['extraction'];               
                 $box->extraction = $box->extraction + $data['extraction'];
             }
             $box->branch_id = $branch->id;

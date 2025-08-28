@@ -96,6 +96,8 @@ class WorkerPurchaseController extends Controller
         $user = Auth::user();
         $userName = $user->name;
         $userId = $user->id;
+        Log::info("Actualizar estado de la solicitudes de productos");
+        Log::info($request);
         DB::beginTransaction();
         try {
             $validatedData = $request->validate([
@@ -184,9 +186,12 @@ class WorkerPurchaseController extends Controller
 
     protected function processInventory($workerPurchase)
     {
-        $productStore = ProductStore::where('product_id', $workerPurchase->product_id)->whereHas('store.branches', function ($query) use ($workerPurchase) {
-            $query->where('branches.id', $workerPurchase->branch_id);
-        })->first();
+        $productStore = ProductStore::where('product_id', $workerPurchase->product_id)
+    ->where('product_exit', '>=', $workerPurchase->cant) // ← Nueva condición
+    ->whereHas('store.branches', function ($query) use ($workerPurchase) {
+        $query->where('branches.id', $workerPurchase->branch_id);
+    })
+    ->first();
         if (!$productStore) {
             throw new \Exception('No se encontró el inventario para este producto en la sucursal');
         }

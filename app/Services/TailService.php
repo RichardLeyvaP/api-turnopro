@@ -529,16 +529,18 @@ class TailService
     
     private function client_history($data)
     {
+        Log::info("Historial del cliente");
+        Log::info($data);
         $fiel = null;
         $frecuencia = null;
         $cantMaxService = 0;
-        $client = Client::find($data['client_id']);
+        $client = Client::withTrashed()->find($data['client_id']);
         $result = [
-            'clientName' => $client->name,
+            'clientName' => $client?->name ?? 'Sin nombre',
             'professionalName' => "Ninguno",
             'branchName' => '',
             'image_data' => '',
-            'imageLook' => $client->client_image ? $client->client_image . '?$' . Carbon::now()->format('Y-m-d') : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
+            'imageLook' => $client?->client_image ? $client->client_image . '?$' . Carbon::now()->format('Y-m-d') : 'clients/default_profile.jpg' . '?$' . Carbon::now(),
             'image_url' => '',
             'cantVisit' => 0,
             'endLook' => '',

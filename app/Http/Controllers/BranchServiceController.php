@@ -184,6 +184,7 @@ class BranchServiceController extends Controller
                 // Consulta directa a branch_service con join a services
                 $services = BranchService::with('service')
                 ->where('branch_id', $data['branch_id'])
+                 ->whereNull('branch_service.deleted_at')
                 ->get()
                 ->map(function ($branchService) {
                     return [
