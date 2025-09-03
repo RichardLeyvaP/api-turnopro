@@ -673,8 +673,14 @@ class OrderController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            $order = Order::find($data['id']);
+           $order = Order::find($data['id']);
+            if (!$order) {
+                return response()->json(['msg' => 'Orden no encontrada'], 404);
+            }
             $car = Car::find($order->car_id);
+            if (!$car) {
+                return response()->json(['msg' => 'Carro asociado no encontrado'], 404);
+            }
             $reservation = $car->reservation;
             $client = $car->clientProfessional->client;
             //$branch = Branch::where('id', $car->reservation->branch_id)->first();
@@ -711,7 +717,7 @@ class OrderController extends Controller
             }
             if ($order->is_product == 0) {
                 Log::info("servicio");
-                $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
+                $branchServiceprofessional = BranchServiceProfessional::withTrashed()->find($order->branch_service_professional_id);
                 Log::info($branchServiceprofessional);
                 $service = $branchServiceprofessional->branchService->service;
                 Log::info("card:".$car);
@@ -773,8 +779,14 @@ class OrderController extends Controller
                 'id' => 'required|numeric',
                 'professional_id' => 'nullable'
             ]);
-            $order = Order::findOrFail($data['id']);
-            $car = Car::findOrFail($order->car_id);
+            $order = Order::find($data['id']);
+            if (!$order) {
+                return response()->json(['msg' => 'Orden no encontrada'], 404);
+            }
+            $car = Car::find($order->car_id);
+            if (!$car) {
+                return response()->json(['msg' => 'Carro asociado no encontrado'], 404);
+            }
             $user = Auth::user();
             $nameProfessional = $user->professional ? $user->professional->name : $user->name;
             $professionalImage = $user->professional ? $user->professional->image_url : 'professionals/default.jpg';
@@ -815,7 +827,7 @@ class OrderController extends Controller
             }
             elseif (!$order->is_product) {
                 Log::info("servicio");
-                $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
+                $branchServiceprofessional = BranchServiceProfessional::withTrashed()->find($order->branch_service_professional_id);
                 Log::info($branchServiceprofessional);
                 $service = $branchServiceprofessional->branchService->service;
                 Log::info("card:".$car);
@@ -878,7 +890,13 @@ class OrderController extends Controller
                 'professional_id' => 'nullable'
             ]);
             $order = Order::find($data['id']);
+            if (!$order) {
+                return response()->json(['msg' => 'Orden no encontrada'], 404);
+            }
             $car = Car::find($order->car_id);
+            if (!$car) {
+                return response()->json(['msg' => 'Carro asociado no encontrado'], 404);
+            }
             $client = $car->clientProfessional->client;
             $professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $request->branch_id)->first();
@@ -919,8 +937,16 @@ class OrderController extends Controller
             }
             elseif ($order->is_product == 0) {
                 Log::info("servicio");
-                $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
-                $service = $branchServiceprofessional->branchService->service;
+                $branchServiceProfessional = BranchServiceProfessional::withTrashed()
+                    ->with([
+                        'branchService' => fn($query) => $query->withTrashed()->with([
+                            'service' => fn($query) => $query->withTrashed(),
+                        ]),
+                    ])
+                    ->find($order->branch_service_professional_id);
+
+                // Accedes al servicio incluso si fue eliminado
+                $service = $branchServiceProfessional?->branchService?->service;
                 /*$reservation = Reservation::where('car_id', $order->car_id)->first();
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');

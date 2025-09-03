@@ -985,13 +985,13 @@ class AdvanceController extends Controller
                 'data' => $advances,
                 'payments' => $payments,
                 'products' => $products,
-                'professionalEarnings' => $professionalPaymentsSum,
+                'professionalEarnings' => (int) $professionalPaymentsSum,
                 'availableCash' => $availableCash,
                 'totalNeto' => $totalNeto,
                 'totals' => [
                     'totalAdvance' => $totalAdvance,
                     'totalProduct' => $totalProduct,
-                    'totalPayments' => $professionalPaymentsSum,
+                    'totalPayments' => (int) $professionalPaymentsSum,
                 ],
             ]);
 

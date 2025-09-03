@@ -48,7 +48,7 @@ class ReservationService
         foreach ($servs as $serv) {
             $service_id = $serv;
             $service = Service::find($service_id);
-            $branchservice = BranchService::where('branch_id', $data['branch_id'])->where('service_id', $service_id)->first();
+            $branchservice = BranchService::withTrashed()->where('branch_id', $data['branch_id'])->where('service_id', $service_id)->first();
             if (!$branchservice) {
                 $branchservice = new BranchService();
                 $branchservice->branch_id = $data['branch_id'];
@@ -57,7 +57,7 @@ class ReservationService
             }
             $branch_service_id = $branchservice->id;
 
-            $branchServiceProfessional = BranchServiceProfessional::where('branch_service_id', $branch_service_id)->where('professional_id', $data['professional_id'])->first();
+            $branchServiceProfessional = BranchServiceProfessional::withTrashed()->where('branch_service_id', $branch_service_id)->where('professional_id', $data['professional_id'])->first();
             //debe ser un servicio que realiza el professional
             /*if (!$branchServiceProfessional) {
                     $branchServiceProfessional = new BranchServiceProfessional();
