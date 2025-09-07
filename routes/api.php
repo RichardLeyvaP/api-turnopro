@@ -531,6 +531,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/professional-state-coordinador', [ProfessionalController::class, 'professionals_state_coordinador']); // dado una branch devuelve los professional disponibles (endpoint para coordinador)
     Route::get('/update-state', [ProfessionalController::class, 'update_state']); // dado una un id actualiza el state del professional
     Route::get('/branch-professionals-service', [ProfessionalController::class, 'branch_professionals_service1']); // los professionales de una branch que realizan x servicios
+    Route::get('/branch-professionals-service-tottem', [ProfessionalController::class, 'branch_professionals_service_tottem']); // los professionales de una branch que realizan x servicios
     Route::get('/branch-professionals-service-new', [ProfessionalController::class, 'branch_professionals_serviceNew']); // los professionales de una branch que realizan x servicios
     Route::get('/verify-tec-prof', [ProfessionalController::class, 'verifi_tec_profe']); // dado una email devolver el nombre y el typo de cargo
     Route::get('/professional-email', [ProfessionalController::class, 'professional_email']); // dado una email devolver si ya existe como cliente

@@ -271,7 +271,7 @@ class BranchProfessionalController extends Controller
                     'second_surname' => $professional->second_surname,
                     'image_url' => $professional->image_url . '?' . Carbon::now()->timestamp, // evitar caché
                     'ponderation' => $ponderation,
-                    'state' => $professional->state,
+                    'state' => 1,
                 ];
             })
             ->sortBy('ponderation')

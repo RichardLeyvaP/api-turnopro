@@ -21,10 +21,12 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\NotificationService;
+use Illuminate\Support\Facades\Cache;
 
 class TailService
 {
 
+    private $clientHistoryCache = [];
     private NotificationService $notificationService;
 
     public function __construct(NotificationService $notificationService)
@@ -415,7 +417,7 @@ class TailService
         return $branchTails;
     }
     
-      public function tail_branch_professional($branch_id, $professional_id)
+      /*public function tail_branch_professional($branch_id, $professional_id)
     {
         $professional = Professional::find($professional_id);
 
@@ -525,6 +527,146 @@ class TailService
                 }
             }
             return $tails;
+    }*/
+
+    public function tail_branch_professional($branch_id, $professional_id)
+    {
+        $professional = Professional::find($professional_id);
+
+        if ($professional->state == 1) {
+            $this->verific_aleatorie($branch_id, $professional);
+        }
+
+        Log::info('Llamando a la cola el profesional: ' . $professional->name . ' en el servicio TailService(tail_branch_professional)');
+        $today = Carbon::now()->format('Y-m-d');
+
+        // NUEVO: Clave para seguimiento de clientes activos ===
+        $activeClientsKey = "tail_active_{$branch_id}_{$professional_id}_" . $today;
+        $previousActiveClients = Cache::get($activeClientsKey, []);
+
+        // Eager loading para evitar consultas N+1
+        $tails = Tail::with([
+            'reservation.car.clientProfessional.client',
+            'reservation.car.clientProfessional.professional',
+            'reservation.car.orders.branchServiceProfessional.branchService.service'
+        ])
+        ->whereHas('reservation', function ($query) use ($branch_id, $today) {
+            $query->where('branch_id', $branch_id)
+                ->whereDate('data', $today)
+                ->whereIn('confirmation', [1, 4]);
+        })
+        ->whereHas('reservation.car.clientProfessional', function ($query) use ($professional_id) {
+            $query->where('professional_id', $professional_id);
+        })
+        ->whereNot('attended', 2)
+        ->where('aleatorie', '!=', 1)
+        ->join('reservations', 'tails.reservation_id', '=', 'reservations.id')
+        ->orderByRaw('reservations.confirmation = 4 DESC')
+        ->orderBy('reservations.from_home', 'desc')
+        ->orderByRaw('CASE WHEN reservations.from_home = 0 THEN reservations.created_at ELSE reservations.announced END ASC')
+        ->select('tails.*')
+        ->with('reservation')
+        ->get()
+        ->map(function ($tail) use ($branch_id, $professional_id, $today) {
+            $reservation = $tail->reservation;
+            $car = $reservation->car;
+            $clientProfessional = $car->clientProfessional;
+            $professional = $clientProfessional->professional;
+            $client = $clientProfessional->client;
+
+            // Servicios
+            $services = $car->orders->filter(fn($os) => $os->is_product == 0)
+                ->map(function ($orderServiceProfessional) {
+                    $service = $orderServiceProfessional->branchServiceProfessional->branchService->service;
+                    return [
+                        'name' => $service->name,
+                        'simultaneou' => $service->simultaneou,
+                        'price_service' => $service->price_service,
+                        'type_service' => $service->type_service,
+                        'profit_percentaje' => $service->profit_percentaje,
+                        'duration_service' => $service->duration_service,
+                        'image_service' => $service->image_service,
+                        'description' => $service->service_comment
+                    ];
+                })->values();
+
+            $client_id = $client->id;
+
+            // CACHÉ DEL HISTORIAL: SI YA SE CALCULÓ, USAR CACHÉ ===
+            $cacheKey = "tail_history_{$branch_id}_{$professional_id}_{$client_id}_{$today}";
+
+            if (!isset($this->clientHistoryCache[$client_id])) {
+                $this->clientHistoryCache[$client_id] = Cache::remember($cacheKey, now()->addHours(24), function () use ($client_id) {
+                    return $this->client_history(['client_id' => $client_id]);
+                });
+            }
+
+            $history = $this->clientHistoryCache[$client_id];
+
+            return [
+                'reservation_id' => $reservation->id,
+                'car_id' => $reservation->car_id,
+                'from_home' => intval($reservation->from_home),
+                'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
+                'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
+                'total_time' => $reservation->total_time,
+                'confirmation' => intval($reservation->confirmation),
+                'client_name' => $client->name,
+                'client_image' => $client->client_image ? $client->client_image : "comments/default_profile.jpg",
+                'professional_name' => $professional->name,
+                'client_id' => $client->id,
+                'professional_id' => $professional->id,
+                'attended' => $tail->attended,
+                'notification' => intval($tail->notification),
+                'updated_at' => $tail->updated_at->format('Y-m-d H:i'),
+                'clock' => $tail->clock,
+                'timeClock' => $tail->timeClock,
+                'detached' => $tail->detached,
+                'total_services' => $services->count(),
+                'select_professional' => intval($reservation->car->select_professional),
+                'telefone_client' => $client->phone ? strval($client->phone) : '',
+                'services' => $services,
+                'url_image_barber' => $history['image_url'] ?: "comments/default_profile.jpg",
+                'frecuencia' => $history['frecuencia'] ?: "No Frecuente",
+                'cant_visit' => $history['cantVisit'] ?: 0,
+                'professional_name' => $history['professionalName'] ?: "Desconocido",
+                'history_service' => $history['services'],
+            ];
+        })->values();
+
+        // NUEVO: Detectar quiénes salieron de la cola y limpiar caché ===
+        $currentClientIds = $tails->pluck('client_id')->toArray();
+        $clientsThatLeft = array_diff($previousActiveClients, $currentClientIds);
+
+        foreach ($clientsThatLeft as $client_id) {
+            $cacheKey = "tail_history_{$branch_id}_{$professional_id}_{$client_id}_{$today}";
+            Cache::forget($cacheKey);
+            Log::info("Caché de historial eliminada para cliente {$client_id} (ya no está en cola)");
+        }
+
+        // Actualizar lista de activos
+        Cache::put($activeClientsKey, $currentClientIds, now()->addHours(24));
+
+        // === WhatsApp (sin cambios) ===
+        if ($tails->isNotEmpty() && $tails->first()['attended'] == 0) {
+            $firstReservation = $tails->first();
+            if ($firstReservation['notification'] == 0) {
+                $client_name = $firstReservation['client_name'];
+                $telefone_client = $firstReservation['telefone_client'];
+                $reservation_id = $firstReservation['reservation_id'];
+
+                $send = $this->notificationService->sendWhatsApp($telefone_client, $client_name);
+                if ($send == true) {
+                    Log::info("Notificación enviada correctamente a {$client_name}:({$telefone_client})");
+                } else {
+                    Log::warning("Error al enviar notificación a {$client_name}:({$telefone_client})");
+                }
+
+                Tail::where('reservation_id', $reservation_id)->update(['notification' => 1]);
+            }
+        }
+
+        return $tails;
     }
     
     private function client_history($data)
@@ -937,11 +1079,11 @@ class TailService
         $tail->attended = $attended;
         $tail->save();
         DB::commit();
-    } catch (Exception $e) {
-        DB::rollback();
-        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
-        throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
-    }
+        } catch (Exception $e) {
+            DB::rollback();
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
+        }
 
     }
 
@@ -1102,11 +1244,11 @@ class TailService
         $tail->attended = $attended;
         $tail->save();
         DB::commit();
-    } catch (Exception $e) {
-        DB::rollback();
-        // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
-        throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
-    }
+        } catch (Exception $e) {
+            DB::rollback();
+            // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
+            throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
+        }
 
     }
     
@@ -1155,7 +1297,7 @@ class TailService
 
     }
     
-     public function type_of_service($branch_id, $professional_id)
+    public function type_of_service($branch_id, $professional_id)
         {
             try {
                 Log::info('Entrando a type_of_service');

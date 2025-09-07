@@ -291,10 +291,10 @@ class ProfessionalController extends Controller
                             ->whereHas('tail', function ($subquery) {
                                 $subquery->where('aleatorie', '!=', 1);
                             });
-                    }])->whereIn('state', [1, 2])->join('branch_professional', function ($join) use ($data) {
+                    }])/*->whereIn('state', [1, 2])*/->join('branch_professional', function ($join) use ($data) {
                         $join->on('professionals.id', '=', 'branch_professional.professional_id')
                             ->where('branch_professional.branch_id', '=', $data['branch_id'])
-                            ->where('branch_professional.arrival', '!=', NULL);
+                            /*->where('branch_professional.arrival', '!=', NULL)*/;
                     })
                     ->select(
                         'professionals.id',
@@ -312,7 +312,7 @@ class ProfessionalController extends Controller
                     )->first();
                 if ($professional == null) {
                     $startTime = Carbon::parse($start_time);
-                    //$horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                    //$horaActualMas2Horas = $currentDateTime->copy()->addHours(1);
                     $closingTime = Carbon::parse($closing_time);
                     while ($startTime <= $closingTime) {
                         $reservations[] = $startTime->format('H:i');
@@ -386,7 +386,7 @@ class ProfessionalController extends Controller
                             $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                             $finalTime = Carbon::parse($finalFormatted);
                             $horaActual = Carbon::now();
-                            $horaActualMas2Horas = $horaActual->copy()->addHours(2);
+                            $horaActualMas2Horas = $horaActual->copy()->addHours(1);
 
                             // Si $finalTime es menor que la hora actual más 2 horas, asignar la hora actual más 2 horas a $finalTime
                             if ($finalTime->lessThan($horaActualMas2Horas)) {
@@ -399,7 +399,7 @@ class ProfessionalController extends Controller
                             return $intervalos;
                         })->flatten()->values()->all();
                         $firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
-                        $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                        $horaActualMas2Horas = $currentDateTime->copy()->addHours(1);
                         if ($horaActualMas2Horas->lessThan($firstReservationStartTime)) {
                             $startTime = Carbon::parse($start_time);
                             while ($startTime <= $horaActualMas2Horas) {
@@ -418,7 +418,7 @@ class ProfessionalController extends Controller
                         return response()->json(['reservations' => $reservations], 200);
                     } else {
                         $startTime = Carbon::parse($start_time);
-                        $horaActualMas2Horas = $currentDateTime->copy()->addHours(2);
+                        $horaActualMas2Horas = $currentDateTime->copy()->addHours(1);
                         $closingTime = Carbon::parse($horaActualMas2Horas);
                         while ($startTime <= $closingTime) {
                             $reservations[] = $startTime->format('H:i');
@@ -649,6 +649,27 @@ class ProfessionalController extends Controller
             Log::info('$servs');
             Log::info($servs);
             $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
+            $query->where('branch_id', $data['branch_id']);
+           })->get();
+           */
+            return response()->json(['professionals' => $professionals], 200);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
+        }
+    }
+
+    public function branch_professionals_service_tottem(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => 'required|numeric'
+            ]);
+            $servs = $request->input('services');
+            Log::info('$servs');
+            Log::info($servs);
+            $professionals = $this->professionalService->branch_professionals_service_tottem1($data['branch_id'], $servs);
             /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
            })->get();

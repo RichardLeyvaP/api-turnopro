@@ -85,7 +85,7 @@ class CommentController extends Controller
 
             if ($request->hasFile('client_look')) {
                $filename = $request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
-               $client = Client::find($reservation->car->clientProfessional->client_id);
+               $client = Client::withTrashed()->find($reservation->car->clientProfessional->client_id);
                $client->client_image = $filename;
                 $client->save();
             }          

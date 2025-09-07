@@ -226,6 +226,37 @@ class AdvanceController extends Controller
                 //'status' => 'nullable|string'
             ]);
 
+            $professionalId = $validated['professional_id'];
+            $date = isset($validated['data']) ? Carbon::parse($validated['data']) : now();
+
+            // Calcular inicio de quincena
+            $fortnightStart = $date->day <= 15
+                ? $date->copy()->startOfMonth()
+                : $date->copy()->day(16);
+
+            // Verificar si ya existe adelanto en esta quincena
+            $existingAdvance = Advance::where('professional_id', $professionalId)
+                ->whereDate('data', '>=', $fortnightStart)
+                ->whereDate('data', '<=', $fortnightStart->copy()->addDays(14))
+                ->where('status', '!=', 'Denegado') // No permitir adelanto si ya está en estado "C" (Cerrado)
+                ->exists();
+
+            if ($existingAdvance) {
+                DB::rollback(); // No hay cambios, pero cerramos transacción
+                Log::info('Solicitud de adelanto rechazada por duplicado en quincena', [
+                    'professional_id' => $professionalId,
+                    'branch_id' => $validated['branch_id'],
+                    'message' => 'Solo se permite un adelanto por quincena.',
+                    'user_request' => $userName // Quién hizo la petición (el usuario autenticado)
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se permite un adelanto por quincena.',
+                ], 500);
+            }
+
+
             $branch = Branch::where('id', $validated['branch_id'])->first();
             $professional = Professional::where('id', $validated['professional_id'])->first();
 
@@ -875,7 +906,7 @@ class AdvanceController extends Controller
                     return [
                         'id' => $advance->id,
                         'data' => $advance->data,
-                        'amount' => $advance->amount,
+                        'amount' => (int) $advance->amount,
                         'status' => $advance->status,
                         'paid' => $advance->paid,
                         'user_name' => $advance->user && $advance->user->professional 
@@ -911,7 +942,7 @@ class AdvanceController extends Controller
                         'productName' => $purchase->product->name,
                         'productImage' => $purchase->product->image_product,
                         'cant' => $purchase->cant,
-                        'total' => $purchase->total,
+                        'total' => (int) $purchase->total,
                         'user_name' => $purchase->user && $purchase->user->professional 
                          ? $purchase->user->professional->name 
                          : 'Desconocido',
@@ -935,7 +966,7 @@ class AdvanceController extends Controller
                     return [
                         'id' => $payment->id,
                         'data' => $payment->date,
-                        'amount' => $payment->amount,
+                        'amount' => (int) $payment->amount,
                         'payment_method' => $payment->type,
                         'type' => 'pay',
                         'created_at' => $payment->created_at,
@@ -986,11 +1017,11 @@ class AdvanceController extends Controller
                 'payments' => $payments,
                 'products' => $products,
                 'professionalEarnings' => (int) $professionalPaymentsSum,
-                'availableCash' => $availableCash,
-                'totalNeto' => $totalNeto,
+                'availableCash' => (int) $availableCash,
+                'totalNeto' => (int) $totalNeto,
                 'totals' => [
-                    'totalAdvance' => $totalAdvance,
-                    'totalProduct' => $totalProduct,
+                    'totalAdvance' => (int) $totalAdvance,
+                    'totalProduct' => (int) $totalProduct,
                     'totalPayments' => (int) $professionalPaymentsSum,
                 ],
             ]);

@@ -393,7 +393,7 @@ class ReservationController extends Controller
             ]);            
             $servs = $request->input('services');
             Log::info($request);
-            if ($request->has('select_professional')) {
+            /*if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
                 // Actualiza el campo 'living' a NULL para el branch_id dado
                 BranchProfessional::where('branch_id', $data['branch_id'])
@@ -405,17 +405,17 @@ class ReservationController extends Controller
                     $data['professional_id'] = $professionals[0]['id'];
                     $data['start_time'] = $professionals[0]['start_time'];
                 }
-            } else {
+            } else {*/
                 $data['select_professional'] = 1;
-            }
+            //}
             if ($request->has('from_home')) {
                 $data['from_home'] = $request->from_home;
             } 
             else {
                 $data['from_home'] = 1;
                 $reservationIntervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
-                Log::info('Horarios del barbero');
-                Log::info($reservationIntervals);
+                //Log::info('Horarios del barbero');
+                //Log::info($reservationIntervals);
                 // Verificar si el array tiene un número impar de elementos
                 if (count($reservationIntervals) % 2 !== 0) {
                     // Duplicar el último elemento
@@ -591,7 +591,7 @@ class ReservationController extends Controller
         Log::info("OKOKOK");
 
                 Log::info($data);
-                //SendEmailJob::dispatch($data);
+                SendEmailJob::dispatch($data);
             }
                 DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
@@ -631,7 +631,7 @@ class ReservationController extends Controller
                 // Actualiza el campo 'living' a NULL para el branch_id dado
                 BranchProfessional::where('branch_id', $data['branch_id'])
                 ->update(['living' => NULL]);
-                $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
+                $professionals = $this->professionalService->branch_professionals_service_tottem1($data['branch_id'], $servs);
                 Log::info('Professionales recalculando el orden para cliente:'.$data['name_client']);
                 Log::info($professionals);
                 if ($professionals) {
@@ -647,8 +647,8 @@ class ReservationController extends Controller
             else {
                 $data['from_home'] = 1;
                 $reservationIntervals = $this->professionalService->professional_reservations_time($data['branch_id'], $data['professional_id'], $data['data']);
-                Log::info('Horarios del barbero');
-                Log::info($reservationIntervals);
+                //Log::info('Horarios del barbero');
+                //Log::info($reservationIntervals);
                 // Verificar si el array tiene un número impar de elementos
                 if (count($reservationIntervals) % 2 !== 0) {
                     // Duplicar el último elemento
