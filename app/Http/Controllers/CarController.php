@@ -32,6 +32,7 @@ use App\Services\TraceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
@@ -339,7 +340,7 @@ class CarController extends Controller
 
     }
 
-    public function car_products_services(Request $request)
+    public function car_products_services_anterior1(Request $request)
     {
         try {
             Log::info("Entra a buscar una las ganancias del mes");
@@ -639,6 +640,362 @@ class CarController extends Controller
 
     }
 
+    public function car_products_services(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar una las ganancias del mes");
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);
+
+            $fechaActual = Carbon::now();
+            $diaActual = $fechaActual->day;
+            $fechaMesAnterior = $fechaActual->copy()->subMonthNoOverflow();
+            $mesActualStr = $fechaActual->format('Y-m');
+
+            // Ajustar día para evitar problemas con meses de 30/31 días
+            if ($diaActual > $fechaMesAnterior->daysInMonth) {
+                $fechaComparacion = $fechaMesAnterior->endOfMonth();
+            } else {
+                $fechaComparacion = $fechaMesAnterior->day($diaActual);
+            }
+            $fechaFormateada = $fechaComparacion->toDateString();
+
+            if ($data['branch_id'] != 0) {
+                Log::info("branch");
+
+                // === MANEJO DE CACHÉ CON LOGS ===
+                $cacheKey = "car_products_services_ant_{$data['business_id']}_{$data['branch_id']}_{$mesActualStr}";
+                
+                $lastKeyCacheKey = "car_products_services_last_key_{$data['business_id']}_{$data['branch_id']}";
+                
+
+                // Borrar caché vieja si cambió el mes
+                $lastUsedKey = Cache::get($lastKeyCacheKey);
+                if ($lastUsedKey && $lastUsedKey !== $cacheKey) {
+                    Cache::forget($lastUsedKey);
+                    Log::info("Caché antigua eliminada: " . $lastUsedKey);
+                }
+                Cache::put($lastKeyCacheKey, $cacheKey, now()->addYear());
+
+                // === DATOS ACTUALES (siempre frescos) ===
+                $ordersAct = Order::whereHas('car', function ($query) use ($data) {
+                    $query->whereHas('reservation', function ($query) use ($data) {
+                        $query->whereDate('data', Carbon::now())
+                            ->where('branch_id', $data['branch_id']);
+                    })->where('pay', 1);
+                })->get();
+
+                $products = Product::with([
+                    'orders' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereDate('data', Carbon::now())
+                            ->whereHas('car', function ($query) use ($data) {
+                                $query->whereHas('reservation', function ($query) use ($data) {
+                                    $query->whereDate('data', Carbon::now())
+                                        ->where('branch_id', $data['branch_id']);
+                                })->where('pay', 1);
+                            })->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->where('cashiersales.branch_id', $data['branch_id'])
+                            ->whereDate('data', Carbon::now())
+                            ->where('pay', 1);
+                    },
+                    'workerPurchases' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', Carbon::now())
+                            ->where('status', 1);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                })->values()->sortByDesc(function ($product) {
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price')
+                    ];
+                });
+
+                $services = Service::has('orders')
+                    ->withCount(['orders' => function ($query) use ($data) {
+                        $query->whereHas('car', function ($query) use ($data) {
+                            $query->whereHas('reservation', function ($query) use ($data) {
+                                $query->whereDate('data', Carbon::now())
+                                    ->where('branch_id', $data['branch_id']);
+                            })->where('pay', 1);
+                        })->where('is_product', 0);
+                    }])->orderByDesc('orders_count')->get();
+
+                // === CACHÉ DEL MES ANTERIOR CON LOGS ===
+                if (Cache::has($cacheKey)) {
+                    Log::info("✅ Caché HIT: datos del mes anterior cargados desde caché", ['key' => $cacheKey]);
+                    $cachedAnt = Cache::get($cacheKey);
+                    $ordersAnt = $cachedAnt['ordersAnt'];
+                    $productsAnt = $cachedAnt['productsAnt'];
+                    $servicesAnt = $cachedAnt['servicesAnt'];
+                } else {
+                    Log::info("🔁 Caché MISS: recalculando datos del mes anterior", ['key' => $cacheKey]);
+
+                    $ordersAnt = Order::whereHas('car', function ($query) use ($data, $fechaFormateada) {
+                        $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
+                            $query->whereDate('data', $fechaFormateada)
+                                ->where('branch_id', $data['branch_id']);
+                        })->where('pay', 1);
+                    })->get();
+
+                    $productsAnt = Product::with([
+                        'orders' => function ($query) use ($data, $fechaFormateada) {
+                            $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
+                                ->groupBy('product_id')
+                                ->whereDate('data', $fechaFormateada)
+                                ->whereHas('car', function ($query) use ($data, $fechaFormateada) {
+                                    $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
+                                        $query->whereDate('data', $fechaFormateada)
+                                            ->where('branch_id', $data['branch_id']);
+                                    })->where('pay', 1);
+                                })->where('is_product', 1);
+                        },
+                        'cashiersales' => function ($query) use ($data, $fechaFormateada) {
+                            $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                                ->groupBy('product_id')
+                                ->where('cashiersales.branch_id', $data['branch_id'])
+                                ->whereDate('data', $fechaFormateada)
+                                ->where('pay', 1);
+                        },
+                        'workerPurchases' => function ($query) use ($data, $fechaFormateada) {
+                            $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                                ->groupBy('product_id')
+                                ->where('branch_id', $data['branch_id'])
+                                ->whereDate('data', $fechaFormateada)
+                                ->where('status', 1);
+                        }
+                    ])->get()->filter(function ($product) {
+                        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                    })->values()->sortByDesc(function ($product) {
+                        return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
+                    })->map(function ($product) {
+                        return [
+                            'name' => $product->name,
+                            'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                            'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price')
+                        ];
+                    });
+
+                    $servicesAnt = Service::has('orders')
+                        ->withCount(['orders' => function ($query) use ($data, $fechaFormateada) {
+                            $query->whereHas('car', function ($query) use ($data, $fechaFormateada) {
+                                $query->whereHas('reservation', function ($query) use ($data, $fechaFormateada) {
+                                    $query->whereDate('data', $fechaFormateada)
+                                        ->where('branch_id', $data['branch_id']);
+                                })->where('pay', 1);
+                            })->where('is_product', 0);
+                        }])
+                        ->orderByDesc('orders_count')
+                        ->get()
+                        ->filter(function ($service) {
+                            return $service->orders_count > 0;
+                        });
+
+                    // Guardar en caché
+                    $cachedAnt = [
+                        'ordersAnt' => $ordersAnt,
+                        'productsAnt' => $productsAnt,
+                        'servicesAnt' => $servicesAnt,
+                    ];
+                    Cache::put($cacheKey, $cachedAnt, now()->addMonths(3));
+                }
+
+                $resultPproduct[] = [
+                    'cant' => $products->sum('total_price'),
+                    'products' => $products,
+                    'cantAnt' => $productsAnt->sum('total_price'),
+                    'productsAnt' => $productsAnt,
+                ];
+
+                $resultService[] = [
+                    'cant' => $ordersAct->where('is_product', 0)->sum('price'),
+                    'services' => $services->filter(function ($service) {
+                        return $service->orders_count > 0;
+                    }),
+                    'cantAnt' => $ordersAnt->where('is_product', 0)->sum('price'),
+                    'servicesAnt' => $servicesAnt->filter(function ($service) {
+                        return $service->orders_count > 0;
+                    }),
+                ];
+
+                return response()->json(['product' => $resultPproduct, 'service' => $resultService], 200);
+            } else {
+                Log::info("No branch");
+
+                $cacheKey = "car_products_services_ant_{$data['business_id']}_global_{$mesActualStr}";
+                //Cache::forget($cacheKey);
+                $lastKeyCacheKey = "car_products_services_last_key_{$data['business_id']}_global";
+                //Cache::forget($lastKeyCacheKey);
+                $lastUsedKey = Cache::get($lastKeyCacheKey);
+                if ($lastUsedKey && $lastUsedKey !== $cacheKey) {
+                    Cache::forget($lastUsedKey);
+                    Log::info("Caché antigua eliminada (global): " . $lastUsedKey);
+                }
+                Cache::put($lastKeyCacheKey, $cacheKey, now()->addYear());
+
+                $ordersAct = Order::whereHas('car', function ($query) {
+                    $query->whereHas('reservation', function ($query) {
+                        $query->whereDate('data', Carbon::now());
+                    })->where('pay', 1);
+                })->get();
+
+                $products = Product::with([
+                    'orders' => function ($query) use ($data) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereDate('data', Carbon::now())
+                            ->whereHas('car', function ($query) use ($data) {
+                                $query->whereHas('reservation', function ($query) use ($data) {
+                                    $query->whereDate('data', Carbon::now());
+                                })->where('pay', 1);
+                            })->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->whereDate('data', Carbon::now())
+                            ->where('pay', 1);
+                    },
+                    'workerPurchases' => function ($query) {
+                        $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                            ->groupBy('product_id')
+                            ->whereDate('data', Carbon::now())
+                            ->where('status', 1);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                })->values()->sortByDesc(function ($product) {
+                    return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
+                })->map(function ($product) {
+                    return [
+                        'name' => $product->name,
+                        'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                        'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price'),
+                    ];
+                });
+
+                $services = Service::has('orders')
+                    ->withCount(['orders' => function ($query) {
+                        $query->whereHas('car', function ($query) {
+                            $query->whereHas('reservation', function ($query) {
+                                $query->whereDate('data', Carbon::now());
+                            })->where('pay', 1);
+                        })->where('is_product', 0);
+                    }])->orderByDesc('orders_count')->get();
+
+                // === CACHÉ GLOBAL CON LOGS ===
+                if (Cache::has($cacheKey)) {
+                    Log::info("✅ Caché HIT (global): datos del mes anterior cargados desde caché", ['key' => $cacheKey]);
+                    $cachedAnt = Cache::get($cacheKey);
+                    $ordersAnt = $cachedAnt['ordersAnt'];
+                    $productsAnt = $cachedAnt['productsAnt'];
+                    $servicesAnt = $cachedAnt['servicesAnt'];
+                } else {
+                    Log::info("🔁 Caché MISS (global): recalculando datos del mes anterior", ['key' => $cacheKey]);
+
+                    $ordersAnt = Order::whereHas('car', function ($query) use ($fechaFormateada) {
+                        $query->whereHas('reservation', function ($query) use ($fechaFormateada) {
+                            $query->whereDate('data', $fechaFormateada);
+                        })->where('pay', 1);
+                    })->get();
+
+                    $productsAnt = Product::with([
+                        'orders' => function ($query) use ($fechaFormateada) {
+                            $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price')
+                                ->groupBy('product_id')
+                                ->whereDate('data', $fechaFormateada)
+                                ->whereHas('car', function ($query) use ($fechaFormateada) {
+                                    $query->whereHas('reservation', function ($query) use ($fechaFormateada) {
+                                        $query->whereDate('data', $fechaFormateada);
+                                    })->where('pay', 1);
+                                })->where('is_product', 1);
+                        },
+                        'cashiersales' => function ($query) use ($fechaFormateada) {
+                            $query->selectRaw('SUM(cant) as total_cant, SUM(price) as total_price, product_id')
+                                ->groupBy('product_id')
+                                ->whereDate('data', $fechaFormateada)
+                                ->where('pay', 1);
+                        },
+                        'workerPurchases' => function ($query) use ($fechaFormateada) {
+                            $query->selectRaw('SUM(cant) as total_cant, SUM(total) as total_price, product_id')
+                                ->groupBy('product_id')
+                                ->whereDate('data', $fechaFormateada)
+                                ->where('status', 1);
+                        }
+                    ])->get()->filter(function ($product) {
+                        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                    })->values()->sortByDesc(function ($product) {
+                        return $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant');
+                    })->map(function ($product) {
+                        return [
+                            'name' => $product->name,
+                            'total_cant' => $product->orders->sum('total_cant') + $product->cashiersales->sum('total_cant') + $product->workerPurchases->sum('total_cant'),
+                            'total_price' => $product->orders->sum('total_price') + $product->cashiersales->sum('total_price') + $product->workerPurchases->sum('total_price'),
+                        ];
+                    });
+
+                    $servicesAnt = Service::has('orders')
+                        ->withCount(['orders' => function ($query) use ($fechaFormateada) {
+                            $query->whereHas('car', function ($query) use ($fechaFormateada) {
+                                $query->whereHas('reservation', function ($query) use ($fechaFormateada) {
+                                    $query->whereDate('data', $fechaFormateada);
+                                })->where('pay', 1);
+                            })->where('is_product', 0);
+                        }])
+                        ->orderByDesc('orders_count')
+                        ->get()
+                        ->filter(function ($service) {
+                            return $service->orders_count > 0;
+                        });
+
+                    $cachedAnt = [
+                        'ordersAnt' => $ordersAnt,
+                        'productsAnt' => $productsAnt,
+                        'servicesAnt' => $servicesAnt,
+                    ];
+                    Cache::put($cacheKey, $cachedAnt, now()->addMonths(3));
+                }
+
+                $resultPproduct[] = [
+                    'cant' => $products->sum('total_price'),
+                    'products' => $products,
+                    'cantAnt' => $productsAnt->sum('total_price'),
+                    'productsAnt' => $productsAnt,
+                ];
+
+                $resultService[] = [
+                    'cant' => $ordersAct->where('is_product', 0)->sum('price'),
+                    'services' => $services->filter(function ($service) {
+                        return $service->orders_count > 0;
+                    }),
+                    'cantAnt' => $ordersAnt->where('is_product', 0)->sum('price'),
+                    'servicesAnt' => $servicesAnt->filter(function ($service) {
+                        return $service->orders_count > 0;
+                    }),
+                ];
+
+                return response()->json(['product' => $resultPproduct, 'service' => $resultService], 200);
+            }
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
+        }
+    }
+
     public function cars_sum_amount_week(Request $request)
     {
         try {
@@ -763,7 +1120,7 @@ class CarController extends Controller
     }
 
 
-    public function cars_sum_amount_mounth(Request $request)
+    public function cars_sum_amount_mounth_anterior1(Request $request)
     {
         try {
             Log::info("Entra a buscar una las ganancias del mes");
@@ -1149,6 +1506,453 @@ class CarController extends Controller
                 return response()->json(['cars' => $cars, 'carsDetail' => $resultDetails, 'carsDetailAnt' => $resultDetailsAnt, 'carsAnt' => $carsAnt], 200);
             }
             //return response()->json($branches->sum(), 200, [], JSON_NUMERIC_CHECK);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
+        }
+    }
+
+    public function cars_sum_amount_mounth(Request $request)
+    {
+        try {
+            Log::info("Entra a buscar las ganancias del mes");
+            $data = $request->validate([
+                'business_id' => 'required|numeric',
+                'branch_id' => 'nullable'
+            ]);
+
+            $startOfMonth = now()->startOfMonth();
+            $endOfMonth = now()->endOfMonth();
+            $inicio_mes_anterior = $startOfMonth->copy()->subMonth();
+            $final_mes_anterior = $inicio_mes_anterior->copy()->endOfMonth();
+            $mesActualStr = now()->format('Y-m'); // 2025-04
+
+            if ($data['branch_id'] != 0) {
+                Log::info("branch");
+
+                // === CACHÉ DEL MES ANTERIOR ===
+                $cacheKey = "cars_sum_amount_mounth_ant_{$data['business_id']}_{$data['branch_id']}_{$mesActualStr}";
+                $lastKeyCacheKey = "cars_sum_amount_mounth_last_key_{$data['business_id']}_{$data['branch_id']}";
+
+                // Borrar caché vieja si cambió el mes
+                $lastUsedKey = Cache::get($lastKeyCacheKey);
+                if ($lastUsedKey && $lastUsedKey !== $cacheKey) {
+                    Cache::forget($lastUsedKey);
+                    Log::info("Caché antigua eliminada: " . $lastUsedKey);
+                }
+                Cache::put($lastKeyCacheKey, $cacheKey, now()->addYear());
+
+                // === DATOS ACTUALES (siempre frescos) ===
+                $cars = Car::whereHas('reservation', function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                    $query->where('branch_id', $data['branch_id'])
+                        ->whereDate('data', '>=', $startOfMonth)
+                        ->whereDate('data', '<=', $endOfMonth);
+                })->where('pay', 1);
+
+                $carIds = $cars->pluck('id');
+
+                /// Nuevo: productos del mes actual
+                $products = Product::with([
+                    'orders' => function ($query) use ($carIds) {
+                        $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereIn('car_id', $carIds)
+                            ->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                            ->groupBy('product_id')
+                            ->where('cashiersales.branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth);
+                    },
+                    'workerPurchases' => function ($query) use ($data, $startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
+                            ->groupBy('product_id')
+                            ->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth)
+                            ->where('status', 1);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                })->map(function ($product) {
+                    $totalOrders = $product->orders->sum('total_cant');
+                    $totalSales = $product->cashiersales->sum('total_sales');
+                    $totalWorker = $product->workerPurchases->sum('total_worker');
+                    
+                    $utilidadOrders = $product->orders->sum('utilidadOrder');
+                    $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                    
+                    $totalPriceOrders = $product->orders->sum('total_price');
+                    $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                        'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                        'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                        'sales' => $totalPriceSales + $totalPriceWorker
+                    ];
+                })->sortByDesc('total_quantity')->values();
+
+                $totalUtilidadProducts = $products->sum('utilidad');
+                $totalPriceProducts = $products->sum('price');
+                $productSales = $products->sum('sales');
+
+                $carsDetail = $cars->get()->map(function ($car) {
+                    $products = $car->orders->where('is_product', 1)->sum('price');
+                    $services = $car->orders->where('is_product', 0)->sum('price');
+                    $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                    $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
+                    return [
+                        'productsAmount' => $products,
+                        'servicesAmount' => $services,
+                        'earnings' => $car->amount,
+                        'technical_assistance' => $car->technical_assistance * 5000,
+                        'tip' => $car->tip,
+                        'total' => $car->amount + $car->technical_assistance * 5000,
+                        'utilidadService' => $utilidadServices
+                    ];
+                });
+
+                $resultDetails[] = [
+                    'productsAmount' => round($totalPriceProducts, 2),
+                    'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
+                    'earnings' => round($carsDetail->sum('earnings'), 2),
+                    'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
+                    'tip' => round($carsDetail->sum('tip'), 2),
+                    'total' => round($carsDetail->sum('total') + $productSales, 2),
+                    'utilidad' => round($carsDetail->sum('utilidadService') + $totalUtilidadProducts + ($carsDetail->sum('tip') * 0.10), 2),
+                    'type' => false
+                ];
+
+                // === MES ANTERIOR: CACHÉ CON LOGS ===
+                if (Cache::has($cacheKey)) {
+                    Log::info("Caché HIT: datos del mes anterior cargados desde caché", ['key' => $cacheKey]);
+                    $cachedAnt = Cache::get($cacheKey);
+                    $resultDetailsAnt = $cachedAnt['resultDetailsAnt'];
+                } else {
+                    Log::info("Caché MISS: recalculando datos del mes anterior", ['key' => $cacheKey]);
+
+                    $carsAnt = Car::whereHas('reservation', function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
+                        $query->where('branch_id', $data['branch_id'])
+                            ->whereDate('data', '>=', $inicio_mes_anterior)
+                            ->whereDate('data', '<=', $final_mes_anterior);
+                    })->where('pay', 1);
+
+                    $carIdsAnt = $carsAnt->pluck('id');
+
+                    $productsAnt = Product::with([
+                        'orders' => function ($query) use ($carIdsAnt) {
+                            $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                                ->groupBy('product_id')
+                                ->whereIn('car_id', $carIdsAnt)
+                                ->where('is_product', 1);
+                        },
+                        'cashiersales' => function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
+                            $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                                ->groupBy('product_id')
+                                ->where('cashiersales.branch_id', $data['branch_id'])
+                                ->whereDate('data', '>=', $inicio_mes_anterior)
+                                ->whereDate('data', '<=', $final_mes_anterior);
+                        },
+                        'workerPurchases' => function ($query) use ($data, $inicio_mes_anterior, $final_mes_anterior) {
+                            $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
+                                ->groupBy('product_id')
+                                ->where('branch_id', $data['branch_id'])
+                                ->whereDate('data', '>=', $inicio_mes_anterior)
+                                ->whereDate('data', '<=', $final_mes_anterior)
+                                ->where('status', 1);
+                        }
+                    ])->get()->filter(function ($product) {
+                        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                    })->map(function ($product) {
+                        $totalOrders = $product->orders->sum('total_cant');
+                        $totalSales = $product->cashiersales->sum('total_sales');
+                        $totalWorker = $product->workerPurchases->sum('total_worker');
+                        
+                        $utilidadOrders = $product->orders->sum('utilidadOrder');
+                        $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                        $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                        
+                        $totalPriceOrders = $product->orders->sum('total_price');
+                        $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                        $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                    
+                        return [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                            'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                            'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                            'sales' => $totalPriceSales + $totalPriceWorker
+                        ];
+                    })->sortByDesc('total_quantity')->values();
+
+                    $totalUtilidadProductsAnt = $productsAnt->sum('utilidad');
+                    $totalPriceProductsAnt = $productsAnt->sum('price');
+                    $productSalesAnt = $productsAnt->sum('sales');
+
+                    $carsDetailAntData = $carsAnt->get()->map(function ($car) {
+                        $products = $car->orders->where('is_product', 1)->sum('price');
+                        $services = $car->orders->where('is_product', 0)->sum('price');
+                        $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                        $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
+                        return [
+                            'productsAmount' => $products,
+                            'servicesAmount' => $services,
+                            'earnings' => $car->amount,
+                            'technical_assistance' => $car->technical_assistance * 5000,
+                            'tip' => $car->tip,
+                            'total' => $car->amount + $car->technical_assistance * 5000,
+                            'utilidadService' => $utilidadServices
+                        ];
+                    });
+
+                    $resultDetailsAnt = [
+                        [
+                            'productsAmount' => round($totalPriceProductsAnt, 2),
+                            'servicesAmount' => round($carsDetailAntData->sum('servicesAmount'), 2),
+                            'earnings' => round($carsDetailAntData->sum('earnings'), 2),
+                            'technical_assistance' => round($carsDetailAntData->sum('technical_assistance'), 2),
+                            'tip' => round($carsDetailAntData->sum('tip'), 2),
+                            'total' => round($carsDetailAntData->sum('total') + $productSalesAnt, 2),
+                            'utilidad' => round($carsDetailAntData->sum('utilidadService') + $totalUtilidadProductsAnt + ($carsDetailAntData->sum('tip') * 0.10), 2),
+                            'type' => false
+                        ]
+                    ];
+
+                    // Guardar en caché
+                    Cache::put($cacheKey, ['resultDetailsAnt' => $resultDetailsAnt], now()->addMonths(3));
+                }
+
+                $cars = $resultDetails[0]['total'];
+                $carsAnt = $resultDetailsAnt[0]['total'];
+
+                return response()->json([
+                    'cars' => $cars,
+                    'carsDetail' => $resultDetails,
+                    'carsDetailAnt' => $resultDetailsAnt,
+                    'carsAnt' => $carsAnt
+                ], 200);
+            } else {
+                Log::info("businesss");
+
+                // === CACHÉ GLOBAL DEL MES ANTERIOR ===
+                $cacheKey = "cars_sum_amount_mounth_ant_{$data['business_id']}_global_{$mesActualStr}";
+                $lastKeyCacheKey = "cars_sum_amount_mounth_last_key_{$data['business_id']}_global";
+
+                $lastUsedKey = Cache::get($lastKeyCacheKey);
+                if ($lastUsedKey && $lastUsedKey !== $cacheKey) {
+                    Cache::forget($lastUsedKey);
+                    Log::info("Caché antigua eliminada (global): " . $lastUsedKey);
+                }
+                Cache::put($lastKeyCacheKey, $cacheKey, now()->addYear());
+
+                // === DATOS ACTUALES (GLOBAL) ===
+                $cars = Car::whereHas('reservations', function ($query) use ($startOfMonth, $endOfMonth) {
+                    $query->whereDate('data', '>=', $startOfMonth)->whereDate('data', '<=', $endOfMonth);
+                })->where('pay', 1);
+
+                $carIds = $cars->pluck('id');
+
+                $products = Product::with([
+                    'orders' => function ($query) use ($carIds) {
+                        $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                            ->groupBy('product_id')
+                            ->whereIn('car_id', $carIds)
+                            ->where('is_product', 1);
+                    },
+                    'cashiersales' => function ($query) use ($startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                            ->groupBy('product_id')
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth);
+                    },
+                    'workerPurchases' => function ($query) use ($startOfMonth, $endOfMonth) {
+                        $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
+                            ->groupBy('product_id')
+                            ->whereDate('data', '>=', $startOfMonth)
+                            ->whereDate('data', '<=', $endOfMonth)
+                            ->where('status', 1);
+                    }
+                ])->get()->filter(function ($product) {
+                    return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                })->map(function ($product) {
+                    $totalOrders = $product->orders->sum('total_cant');
+                    $totalSales = $product->cashiersales->sum('total_sales');
+                    $totalWorker = $product->workerPurchases->sum('total_worker');
+                    
+                    $utilidadOrders = $product->orders->sum('utilidadOrder');
+                    $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                    $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                    
+                    $totalPriceOrders = $product->orders->sum('total_price');
+                    $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                    $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                        'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                        'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                        'sales' => $totalPriceSales + $totalPriceWorker
+                    ];
+                })->sortByDesc('total_quantity')->values();
+
+                $totalUtilidadProducts = $products->sum('utilidad');
+                $totalPriceProducts = $products->sum('price');
+                $productSales = $products->sum('sales');
+
+                $couseStudent = CourseStudent::whereHas('course', function ($query) use ($startOfMonth) {
+                    $query->whereDate('startDate', '>=', $startOfMonth);
+                })->where('payment_status', 1);
+                $amountCourse = $couseStudent->sum('total_payment');
+
+                $carsDetail = $cars->get()->map(function ($car) {
+                    $products = $car->orders->where('is_product', 1)->sum('price');
+                    $services = $car->orders->where('is_product', 0)->sum('price');
+                    $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                    $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
+                    return [
+                        'productsAmount' => $products,
+                        'servicesAmount' => $services,
+                        'earnings' => $car->amount,
+                        'technical_assistance' => $car->technical_assistance * 5000,
+                        'tip' => $car->tip,
+                        'total' => $car->amount + $car->technical_assistance * 5000,
+                        'utilidadService' => $utilidadServices
+                    ];
+                });
+
+                $resultDetails[] = [
+                    'productsAmount' => round($totalPriceProducts, 2),
+                    'servicesAmount' => round($carsDetail->sum('servicesAmount'), 2),
+                    'earnings' => round($carsDetail->sum('earnings'), 2),
+                    'academia' => round($amountCourse, 2),
+                    'technical_assistance' => round($carsDetail->sum('technical_assistance'), 2),
+                    'tip' => round($carsDetail->sum('tip'), 2),
+                    'total' => round($carsDetail->sum('total') + $productSales + $amountCourse, 2),
+                    'utilidad' => round($carsDetail->sum('utilidadService') + $totalUtilidadProducts + ($carsDetail->sum('tip') * 0.10) + $amountCourse, 2),
+                    'type' => true
+                ];
+
+                // === MES ANTERIOR (GLOBAL) EN CACHÉ ===
+                if (Cache::has($cacheKey)) {
+                    Log::info("Caché HIT (global): datos del mes anterior cargados desde caché", ['key' => $cacheKey]);
+                    $cachedAnt = Cache::get($cacheKey);
+                    $resultDetailsAnt = $cachedAnt['resultDetailsAnt'];
+                } else {
+                    Log::info("🔁 Caché MISS (global): recalculando datos del mes anterior", ['key' => $cacheKey]);
+
+                    $carsAnt = Car::whereHas('reservations', function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
+                        $query->whereDate('data', '>=', $inicio_mes_anterior)->whereDate('data', '<=', $final_mes_anterior);
+                    })->where('pay', 1);
+
+                    $carIdsAnt = $carsAnt->pluck('id');
+
+                    $productsAnt = Product::with([
+                        'orders' => function ($query) use ($carIdsAnt) {
+                            $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
+                                ->groupBy('product_id')
+                                ->whereIn('car_id', $carIdsAnt)
+                                ->where('is_product', 1);
+                        },
+                        'cashiersales' => function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
+                            $query->selectRaw('product_id, SUM(cant) as total_sales, SUM(percent_wint) as utilidadCash, SUM(price) as total_pricesales')
+                                ->groupBy('product_id')
+                                ->whereDate('data', '>=', $inicio_mes_anterior)
+                                ->whereDate('data', '<=', $final_mes_anterior);
+                        },
+                        'workerPurchases' => function ($query) use ($inicio_mes_anterior, $final_mes_anterior) {
+                            $query->selectRaw('product_id, SUM(cant) as total_worker, SUM(percent_wint) as utilidadWorker, SUM(total) as total_worker_price')
+                                ->groupBy('product_id')
+                                ->whereDate('data', '>=', $inicio_mes_anterior)
+                                ->whereDate('data', '<=', $final_mes_anterior)
+                                ->where('status', 1);
+                        }
+                    ])->get()->filter(function ($product) {
+                        return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty() || !$product->workerPurchases->isEmpty();
+                    })->map(function ($product) {
+                        $totalOrders = $product->orders->sum('total_cant');
+                        $totalSales = $product->cashiersales->sum('total_sales');
+                        $totalWorker = $product->workerPurchases->sum('total_worker');
+                        
+                        $utilidadOrders = $product->orders->sum('utilidadOrder');
+                        $utilidadSales = $product->cashiersales->sum('utilidadCash');
+                        $utilidadWorker = $product->workerPurchases->sum('utilidadWorker');
+                        
+                        $totalPriceOrders = $product->orders->sum('total_price');
+                        $totalPriceSales = $product->cashiersales->sum('total_pricesales');
+                        $totalPriceWorker = $product->workerPurchases->sum('total_worker_price');
+                    
+                        return [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'total_quantity' => $totalOrders + $totalSales + $totalWorker,
+                            'utilidad' => $utilidadOrders + $utilidadSales + $utilidadWorker,
+                            'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorker,
+                            'sales' => $totalPriceSales + $totalPriceWorker
+                        ];
+                    })->sortByDesc('total_quantity')->values();
+
+                    $totalUtilidadProductsAnt = $productsAnt->sum('utilidad');
+                    $totalPriceProductsAnt = $productsAnt->sum('price');
+                    $productSalesAnt = $productsAnt->sum('sales');
+
+                    $couseStudentA = CourseStudent::whereHas('course', function ($query) use ($inicio_mes_anterior) {
+                        $query->whereDate('startDate', '>=', $inicio_mes_anterior);
+                    })->where('payment_status', 1);
+                    $amountCourseA = $couseStudentA->sum('total_payment');
+
+                    $carsDetailAntData = $carsAnt->get()->map(function ($car) {
+                        $products = $car->orders->where('is_product', 1)->sum('price');
+                        $services = $car->orders->where('is_product', 0)->sum('price');
+                        $noMetas = $car->orders->where('is_product', 0)->where('meta', 0);
+                        $utilidadServices = $noMetas->sum('price') - $noMetas->sum('percent_win');
+                        return [
+                            'productsAmount' => $products,
+                            'servicesAmount' => $services,
+                            'earnings' => $car->amount,
+                            'technical_assistance' => $car->technical_assistance * 5000,
+                            'tip' => $car->tip,
+                            'total' => $car->amount + $car->technical_assistance * 5000,
+                            'utilidadService' => $utilidadServices
+                        ];
+                    });
+
+                    $resultDetailsAnt = [
+                        [
+                            'productsAmount' => round($totalPriceProductsAnt, 2),
+                            'servicesAmount' => round($carsDetailAntData->sum('servicesAmount'), 2),
+                            'earnings' => round($carsDetailAntData->sum('earnings'), 2),
+                            'academia' => round($amountCourseA, 2),
+                            'technical_assistance' => round($carsDetailAntData->sum('technical_assistance'), 2),
+                            'tip' => round($carsDetailAntData->sum('tip'), 2),
+                            'total' => round($carsDetailAntData->sum('total') + $productSalesAnt + $amountCourseA, 2),
+                            'utilidad' => round($carsDetailAntData->sum('utilidadService') + $totalUtilidadProductsAnt + ($carsDetailAntData->sum('tip') * 0.10) + $amountCourseA, 2),
+                            'type' => true
+                        ]
+                    ];
+
+                    Cache::put($cacheKey, ['resultDetailsAnt' => $resultDetailsAnt], now()->addMonths(3));
+                }
+
+                $cars = $resultDetails[0]['total'];
+                $carsAnt = $resultDetailsAnt[0]['total'];
+
+                return response()->json([
+                    'cars' => $cars,
+                    'carsDetail' => $resultDetails,
+                    'carsDetailAnt' => $resultDetailsAnt,
+                    'carsAnt' => $carsAnt
+                ], 200);
+            }
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);

@@ -393,7 +393,7 @@ class BranchProfessionalController extends Controller
         return $fechas;
     }
     
-     function obtenerFechasDiasSemana($diasSemana)
+     /*function obtenerFechasDiasSemana($diasSemana)
     {
         // Definir los nombres de los días de la semana en inglés
         $diasSemanaIngles = [
@@ -425,12 +425,57 @@ class BranchProfessionalController extends Controller
             /*if ($fecha->isPast()) { // Si la fecha ya pasó, avanzar una semana
                 $fecha->addWeek();
             }*/
-            while ($fecha->year <= $añoLimite) { // Verificar todo el año
+            /*while ($fecha->year <= $añoLimite) { // Verificar todo el año
                 $fechas[] = $fecha->format('Y-m-d');
                 $fecha->addWeek(); // Avanzar una semana
             }
         }
         // Ordenar las fechas
+        sort($fechas);
+
+        return $fechas;
+    }*/
+
+    function obtenerFechasDiasSemana($diasSemana)
+    {
+        // Definir los nombres de los días de la semana en inglés
+        $diasSemanaIngles = [
+            'Lunes' => 'Monday',
+            'Martes' => 'Tuesday',
+            'Miércoles' => 'Wednesday',
+            'Jueves' => 'Thursday',
+            'Viernes' => 'Friday',
+            'Sábado' => 'Saturday',
+            'Domingo' => 'Sunday'
+        ];
+
+        $añoActual = Carbon::now()->year;
+        $añoLimite = $añoActual + 2;
+        $fechas = []; // ¡Importante inicializarlo aquí!
+
+        foreach ($diasSemana as $dia) {
+            $diaIngles = $diasSemanaIngles[$dia] ?? null;
+
+            if (!$diaIngles) {
+                continue; // Saltar si no se encuentra la traducción
+            }
+
+            $fecha = Carbon::now();
+
+            // Si hoy NO es el día deseado, ir al próximo
+            if ($fecha->isoFormat('dddd') !== $diaIngles) {
+                $fecha = $fecha->next($diaIngles);
+            }
+
+            // Generar todas las fechas hasta el límite
+            while ($fecha->year <= $añoLimite) {
+                $fechas[] = $fecha->format('Y-m-d');
+                $fecha->addWeek();
+            }
+        }
+
+        // Eliminar duplicados y ordenar
+        $fechas = array_unique($fechas);
         sort($fechas);
 
         return $fechas;
