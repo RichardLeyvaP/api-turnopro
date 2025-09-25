@@ -127,6 +127,9 @@ class BoxController extends Controller
             DB::beginTransaction();
             Log::info("Editar la caja (store)");
             Log::info($request->all());
+            $request->merge([
+                'cashFound' => $request->cashFound === 'null' ? null : $request->cashFound
+            ]);
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'cashFound' => 'nullable|numeric',
@@ -247,6 +250,9 @@ class BoxController extends Controller
         try {
 
             Log::info("Editar");
+            $request->merge([
+                'cashFound' => $request->cashFound === 'null' ? null : $request->cashFound
+            ]);
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'cashFound' => 'nullable|numeric',

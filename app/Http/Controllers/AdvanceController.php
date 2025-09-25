@@ -56,15 +56,21 @@ class AdvanceController extends Controller
             $startDate = now()->toDateString();
 
             // Construir consulta base
-            $advances = Advance::where('branch_id', $validated['branch_id'])
-                ->with(['branch', 'professional'])
-                //->whereDate('paid', 0)
-                ->whereDate('data', $startDate)
-                //->where('status', '!=', 'Pagado')
-                ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Pagado')") // Orden específico
-                ->orderBy('created_at', 'asc') // Luego por fecha más antigua
-                ->where('type', 'Adelanto')
-                ->get()->map(function ($advance) {
+            $advances = Advance::where(function ($query) use ($startDate) {
+            // Adelantos del día actual (cualquier estado)
+                $query->whereDate('data', $startDate)
+                    // O adelantos anteriores con estado 'Pendiente'
+                    ->orWhere(function ($subQuery) use ($startDate) {
+                        $subQuery->whereDate('data', '<', $startDate)
+                                ->where('status', 'Pendiente');
+                    });
+            })
+            ->where('branch_id', $validated['branch_id'])
+            ->where('type', 'Adelanto')
+            ->with(['branch', 'professional'])
+            ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Pagado')")
+            ->orderBy('created_at', 'asc')
+            ->get()->map(function ($advance) {
                     return [
                         'id' => $advance->id,
                         'data' => $advance->data,
@@ -137,32 +143,40 @@ class AdvanceController extends Controller
 
             // Construir consulta base
             $query = Advance::where('branch_id', $validated['branch_id'])
-                ->whereDate('data', '>=', $startDate)
-                ->whereDate('data', '<=', $endDate)
-                ->orderBy('created_at', 'desc')
-                ->where('type', 'Adelanto');
+                ->where('type', 'Adelanto')
+                ->where(function ($q) use ($startDate, $endDate) {
+                    // Condición 1: dentro del rango de fechas (cualquier estado)
+                    $q->whereBetween('data', [$startDate, $endDate])
+                    // Condición 2: fuera del rango, pero con estado Pendiente o Aprobado
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereIn('status', ['Pendiente', 'Aprobado']);
+                    });
+                });
 
             // Filtrar por profesional si se especificó
             if (!empty($validated['professional_id'])) {
                 $query->where('professional_id', $validated['professional_id']);
             }
 
-            // Obtener todos los resultados
-            $advances = $query->get()->map(function ($advance) {
-                return [
-                    'id' => $advance->id,
-                    'data' => $advance->data,
-                    'type' => $advance->type,
-                    'amount' => $advance->amount,
-                    'status' => $advance->status,
-                    'created_at' => $advance->created_at,
-                    'branch' => $advance->branch,
-                    'paid' => $advance->paid,
-                    'receipt' => $advance->receipt ?? null,
-                    'professionalName' => $advance->professional->name ?? null, // Nombre del profesional
-                    'image' => $advance->professional->image_url ?? null,      // Imagen del profesional
-                ];
-            });;
+            $advances = $query->with(['branch', 'professional'])
+                ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Pagado')")
+                ->orderBy('created_at', 'asc')
+                ->get()
+                ->map(function ($advance) {
+                    return [
+                        'id' => $advance->id,
+                        'data' => $advance->data,
+                        'type' => $advance->type,
+                        'amount' => $advance->amount,
+                        'status' => $advance->status,
+                        'created_at' => $advance->created_at,
+                        'branch' => $advance->branch,
+                        'paid' => $advance->paid,
+                        'receipt' => $advance->receipt ?? null,
+                        'professionalName' => $advance->professional->name ?? null,
+                        'image' => $advance->professional->image_url ?? null,
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
@@ -644,7 +658,7 @@ class AdvanceController extends Controller
                 $advance->paid = 1;
                 $advance->save();
             }
-            if ($validated['status'] == 'Aprobado') {
+            if ($validated['status'] === 'Aprobado') {
 
                 $notification = new Notification();
                 $notification->professional_id = $advance->professional_id;
@@ -922,7 +936,12 @@ class AdvanceController extends Controller
                 })->toArray(); // Convertir a array
 
             // Obtener compras de trabajadores (products)
-            $products = WorkerPurchase::with(['product:id,name,image_product', 'user.professional'])
+            $products = WorkerPurchase::with([
+                        'product' => function ($query) {
+                            $query->select('id', 'name', 'image_product')->withTrashed();
+                        },
+                        'user.professional'
+                    ])
                 ->where('branch_id', $validated['branch_id'])
                 ->where('professional_id', $validated['professional_id'])
                 ->whereDate('data', '>=', $productsStartDate)
@@ -936,11 +955,13 @@ class AdvanceController extends Controller
                         2 => 'Denegado',
                         default => 'Desconocido'
                     };
+                    $product = $purchase->product;
+
                     return [
                         'id' => $purchase->id,
                         'data' => $purchase->data,
-                        'productName' => $purchase->product->name,
-                        'productImage' => $purchase->product->image_product,
+                        'productName' => $product ? $product->name : 'Producto eliminado',
+                        'productImage' => $product ? $product->image_product : 'product/default.png',
                         'cant' => $purchase->cant,
                         'total' => (int) $purchase->total,
                         'user_name' => $purchase->user && $purchase->user->professional 
