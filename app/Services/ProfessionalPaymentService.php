@@ -413,7 +413,16 @@ class ProfessionalPaymentService
             : Carbon::now()->endOfMonth();
 
         // Obtener transacciones
-        $allSales = CashierSale::with('productStore.product')
+        $allSales = CashierSale::with([
+            'productStore' => function ($query) {
+                // Si ProductStore usa soft deletes, inclúyelos
+                $query->withTrashed();
+            },
+            'productStore.product' => function ($query) {
+                // Incluir productos eliminados lógicamente
+                $query->withTrashed();
+            }
+            ])
             ->where('professional_id', $data['professional_id'])
             ->where('branch_id', $data['branch_id'])
             ->where('pay', 1)
@@ -422,7 +431,15 @@ class ProfessionalPaymentService
             ->orderBy('created_at')
             ->get();
 
-        $allOrders = Order::with(['productStore.product', 'car'])
+        $allOrders = Order::with([
+            'productStore' => function ($query) {
+                $query->withTrashed();
+            },
+            'productStore.product' => function ($query) {
+                $query->withTrashed();
+            },
+            'car'
+			])
             ->where('branch_id', $data['branch_id'])
             ->where('professional_id', $data['professional_id'])
             ->whereHas('car', fn($q) => $q->where('pay', 1))
@@ -1174,7 +1191,16 @@ class ProfessionalPaymentService
             : Carbon::now()->endOfMonth();
 
         // Obtener transacciones
-        $allSales = CashierSale::with('productStore.product')
+        $allSales = CashierSale::with([
+            'productStore' => function ($query) {
+                // Si ProductStore usa soft deletes, inclúyelos
+                $query->withTrashed();
+            },
+            'productStore.product' => function ($query) {
+                // Incluir productos eliminados lógicamente
+                $query->withTrashed();
+            }
+            ])
             ->where('professional_id', $data['professional_id'])
             ->where('branch_id', $data['branch_id'])
             ->where('pay', 1)
@@ -1182,7 +1208,15 @@ class ProfessionalPaymentService
             ->orderBy('created_at')
             ->get();
 
-        $allOrders = Order::with(['productStore.product', 'car'])
+        $allOrders = Order::with([
+            'productStore' => function ($query) {
+                $query->withTrashed();
+            },
+            'productStore.product' => function ($query) {
+                $query->withTrashed();
+            },
+            'car'
+			])
             ->where('branch_id', $data['branch_id'])
             ->where('professional_id', $data['professional_id'])
             ->whereHas('car', fn($q) => $q->where('pay', 1))
@@ -1529,7 +1563,16 @@ class ProfessionalPaymentService
             : Carbon::now()->endOfMonth();
 
         // Obtener transacciones
-        $allSales = CashierSale::with('productStore.product')
+        $allSales = CashierSale::with([
+            'productStore' => function ($query) {
+                // Si ProductStore usa soft deletes, inclúyelos
+                $query->withTrashed();
+            },
+            'productStore.product' => function ($query) {
+                // Incluir productos eliminados lógicamente
+                $query->withTrashed();
+            }
+            ])
             ->where('professional_id', $data['professional_id'])
             ->where('branch_id', $data['branch_id'])
             ->where('pay', 1)
@@ -1538,7 +1581,15 @@ class ProfessionalPaymentService
             ->orderBy('created_at')
             ->get();
 
-        $allOrders = Order::with(['productStore.product', 'car'])
+        $allOrders = Order::with([
+            'productStore' => function ($query) {
+                $query->withTrashed();
+            },
+            'productStore.product' => function ($query) {
+                $query->withTrashed();
+            },
+            'car'
+			])
             ->where('branch_id', $data['branch_id'])
             ->where('professional_id', $data['professional_id'])
             ->whereHas('car', fn($q) => $q->where('pay', 1))
@@ -2223,21 +2274,21 @@ class ProfessionalPaymentService
     protected function processProductCommissions($data, $professional)
     {
          $payments = $data['payments'];
-    $productsData = $payments['products'];
+        $productsData = $payments['products'];
 
-    // Registrar retención (si existe)
-    if ($productsData['retention_amount'] > 0) {
-        $retention = new Retention();
-        $retention->branch_id = $data['branch_id'];
-        $retention->professional_id = $data['professional_id'];
-        $retention->date = $data['paymentDate'];
-        $retention->retention = $productsData['retention_amount'];
-        $retention->type = 'Products';
-        $retention->save();
-    }
+        // Registrar retención (si existe)
+        if ($productsData['retention_amount'] > 0) {
+            $retention = new Retention();
+            $retention->branch_id = $data['branch_id'];
+            $retention->professional_id = $data['professional_id'];
+            $retention->data = $data['paymentDate'];
+            $retention->retention = $productsData['retention_amount'];
+            $retention->type = 'Products';
+            $retention->save();
+        }
 
-    // Registrar pago y movimiento financiero solo si hay comisión neta
-    if ($productsData['commission_neto'] > 0) {
+        // Registrar pago y movimiento financiero solo si hay comisión neta
+        if ($productsData['commission_neto'] > 0) {
         // 1. Registrar pago al profesional
         $professionalPayment = new ProfessionalPayment();
         $professionalPayment->branch_id = $data['branch_id'];
@@ -2260,15 +2311,15 @@ class ProfessionalPaymentService
         $finance->branch_id = $data['branch_id'];
         $finance->type = 'Sucursal';
         $finance->expense_id = 5;
-        $finance->date = $data['paymentDate'];
+        $finance->data = $data['paymentDate'];
         $finance->professional_payment_id = $professionalPayment->id;
         $finance->file = '';
         $finance->save();
 
         // 4. Ajustar totalNeto
         $data['payments']['totalNeto'] -= $productsData['commission_neto'];
-    }
-    // 2. Actualizar sales/orders asociadas
+        }
+        // 2. Actualizar sales/orders asociadas
         if (!empty($productsData['sales_ids'])) {
             CashierSale::whereIn('id', $productsData['sales_ids'])
                 ->update(['paycashier' => $professionalPayment->id]);

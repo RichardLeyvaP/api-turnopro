@@ -450,16 +450,44 @@ class OperationTipController extends Controller
 
             $sales = [];
             
-            $cashierSales = CashierSale::where('professional_id', $request->professional_id)->where('branch_id', $data['branch_id'])->where('pay', 1)->where('paycashier', 0)->get();
+            $cashierSales = CashierSale::with([
+            'productStore' => function ($query) {
+                $query->withTrashed(); // incluye ProductStore eliminados
+            },
+            'productStore.product' => function ($query) {
+                $query->withTrashed(); // incluye Product eliminados
+            }
+        ])
+        ->where('professional_id', $request->professional_id)
+        ->where('branch_id', $data['branch_id'])
+        ->where('pay', 1)
+        ->where('paycashier', 0)
+        ->get();
             foreach ($cashierSales as $cashierSale) {
-                $product = $cashierSale['productStore']['product'];
+                $productStore = $cashierSale->productStore;
+                $product = $productStore ? $productStore->product : null;
+
+                // Si incluso con withTrashed() sigue siendo null, saltamos
+                if (!$product) {
+                    // Opcional: usar datos por defecto
+                    $sales[] = [
+                        'id' => $cashierSale->id,
+                        'price' => round($cashierSale->price, 2),
+                        'pay' => $cashierSale->pay,
+                        'cant' => $cashierSale->cant,
+                        'name' => '[Producto eliminado]',
+                        'image_product' => null
+                    ];
+                    continue;
+                }
+
                 $sales[] = [
-                    'id' => $cashierSale['id'],
-                    'price' => round($cashierSale['price'], 2),
-                    'pay' => $cashierSale['pay'],
-                    'cant' => $cashierSale['cant'],
-                    'name' => $product['name'],
-                    'image_product' => $product['image_product']
+                    'id' => $cashierSale->id,
+                    'price' => round($cashierSale->price, 2),
+                    'pay' => $cashierSale->pay,
+                    'cant' => $cashierSale->cant,
+                    'name' => $product->name,
+                    'image_product' => $product->image_product
                 ];
             }
 

@@ -1331,6 +1331,8 @@ class ReservationController extends Controller
                 'id' => 'required'
 
             ]);
+            Log::info('Cambiando estado de la reservas realizadas por BH');
+            Log::info($data);
             $msg = '';
             $reservacion = Reservation::find($data['id']);
             if ($reservacion) {
