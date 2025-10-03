@@ -665,7 +665,7 @@ class ProfessionalPaymentController extends Controller
                 
                 try {
                     // Verificar si ya existe un pago mensual
-                    $existingPayment = ProfessionalPayment::where([
+                    /*$existingPayment = ProfessionalPayment::where([
                         'professional_id' => $professionalId,
                         'branch_id' => $branchProfessional->branch_id,
                         'type' => 'Mes'
@@ -682,7 +682,7 @@ class ProfessionalPaymentController extends Controller
                         $results[] = $result;
                         Log::info("Resultado del profesional ID {$professionalId}: " . json_encode($result));
                         continue;
-                    }
+                    }*/
 
                     // Calcular pagos
                     $paymentData = [

@@ -2105,9 +2105,9 @@ class TailService
             }
         }
         //end ver si hay aleatorios antes de algun cliente seleccionado
-    } catch (\Throwable $th) {
-        throw new \RuntimeException("Error al ejecutar el TailService(verific_aleatorie): " . $th->getMessage());
-    }
+        } catch (\Throwable $th) {
+            throw new \RuntimeException("Error al ejecutar el TailService(verific_aleatorie): " . $th->getMessage());
+        }
     }
     
       private function verific_aleatorie($branch_id, $professional)
@@ -2172,7 +2172,7 @@ class TailService
             }
         }
         
-         private function handleAleatorieTails($branch_id, $professional)
+        private function handleAleatorieTails($branch_id, $professional)
         {
             // Optimización: consultar solo una vez y ordenar
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id) {
@@ -2273,9 +2273,9 @@ class TailService
         }//for aleatorie
          // Retorna false indicando que no se ha procesado ninguna 'tail'
         return false;
-    } catch (\Throwable $th) {
-        throw new \RuntimeException("Error al ejecutar el TailService(verific_services): " . $th->getMessage());
-    }
+        } catch (\Throwable $th) {
+            throw new \RuntimeException("Error al ejecutar el TailService(verific_services): " . $th->getMessage());
+        }
     }
 
     private function verific_services_bh($tails, $branch_id, $professional, $start_time)
@@ -2354,10 +2354,6 @@ class TailService
         }
     }
 
-
-
-
-
     private function reassignServices_ANTERIOR($servicesOrders, $service_professionals)
     {
         try{
@@ -2384,14 +2380,13 @@ class TailService
                 $service->delete();
             }
         }
-    } catch (\Throwable $th) {
-        throw new \RuntimeException("Error al ejecutar el TailService(reassignServices): " . $th->getMessage());
-    }
+        } catch (\Throwable $th) {
+            throw new \RuntimeException("Error al ejecutar el TailService(reassignServices): " . $th->getMessage());
+        }
     }
     
      private function reassignServices($servicesOrders, $service_professionals)
     {
-        Log::info('Entra a reasignar Servicios al profesional');
         Log::info('Entra a reasignar Servicios al profesional');
         try{
          $serviceProfessionalMap = $service_professionals->unique('branch_service_id')->keyBy(function ($item) {

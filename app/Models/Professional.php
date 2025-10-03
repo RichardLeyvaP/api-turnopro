@@ -27,7 +27,7 @@ class Professional extends Model
     }
 
     public function clients(){
-        return $this->belongsToMany(Client::class)->withTimestamps();
+        return $this->belongsToMany(Client::class)->withTimestamps()->withTrashed();
     }
 
     public function branchServices(){
