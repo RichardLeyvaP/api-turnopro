@@ -70,13 +70,6 @@ class CashierSaleController extends Controller
             $category = $product->productCategory; // Asumiendo que existe relación 'category' en el modelo Product
             $commissionAmount = 0;
             $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
-
-            Log::info('Categoría obtenida:', [
-                'category_id' => $category ? $category->id : null,
-                'category_name' => $category ? $category->name : null,
-                'gives_commission' => $category ? $category->gives_commission : null,
-                'commission_rate' => $product ? $product->commission_rate : null
-            ]);
             if ($category && $category->gives_commission) {
                 $commissionAmount = $percent_wint * $validatedData['cant'];
                 Log::info('Cálculo de comisión:', [
@@ -101,7 +94,6 @@ class CashierSaleController extends Controller
             $productStore->product_quantity = $validatedData['cant'];
                 $productStore->product_exit = $productStore->product_exit - $validatedData['cant'];
                 $productStore->save();
-                Log::info('ProductStore CashierController:', ['productStore' => $productStore]);
             //todo pendiente para revisar importante
             $this->actualizarProductExit($productStore, $validatedData['branch_id']);      
                 $trace = [
@@ -114,10 +106,7 @@ class CashierSaleController extends Controller
                     'description' => '',
                 ];
                 $this->traceService->store($trace);
-                
-                //$professional = Professional::find($validatedData['professional_id']);
-
-            
+                            
             DB::commit();
             return response()->json($cashierSale, 201);
         } catch (\Exception $e) {
@@ -178,7 +167,7 @@ class CashierSaleController extends Controller
 
     public function cashiersale_denegar(Request $request)
     {
-        Log::info("Actualizar Venta de productos en la caja");
+        Log::info("Actualizar Venta de productos en la caja cashiersale_denegar");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -206,7 +195,7 @@ class CashierSaleController extends Controller
 
     public function destroy_solicitud(Request $request)
     {
-        Log::info("Eliminar");
+        Log::info("Eliminar Solicitud destroy_solicitud");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',

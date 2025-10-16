@@ -139,15 +139,15 @@ class MonthlyClosureController extends Controller
     }
 
     protected function parseJsonField($value)
-{
-    if (is_array($value)) {
-        return $value;
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        $parsed = json_decode($value, true);
+        
+        return is_array($parsed) ? $parsed : [];
     }
-    
-    $parsed = json_decode($value, true);
-    
-    return is_array($parsed) ? $parsed : [];
-}
 
     /**
      * Store a newly created resource in storage.
@@ -356,10 +356,6 @@ class MonthlyClosureController extends Controller
                                             ->unique()
                                             ->values()
                                             ->toArray();
-
-            Log::info('Correos para cierre de mes', ['emails' => $mergedEmails]);
-            //$mergedEmails = ['yasmany891230@gmail.com', 'deylert89@gmail.com', 'evylabrada@gmail.com'];
-            //$mergedEmails = ['yasmany891230@gmail.com'];
             foreach ($mergedEmails as $email) {
                 try {
                     $this->sendEmailService->emailBoxClosureMonthlyEjecutado(

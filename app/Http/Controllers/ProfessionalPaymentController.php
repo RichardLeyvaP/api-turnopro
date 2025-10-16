@@ -55,7 +55,6 @@ class ProfessionalPaymentController extends Controller
             ]);
             if($data['type'] == 'Pago Academia'){
                 
-                Log::info('entra a pago los cursos');
                 $ids = $request->input('course_ids');
                 $courseProfessional = CourseProfessional::find($ids);
                 $enrollment_id = $courseProfessional->course->enrollment_id;
@@ -70,14 +69,6 @@ class ProfessionalPaymentController extends Controller
                 $professionalPayment->save();
                 $courseProfessional->pay = $professionalPayment->id;
                 $courseProfessional->save();
-                /*Log::info($request->input('course_ids'));
-                if ($request->input('course_ids')) {
-                    // Actualizar carros con professional_payment_id
-                    Log::info('entra a pago los cursos');
-                    $course_ids = $request->input('course_ids');
-                    CourseProfessional::whereIn('id', $course_ids)->update(['professional_payment_id' => $professionalPayment->id]);
-                }*/
-
                 $professional = Professional::find($data['professional_id']);
 
                 //$finance = Finance::where('enrollment_id', $ids)->where('expense_id', 6)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
@@ -100,18 +91,6 @@ class ProfessionalPaymentController extends Controller
                                 $finance->data = Carbon::now();                
                                 $finance->file = '';
                                 $finance->save();
-
-                                /*$finance = new Finance();
-                                $finance->control = $control++;
-                                $finance->operation = 'Ingreso';
-                                $finance->amount = $courseProfessional->course->price-$data['amount'];
-                                $finance->comment = 'Ingreso por pago de curso a '.$professional->name;
-                                $finance->enrollment_id = $enrollment_id;
-                                $finance->type = 'Academia';
-                                $finance->revenue_id = 9;
-                                $finance->data = Carbon::now();                
-                                $finance->file = '';
-                                $finance->save();*/
             }else{
                 $professionalPayment = new ProfessionalPayment();
                 $professionalPayment->branch_id = $data['branch_id'];
@@ -122,10 +101,7 @@ class ProfessionalPaymentController extends Controller
 
             // Guardar el modelo
             $professionalPayment->save();
-            Log::info($request->input('car_ids'));
             if ($request->input('car_ids')) {
-                // Actualizar carros con professional_payment_id
-                Log::info('entra a pago los carros');
                 $carIds = $request->input('car_ids');
                 Car::whereIn('id', $carIds)->update(['professional_payment_id' => $professionalPayment->id]);
             }
@@ -198,7 +174,6 @@ class ProfessionalPaymentController extends Controller
 
             if($data['amountAcadem']){
                 
-                Log::info('entra a pago los cursos');
                 $ids = $request->input('course_ids');
                 // Obtener todos los CourseProfessional de una vez
                 $courseProfessionals = CourseProfessional::whereIn('id', $ids)->get();
@@ -358,10 +333,7 @@ class ProfessionalPaymentController extends Controller
 
             // Guardar el modelo
             $professionalPayment->save();
-            Log::info($request->input('ids'));
             if ($request->input('ids')) {
-                // Actualizar carros con professional_payment_id
-                Log::info('entra a pago los carros');
                 $Ids = $request->input('ids');
                 CashierSale::whereIn('id', $Ids)->update(['paycashier' => $professionalPayment->id]);
             }
@@ -508,134 +480,11 @@ class ProfessionalPaymentController extends Controller
         }
     }
 
-    /*public function store_payment_automaticallyAnterior(Request $request)
-    {
-        $codigo = $request->query('codigo');
-
-        if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
-            Log::info("Código no coincide");
-            return response()->json(['msg' => 'Código inválido'], 403);
-        }
-
-        try {
-            DB::beginTransaction();
-            
-            $branchProfessionals = BranchProfessional::with(['professional'])
-                             ->whereHas('professional', function($query) {
-                                $query->whereNull('deleted_at');
-                             })
-                             ->where('branch_id', '1=', 20)
-                             ->get();
-            $results = [];
-            $currentYearMonth = now()->format('Y-m'); // Obtiene "2025-05"
-            
-            foreach ($branchProfessionals as $branchProfessional) {
-                $professionalId = $branchProfessional->professional_id;
-                $professionalName = $branchProfessional->professional->name ?? 'Nombre no disponible';
-                
-                Log::info("Procesando profesional: ID {$professionalId} - {$professionalName}");
-                try {
-                    // Verificar si ya existe un pago mensual para este profesional en el mes actual
-                    $existingPayment = ProfessionalPayment::where([
-                        'professional_id' => $branchProfessional->professional_id,
-                        'branch_id' => $branchProfessional->branch_id,
-                        'type' => 'Mes'
-                    ])
-                    ->where('date', 'LIKE', $currentYearMonth.'-%') // Busca cualquier día del mes actual
-                    ->exists();
-
-                    if ($existingPayment) {
-                        $result = [
-                            'professional_id' => $branchProfessional->professional_id,
-                            'status' => 'skipped',
-                            'message' => 'Ya existe un pago mensual para este profesional en '.$currentYearMonth
-                        ];
-                        $results[] = $result;
-                        Log::info("Resultado del profesional ID {$professionalId}: " . json_encode($result));
-                        continue;
-                    }
-
-                    // Resto del proceso...
-                    $paymentData = [
-                        'branch_id' => $branchProfessional->branch_id,
-                        'professional_id' => $branchProfessional->professional_id,
-                    ];
-                    
-                    $paymentsData = $this->professionalPaymentService->calculatePayments($paymentData);
-
-                    //Log::info(['pay_data' => $paymentsData]);
-                    
-                    // Solo procesar si hay cantidad a pagar
-                    if ($paymentsData['totalNetoPay'] != 0) {
-                        $paymentData['payments'] = $paymentsData;
-                        $processResult = $this->professionalPaymentService->processPayment($paymentData);
-                        //Log::info(['processResult' => $processResult]);
-                        $result = [
-                            'professional_id' => $branchProfessional->professional_id,
-                            'status' => 'success',
-                            'amount' => $paymentsData['totalNetoPay'],
-                            'processed_at' => now()
-                        ];
-                        $results[] = $result;
-                        Log::info("Resultado del profesional ID {$professionalId}: " . json_encode($result));
-                    } else {
-                        $result = [
-                            'professional_id' => $branchProfessional->professional_id,
-                            'status' => 'no_payment',
-                            'message' => 'No hay cantidad a pagar (totalNetoPay = 0)'
-                        ];
-                        $results[] = $result;
-                        Log::info("Resultado del profesional ID {$professionalId}: " . json_encode($result));
-                    }
-                    
-                } catch (\Exception $e) {
-                    $result = [
-                        'professional_id' => $branchProfessional->professional_id,
-                        'status' => 'failed',
-                        'error' => $e->getMessage()
-                    ];
-                    $results[] = $result;
-                    Log::error("Resultado del profesional ID {$professionalId}: " . json_encode($result));
-                    throw $e;
-                }
-            }
-            
-            DB::commit();
-            Log::info("Proceso completado", [
-            'resumen' => [
-                'total_procesados' => count($results),
-                'exitosos' => count(array_filter($results, fn($r) => $r['status'] === 'success')),
-                'saltados' => count(array_filter($results, fn($r) => $r['status'] === 'skipped')),
-                'fallidos' => count(array_filter($results, fn($r) => $r['status'] === 'failed')),
-                'sin_pago' => count(array_filter($results, fn($r) => $r['status'] === 'no_payment'))
-            ],
-            'resultados_completos' => $results
-        ]);
-            
-            return [
-                'success' => true,
-                'month' => $currentYearMonth,
-                'processed_count' => count(array_filter($results, fn($r) => $r['status'] === 'success')),
-                'skipped_count' => count(array_filter($results, fn($r) => $r['status'] === 'skipped')),
-                'results' => $results
-            ];
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Todos los cambios fueron revertidos'
-            ];
-        }
-    }*/
-
     public function store_payment_automatically(Request $request)
     {
         $codigo = $request->query('codigo');
 
         if ($codigo != 'P{\nkNgP9hjm/L*~Sks25h^C30_|17') {
-            Log::info("Código no coincide");
             return response()->json(['msg' => 'Código inválido'], 403);
         }
 
@@ -664,27 +513,7 @@ class ProfessionalPaymentController extends Controller
                 Log::info("Procesando profesional: ID {$professionalId} - {$professionalName}");
                 
                 try {
-                    // Verificar si ya existe un pago mensual
-                    /*$existingPayment = ProfessionalPayment::where([
-                        'professional_id' => $professionalId,
-                        'branch_id' => $branchProfessional->branch_id,
-                        'type' => 'Mes'
-                    ])
-                    ->where('date', 'LIKE', $currentYearMonth.'-%')
-                    ->exists();
-
-                    if ($existingPayment) {
-                        $result = [
-                            'professional_id' => $professionalId,
-                            'status' => 'skipped',
-                            'message' => 'Ya existe un pago mensual para este profesional en '.$currentYearMonth
-                        ];
-                        $results[] = $result;
-                        Log::info("Resultado del profesional ID {$professionalId}: " . json_encode($result));
-                        continue;
-                    }*/
-
-                    // Calcular pagos
+                   // Calcular pagos
                     $paymentData = [
                         'branch_id' => $branchProfessional->branch_id,
                         'professional_id' => $professionalId,
@@ -739,17 +568,6 @@ class ProfessionalPaymentController extends Controller
             }
             
             DB::commit();
-            
-            Log::info("Proceso completado", [
-                'resumen' => [
-                    'total_procesados' => count($results),
-                    'exitosos' => count(array_filter($results, fn($r) => $r['status'] === 'success')),
-                    'saltados' => count(array_filter($results, fn($r) => $r['status'] === 'skipped')),
-                    'fallidos' => count(array_filter($results, fn($r) => $r['status'] === 'failed')),
-                    'sin_pago' => count(array_filter($results, fn($r) => $r['status'] === 'no_payment'))
-                ],
-                'resultados_completos' => $results
-            ]);
             
             return response()->json([
                 'success' => true,
@@ -850,10 +668,7 @@ class ProfessionalPaymentController extends Controller
                                           //pendiente por pagar
                                           $retention = Professional::where('id', $request->professional_id)->value('retention');
                                           $paymentIds = $payments->pluck('id');
-                                          
-                                          Log::info('Resultado de $payments');
-                                           Log::info($payments);
-                                          
+                                                               
                 if($request->charge == 'Tecnico'){
                    $pendienteMount = 0;
                     $pagadoMount = $payments->sum('amount') ? $payments->sum('amount') : intval(0);
@@ -1098,11 +913,6 @@ class ProfessionalPaymentController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric|exists:professionals_payments,id',
                 'amount' => 'required|numeric'
-            ]);
-
-             // Registrar log detallado
-            Log::info('Datos recibidos al editar el pago', [
-                'id' => $data['id']
             ]);
             $payment = ProfessionalPayment::findOrFail($data['id']);
                 $payment->amount = $data['amount'];

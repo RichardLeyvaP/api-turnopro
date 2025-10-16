@@ -148,7 +148,6 @@ class OrderService {
 
 
     public function sales_periodo_product($data){
-        Log::info("optener los productos");
         $products = Product::whereHas('stores.branches', function ($query) use ($data) {
             $query->where('branch_id', $data['branch_id']);
         })
@@ -169,17 +168,12 @@ class OrderService {
     }
 
     public function sales_periodo_service($data){
-        /*Log::info('services');
-        /*$orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-        })->whereBetween('data', [$data['startDate'], $data['endDate']])->get()*/
         $services = Service::whereHas('branches', function ($query) use ($data){
             $query->where('branch_id', $data['branch_id']);
         })->whereHas('branchServices.branchServiceProfessionals.orders', function ($query) use ($data){
             $query->whereBetween('data', [$data['startDate'], $data['endDate']]);
             $query->select('percent_win');
         })->get()->map(function ($service) use ($data){
-            Log::info($service);
            foreach ($service->branchServices as $branchService) {
                 foreach($branchService->branchServiceProfessionals as $branchServiceProfessional){
                 $totalService = $branchServiceProfessional->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->sum('percent_win');
@@ -190,19 +184,7 @@ class OrderService {
                 'total_sale' => $totalService,
             ];
         });
-        /*Log::info('services');
-        Log::info($services);
-        foreach($services as $service)
-        foreach ($service->branchServices as $branchService) {
-            $totalService = $branchService->branchServiceProfessionals->flatMap(function ($branchServiceProfessional) use ($data){
-                $branchServiceProfessional->orders->whereBetween('data', [$data['startDate'], $data['endDate']])->pluck('price');
-            })->sum();
-
-            $result [] = [
-                'nameService' => $branchService->service->name,
-                'total_sale' => $totalService,
-            ];
-        }*/
+        
         return $services;
     }
 }

@@ -49,8 +49,6 @@ class CourseController extends Controller
     public function index()
     {
         try { 
-            
-            Log::info( "entra a cliente");
             $courses = Course::with('enrollment')->get()->map(function ($query){
                 return [
                     "id" => $query->id,
@@ -114,7 +112,6 @@ class CourseController extends Controller
             $course->practical_percentage = $data['practical_percentage'];
             $course->theoretical_percentage = $data['theoretical_percentage'];
             $course->save();
-            Log::info($course);
             $filename = "courses/default.jpg"; 
             if ($request->hasFile('course_image')) {
                $filename = $request->file('course_image')->storeAs('courses',$course->id.'.'.$request->file('course_image')->extension(),'public');
@@ -168,8 +165,6 @@ class CourseController extends Controller
                 'practical_percentage' => 'nullable|numeric',
                 'theoretical_percentage' => 'nullable|numeric',   
             ]);
-           
-            Log::info($request['course_image']);
             $course = Course::find($data['id']);
             if ($request->hasFile('course_image')) {
                 if($course->course_image != 'courses/default.jpg'){
@@ -193,7 +188,6 @@ class CourseController extends Controller
             $course->practical_percentage = $data['practical_percentage'];
             $course->theoretical_percentage = $data['theoretical_percentage'];
             $course->save();
-            Log::info($course);
 
             return response()->json(['msg' => 'Curso creado correctamente'], 200);
         } catch (\Throwable $th) {

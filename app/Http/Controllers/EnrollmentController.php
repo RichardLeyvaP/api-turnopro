@@ -92,7 +92,6 @@ class EnrollmentController extends Controller
                 'address' => 'nullable',
                 'phone' => 'nullable'
             ]);
-            Log::info($data);
             $enrollment = Enrollment::find($data['id']);
             if ($request->hasFile('image_data')) {
                 if($enrollment->image_data != 'enrollments/default.jpg'){

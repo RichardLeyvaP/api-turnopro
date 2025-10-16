@@ -39,17 +39,7 @@ class BranchService
         $aleatorio = 0;
         $ingreso = 0;
         $gasto = 0;
-        /*$finances = Finance::Where('branch_id', $branch_id)->whereDate('data', Carbon::now())->get();
-        if (!$finances->isEmpty()) {
 
-            foreach ($finances as $finance) {
-                if ($finance->operation == 'Gasto') {
-                    $gasto = $gasto + $finance->amount;
-                } else {
-                    $ingreso = $ingreso + $finance->amount;
-                }
-            }
-        }*/
         $products = Product::with([
             'orders' => function ($query) use ($carIds) {
                 $query->selectRaw('product_id, SUM(cant) as total_cant, SUM(percent_win) as utilidadOrder, SUM(price) as total_price')
@@ -182,17 +172,6 @@ class BranchService
 
         $ingreso = 0;
         $gasto = 0;
-        /*$finances = Finance::Where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->get();
-        if (!$finances->isEmpty()) {
-
-            foreach ($finances as $finance) {
-                if ($finance->operation == 'Gasto') {
-                    $gasto = $gasto + $finance->amount;
-                } else {
-                    $ingreso = $ingreso + $finance->amount;
-                }
-            }
-        }*/
 
         $products = Product::with([
             'orders' => function ($query) use ($carIds) {
@@ -332,17 +311,6 @@ class BranchService
 
         $ingreso = 0;
         $gasto = 0;
-        /*$finances = Finance::Where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->get();
-        if (!$finances->isEmpty()) {
-
-            foreach ($finances as $finance) {
-                if ($finance->operation == 'Gasto') {
-                    $gasto = $gasto + $finance->amount;
-                } else {
-                    $ingreso = $ingreso + $finance->amount;
-                }
-            }
-        }*/
 
         $products = Product::with([
             'orders' => function ($query) use ($carIds) {
@@ -649,91 +617,6 @@ class BranchService
         return $transformedResult;
     }
 
-    /*public function branch_winner_month_icon($branch_id, $month, $year)
-    {
-        $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->whereHas('orders', function ($query) use ($month, $year) {
-            $query->whereMonth('data', $month)->whereYear('data', $year);
-        })->get();
-        $totalservices = 0;
-        $totalproducts = 0;
-        $seleccionado = 0;
-        $aleatorio = 0;
-        $totalClients = 0;
-        $transformedResult = [];
-        $totalClients = $cars->count();
-       if(!$totalClients = $cars->count()){
-        return $transformedResult;
-       }
-        $products = Product::withCount(['orders' => function ($query) use ($month, $year) {
-            $query->whereMonth('data', $month)->whereYear('data', $year);
-        }])->whereHas('productStores.store.branches', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->orderByDesc('orders_count')->first();
-        $services = Service::withCount(['orders' => function ($query) use ($month, $year) {
-            $query->whereMonth('data', $month)->whereYear('data', $year);
-        }])->whereHas('branchServices', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->orderByDesc('orders_count')->first();
-        foreach ($cars as $car) {
-            if ($car->select_professional == 1) {
-                $seleccionado = $seleccionado + $car->orders->where('is_product', 0)->count();
-            } else {
-                $aleatorio = $aleatorio + $car->orders->where('is_product', 0)->count();
-            }
-            $totalservices = $totalservices + count($car->orders->where('is_product', 0));
-            $totalproducts = $totalproducts + count($car->orders->where('is_product', 1));
-        }
-        $orders = Order::whereHas('branchServiceProfessional.branchService', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->whereHas('branchServiceProfessional', function ($query) {
-            $query->where('type_service', 'Especial');
-        })->whereMonth('data', $month)->whereYear('data', $year)->get();
-        $result = [
-            'Monto Generado' => round($cars->sum('amount') + ($cars->sum('technical_assistance') * 5000), 2),
-            'Propina' => round($cars->sum('tip'), 2),
-            'Producto mas Vendido' => $products->orders_count ? $products->name : null,
-            'Cantidad del Producto' => $products->orders_count ? $products->orders_count : 0,
-            'Total de Productos Vendidos' => $totalproducts ? $totalproducts : 0,
-            'Servicio mas Brindado' => $services->orders_count ? $services->name : null,
-            'Cantidad del Servicio' => $services->orders_count ? $services->orders_count : 0,
-            'Total de Servicios Brindados' => $totalservices,
-            'Servicios Seleccionados' => $seleccionado,
-            'Servicios Aleatorios' => $aleatorio,
-            'Servicios Especiales' => $orders->count(),
-            'Monto Servicios Especiales' => round($orders->sum('price'), 2),
-            'Clientes Atendidos' => $totalClients
-        ];
-        $iconColorMapping = [
-            'Monto Generado' => ['icon' => 'mdi-wallet', 'color' => 'green'],
-            'Propina' => ['icon' => 'mdi-cash', 'color' => 'blue'],
-            'Producto mas Vendido' => ['icon' => 'mdi-cart', 'color' => 'red'],
-            'Cantidad del Producto' => ['icon' => 'mdi-format-list-numbered', 'color' => 'orange'],
-            'Total de Productos Vendidos' => ['icon' => 'mdi-cash-register', 'color' => 'purple'],
-            'Servicio mas Brindado' => ['icon' => 'mdi-wrench', 'color' => 'pink'],
-            'Cantidad del Servicio' => ['icon' => 'mdi-counter', 'color' => 'teal'],
-            'Total de Servicios Brindados' => ['icon' => 'mdi-hammer-screwdriver', 'color' => 'cyan'],
-            'Servicios Seleccionados' => ['icon' => 'mdi-check-circle', 'color' => 'lime'],
-            'Servicios Aleatorios' => ['icon' => 'mdi-shuffle', 'color' => 'amber'],
-            'Servicios Especiales' => ['icon' => 'mdi-star', 'color' => 'yellow'],
-            'Monto Servicios Especiales' => ['icon' => 'mdi-lightning-bolt', 'color' => 'deep_orange'],
-            'Clientes Atendidos' => ['icon' => 'mdi-account-multiple', 'color' =>'indigo'],
-        ];
-
-        $transformedResult = [];
-
-        foreach ($result as $key => $value) {
-            $transformedResult[$key] = [
-                'value' => $value,
-                'icon' => $iconColorMapping[$key]['icon'] ?? 'default_icon',
-                'color' => $iconColorMapping[$key]['color'] ?? 'default_color',
-            ];
-        }
-
-        return $transformedResult;
-    }*/
-
     public function branch_winner_date_icon($branch_id)
     {
         $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
@@ -805,25 +688,7 @@ class BranchService
                 'price' => $totalPriceOrders + $totalPriceSales + $totalPriceWorkerPurchases,
                 'sales' => $totalPriceSales
             ];
-        })->sortByDesc('total_quantity')->values();/*
-        ])->get()->filter(function ($product) {
-            return !$product->orders->isEmpty() || !$product->cashiersales->isEmpty();
-        })->map(function ($product) {
-            $totalOrders = $product->orders->sum('total_cant');
-            $totalSales = $product->cashiersales->sum('total_sales');
-            $utilidadOrders = $product->orders->sum('utilidadOrder');
-            $UtilidadSales = $product->cashiersales->sum('utilidadCash');
-            $totalPriceOrders = $product->orders->sum('total_price');
-            $totalPriceSales = $product->cashiersales->sum('total_price');
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'total_quantity' => $totalOrders + $totalSales,
-                'utilidad' => $utilidadOrders + $UtilidadSales,
-                'price' => $totalPriceOrders + $totalPriceSales,
-                'sales' => $totalPriceSales
-            ];
-        })->sortByDesc('total_quantity')->values();*/
+        })->sortByDesc('total_quantity')->values();
 
         $mostSoldProductName = $products->isNotEmpty() ? $products->first()['name'] : '';
         //$mostSoldProductQuantity = $products->isNotEmpty() ? $products->first()['total_quantity'] : 0;
@@ -935,59 +800,6 @@ class BranchService
         return $transformedResult;
     }
 
-
-    /*public function company_close_car_month($month, $year, $data)
-    {
-        $branches = Branch::where('business_id', $data['business_id'])->get();
-        $result = [];
-        $i = 0;
-        $total_company = 0;
-        $total_branch = 0;
-        $total_product = 0;
-        $total_service = 0;
-        $technical_assistance = 0;
-        $total_tip = 0;
-        foreach ($branches as $branch) {
-            $cars = Car::whereHas('reservation', function ($query) use ($branch) {
-                $query->where('branch_id', $branch->id);
-            })->whereHas('orders', function ($query) use ($month, $year) {
-                $query->whereMonth('data', $month)->whereYear('data', $year);
-            })->get()->map(function ($car) {
-                $products = $car->orders->where('is_product', 1)->sum('price');
-                $services = $car->orders->where('is_product', 0)->sum('price');
-                return [
-                    'earnings' => $car->amount,
-                    'technical_assistance' => $car->technical_assistance * 5000,
-                    'tip' => $car->tip,
-                    'product' => $products,
-                    'service' => $services,
-                    'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
-                ];
-            });
-            $result[$i]['name'] = $branch->name;
-            $result[$i]['earnings'] = round($cars->sum('earnings'), 2);
-            $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
-            $result[$i]['tip'] = round($cars->sum('tip'), 2);
-            $result[$i]['serviceMount'] = round($cars->sum('service'), 2);
-            $result[$i]['productMount'] = round($cars->sum('product'), 2);
-            $result[$i++]['total'] = round($cars->sum('total'), 2);
-            $total_tip += round($cars->sum('tip'), 2);
-            $total_branch += round($cars->sum('earnings'), 2);
-            $total_company += round($cars->sum('total'), 2);
-            $total_product += round($cars->sum('product'), 2);
-            $total_service += round($cars->sum('service'), 2);
-            $technical_assistance += round($cars->sum('technical_assistance'), 2);
-        } //foreach
-        $result[$i]['name'] = 'Total';
-        $result[$i]['tip'] = $total_tip;
-        $result[$i]['earnings'] = $total_branch;
-        $result[$i]['technical_assistance'] = $technical_assistance;
-        $result[$i]['serviceMount'] = $total_service;
-        $result[$i]['productMount'] = $total_product;
-        $result[$i++]['total'] = $total_company;
-        return $result;
-    }*/
-
     public function company_close_car_date($data)
     {
         $branches = Branch::where('business_id', $data['business_id'])->get();
@@ -1087,46 +899,6 @@ class BranchService
         $result[$i++]['total'] = $total_company;
         return $result;
     }
-
-    /*public function company_winner_month($month, $year, $data)
-    {
-        $branches = Branch::where('business_id', $data['business_id'])->get();
-        $result = [];
-        $i = 0;
-        $total_company = 0;
-        $total_branch = 0;
-        $total_tip = 0;
-        $technical_assistance = 0;
-        foreach ($branches as $branch) {
-            $cars = Car::whereHas('reservation', function ($query) use ($branch) {
-                $query->where('branch_id', $branch->id);
-            })->whereHas('orders', function ($query) use ($month, $year) {
-                $query->whereMonth('data', $month)->whereYear('data', $year);
-            })->get()->map(function ($car) {
-                return [
-                    'earnings' => $car->amount,
-                    'technical_assistance' => $car->technical_assistance * 5000,
-                    'tip' => $car->tip,
-                    'total' => $car->amount + $car->tip + $car->technical_assistance * 5000
-                ];
-            });
-            $result[$i]['name'] = $branch->name;
-            $result[$i]['earnings'] = round($cars->sum('earnings'), 2);
-            $result[$i]['technical_assistance'] = round($cars->sum('technical_assistance'), 2);
-            $result[$i]['tip'] = round($cars->sum('tip'), 2);
-            $result[$i++]['total'] = round($cars->sum('total'), 2);
-            $total_tip += round($cars->sum('tip'), 2);
-            $total_branch += round($cars->sum('earnings'), 2);
-            $total_company += round($cars->sum('total'), 2);
-            $technical_assistance += round($cars->sum('technical_assistance'), 2);
-        } //foreach
-        $result[$i]['name'] = 'Total';
-        $result[$i]['tip'] = $total_tip;
-        $result[$i]['earnings'] = $total_branch;
-        $result[$i]['technical_assistance'] = $technical_assistance;
-        $result[$i++]['total'] = $total_company;
-        return $result;
-    }*/
 
     public function company_winner_periodo($startDate, $endDate, $data)
     {
@@ -1334,113 +1106,8 @@ class BranchService
         $result[$i++]['total'] = $total_company + $total_tip;
         return $result;
     }
-
-    
-    
-     public function branch_professionals_winner_date_ANTERIOR($branch_id)
-    {
-        $dates = [];
-        $bonusAuxiliar = 0;
-        $service = 0;
-        $convivencia = 0;
-        $amount = 0;
-        $amountService = 0;
-        $professionals = Professional::whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->whereHas('branches', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->get();
-
-        //$branches = Branch::select('id', 'name')->get();
-        foreach ($professionals as $professional) {
-            $bonusAuxiliar = 0;
-            $service = 0;
-            $convivencia = 0;
-            $amount = 0;
-            $amountService = 0;
-            $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
-            $payments = ProfessionalPayment::where('branch_id', $branch_id)
-                ->where('professional_id', $professional->id)
-                ->whereDate('date', Carbon::now())
-                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
-                ->get();
-            //foreach ($branches as $branch) {
-            $cars = Car::whereHas('reservation', function ($query) use ($branch_id) {
-                $query->where('branch_id', $branch_id)->whereDate('data', Carbon::now());
-            })->whereHas('clientProfessional', function ($query) use ($professional) {
-                $query->where('professional_id', $professional->id);
-            })->where('pay', 1)->get();
-            $retention = $professional->retention;
-            $winProfessional = $cars->sum(function ($car) {
-                return $car->orders->sum(function ($order) {
-                    return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                });
-            });
-            $amuntGenerate = $cars->sum(function ($car) {
-                return $car->orders->sum('price');
-            });
-            $retentionPorcent = ($winProfessional * $retention) / 100;
-            $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', Carbon::now())->sum('retention');
-            Log::info('Total de retenciones'.$professional->name);
-            Log::info($totalRetention);
-            Log::info('Total de Servicios'.$professional->name);
-            Log::info($amuntGenerate);
-            Log::info('Total de Ganado'.$professional->name);
-            Log::info($winProfessional);
-            $winTips =  $cars->sum('tip') * 0.8;
-            $tips = $cars->sum('tip');
-            $bonus = 0;
-
-            foreach ($payments as $payment) {
-                if ($payment->type == 'Bono convivencias' || $payment->type == 'Bono productos') {
-                    // Aplica la fórmula para obtener el amount original
-                    $originalAmount = $payment->amount / (1 - $retention / 100);
-                    $bonus += $originalAmount;
-                    if ($payment->type == 'Bono productos') {
-                        $bonusAuxiliar += $originalAmount;
-                    }
-                    if ($payment->type == 'Bono convivencias') {
-                        $convivencia += $payment->amount;
-                    }
-                } elseif($payment->type == 'Bono servicios'){
-                    $service += $payment->amount;
-                    $bonus += $profesionalbonus->mountpay;
-                    $bonusAuxiliar += $profesionalbonus->mountpay;
-                }else {
-                    // Suma el amount directamente si no es 'Bono convivencias'
-                    $bonus += $payment->amount;
-                }
-            }
-            Log::info('Bonos sin retetncion:'.$professional->id);
-            Log::info($bonus);
-            $bonusRetention = $payments->sum('amount');
-            Log::info('$bonusAuxiliar');
-            Log::info($bonusAuxiliar);
-            $amount = $winProfessional - $retentionPorcent;
-            $amountService = $amount- $convivencia;
-            $dates[] =  [
-                //'branchName' => $branch->name,
-                'name' => $professional->name,
-                'image_url' => $professional->image_url,
-                'amount' => $amount,
-                'amountService' => $amountService,
-                'amountGenerate' => $amuntGenerate,
-                'retention' => $totalRetention,
-                //'retention' => $retentionPorcent,
-                'tip' => $tips,
-                'tip80' => $winTips,
-                'bonus' => $bonusRetention,
-                'renta' => $winProfessional + $bonusAuxiliar,
-                'total' => $amountService + $winTips + $bonusRetention,
-                'total_cars' => $cars->count()
-            ];
-            //})->sortByDesc('total')->values();
-            //}
-        }
-        return $dates;
-    }
-    
-      public function branch_professionals_winner_date($branch_id)
+       
+    public function branch_professionals_winner_date($branch_id)
     {
         $dates = [];
         $bonusAuxiliar = 0;
@@ -1488,12 +1155,6 @@ class BranchService
             });
             $retentionPorcent = ($winProfessional * $retention) / 100;
             $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', Carbon::now())->sum('retention');
-            Log::info('Total de retenciones'.$professional->name);
-            Log::info($totalRetention);
-            Log::info('Total de Servicios'.$professional->name);
-            Log::info($amuntGenerate);
-            Log::info('Total de Ganado'.$professional->name);
-            Log::info($winProfessional);
             $winTips =  $cars->sum('tip') * 0.8;
             $tips = $cars->sum('tip');
             $bonus = 0;
@@ -1518,11 +1179,7 @@ class BranchService
                     $bonus += $payment->amount;
                 }
             }
-            Log::info('Bonos sin retetncion:'.$professional->id);
-            Log::info($bonus);
             $bonusRetention = $payments->sum('amount');
-            Log::info('$bonusAuxiliar');
-            Log::info($bonusAuxiliar);
             $amount = $winProfessional - $retentionPorcent;
             $amountService = $amount- $convivencia;
             $dates[] =  [
@@ -1546,9 +1203,8 @@ class BranchService
         }
         return $dates;
     }
-   
-    
-     public function branch_professionals_winner_periodo_ANTERIOR($startDate, $endDate, $branch_id)
+       
+    public function branch_professionals_winner_periodo($startDate, $endDate, $branch_id)
     {
         $dates = [];
         $bonusAuxiliar = 0;
@@ -1574,114 +1230,6 @@ class BranchService
                 ->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
                 ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
                 ->get();
-            //foreach ($branches as $branch) {
-            $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
-                $query->where('branch_id', $branch_id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
-            })->whereHas('clientProfessional', function ($query) use ($professional) {
-                $query->where('professional_id', $professional->id);
-            })->where('pay', 1)->get();
-            $retention = $professional->retention;
-            $winProfessional = $cars->sum(function ($car) {
-                return $car->orders->sum(function ($order) {
-                    return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                });
-            });
-            $amuntGenerate = $cars->sum(function ($car) {
-                return $car->orders->sum('price');
-            });
-            $retentionPorcent = ($winProfessional * $retention) / 100;
-            $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
-            Log::info('Total de retenciones'.$professional->name);
-            Log::info($totalRetention);
-            Log::info('Total de Servicios'.$professional->name);
-            Log::info($amuntGenerate);
-            Log::info('Total de Ganado'.$professional->name);
-            Log::info($winProfessional);
-            $winTips =  $cars->sum('tip') * 0.8;
-            $tips = $cars->sum('tip');
-            $bonus = 0;
-            
-            foreach ($payments as $payment) {
-                if ($payment->type == 'Bono convivencias' || $payment->type == 'Bono productos') {
-                    // Aplica la fórmula para obtener el amount original
-                    $originalAmount = $payment->amount / (1 - $retention / 100);
-                    $bonus += $originalAmount;
-                    if ($payment->type == 'Bono productos') {
-                        $bonusAuxiliar += $originalAmount;
-                    }
-                    if ($payment->type == 'Bono convivencias') {
-                        $convivencia += $payment->amount;
-                    }
-                } elseif($payment->type == 'Bono servicios'){
-                    $service += $payment->amount;
-                    $bonus += $profesionalbonus->mountpay;
-                    $bonusAuxiliar += $profesionalbonus->mountpay;
-                }else {
-                    // Suma el amount directamente si no es 'Bono convivencias'
-                    $bonus += $payment->amount;
-                    $bonusAuxiliar += $payment->amount;
-                }
-            }
-            Log::info('Bonos sin retetncion:'.$professional->id);
-            Log::info($bonus);
-            $bonusRetention = $payments->sum('amount');
-            Log::info('$bonusAuxiliar');
-            Log::info($bonusAuxiliar);
-            Log::info('Bonos sin retetncion:'.$professional->id);
-            Log::info($bonus);
-            $amount = $winProfessional - $retentionPorcent;
-            $amountService = $amount- $convivencia;
-            $dates[] =  [
-                //'branchName' => $branch->name,
-                'name' => $professional->name,
-                'image_url' => $professional->image_url,
-                'amount' => $amount,
-                'amountService' => $amountService,
-                'amountGenerate' => $amuntGenerate,
-                'retention' => $totalRetention,
-                //'retention' => $retentionPorcent,
-                'tip' => $tips,
-                'tip80' => $winTips,
-                'bonus' => $bonusRetention,
-                'renta' => $winProfessional + $bonusAuxiliar,
-                'total' => $amountService + $winTips + $bonusRetention,
-                'total_cars' => $cars->count()
-            ];
-            //})->sortByDesc('total')->values();
-            //}
-        }
-        return $dates;
-    }
-    
-     public function branch_professionals_winner_periodo($startDate, $endDate, $branch_id)
-    {
-        $dates = [];
-        $bonusAuxiliar = 0;
-        $service = 0;
-        $convivencia = 0;
-        $amount = 0;
-        $amountService = 0;
-        $professionals = Professional::whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })->whereHas('branches', function ($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })->get();
-        //$branches = Branch::select('id', 'name')->get();
-        foreach ($professionals as $professional) {
-            $bonusAuxiliar = 0;
-            $service = 0;
-            $convivencia = 0;
-            $amount = 0;
-            $amountService = 0;
-            $profesionalbonus = BranchProfessional::where('professional_id', $professional->id)->where('branch_id', $branch_id)->first();
-            $payments = ProfessionalPayment::where('branch_id', $branch_id)
-                ->where('professional_id', $professional->id)
-                ->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
-                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
-                ->get();
-                Log::info($professional->name);
-                Log::info('Bonos');
-                Log::info($payments->sum('amount'));
 
             //foreach ($branches as $branch) {
             $cars = Car::whereHas('reservation', function ($query) use ($branch_id, $startDate, $endDate) {
@@ -1704,12 +1252,6 @@ class BranchService
             });
             $retentionPorcent = ($winProfessional * $retention) / 100;
             $totalRetention = Retention::where('branch_id', $branch_id)->where('professional_id', $professional->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
-            Log::info('Total de retenciones'.$professional->name);
-            Log::info($totalRetention);
-            Log::info('Total de Servicios'.$professional->name);
-            Log::info($amuntGenerate);
-            Log::info('Total de Ganado'.$professional->name);
-            Log::info($winProfessional);
             $winTips =  $cars->sum('tip') * 0.8;
             $tips = $cars->sum('tip');
             $bonus = 0;
@@ -1735,13 +1277,7 @@ class BranchService
                     $bonusAuxiliar += $payment->amount;
                 }
             }
-            Log::info('Bonos sin retetncion:'.$professional->id);
-            Log::info($bonus);
             $bonusRetention = $payments->sum('amount');
-            Log::info('$bonusAuxiliar');
-            Log::info($bonusAuxiliar);
-            Log::info('Bonos sin retetncion:'.$professional->id);
-            Log::info($bonus);
             $amount = $winProfessional - $retentionPorcent;
             $amountService = $amount- $convivencia;
             $dates[] =  [

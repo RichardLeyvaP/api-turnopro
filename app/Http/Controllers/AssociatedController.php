@@ -37,10 +37,6 @@ class AssociatedController extends Controller
     public function store(Request $request)
     {
         try {
-            /*$data = $request->validate([
-                'name' => 'required|max:50',
-                'email' => 'required|max:100|email|unique:associates'
-            ]);*/
             $validator = Validator::make($request->all(), [
                 'name' => 'required|max:50',
                 'email' => 'required|max:100|email|unique:associates'
@@ -97,11 +93,6 @@ class AssociatedController extends Controller
     public function update(Request $request, Associated $associated)
     {
         try {
-            /*$data = $request->validate([
-                'id' => 'required|numeric',
-                'name' => 'required|max:50',
-                'email' => 'required|max:100|email'
-            ]);*/
             $associated = Associated::find($request->id);
             $validator = Validator::make($request->all(), [
                 'id' => 'required|numeric',

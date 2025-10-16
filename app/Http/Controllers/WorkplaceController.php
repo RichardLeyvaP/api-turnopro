@@ -18,7 +18,6 @@ class WorkplaceController extends Controller
     public function index()
     {
         try {
-            Log::info("mostrar locales");
             return response()->json(['workplaces' => Workplace::with(['branch'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -53,19 +52,6 @@ class WorkplaceController extends Controller
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
-
-    public function branch_workplaces_busy_ANTERIOR(Request $request)
-    {
-        try {
-            $workplace_data = $request->validate([
-                'branch_id' => 'required|numeric'
-            ]);
-            return response()->json(['workplaces' => Workplace::where('branch_id', $workplace_data['branch_id'])->where('busy', 0)->get()], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
-        }
-    }
     
     public function branch_workplaces_busy(Request $request)
     {
@@ -75,8 +61,6 @@ class WorkplaceController extends Controller
             ]);
 
             $workplaces = Workplace::where('branch_id', $workplace_data['branch_id'])->where('busy', 0)->get();
-            Log::info('Puestos de trabajos libres');
-            Log::info($workplaces);
             return response()->json(['workplaces' => $workplaces], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -100,8 +84,6 @@ class WorkplaceController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Guardar");
-        Log::info($request);
         try {
             $workplace_data = $request->validate([
                 'name' => 'required|max:100',
@@ -123,9 +105,6 @@ class WorkplaceController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("Editar");
-            Log::info($request);
             $workplace_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:100',
@@ -145,9 +124,6 @@ class WorkplaceController extends Controller
     public function update_state_prof(Request $request)
     {
         try {
-
-            Log::info("Editar");
-            Log::info($request);
             $workplace_data = $request->validate([
                 'id' => 'required|numeric',
                 'busy' => 'required|numeric',
@@ -171,9 +147,6 @@ class WorkplaceController extends Controller
     public function update_state_tec(Request $request)
     {
         try {
-
-            Log::info("Editar");
-            Log::info($request);
             $workplace_data = $request->validate([
                 'id' => 'required|numeric',
                 'select' => 'required|numeric',
@@ -212,19 +185,8 @@ class WorkplaceController extends Controller
         }
     }
 
-    public function resetWorkplaces_ANTERIOR()
-    {
-        try{
-        Workplace::query()->update(['busy' => 0, 'select' => 0]);
-
-        return response()->json(['msg' => 'Puestos de Trabajo actualizados correctamente'], 200);
-    } catch (\Throwable $th) {
-        Log::info($th);
-        return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
-    }
-    }
     
-     public function resetWorkplaces(Request $request)
+    public function resetWorkplaces(Request $request)
     {
         $codigo = $request->query('codigo'); 
 

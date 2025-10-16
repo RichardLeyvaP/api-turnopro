@@ -75,7 +75,6 @@ class BusinessTypesController extends Controller
             $business_type_data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            Log::info($business_type_data['id']);
             BusinessTypes::destroy($business_type_data['id']);
 
             return response()->json(['msg' => 'Tipo de negocio eliminado correctamente'], 200);

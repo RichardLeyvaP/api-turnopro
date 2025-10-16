@@ -11,7 +11,6 @@ class StoreController extends Controller
     {
         try { 
             
-            Log::info( "entra a almacenes");
             return response()->json(['stores' => Store::all()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -21,7 +20,6 @@ class StoreController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("entra a buscar los stores de una branch");
             return response()->json(['stores' => Store::all()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -35,7 +33,6 @@ class StoreController extends Controller
             $data = $request->validate([
                 'store_id' => 'required|numeric'
             ]);
-            Log::info("entra a buscar los stores de una branch");
             return response()->json(['stores' => Store::where('id', '!=',$data['store_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -45,12 +42,10 @@ class StoreController extends Controller
 
     public function show_branch(Request $request)
     {
-        Log::info('Entra a buscar los almacenes de una sucursal');
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            Log::info("entra a buscar los stores de una branch");
             if (auth()->user()->professional->charge->name == 'Administrador'){
                 $stores = Store::all();
             }else {
@@ -71,7 +66,6 @@ class StoreController extends Controller
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric'
             ]);
-            Log::info("entra a buscar los stores de una academia");
             return response()->json(['stores' => Store::whereHas('enrollments', function ($query) use ($data){
                 $query->where('enrollment_id', $data['enrollment_id']);
             })->get()], 200, [], JSON_NUMERIC_CHECK);
@@ -111,10 +105,7 @@ class StoreController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar");
-                
-
+            Log::info("entra a actualizar alamacen");  
             $stores_data = $request->validate([
                 'id' => 'required|numeric',
                 'reference' => 'required|max:50',

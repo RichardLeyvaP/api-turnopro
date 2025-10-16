@@ -10,7 +10,6 @@ class ChargeController extends Controller
 {
     public function index_web(Request $request)
     {
-        Log::info( "entra a buscar cargos y sucursales");
         try { $branch_data = $request->validate([
             'business_id' => 'required|numeric'
         ]);
@@ -26,8 +25,6 @@ class ChargeController extends Controller
     public function index()
     {
         try { 
-            
-            Log::info( "entra a buscar cargos");
             return response()->json(['charges' => Charge::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -78,15 +75,11 @@ class ChargeController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar");
-                
-
+            Log::info("entra a actualizar cargo");
             $charge_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
-                'description' => 'required|max:50',
-              
-              
+                'description' => 'required|max:50',    
             ]);
             Log::info($request);
             $store = Charge::find($charge_data['id']);

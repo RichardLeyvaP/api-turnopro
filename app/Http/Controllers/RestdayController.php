@@ -91,8 +91,6 @@ class RestdayController extends Controller
                 'schedule' => 'nullable'
             ]);
             
-            Log::info("data");
-            Log::info($data);
             $professional = Professional::find($data['professional_id']);
 
             // Iteramos sobre los horarios proporcionados

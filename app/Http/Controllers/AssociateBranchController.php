@@ -29,6 +29,7 @@ class AssociateBranchController extends Controller
                 'branch_id' => 'required|numeric',
                 'associated_id' => 'required|numeric'
             ]);
+        Log::info($data);
             $branch = Branch::find($data['branch_id']);
             $associate = Associated::find($data['associated_id']);
 
@@ -47,7 +48,6 @@ class AssociateBranchController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("Entra a buscar los srvicios que realiza una branch");
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric'
             ]);

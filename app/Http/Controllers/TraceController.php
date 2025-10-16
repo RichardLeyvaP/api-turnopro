@@ -13,8 +13,6 @@ class TraceController extends Controller
 {
     public function traces_branch_day(Request $request)
     {
-    Log::info("Trazas por año");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -31,8 +29,6 @@ class TraceController extends Controller
 
     public function traces_branch_month(Request $request)
     {
-    Log::info("Trazas en un mes");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -50,8 +46,6 @@ class TraceController extends Controller
 
     public function traces_branch_periodo(Request $request)
     {
-    Log::info("Trazas en un periodo");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',

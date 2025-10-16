@@ -53,18 +53,11 @@ class CardGiftController extends Controller
                 'name' => 'required|string'
             ]);
             
-            /*do {
-                // Genera un código alfanumérico aleatorio
-                $codigo = Str::random(8);
-        
-                // Verifica si el código ya existe en la base de datos
-            } while (CardGift::where('code', $codigo)->exists());*/
             $cardGift = new CardGift();
             $cardGift->business_id = $data['business_id'];
             $cardGift->value = $data['value'];
             $cardGift->name = $data['name'];
             $cardGift->save();
-            Log::info($cardGift);
             $filename = "cardgifts/default.jpg"; 
             if ($request->hasFile('image_cardgift')) {
                $filename = $request->file('image_cardgift')->storeAs('cardgifts',$cardGift->id.'.'.$request->file('image_cardgift')->extension(),'public');
@@ -98,27 +91,12 @@ class CardGiftController extends Controller
                     'image_cardgift' => $query->image_cardgift.'?$'.$now
                 ];
             });
-            Log::info($cardGifts);
             return response()->json(['cardGifts' => $cardGifts], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::info($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
         }
     }
-
-    /*public function show_value(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'code' => 'required'
-            ]);
-            $cardGifts = CardGift::where('code', $data['code'])->first()->value('value');
-            Log::info($cardGifts);
-            return response()->json($cardGifts, 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
-        }
-    }*/
 
     /**
      * Update the specified resource in storage.
@@ -127,7 +105,6 @@ class CardGiftController extends Controller
     {
         try {
 
-        Log::info("Editar");
         $data = $request->validate([
             'value' => 'nullable|numeric',
             'name' => 'nullable|string',

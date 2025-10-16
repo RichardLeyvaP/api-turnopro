@@ -18,10 +18,8 @@ class SendMailController extends Controller
             $data = $request->validate([
                 'email' => 'required',
             ]);         
-            Log::info( "Entra a send_email");
             
             Mail::to($data['email'])->send(new Send_mail('q','w','e','r','t','t','y','z'));
-            Log::info( "Enviado send_email");
             return response()->json(['Response' => "Email enviado correctamente"], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -34,7 +32,6 @@ class SendMailController extends Controller
 public function sendMessage(Request $request)
 {
     try{
-    Log::info("sendMessage Whatsapp1");
    // $url = env('WHATSAPP_API_URL');
     $url = 'https://graph.facebook.com/v18.0/113984608247982/messages';
     //$token = env('WHATSAPP_TOKEN');
@@ -53,9 +50,6 @@ public function sendMessage(Request $request)
             //'text' => ['body' => $request->input('message')] // Mensaje
         ],
     ]);
-
-    Log::info("sendMessage Whatsapp2");
-    Log::info((string) $response->getBody());
     return response()->json(json_decode((string) $response->getBody(), true));
     } catch (\Throwable $th) {  
         Log::error($th);

@@ -12,7 +12,6 @@ class SurveyController extends Controller
     {
         try { 
             
-            Log::info( "entra a buscar las resdes");
             return response()->json(['surveys' => Survey::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -59,7 +58,7 @@ class SurveyController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar");
+            Log::info("entra a actualizar encuesta");
              $data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50'

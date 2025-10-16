@@ -52,7 +52,6 @@ class OrderController extends Controller
     public function order_delete_show(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar las orders");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -87,7 +86,6 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Compra de Productos y servicio prestado");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -102,7 +100,6 @@ class OrderController extends Controller
             $branch = Branch::where('id', $request->branch_id)->first();
             $user = Auth::user();
             $professional_id = $user->professional ? $user->professional->id : null;
-            Log::info("Professional_id al comprar el producto: " . $professional_id);
             if ($data['service_id'] == 0 && $data['type'] == 'product') {
                 $productStore = ProductStore::find($data['product_id']);
                 $product = $productStore->product;
@@ -138,7 +135,6 @@ class OrderController extends Controller
 
     public function store_products(Request $request)
     {
-        Log::info("Compra de Productos y servicio prestado");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -213,7 +209,7 @@ class OrderController extends Controller
 
     public function store_web(Request $request)
     {
-        Log::info("Compra de Productos y servicio prestado");
+        Log::info("Compra de Productos y servicio prestado web");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -272,8 +268,6 @@ class OrderController extends Controller
                 );
                 $car->save();
                 }
-                Log::info('$trace Pproduct');
-                Log::info($trace);
              }
             if ($data['product_id'] == 0 && $data['type'] == 'service') {
                 $order = $this->orderService->service_order_store1($data);
@@ -295,9 +289,7 @@ class OrderController extends Controller
                         $professionalImage
                     );
                     $car->save();
-                    }
-                Log::info('$trace Service');
-                //Log::info($trace);             
+                    }            
             }
             DB::commit();
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
@@ -311,7 +303,6 @@ class OrderController extends Controller
 
     public function sales_periodo_branch(Request $request)
     {
-        Log::info("Ventas de Productos y servicios prestados en un periodo");
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -332,7 +323,6 @@ class OrderController extends Controller
     public function show(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar los carros");
             $data = $request->validate([
                 'car_id' => 'required|numeric'
             ]);
@@ -404,12 +394,8 @@ class OrderController extends Controller
                 $notification->type = 'Barbero';
                 $notification->save();
              }else {
-                Log::info("servicio");
                 $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
-                Log::info($branchServiceprofessional);
                 $service = $branchServiceprofessional->branchService->service;
-                Log::info("card:".$car);
-
                 $notification = new Notification();
                 $notification->professional_id = $car->clientProfessional->professional_id;
                 $notification->branch_id = $reservation->branch_id;
@@ -432,7 +418,7 @@ class OrderController extends Controller
 
     public function order_denegar(Request $request)
     {
-        Log::info("Actualizar orden");
+        Log::info("Actualizar orden denegar");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -441,12 +427,8 @@ class OrderController extends Controller
             ]);
             $order = Order::find($data['id']);
             $branch = Branch::where('id', $order->car->reservation->branch_id)->first();
-            /*$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
-            $query->where('name', 'Cajero (a)');
-        })->get('professional_id');*/
-        $type = $order->is_producy ? 'producto' : 'servicio';
-        /*if(!$cajeros->isEmpty()){
-            foreach ($cajeros as $cajero) {    */                
+            $type = $order->is_producy ? 'producto' : 'servicio';
+             
             $notification = new Notification();
             $notification->professional_id = $data['professional_id'];
             $notification->tittle = 'Denegada';
@@ -466,7 +448,7 @@ class OrderController extends Controller
 
     public function update2(Request $request)
     {
-        Log::info("Actualizar orden");
+        Log::info("Actualizar orden update2");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -527,7 +509,7 @@ class OrderController extends Controller
 
     public function update_web(Request $request)
     {
-        Log::info("Actualizar orden");
+        Log::info("Actualizar orden update_web");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -548,8 +530,6 @@ class OrderController extends Controller
                         'description' => $car->clientProfessional->professional->name,
                     ];
                     $this->traceService->store($trace);
-                    Log::info('$trace Pproduct');
-                    Log::info($trace);
                 }
                 elseif (!$order->is_product) {
                     $trace = [
@@ -562,104 +542,12 @@ class OrderController extends Controller
                         'description' => $car->clientProfessional->professional->name,
                     ];
                     $this->traceService->store($trace);
-                    Log::info('$trace Service');
-                    Log::info($trace);      
-    
                 }
             $order->request_delete = $data['request_delete'];
             $order->save();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
-            return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
-        }
-    }
-
-    public function destroy_ANTERIOR(Request $request)
-    {
-        Log::info("Eliminar orden");
-        Log::info($request);
-        DB::beginTransaction();
-        try {
-            $data = $request->validate([
-                'id' => 'required|numeric'
-            ]);
-            $order = Order::find($data['id']);
-            $car = Car::find($order->car_id);
-            $reservation = $car->reservation;
-            $client = $car->clientProfessional->client;
-            //$branch = Branch::where('id', $car->reservation->branch_id)->first();
-            Log::info($order);
-            Log::info($car);
-            if ($order->is_product == 1) {                
-            Log::info("Es producto");
-                $productstore = ProductStore::find($order->product_store_id);
-                $product = $productstore->product;
-                $cant = $order->cant;
-                $productstore->product_quantity = $cant;
-                $productstore->product_exit = $productstore->product_exit + $cant;
-                $productstore->save();
-
-                $notification = new Notification();
-                $notification->professional_id = $car->clientProfessional->professional_id;
-                $notification->branch_id = $reservation->branch_id;
-                $notification->tittle = 'Aceptada Eliminación de Producto';
-                $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
-                $notification->type = 'Barbero';
-                $notification->save();
-
-            }
-            if ($order->is_product == 0) {
-                Log::info("servicio");
-                $branchServiceprofessional = BranchServiceProfessional::find($order->branch_service_professional_id);
-                Log::info($branchServiceprofessional);
-                $service = $branchServiceprofessional->branchService->service;
-                Log::info("card:".$car);
-                //$reservation = Reservation::where('car_id', $order->car_id)->first();
-                Log::info($reservation);
-                $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
-                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
-                $reservation->save();
-                //reducir tiempo al reloj
-                $updated = Carbon::parse($order->updated_at);
-                $starnow = Carbon::now();
-                $diffInSegunds = $updated->diffInSeconds($starnow, false);
-                Log::info('diferencia en segundos'.$diffInSegunds);
-                $timeMod =  ($service->duration_service*60)+$diffInSegunds;
-                Log::info('diferencia en segundos1'.$timeMod);
-                $tail = $reservation->tail;
-                $timeClock = $tail->timeClock - $timeMod;
-                Log::info('diferencia en segundos - reloj actual'.$timeClock);
-                $timeClock1 = $timeClock <=0 ? 0 : $timeClock;
-                Log::info('diferencia en segundos - reloj actual bd'.$timeClock1);
-                $tail->timeClock = $timeClock1;
-                $tail->save();
-                $notification = new Notification();
-                $notification->professional_id = $car->clientProfessional->professional_id;
-                $notification->branch_id = $reservation->branch_id;
-                $notification->tittle = 'Aceptada Eliminación de Servicio';
-                $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'seg'.'.'.$reservation->id;
-                $notification->type = 'Barbero';
-                $notification->state = 3;
-                $notification->save();
-            }
-            //para las notificaciones de solicitud a 1
-            Notification::where('branch_id', $reservation->branch_id)->where('state', 0)->where('stateApk', 'orden'.$data['id'])->update(['state' => 1]);
-            $amountTemp = $car->amount - $order->price;
-            $car->amount = $amountTemp;
-            $order->delete();
-            if($amountTemp)
-            {
-                $car->save();
-            }
-            else {
-                $car->delete();
-            }
-            DB::commit();
-            return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::info("Eliminar orden:$th");
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
@@ -683,9 +571,6 @@ class OrderController extends Controller
             }
             $reservation = $car->reservation;
             $client = $car->clientProfessional->client;
-            //$branch = Branch::where('id', $car->reservation->branch_id)->first();
-            Log::info($order);
-            Log::info($car);
             if($reservation->confirmation == 2){
                 Log::info('Manda a eliminar una orden con el cliente ya finalizado');
                 Log::info('$car->id');
@@ -697,8 +582,7 @@ class OrderController extends Controller
                 DB::commit();
                 return response()->json(['msg' =>'Solicitud de eliminar la orden no realizada cliente finalizado'], 200);
             }
-            if ($order->is_product == 1) {                
-                Log::info("Es producto");
+            if ($order->is_product == 1) {   
                 $productstore = ProductStore::find($order->product_store_id);
                 $product = $productstore->product;
                 $cant = $order->cant;
@@ -716,13 +600,9 @@ class OrderController extends Controller
 
             }
             if ($order->is_product == 0) {
-                Log::info("servicio");
                 $branchServiceprofessional = BranchServiceProfessional::withTrashed()->find($order->branch_service_professional_id);
-                Log::info($branchServiceprofessional);
+
                 $service = $branchServiceprofessional->branchService->service;
-                Log::info("card:".$car);
-                //$reservation = Reservation::where('car_id', $order->car_id)->first();
-                Log::info($reservation);
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
                 $reservation->save();
@@ -730,14 +610,10 @@ class OrderController extends Controller
                 $updated = Carbon::parse($order->updated_at);
                 $starnow = Carbon::now();
                 $diffInSegunds = $updated->diffInSeconds($starnow, false);
-                Log::info('diferencia en segundos'.$diffInSegunds);
                 $timeMod =  ($service->duration_service*60)+$diffInSegunds;
-                Log::info('diferencia en segundos1'.$timeMod);
                 $tail = $reservation->tail;
                 $timeClock = $tail->timeClock - $timeMod;
-                Log::info('diferencia en segundos - reloj actual'.$timeClock);
                 $timeClock1 = $timeClock <=0 ? 0 : $timeClock;
-                Log::info('diferencia en segundos - reloj actual bd'.$timeClock1);
                 $tail->timeClock = $timeClock1;
                 $tail->save();
                 $notification = new Notification();
@@ -772,7 +648,7 @@ class OrderController extends Controller
 
     public function destroy_web(Request $request)
     {
-        Log::info("Eliminar orden");
+        Log::info("Eliminar orden web");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -790,23 +666,15 @@ class OrderController extends Controller
             $user = Auth::user();
             $nameProfessional = $user->professional ? $user->professional->name : $user->name;
             $professionalImage = $user->professional ? $user->professional->image_url : 'professionals/default.jpg';
-            //$client = $car->clientProfessional->client;
-            //$professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $car->reservation->branch_id)->first();
-            /*$cajeros = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
-                $query->where('name', 'Cajero (a)');
-            })->get('professional_id');*/
             if ($order->is_product) {                
-            Log::info("Es producto");
-            
+           
                 $productstore = ProductStore::find($order->product_store_id);
-                //$product = $productstore->product;
                 $cant = $order->cant;
                 $productstore->product_quantity = $cant;
                 $productstore->product_exit = $productstore->product_exit + $cant;
                 $productstore->save();
-                /*if(!$cajeros->isEmpty()){
-                    foreach ($cajeros as $cajero) {     */               
+           
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Aceptada';
@@ -826,18 +694,13 @@ class OrderController extends Controller
                 }
             }
             elseif (!$order->is_product) {
-                Log::info("servicio");
                 $branchServiceprofessional = BranchServiceProfessional::withTrashed()->find($order->branch_service_professional_id);
-                Log::info($branchServiceprofessional);
                 $service = $branchServiceprofessional->branchService->service;
-                Log::info("card:".$car);
                 $reservation = Reservation::where('car_id', $order->car_id)->first();
-                Log::info($reservation);
                 $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
                 $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i');
                 $reservation->save();
-                /*if(!$cajeros->isEmpty()){
-                    foreach ($cajeros as $cajero) { */                   
+             
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Aceptada';
@@ -882,7 +745,7 @@ class OrderController extends Controller
 
     public function destroy_solicitud(Request $request)
     {
-        Log::info("Eliminar orden");
+        Log::info("Eliminar orden destroy_solicitud");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -900,18 +763,11 @@ class OrderController extends Controller
             $client = $car->clientProfessional->client;
             $professional = $car->clientProfessional->professional;
             $branch = Branch::where('id', $request->branch_id)->first();
-            /*$administradores = BranchProfessional::where('branch_id', $branch->id)->whereHas('professional.charge', function ($query){
-                $query->where('name', 'Administrador de Sucursal');
-            })->get('professional_id');*/
             if ($order->is_product == 1) {                
-            Log::info("Es producto");
             
                 $productstore = ProductStore::find($order->product_store_id);
                 $product = $productstore->product;
                 $cant = $order->cant;
-                /*$productstore->product_quantity = $cant;
-                $productstore->product_exit = $productstore->product_exit + $cant;
-                $productstore->save();*/
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -922,21 +778,15 @@ class OrderController extends Controller
                     'description' => $professional->name,
                 ];
                 $this->traceService->store($trace);
-                /*if(!$administradores->isEmpty()){
-                    foreach ($administradores as $administrador) { */                   
+               
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Solicitud';
                     $notification->description = 'Solicitud de eliminación de la orden de producto del carro: '.$car->id;
                     $notification->type = 'Administrador';
                     $branch->notifications()->save($notification);
-                   // }
-                //}
-                //todo pendiente para revisar importante
-               // $this->actualizarProductExit($productstore->product_id, $productstore->service_id); 
             }
             elseif ($order->is_product == 0) {
-                Log::info("servicio");
                 $branchServiceProfessional = BranchServiceProfessional::withTrashed()
                     ->with([
                         'branchService' => fn($query) => $query->withTrashed()->with([
@@ -947,10 +797,6 @@ class OrderController extends Controller
 
                 // Accedes al servicio incluso si fue eliminado
                 $service = $branchServiceProfessional?->branchService?->service;
-                /*$reservation = Reservation::where('car_id', $order->car_id)->first();
-                $reservation->final_hour = Carbon::parse($reservation->final_hour)->subMinutes($service->duration_service)->toTimeString();
-                $reservation->total_time = Carbon::parse($reservation->total_time)->subMinutes($service->duration_service)->format('H:i:s');
-                $reservation->save();*/
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -961,8 +807,7 @@ class OrderController extends Controller
                     'description' => $professional->name,
                 ];
                 $this->traceService->store($trace);
-                /*if(!$administradores->isEmpty()){
-                    foreach ($administradores as $administrador) {  */                  
+            
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
                     $notification->tittle = 'Solicitud';

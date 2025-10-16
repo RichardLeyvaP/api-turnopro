@@ -130,7 +130,6 @@ class ProfessionalController extends Controller
     public function show_autocomplete_Notin(Request $request)
     {
         try {
-            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -206,23 +205,6 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function show_apk_ANTERIOR(Request $request)
-    {
-        try {
-            $professionals_data = $request->validate([
-                'id' => 'required|numeric'
-            ]);
-            $professional = Professional::where('id', $professionals_data['id'])->first();
-            if ($professional !== null)
-                return $professional->state;
-            else
-                return -1;
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
-        }
-    }
-
     public function show_apk(Request $request)
     {
         try {
@@ -273,8 +255,6 @@ class ProfessionalController extends Controller
             $horario = Schedule::where('branch_id', $data['branch_id'])->where('day', $nombreDia)->first();
             $start_time = Carbon::parse($horario->start_time)->format('H:i');
             $closing_time = Carbon::parse($horario->closing_time)->format('H:i');
-            //$closing_time = $horario->closing_time;
-            //$startTime = strtotime($start_time);
             $reservations = [];
 
             $currentDateTime =  Carbon::now();
@@ -335,36 +315,6 @@ class ProfessionalController extends Controller
                             $finalTime = Carbon::parse($reservation->final_hour);
                             $finalMinutes = $finalTime->minute;
 
-                            /*if ($finalMinutes <= 15) {
-                                if ($finalMinutes <= 5) {
-                                    $roundedMinutes = '5';
-                                }elseif ($finalMinutes <= 10) {
-                                    $roundedMinutes = '10';
-                                }else{
-                                $roundedMinutes = '15';
-                                }
-                            } elseif ($finalMinutes <= 30) {
-                                if ($finalMinutes <= 20) {
-                                    $roundedMinutes = '15';
-                                }elseif ($finalMinutes <= 25) {
-                                    $roundedMinutes = '20';
-                                }
-                                else {
-                                $roundedMinutes = '25';
-                                }
-                            } elseif ($finalMinutes <= 45) {
-                                if ($finalMinutes <= 35) {
-                                    $roundedMinutes = '30';
-                                }elseif ($finalMinutes <= 40) {
-                                    $roundedMinutes = '35';
-                                }
-                                else {
-                                $roundedMinutes = '40';
-                                }
-                            } else {
-                                $finalTime->addHour();
-                                $roundedMinutes = '55';
-                            }*/
                             if ($finalMinutes <= 10) {
                                 $roundedMinutes = '05';
                             } elseif ($finalMinutes <= 20) {
@@ -448,37 +398,6 @@ class ProfessionalController extends Controller
                         $finalTime = Carbon::parse($reservation->final_hour);
                         $finalMinutes = $finalTime->minute;
 
-                        /*if ($finalMinutes <= 15) {
-                            if ($finalMinutes <= 5) {
-                                $roundedMinutes = '5';
-                            }elseif ($finalMinutes <= 10) {
-                                $roundedMinutes = '10';
-                            }else{
-                            $roundedMinutes = '15';
-                            }
-                        } elseif ($finalMinutes <= 30) {
-                            if ($finalMinutes <= 20) {
-                                $roundedMinutes = '15';
-                            }elseif ($finalMinutes <= 25) {
-                                $roundedMinutes = '20';
-                            }
-                            else {
-                            $roundedMinutes = '25';
-                            }
-                        } elseif ($finalMinutes <= 45) {
-                            if ($finalMinutes <= 35) {
-                                $roundedMinutes = '30';
-                            }elseif ($finalMinutes <= 40) {
-                                $roundedMinutes = '35';
-                            }
-                            else {
-                            $roundedMinutes = '40';
-                            }
-                        } else {
-                            $finalTime->addHour();
-                            $roundedMinutes = '55';
-                        }*/
-
                         if ($finalMinutes <= 10) {
                             $roundedMinutes = '05';
                         } elseif ($finalMinutes <= 20) {
@@ -501,9 +420,6 @@ class ProfessionalController extends Controller
                         $finalFormatted = $finalTime->format('H:') . $roundedMinutes;
                         $finalTime = Carbon::parse($finalFormatted);
                         $horaActual = Carbon::now();
-                        /*if ($finalTime->lessThan($horaActual)) {
-                            $finalTime = $horaActual;
-                        }*/
                         // Agregar las horas intermedias de 15 en 15 minutos
                         while ($startTime->addMinutes(10) <= $finalTime) {
                             $intervalos[] = $startTime->format('H:i');
@@ -529,19 +445,7 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $professional = $this->professionalService->professionals_branch($data['branch_id'], $data['professional_id']);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->find($data['professional_id']);
-           
-           if ($professionals) {
-                $date = Carbon::now();
-                $dataUser = [];
-                $dataUser['id'] = $professionals->id;
-                $dataUser['usuario'] = $professionals->name;
-                $dataUser['fecha'] = $date->toDateString();
-                $dataUser['hora'] = $date->Format('g:i:s A');
-                return response()->json(['professional_branch' => $dataUser], 200);
-           }*/
+
             return response()->json(['professional_branch' => $professional], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -556,10 +460,7 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $professionals = $this->professionalService->branch_professionals($data['branch_id']);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->get();
-           */
+   
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -576,9 +477,7 @@ class ProfessionalController extends Controller
             $now = Carbon::now();
             $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
-            })/*->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-        })*/->get()->map(function ($query) use ($now) {
+            })->get()->map(function ($query) use ($now) {
                 return [
                     'id' => $query->id,
                     'name' => $query->name,
@@ -628,10 +527,7 @@ class ProfessionalController extends Controller
             ]);
             $servs = $request->input('services');
             $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->get();
-           */
+
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -646,13 +542,8 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $servs = $request->input('services');
-            Log::info('$servs');
-            Log::info($servs);
             $professionals = $this->professionalService->branch_professionals_service($data['branch_id'], $servs);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->get();
-           */
+
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -667,13 +558,8 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $servs = $request->input('services');
-            Log::info('$servs');
-            Log::info($servs);
             $professionals = $this->professionalService->branch_professionals_service_tottem1($data['branch_id'], $servs);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->get();
-           */
+  
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -690,10 +576,6 @@ class ProfessionalController extends Controller
             ]);
             $servs = $request->input('services');
             $professionals = $this->professionalService->branch_professionals_serviceNew($data['branch_id'], $servs);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->get();
-           */
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -710,10 +592,6 @@ class ProfessionalController extends Controller
 
             ]);
             $professionals = $this->professionalService->get_professionals_service($data);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data) {
-            $query->where('branch_id', $data['branch_id'])->where('service_id', $data['service_id']);
-        })->select('id', 'name','surname','second_surname')->get();*/
-
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::info($th);
@@ -803,7 +681,7 @@ class ProfessionalController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar");
+            Log::info("entra a actualizar update_state");
             $data = $request->validate([
                 'professional_id' => 'nullable|numeric',
                 'state' => 'required|numeric'
@@ -832,10 +710,6 @@ class ProfessionalController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $professionals = $this->professionalService->verifi_tec_prof($data['email'], $data['branch_id']);
-            /*$professionals = Professional::whereHas('branchServices', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-           })->get();
-           */
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
             Log::info($th);
@@ -847,7 +721,7 @@ class ProfessionalController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar");
+            Log::info("entra a actualizar el professional");
             $professionals_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
@@ -912,36 +786,6 @@ class ProfessionalController extends Controller
         }
     }
 
-    public function destroy_ANTERIOR(Request $request)
-    {
-        try {
-
-            $professionals_data = $request->validate([
-                'id' => 'required|numeric'
-            ]);
-            $professional = Professional::find($professionals_data['id']);
-            if ($professional->image_url != "professionals/default.jpg") {
-                //$this->imageService->destroyImagen($professional->image_url);
-                $destination = public_path("storage\\" . $professional->image_url);
-                if (File::exists($destination)) {
-                    File::delete($destination);
-                }
-            }
-            //$user = User::find($professional->user_id);
-            $client = Client::where('user_id', $professional->user_id)->first();
-            if ($client) {
-                Professional::destroy($professionals_data['id']);
-            } else {
-                Professional::destroy($professionals_data['id']);
-                User::destroy($professional->user_id);
-            }
-            return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la professional'], 500);
-        }
-    }
-
     public function destroy(Request $request)
     {
         try {
@@ -982,8 +826,6 @@ class ProfessionalController extends Controller
             $orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
             $services = BranchServiceProfessional::whereIn('id', $orders)->get()->pluck('branch_service_id');
             $servs = BranchService::whereIn('id', $services)->pluck('service_id');
-            Log::info('Servicios del nuevlo cliente a realizar');
-            Log::info($servs);
             $professionals = $this->professionalService->branch_professionals_service_tottem($data['branch_id'], $servs, $professional_id, $reservation);
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {

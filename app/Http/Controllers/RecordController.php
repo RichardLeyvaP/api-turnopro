@@ -80,10 +80,7 @@ class RecordController extends Controller
                             ->get()->map->pivot->where('data', Carbon::now()->toDateString());
                             if ($professionalRules->isEmpty()) {
                                 $branchRules = Branch::find($request->branch_id);
-                            //$professional = Professional::find($user->professional->id);
-                            Log::info($professionalRules);
                                 $branchRulesId = $branchRules->rules()->withPivot('id')->get()->map->pivot->pluck('id');
-                                Log::info($branchRulesId);
                                 $professional->branchRules()->attach($branchRulesId, ['data' => Carbon::now()->toDateString(), 'estado' => 3]);
                             }
                         }//if del cargo
@@ -196,7 +193,7 @@ class RecordController extends Controller
      */
     public function update(Request $request)
     {
-        Log::info("Guardar");
+        Log::info("Guardar record");
         Log::info($request);
         DB::beginTransaction();
         try {
@@ -260,7 +257,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -274,16 +270,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
@@ -299,32 +291,7 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-            // Cantidad de profesionales que llegaron tarde
-            //$tardyCount = $tardyProfessionals->count();
-            /*$llegadasTardias = [];
-            $branchId = Branch::find($data['branch_id']);
-            // Obtén la fecha actual
-            $hoy = Carbon::now();
-
-            // Obtén el nombre del día de la semana
-            $nombreDia = $hoy->format('l');
-            if($branchId)
-            $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
-                ->whereBetween('start_time', [$request->start_date, $request->end_date])
-                ->get()
-                ->filter(function ($registro) {
-                    // Considera llegada tardía si es después de las 9:00 AM
-                    return Carbon::parse($registro->start_time)->hour >= 9;
-                })->groupBy('professional_id')->map(function ($group){
-                    return [
-                        'professional_id' => $group->first()->professional_id,
-                        'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
-                        'image_url' => $group->first()->professional->image_url,
-                        'charge' => $group->first()->professional->charge->name,
-                        'cant' => $group->sum('professional_count')
-                    ];
-                })->sortByDesc('cant')->values();*/
-
+            
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -349,7 +316,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -363,16 +329,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
@@ -388,25 +350,7 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-            /*$llegadasTardias = [];
-            $branchId = Branch::find($data['branch_id']);
-            if ($branchId)
-                $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
-                    ->whereDate('start_time', $today)
-                    ->get()
-                    ->filter(function ($registro) {
-                        // Considera llegada tardía si es después de las 9:00 AM
-                        return Carbon::parse($registro->start_time)->hour >= 9;
-                    })->groupBy('professional_id')->map(function ($group) {
-                        return [
-                            'professional_id' => $group->first()->professional_id,
-                            'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
-                            'image_url' => $group->first()->professional->image_url,
-                            'charge' => $group->first()->professional->charge->name,
-                            'cant' => $group->sum('professional_count')
-                        ];
-                    })->sortByDesc('cant')->values();*/
-
+            
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -430,7 +374,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -444,16 +387,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
@@ -469,25 +408,7 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-            /*$llegadasTardias = [];
-            $branchId = Branch::find($data['branch_id']);
-            if ($branchId)
-                $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
-                    ->whereMonth('start_time', $request->mes)->whereYear('start_time', $request->year)
-                    ->get()
-                    ->filter(function ($registro) {
-                        // Considera llegada tardía si es después de las 9:00 AM
-                        return Carbon::parse($registro->start_time)->hour >= 9;
-                    })->groupBy('professional_id')->map(function ($group) {
-                        return [
-                            'professional_id' => $group->first()->professional_id,
-                            'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
-                            'image_url' => $group->first()->professional->image_url,
-                            'charge' => $group->first()->professional->charge->name,
-                            'cant' => $group->sum('professional_count')
-                        ];
-                    })->sortByDesc('cant')->values();*/
-
+            
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -508,9 +429,6 @@ class RecordController extends Controller
             $branchId = Branch::find($data['branch_id']);
             $professionalId = Professional::find($data['professional_id']);
             $today = Carbon::now(); // Incluye toda la jornada del último día
-            Log::info($branchId);
-            Log::info('sadsd');
-            Log::info($professionalId);
             if (!$branchId || !$professionalId)
                 return $llegadasTardias;
 
@@ -522,7 +440,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -536,16 +453,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })->map(function ($group) {
@@ -558,8 +471,6 @@ class RecordController extends Controller
                         'end_time' => $group->end_time
                     ];
                 })->values();
-            Log::info('ffafafafafa');
-            Log::info($llegadasTardias);
             $cant = $llegadasTardias->count();
             $total = [
                 /*'professional_id' => 0,
@@ -599,7 +510,6 @@ class RecordController extends Controller
                         //$diaSemana = $registro->start_time->formatLocalized('%A');
                         $diaSemana = new DateTime($registro->start_time);
                         $nombreDia = $diaSemana->format('l');
-                        Log::info($nombreDia);
                         // Días de la semana en español
                         $diasSemanaEspañol = [
                             'Monday' => 'Lunes',
@@ -613,24 +523,16 @@ class RecordController extends Controller
 
                         // Reemplazamos el día de la semana en inglés por su equivalente en español
                         $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                        Log::info($diaSemanaEspañol);
                         // Obtiene el horario de inicio correspondiente al día de la semana del registro
                         $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                        Log::info($schedule);
                         // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                         if (!$schedule) {
                             return false;
                         }
-                        Log::info($schedule->start_time);
-                        Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                         // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                         return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                     })->map(function ($group) use ($cant) {
                         return [
-                            /*'professional_id' => $group->first()->professional_id,
-                        /*'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
-                        'image_url' => $group->first()->professional->image_url,
-                        'charge' => $group->first()->professional->charge->name,*/
                             'start_time' => $group->start_time,
                             'end_time' => $group->end_time
                         ];
@@ -638,10 +540,6 @@ class RecordController extends Controller
 
                 $cant = $llegadasTardias->count();
                 $total = [
-                    /*'professional_id' => 0,
-                        'name' => 'Total',
-                        'image_url' => '',
-                        'charge' => '',*/
                     'start_time' => 'Total',
                     'end_time' => $cant
                 ];
@@ -676,8 +574,7 @@ class RecordController extends Controller
                         //$diaSemana = $registro->start_time->formatLocalized('%A');
                         $diaSemana = new DateTime($registro->start_time);
                         $nombreDia = $diaSemana->format('l');
-                        Log::info($nombreDia);
-                        // Días de la semana en español
+                         // Días de la semana en español
                         $diasSemanaEspañol = [
                             'Monday' => 'Lunes',
                             'Tuesday' => 'Martes',
@@ -690,24 +587,16 @@ class RecordController extends Controller
 
                         // Reemplazamos el día de la semana en inglés por su equivalente en español
                         $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                        Log::info($diaSemanaEspañol);
                         // Obtiene el horario de inicio correspondiente al día de la semana del registro
                         $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                        Log::info($schedule);
                         // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                         if (!$schedule) {
                             return false;
                         }
-                        Log::info($schedule->start_time);
-                        Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                         // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                         return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                     })->map(function ($group) use ($cant) {
                         return [
-                            /*'professional_id' => $group->first()->professional_id,
-                        /*'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
-                        'image_url' => $group->first()->professional->image_url,
-                        'charge' => $group->first()->professional->charge->name,*/
                             'start_time' => $group->start_time,
                             'end_time' => $group->end_time
                         ];
@@ -715,10 +604,6 @@ class RecordController extends Controller
 
                 $cant = $llegadasTardias->count();
                 $total = [
-                    /*'professional_id' => 0,
-                        'name' => 'Total',
-                        'image_url' => '',
-                        'charge' => '',*/
                     'start_time' => 'Total',
                     'end_time' => $cant
                 ];
@@ -749,7 +634,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -763,16 +647,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
@@ -798,7 +678,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -812,16 +691,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') <= $schedule->start_time;
                 })
@@ -837,32 +712,7 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-            // Cantidad de profesionales que llegaron tarde
-            //$tardyCount = $tardyProfessionals->count();
-            /*$llegadasTardias = [];
-            $branchId = Branch::find($data['branch_id']);
-            // Obtén la fecha actual
-            $hoy = Carbon::now();
-
-            // Obtén el nombre del día de la semana
-            $nombreDia = $hoy->format('l');
-            if($branchId)
-            $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
-                ->whereBetween('start_time', [$request->start_date, $request->end_date])
-                ->get()
-                ->filter(function ($registro) {
-                    // Considera llegada tardía si es después de las 9:00 AM
-                    return Carbon::parse($registro->start_time)->hour >= 9;
-                })->groupBy('professional_id')->map(function ($group){
-                    return [
-                        'professional_id' => $group->first()->professional_id,
-                        'name' => $group->first()->professional->name.' '.$group->first()->professional->surname.' '.$group->first()->professional->second_surname,
-                        'image_url' => $group->first()->professional->image_url,
-                        'charge' => $group->first()->professional->charge->name,
-                        'cant' => $group->sum('professional_count')
-                    ];
-                })->sortByDesc('cant')->values();*/
-
+           
             return response()->json(['tardes' => $llegadasTardias, 'tiempo' => $llegadasTime], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -887,7 +737,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -901,16 +750,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
-                    // Si no hay horario de inicio para ese día, no se considera como llegada tardía
+                      // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') <= $schedule->start_time;
                 })
@@ -926,26 +771,6 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-            /*$today = now()->endOfDay(); // Incluye toda la jornada del último día
-
-            $llegadasTardias = [];
-            $branchId = Branch::find($data['branch_id']);
-            if ($branchId)
-                $llegadasTardias = Record::withCount('professional')->with('professional')->where('branch_id', $branchId->id)
-                    ->whereDate('start_time', $today)
-                    ->get()
-                    ->filter(function ($registro) {
-                        // Considera llegada tardía si es después de las 9:00 AM
-                        return Carbon::parse($registro->start_time)->hour <  9;
-                    })->groupBy('professional_id')->map(function ($group) {
-                        return [
-                            'professional_id' => $group->first()->professional_id,
-                            'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
-                            'image_url' => $group->first()->professional->image_url,
-                            'charge' => $group->first()->professional->charge->name,
-                            'cant' => $group->sum('professional_count')
-                        ];
-                    })->sortByDesc('cant')->values();*/
             $llegadasTardias = Record::withCount('professional')->with('professional')
                 ->where('branch_id', $data['branch_id'])
                 ->whereDate('start_time', $today)
@@ -969,16 +794,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') > $schedule->start_time;
                 })
@@ -1018,7 +839,6 @@ class RecordController extends Controller
                     //$diaSemana = $registro->start_time->formatLocalized('%A');
                     $diaSemana = new DateTime($registro->start_time);
                     $nombreDia = $diaSemana->format('l');
-                    Log::info($nombreDia);
                     // Días de la semana en español
                     $diasSemanaEspañol = [
                         'Monday' => 'Lunes',
@@ -1032,16 +852,12 @@ class RecordController extends Controller
 
                     // Reemplazamos el día de la semana en inglés por su equivalente en español
                     $diaSemanaEspañol = $diasSemanaEspañol[$nombreDia];
-                    Log::info($diaSemanaEspañol);
                     // Obtiene el horario de inicio correspondiente al día de la semana del registro
                     $schedule = $registro->branch->schedule()->where('day', $diaSemanaEspañol)->first();
-                    Log::info($schedule);
                     // Si no hay horario de inicio para ese día, no se considera como llegada tardía
                     if (!$schedule) {
                         return false;
                     }
-                    Log::info($schedule->start_time);
-                    Log::info(Carbon::parse($registro->start_time)->format('H:i'));
                     // Considera llegada tardía si la hora de inicio del registro es después del horario de inicio de la sucursal
                     return Carbon::parse($registro->start_time)->format('H:i') <= $schedule->start_time;
                 })
@@ -1057,25 +873,7 @@ class RecordController extends Controller
                 })
                 ->sortByDesc('cant')
                 ->values();
-            /*$llegadasTardias = [];
-            $branchId = Branch::find($data['branch_id']);
-            if ($branchId)
-                $llegadasTardias = Record::withCount('professional')->where('branch_id', $branchId->id)
-                    ->whereMonth('start_time', $request->mes)->whereYear('start_time', $request->year)
-                    ->get()
-                    ->filter(function ($registro) {
-                        // Considera llegada tardía si es después de las 9:00 AM
-                        return Carbon::parse($registro->start_time)->hour < 9;
-                    })->groupBy('professional_id')->map(function ($group) {
-                        return [
-                            'professional_id' => $group->first()->professional_id,
-                            'name' => $group->first()->professional->name . ' ' . $group->first()->professional->surname . ' ' . $group->first()->professional->second_surname,
-                            'image_url' => $group->first()->professional->image_url,
-                            'charge' => $group->first()->professional->charge->name,
-                            'cant' => $group->sum('professional_count')
-                        ];
-                    })->sortByDesc('cant')->values();*/
-
+           
             return response()->json($llegadasTardias, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);

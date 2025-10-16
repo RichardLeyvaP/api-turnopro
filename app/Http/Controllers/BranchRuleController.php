@@ -86,7 +86,7 @@ class BranchRuleController extends Controller
     public function branch_rules_noIn(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar las rules de una que aun no posee una branch");
+            Log::info( "Entra a buscar las rules que aun no posee una branch");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);

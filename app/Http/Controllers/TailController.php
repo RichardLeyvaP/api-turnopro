@@ -55,7 +55,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("entra a buscar Tail");
             $tails = Tail::with(['reservation' => function ($query) {
                 $query->orderBy('start_time');
             }])->get();
@@ -71,20 +70,12 @@ class TailController extends Controller
 
         try {
 
-            Log::info("entra a availability");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'data' => 'required'
             ]);
             $idP = $data['professional_id'];
             $id_branch = 1;
-            Log::info($idP);
-
-
-            //todo funcionandooooooo Obtener todas las colas (tails) ordenadas por su ID_reservacion 
-            //             $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($idP) {
-            //     $query->where('professional_id', $idP);
-            // })->whereDate('data', $data['data'])->get();
 
             $reservations = Reservation::whereHas('car.clientProfessional', function ($query) use ($idP, $id_branch) {
                 $query->whereHas('professional', function ($query) use ($idP) {
@@ -94,11 +85,7 @@ class TailController extends Controller
                 });
             })->whereDate('data', $data['data'])->get();
 
-            Log::info($reservations);
-            Log::info('muestra  el resultado');
-
             $differences = [];
-            Log::info("entra a a calcular la diferencia:");
             // Iterar sobre las reservas
             for ($i = 0; $i < count($reservations); $i++) {
                 $currentReservation = $reservations[$i];
@@ -118,8 +105,6 @@ class TailController extends Controller
                     'service_time_vailable' => $timeDifferenceMinutes,
                 ];
             }
-            Log::info("esta es desde la funtion :");
-            Log::info($differences);
             return response()->json(['Reservation' => $differences], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -131,7 +116,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("entra a availability");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'data' => 'required'
@@ -142,8 +126,6 @@ class TailController extends Controller
                 $query->where('id', $data['professional_id']);
             }])->whereDate('data', $data['data'])->get();
 
-            Log::info($tails);
-            Log::info('muestra la cola');
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
@@ -154,8 +136,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Editar");
-            Log::info($request);
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
@@ -169,11 +149,8 @@ class TailController extends Controller
             return response()->json(['msg' => 'Error al pasar el cliente a atendido'], 500);
         }
     }
-
     
-    
-    
-         public function notification_tail_colation_ANTERIOR(Request $request)
+    public function notification_tail_colation(Request $request)
     {
         try {
             Log::info("Ruta unificada de coordinador y encargado");
@@ -189,15 +166,12 @@ class TailController extends Controller
             ]);
             $data['branch_id'] = intval($data['branch_id']);
             try {
-                Log::info("Obtener las Notificaciones");
                 //optener las notificaciones
                 $notifications = [];
                 $branch = Branch::find($data['branch_id']);
                 $professional = Professional::find($data['professional_id']);
                 if ($professional->charge->name == "Tecnico") {
                     $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first();
-                    Log::info('Workplaces');
-                    Log::info($workplace);
                     if ($workplace) {
                         $places = json_decode($workplace->places, true);
                         $professionals = ProfessionalWorkPlace::whereHas('workplace', function ($query) use ($places) {
@@ -209,8 +183,6 @@ class TailController extends Controller
                             ->where('type', 'Tecnico')
                             ->orderByDesc('created_at')
                             ->get();
-                        Log::info('Notificaciones');
-                        Log::info($notifications1);
                         foreach ($notifications1  as $query) {
                             $query->professional_id = $data['professional_id'];
                             $query->save();
@@ -256,13 +228,11 @@ class TailController extends Controller
                 Log::error($th);
             }
             try {
-                Log::info("Obtener las Colas");
                 $professionaltem = [];
                 $professionalbar = [];
                 $tailsData = Tail::whereHas('reservation', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
                 })->whereIn('attended', [0, 3, 33])->get();
-                Log::info($tailsData);
                 foreach ($tailsData as $tail) {
                     $reservation = $tail->reservation;
                     $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
@@ -300,19 +270,13 @@ class TailController extends Controller
                             $car = Car::whereHas('reservation', function ($query) use ($reservation) {
                                 $query->where('id', $reservation->id);
                             })->first();
-                            Log::info('$car->id');
-                            Log::info($car->id);
                             $professionaltem = ClientProfessional::whereHas('cars', function ($query) use ($car) {
                                 $query->where('id', $car->id);
                             })->first();
-                            Log::info('$professional->id');
-                            Log::info($professionaltem);
                             $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem->professional_id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) {
                                 $query->where('busy', 1)->where('select', 1);
                             })->first();
                             if ($workplaceId) {
-                                Log::info('$workplace->id');
-                                Log::info($workplaceId);
                                 $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query) {
                                     $query->where('name', 'Tecnico');
                                 })->orderByDesc('data')
@@ -366,7 +330,6 @@ class TailController extends Controller
                 Log::error($th);
             }
             try {
-                Log::info("Estados de los professionales de colacion");
                 $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })->whereIn('state', [3, 4])->get();
@@ -395,274 +358,6 @@ class TailController extends Controller
                 Log::error($th);
             }
             try {
-                Log::info("Estados de los professionales de colacion");
-                $orderDatas = $orderDatas = Order::with(['car.reservation', 'car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])
-                    ->whereHas('car.reservation', function ($query) use ($data) {
-                        $query->where('branch_id', $data['branch_id']);
-                    })
-                    ->where('request_delete', true)
-                    ->whereDate('data', Carbon::now()->toDateString())
-                    ->orderBy('updated_at', 'desc')
-                    ->get()->map(function ($orderData) {
-                        $professional = $orderData->car->clientProfessional->professional;
-                        $client = $orderData->car->clientProfessional->client;
-                        if ($orderData->is_product == true) {
-                            return [
-                                'id' => $orderData->id,
-                                'nameProfesional' => $professional->name,
-                                'nameClient' => $client->name,
-                                'hora' => $orderData->updated_at->Format('H:i'),
-                                'nameProduct' => $orderData->productStore->product->name,
-                                'nameService' => null,
-                                'is_product' => $orderData->is_product,
-                                'updated_at' => $orderData->updated_at->toDateString()
-                            ];
-                        } else {
-                            return [
-                                'id' => $orderData->id,
-                                'nameProfesional' => $professional->name,
-                                'nameClient' => $client->name,
-                                'hora' => $orderData->updated_at->Format('H:i'),
-                                'nameProduct' => null,
-                                'nameService' => $orderData->branchServiceProfessional->branchService->service->name,
-                                'is_product' => (int)$orderData->is_product,
-                                'updated_at' => $orderData->updated_at->toDateString()
-                            ];
-                        }
-                    });
-            } catch (\Throwable $th) {
-                Log::error($th);
-            }
-            return response()->json(['notifications' => $notifications, 'tail' => $tails, 'tail1' => $tails1, 'professionals3' => $professionals3, 'professionals4' => $professionals4, 'carOrderDelete' => $orderDatas], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
-        }
-    }
-    
-       public function notification_tail_colation(Request $request)
-    {
-        try {
-            Log::info("Ruta unificada de coordinador y encargado");
-            $notifications = [];
-            $tails = [];
-            $tails1 = [];
-            $professionals3 = [];
-            $professionals4 = [];
-            $orderDatas = [];
-            $data = $request->validate([
-                'branch_id' => 'required',
-                'professional_id' => 'required|numeric',
-            ]);
-            $data['branch_id'] = intval($data['branch_id']);
-            try {
-                Log::info("Obtener las Notificaciones");
-                //optener las notificaciones
-                $notifications = [];
-                $branch = Branch::find($data['branch_id']);
-                $professional = Professional::find($data['professional_id']);
-                if ($professional->charge->name == "Tecnico") {
-                    $workplace = ProfessionalWorkPlace::where('professional_id', $data['professional_id'])->whereDate('data', Carbon::now())->where('state', 1)->orderByDesc('created_at')->first();
-                    Log::info('Workplaces');
-                    Log::info($workplace);
-                    if ($workplace) {
-                        $places = json_decode($workplace->places, true);
-                        $professionals = ProfessionalWorkPlace::whereHas('workplace', function ($query) use ($places) {
-                            $query->whereIn('id', $places)->where('select', 1);
-                        })->where('state', 1)->whereDate('data', Carbon::now())->orderByDesc('created_at')->get()->pluck('professional_id');
-                        $notifications1 = $branch->notifications()
-                            ->whereIn('professional_id', $professionals)
-                            ->whereDate('created_at', Carbon::now())
-                            ->where('type', 'Tecnico')
-                            ->orderByDesc('created_at')
-                            ->get();
-                        Log::info('Notificaciones');
-                        Log::info($notifications1);
-                        foreach ($notifications1  as $query) {
-                            $query->professional_id = $data['professional_id'];
-                            $query->save();
-                            $notifications[] = [
-                                'id' => $query->id,
-                                'professional_id' => $query->professional_id,
-                                'branch_id' => $query->branch_id,
-                                'tittle' => $query->tittle,
-                                'description' => $query->description,
-                                'state' => $query->state,
-                                'type' => $query->type,
-                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
-                                'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
-                            ];
-                        }
-                    } else {
-                        $notifications = [];
-                    }
-                } else {
-                    $notifications = $branch->notifications()
-                        ->where('professional_id', $professional->id)
-                        ->whereDate('created_at', Carbon::now())
-                        ->get()
-                        ->map(function ($query) {
-                            return [
-                                'id' => $query->id,
-                                'professional_id' => $query->professional_id,
-                                'branch_id' => $query->branch_id,
-                                'tittle' => $query->tittle,
-                                'description' => $query->description,
-                                'state' => $query->state,
-                                'type' => $query->type,
-                                'created_at' => Carbon::parse($query->created_at)->format('Y-m-d h:i A'),
-                                'updated_at' => Carbon::parse($query->updated_at)->format('Y-m-d h:i A')
-                            ];
-                        })
-                        ->sortByDesc(function ($notification) {
-                            return $notification['created_at'];
-                        })
-                        ->values();
-                }
-            } catch (\Throwable $th) {
-                Log::error($th);
-            }
-            try {
-                Log::info("Obtener las Colas");
-                $professionaltem = [];
-                $professionalbar = [];
-                $tailsData = Tail::whereHas('reservation', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
-                })->whereIn('attended', [0, 3, 33])->get();
-                Log::info($tailsData);
-                foreach ($tailsData as $tail) {
-                    $reservation = $tail->reservation;
-                    $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
-                    $client = $reservation->car->clientProfessional->client;
-                    $workplace = $professional->workplaces()
-                        ->whereDate('data', $reservation->data)
-                        ->first();
-                    //cola branch data
-                    if (in_array($tail->attended, [0, 3, 33])) {
-                        $createdAt = $reservation->from_home == 1 ? $reservation->updated_at : $reservation->created_at;
-                        $tails[] = [
-                            'reservation_id' => $reservation->id,
-                            'car_id' => $reservation->car_id,
-                            'from_home' => intval($reservation->from_home),
-                            'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
-                            'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
-                            'total_time' => $reservation->total_time,
-                            'client_name' => $client->name,
-                            'client_image' => $client->client_image ? $client->client_image : 'clients/default_profile.jpg',
-                            'professional_name' => $professional->name,
-                            'client_id' => $client->id,
-                            'professional_id' => $professional->id,
-                            'professional_state' => $professional->state,
-                            'attended' => $tail->attended,
-                            'created_at' => $createdAt,
-                            'puesto' => $workplace ? $workplace->name : null,
-                            'select_professional' => intval($reservation->car->select_professional)
-                        ];
-                    }
-
-                    if (in_array($tail->attended, [3, 33])) {
-                        $professionalbar = [];
-                        $professionaltem = [];
-                        if ($tail->attended == 33) {
-                            $car = Car::whereHas('reservation', function ($query) use ($reservation) {
-                                $query->where('id', $reservation->id);
-                            })->first();
-                            Log::info('$car->id');
-                            Log::info($car->id);
-                            $professionaltem = ClientProfessional::whereHas('cars', function ($query) use ($car) {
-                                $query->where('id', $car->id);
-                            })->first();
-                            Log::info('$professional->id');
-                            Log::info($professionaltem);
-                            $workplaceId = ProfessionalWorkPlace::where('professional_id', $professionaltem->professional_id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) {
-                                $query->where('busy', 1)->where('select', 1);
-                            })->first();
-                            if ($workplaceId) {
-                                Log::info('$workplace->id');
-                                Log::info($workplaceId);
-                                $workplacetecnicos = ProfessionalWorkplace::where('data', Carbon::today())->whereHas('professional.charge', function ($query) {
-                                    $query->where('name', 'Tecnico');
-                                })->orderByDesc('data')
-                                    //->whereJsonContains('places', (int)$workplaceId->workplace_id)
-                                    ->get();
-                                if ($workplacetecnicos) {
-                                    foreach ($workplacetecnicos as $workplacetecnico) {
-                                        $places = json_decode($workplacetecnico->places, true);
-                                        if (in_array($workplaceId->workplace_id, $places)) {
-                                            $tecnicoId = $workplacetecnico;
-                                            $professionalbar = $workplacetecnico->professional;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            $professionalbar = $reservation->car->clientProfessional->professional()->withTrashed()->first();;
-                        }
-                        $tails1[] = [
-                            'reservation_id' => $reservation->id,
-                            'car_id' => $reservation->car_id,
-                            'from_home' => intval($reservation->from_home),
-                            'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
-                            'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
-                            'total_time' => $reservation->total_time,
-                            'client_image' => $client->client_image ? $client->client_image : 'clients/default_profile.jpg',
-                            'client_id' => $client->id,
-                            'idBarber' => $professionaltem ? $professionaltem->professional_id : 0,
-                            'nameBarber' => $professionaltem ? $professionaltem->name : "",
-                            'professional_id' => $professionalbar ? $professionalbar->id : 0,
-                            'professional_name' => $professionalbar->name,
-                            'client_name' => $client->name,
-                            'charge' => $professionalbar ? $professionalbar->charge->name : ' ',
-                            'attended' => $tail->attended,
-                            'time' => Carbon::parse($tail->updated_at)->format('H:i'),
-                            'select_professional' => intval($reservation->car->select_professional)
-                        ];
-                    }
-                } //foreach()
-
-                // Ordenar $tails por professional_state descendente y luego por start_time ascendente
-                $tails = collect($tails)
-                ->sortBy('created_at')  // Ordenar por 'created_at' en ascendente
-                ->sortByDesc('professional_state')  // Ordenar por 'professional_state' en descendente
-                ->values(); 
-
-                // Ordenar $tails1 por time ascendente
-                $tails1 = collect($tails1)->sortBy('time')->values();
-            } catch (\Throwable $th) {
-                Log::error($th);
-            }
-            try {
-                Log::info("Estados de los professionales de colacion");
-                $professionals = Professional::whereHas('branches', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->whereIn('state', [3, 4])->get();
-                foreach ($professionals as $professional) {
-                    if ($professional->state == 3) {
-                        $professionals3[] = [
-                            'professional_name' => $professional->name,
-                            'client_image' => $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg",
-                            'professional_id' => $professional->id,
-                            'professional_state' => $professional->state,
-                            'start_time' => Carbon::parse($professional->start_time)->format('H:i'),
-                            'charge' => $professional->charge->name
-                        ];
-                    } else {
-                        $professionals4[] = [
-                            'professional_name' => $professional->name,
-                            'client_image' => $professional->image_url ? $professional->image_url : "professionals/default_profile.jpg",
-                            'professional_id' => $professional->id,
-                            'professional_state' => $professional->state,
-                            'start_time' => Carbon::parse($professional->start_time)->format('H:i'),
-                            'charge' => $professional->charge->name
-                        ];
-                    }
-                }
-            } catch (\Throwable $th) {
-                Log::error($th);
-            }
-            try {
-                Log::info("Estados de los professionales de colacion");
                 $orderDatas = $orderDatas = Order::with(['car.reservation', 'car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])
                     ->whereHas('car.reservation', function ($query) use ($data) {
                         $query->where('branch_id', $data['branch_id'])->where('confirmation', 4);
@@ -712,7 +407,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostrar la cola del dia de una branch");
             $data = $request->validate([
                 'branch_id' => 'required'
             ]);
@@ -727,7 +421,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostarr la cola del dia de una branch");
             $data = $request->validate([
                 'branch_id' => 'required'
             ]);
@@ -738,90 +431,8 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
         }
     }
-    
-    
-    public function tail_branch_attended_ANTERIOR(Request $request)
-    {
-        try {
-
-            $data = $request->validate([
-                'branch_id' => 'required'
-            ]);
-            $data['branch_id'] = intval($data['branch_id']);
-            $today = Carbon::now()->format('Y-m-d');
-            $attendedReservations = collect();
-            $unattendedReservations = collect();
-            // Cargar relaciones con eager loading
-            $reservations = Tail::with([
-                'reservation.car.clientProfessional.professional',
-                'reservation.car.clientProfessional.client',
-                'reservation.car',
-                'reservation:id,car_id,from_home,start_time,final_hour,total_time,code,created_at,updated_at',
-                'reservation.car.clientProfessional.professional.workplaces' => function ($query) use ($data, $today) {
-                    $query->where('branch_id', $data['branch_id'])->where('state', 1)->whereDate('data', $today)->select('professional_workplace.workplace_id', 'name');
-                }
-            ])->whereHas('reservation', function ($query) use ($data, $today) {
-                $query->where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereDate('data', $today);
-            })->whereNot('attended', 2)->get();
-
-            // Procesar la lista
-            $reservations = $reservations->map(function ($tail) use ($attendedReservations, $unattendedReservations){
-                $reservation = $tail->reservation;
-                $professional = $reservation->car->clientProfessional->professional;
-                $client = $reservation->car->clientProfessional->client;
-
-                $tail = $reservation->tail;
-
-                // Inicializa workplace como null
-                $workplace = null;
-
-                // Solo ejecutar si `attended` es 1
-                if ($tail->attended == 1) {
-                    $workplace = $professional->workplaces->first(); // Obtener el puesto de trabajo
-                }
-
-                $name = ($tail->attended == 0 && $tail->aleatorie == 1) ? '' : $professional->name;
-
-                $createdAt = $reservation->from_home == 1 ? $reservation->updated_at : $reservation->created_at;
-
-                $reservationData = [
-                    'reservation_id' => $reservation->id,
-                    'car_id' => $reservation->car_id,
-                    'from_home' => intval($reservation->from_home),
-                    'start_time' => Carbon::parse($reservation->start_time)->format('H:i'),
-                    'final_hour' => Carbon::parse($reservation->final_hour)->format('H:i'),
-                    'total_time' => $reservation->total_time,
-                    'client_name' => $client->name,
-                    'professional_name' => $name,
-                    'client_id' => $client->id,
-                    'professional_id' => $professional->id,
-                    'professional_state' => $professional->state,
-                    'attended' => $tail->attended,
-                    'puesto' => $workplace ? $workplace->name : null,
-                    'code' => $reservation->code,
-                    'select_professional' => intval($reservation->car->select_professional),
-                    'created_at' => $createdAt
-                ];
-                // Clasificar las reservas mientras las mapeas
-                if (in_array($tail->attended, [1, 11, 111, 4, 5, 33])) {
-                    $attendedReservations->push($reservationData);
-                } else if (in_array($tail->attended, [0, 3])) {
-                    $unattendedReservations->push($reservationData);
-                }
-            });
-
-            // Ordenar las reservas atendidas y no atendidas
-            $attendedReservations = $attendedReservations->sortByDesc('start_time')->values();
-            $unattendedReservations = $unattendedReservations->sortBy('created_at')->values();
-
-            return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
-        }
-    }
-    
-     public function tail_branch_attended(Request $request)
+        
+    public function tail_branch_attended(Request $request)
     {
         try {
 
@@ -907,7 +518,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostarr la cola de servicio capilar del dia de una branch");
             $data = $request->validate([
                 'branch_id' => 'required'
             ]);
@@ -923,7 +533,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostarr la cola de servicio capilar del dia de un tecnico");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric',
@@ -938,8 +547,6 @@ class TailController extends Controller
     public function cola_branch_delete(Request $request)
     {
         try {
-
-            Log::info("Mostarr la cola del dia de una branch");
             $data = $request->validate([
                 'branch_id' => 'required'
             ]);
@@ -956,7 +563,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostarr la cola del dia de una branch");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
@@ -972,8 +578,6 @@ class TailController extends Controller
     public function cola_branch_professional_new(Request $request)
     {
         try {
-
-            Log::info("Mostrar la cola del dia de un professional en una branch");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
@@ -990,8 +594,6 @@ class TailController extends Controller
     public function tail_branch_professional(Request $request)
     {
         try {
-
-            Log::info("Mostrar la cola del dia de un professional en una branch");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
@@ -1012,7 +614,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Mostarr la cola del dia de una branch");
             $validator = Validator::make($request->all(), [
                 'branch_id' => 'required|numeric|exists:branches,id',
                 'professional_id' => 'required|numeric|exists:professionals,id'
@@ -1036,8 +637,6 @@ class TailController extends Controller
     public function show_clocks(Request $request)
     {
         try {
-
-            Log::info("Dado un profesional devolver estado de los relojes");
             $data = $request->validate([
                 'professional_id' => 'required|numeric'
             ]);
@@ -1135,23 +734,6 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar el estado de la reservacion'], 500);
         }
     }
-
-    public function cola_truncate_ANTERIOR()
-    {
-        try {
-
-            Log::info("Mandar a eliminar la cola");
-            Tail::truncate();
-            Professional::query()->update(['start_time' => NULL, 'end_time' => NULL, 'state' => 0]);
-            BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
-            PersonalAccessToken::query()->delete();
-            return response()->json(['msg' => "Cola eliminada correctamente"], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => "Error al eliminar la Tail"], 500);
-        }
-    }
-    
     
     public function cola_truncate(Request $request)
     {
@@ -1164,7 +746,6 @@ class TailController extends Controller
         }
         try {
 
-            Log::info("Mandar a eliminar la cola");
             Tail::truncate();
             Professional::query()->update(['start_time' => NULL, 'end_time' => NULL, 'state' => 0]);
             BranchProfessional::query()->update(['living' => NULL, 'arrival' => NULL, 'numberRandom' => NULL]);
@@ -1180,7 +761,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Vaciar tablas para prueba");
             // Eliminar todos los registros de la tabla box_closes
             BoxClose::query()->delete();
 
@@ -1215,8 +795,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Modificar estado del relock");
-            Log::info($request);
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'clock' => 'required|numeric'
@@ -1236,18 +814,12 @@ class TailController extends Controller
     public function set_timeClock(Request $request)
     {
         try {
-
-            Log::info("Modificar estado del relock");
-            Log::info($request);
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'timeClock' => 'required|numeric',
                 'detached' => 'required|numeric',
                 'clock' => 'required|numeric'
             ]);
-            //esta comparacin esta porque llego en null en una ocasion y da error
-            Log::info('Variable que lleg null ($data["timeClock"])');
-            Log::info($data['timeClock']);
             if ($data['timeClock'] !== null) {
                 $tail = Tail::where('reservation_id', $data['reservation_id'])->first();
                 if ($tail) {
@@ -1268,8 +840,6 @@ class TailController extends Controller
     {
         try {
 
-            Log::info("Devolver campo clock dado el id reservation");
-            Log::info($request);
             $data = $request->validate([
                 'reservation_id' => 'required|numeric'
             ]);
@@ -1285,8 +855,6 @@ class TailController extends Controller
     public function reasigned_client_coordinador(Request $request)
     {
         try {
-
-            Log::info("Reasignar Cliente a barbero Coordinador");
             DB::beginTransaction();
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
@@ -1310,59 +878,11 @@ class TailController extends Controller
         }
     }
 
-    public function reasigned_client_ANTERIOR(Request $request)
-    {
-        try {
-
-            Log::info("Reasignar Cliente a barbero");
-            DB::beginTransaction();
-            $data = $request->validate([
-                'reservation_id' => 'required|numeric',
-                'client_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
-            ]);
-            Log::info("Reasignar Cliente a barbero Cliente:".$data['client_id'].'-professional_id:'.$data['professional_id']);
-            $reservation = Reservation::where('id', $data['reservation_id'])->first();
-            $professional = Professional::find($data['professional_id']);
-            if ($professional && $professional->state != 1) {
-                if ($reservation != null) {
-                    $reservation->timeClock = now();
-                    $reservation->save();
-                }
-                return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
-            }
-            if ($reservation != null) {
-                $professional = $this->professionalService->professionals_state($reservation->branch_id, $data['reservation_id']);
-                //Log::info('professionales disponibles reasignar primer plano');
-                //Log::info($professional);
-                if (!empty($professional)) {
-                    $firstProfessional = $professional[0];
-                    Log::info('professional disponible primero id');
-                    Log::info($firstProfessional->id);
-                    $data['professional_id'] = $firstProfessional->id;
-                    Log::info("Reasignar Cliente a barbero en segundo plano - tailService.reasigned_client");
-                    $this->tailService->reasigned_client($data);
-                }
-                //if ($reservation != null) {
-                    $reservation->timeClock = now();
-                    $reservation->save();
-                //}
-            }
-            //$this->tailService->reasigned_client($data);
-            DB::commit();
-            return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
-        }
-    }
     
-     public function reasigned_client(Request $request)
+    public function reasigned_client(Request $request)
     {
         try {
 
-            Log::info("Reasignar Cliente a barbero");
             DB::beginTransaction();
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
@@ -1385,10 +905,7 @@ class TailController extends Controller
                 //Log::info($professional);
                 if (!empty($professional)) {
                     $firstProfessional = $professional[0];
-                    Log::info('professional disponible primero id');
-                    Log::info($firstProfessional->id);
                     $data['professional_id'] = $firstProfessional->id;
-                    Log::info("Reasignar Cliente a barbero en segundo plano - tailService.reasigned_client");
                     $this->tailService->reasigned_client($data);
                 }
                
@@ -1408,330 +925,9 @@ class TailController extends Controller
         }
     }
 
-    /*public function reasigned_client_totem(Request $request)
-    {
-        try {
-
-            Log::info("Reasignar Cliente a barbero");
-            $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
-            ]);
-            $tails = Tail::whereHas('reservation', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id'])->orderBy('start_time');
-            })->where('aleatorie', 1)->get();
-            if ($tails->isEmpty()) {
-                Log::info('No hay aleatorie');
-                return response()->json(0, 200);
-            } else {
-                foreach ($tails as $tail) {
-                    $reservation = $tail->reservation;
-                    $tiempoReserva = $reservation->total_time;
-                    $car = $reservation->car;
-                    $services_id = [];
-                    $service_professional_id = [];
-                    $servicesOrders = Order::where('car_id', $car->id)
-                    ->where('is_product', 0)
-                    ->with(['branchServiceProfessional.branchService.service'])
-                    ->get();
-                    foreach ($servicesOrders as $servicesOrder) {
-                        $services_id[] = $servicesOrder->branchServiceProfessional->branchService->service->id;
-                    }
-                    //$services_id = $servicesOrders->branchService->service->pluck('id');
-                    $service_professionals = BranchServiceProfessional::whereHas('branchService', function ($query) use ($data) {
-                        $query->where('branch_id', $data['branch_id']);
-                    })
-                    ->where('professional_id', $data['professional_id'])
-                    ->with('branchService.service')
-                    ->get();
-                    foreach ($service_professionals as $service_professional) {
-                        $service_professional_id[] = $service_professional->branchService->service->id;
-                    }
-                    // Verificar si todos los services_id están en service_professional_ids
-                    // Convertir los arrays en colecciones
-                    $services_id_collection = collect($services_id);
-                    $service_professional_id_collection = collect($service_professional_id);
-
-                    // Calcular la diferencia
-                    $diff = $services_id_collection->diff($service_professional_id_collection);
-                    Log::info($diff);
-                    if ($diff->isEmpty()) {
-                        Log::info('Realiza todos los servicios');
-                        // Todos los services_id están en service_professional_ids
-                        $client = $car->clientProfessional->client;
-                        $professional = Professional::find($data['professional_id']);
-                        //actualizar horario de la rserva
-                        $horaActual = Carbon::now();
-                        $reservations = $professional->reservations()
-                            ->where('branch_id', $data['branch_id'])
-                            ->whereIn('confirmation', [1, 4])
-                            ->whereDate('data', Carbon::now())
-                            ->orderBy('start_time')
-                            ->get();
-                        Log::info('$reservations');
-                        if ($reservations->isEmpty()) {
-                            Log::info('No tiene reservas');
-                            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
-
-
-                            $reservation->start_time = $horaActual->format('H:i:s');
-                            // Sumar el tiempo de la reserva a la hora actual
-                            $nuevaHora = $horaActual->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
-                            $reservation->final_hour = $nuevaHora->format('H:i:s');
-                            $reservation->save();
-                        } else {
-                            Log::info('Tiene reservas reasigned aleatorie');
-                            $encontrado = false;
-                            $nuevaHoraInicio = $horaActual;
-                            
-                            $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
-                            // Recorrer las reservas existentes para encontrar un intervalo de tiempo libre
-                            foreach ($reservations as $reservation1) {
-                                Log::info('entra al ciclo de las reservas reasigned aleatorie');
-                                $start_time = Carbon::parse($reservation1->start_time);
-                                $final_hour = Carbon::parse($reservation1->final_hour);
-                                //return $reservation1;
-                                $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
-                                $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
-                                $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
-                                
-                                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                                    Log::info('Entra que es menor que la reserva reasigned aleatorie');
-                                   $encontrado = true;
-                                   break;
-                                }
-
-                                $nuevaHoraInicio = $final_hour;
-                            }
-
-                            if (!$encontrado) {
-                                // Si no se encontró un intervalo libre, usar el final de la última reserva
-                                $nuevaHoraInicio = Carbon::parse($reservations->last()->final_hour);
-                            }
-
-                            list($horasReserva, $minutosReserva, $segundosReserva) = explode(':', $tiempoReserva);
-
-                            $reservation->start_time = $nuevaHoraInicio->format('H:i:s');
-                            // Sumar el tiempo de la reserva a la hora actual
-                            $nuevaHoraFinal = $nuevaHoraInicio->copy()->addHours($horasReserva)->addMinutes($minutosReserva)->addSeconds($segundosReserva);
-                            // Guardar la nueva reserva
-                            $reservation->final_hour = $nuevaHoraFinal->format('H:i:s');
-                            $reservation->save();
-                        }
-                        //end actualizar horario de la reserva
-                        $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
-                        if (!$client_professional) {
-                            Log::info("no existe");
-                            $professional->clients()->attach($client->id);
-                            $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
-                            Log::info($client_professional_id);
-                        } else {
-                            $client_professional_id = $client_professional->pivot->id;
-                            Log::info($client_professional_id);
-                        }
-                        $car->client_professional_id = $client_professional_id;
-                        $car->save();
-                        $tails->aleatorie = 2;
-                        $tails->save();
-                        foreach ($servicesOrders as $service) {
-                            foreach ($service_professionals as $service_professional) {
-                                $serv = $service->branchServiceProfessional->branchService->service;
-                                if ($serv->id == $service_professional->branchService->service->id) {
-                                    $percent = $service_professional->percent ? $service_professional->percent : 1;
-                                    $order = new Order();
-                                    $order->car_id = $service->car_id;
-                                    $order->product_store_id = null;
-                                    $order->branch_service_professional_id = $service_professional->id;
-                                    $order->data = $service->data;
-                                    $order->is_product = false;
-                                    //logica de porciento de ganancia
-                                    $order->percent_win = $serv->price_service * $percent / 100;
-                                    $order->price = $serv->price_service;
-                                    $order->request_delete = false;
-                                    $order->save();
-                                    $service->delete();
-                                }
-                            }
-                        }
-                        return response()->json(1, 200);
-                    } //if diferencia
-                } //foreach
-                return response()->json(0, 200);
-            }
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
-        }
-    }*/
-    public function reasigned_secound_plain_ANTERIOR(Request $request)
-    {
-        //Log::info("Reasignar Cliente a barbero en segundo plano");
-        try {
-            $data = $request->validate([
-                'professional_id' => 'required|numeric',
-                'branch_id' => 'required|numeric',
-                'place' => 'sometimes|numeric'
-            ]);
-            Log::info("reasigned_secound_plain-Reasignar Cliente a barbero en Segundo plano professional_id:".$data['professional_id'].'-branch_id:'.$data['branch_id']);
-            $professional = Professional::find($data['professional_id']);
-            if ($professional->state != 1) {
-                return response()->json(0, 200);
-            }
-            // Verificar si el campo 'place' está presente en la solicitud
-            if ($request->has('place')) {
-                $data['place'] = $request->input('place');
-                // Realiza las acciones necesarias con el campo 'place'
-               // Log::info("Campo 'place' presente con valor: " . $data['place']);
-            } else {
-                // Realiza las acciones necesarias cuando 'place' no está presente
-               // Log::info("Campo 'place' no está presente");
-                $data['place'] = 1;
-            }
-            //Saber si esta disponible distinto [0, 2, 3]
-            $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
-                $query->where('professional_id', $data['professional_id']);
-            })->whereHas('tail', function ($query) use ($data) {
-                $query->whereNotIn('attended', [0, 2, 3]);
-            })->whereDate('data', Carbon::now())->orderBy('start_time')->get();
-            if ($reservationAttended->isNotEmpty()) {
-                return response()->json(0, 200);
-            }
-            DB::beginTransaction();
-            $reservation = Reservation::where('branch_id', $data['branch_id'])->where('confirmation', 4)->whereHas('car.clientProfessional', function ($query) use ($data) {
-                $query->where('professional_id', $data['professional_id']);
-            })->whereHas('tail', function ($query) use ($data) {
-                $query->whereIn('attended', [0, 3])->whereNot('aleatorie', 1);
-            })->whereDate('data', Carbon::now())->orderBy('start_time')->first();
-           // Log::info("Antes Reservación 444");
-            if ($reservation != null) {
-               // Log::info("Reservación 444");
-                if ($data['place'] == 0) {
-                   //  Log::info("Place 444");
-                    $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
-                    if (!empty($professional)) {
-                        $firstProfessional = $professional[0];
-                        $dataReasigned = [
-                            'reservation_id' => $reservation->id,
-                            'professional_id' => $firstProfessional->id,
-                            'client_id' => $reservation->car->clientProfessional->client_id
-
-                        ];
-                       // Log::info("Reasignar Cliente a barbero en segundo plano - place = 0");
-                        $this->tailService->reasigned_client($dataReasigned);
-                        $reservation->timeClock = now();
-                        $reservation->save();
-                        //consulta para despues asignar la no convivencia
-                        $professionalConv = Professional::find($data['professional_id']);
-                        if ($professionalConv->charge->name != 'Barbero y Encargado') {
-                            $branchrule = BranchRule::whereHas('rule', function ($query) use ($data) {
-                                $query->where('type', 'Tiempo');
-                            })->where('branch_id', $data['branch_id'])->first();
-                            $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();
-                            if ($existencia != null && $existencia->estado != 0) {
-                                $professionalConv->branchrules()->updateExistingPivot($branchrule->id, ['estado' => 0]);
-                                $notification = new Notification();
-                                $notification->professional_id = $data['professional_id'];
-                                $notification->branch_id = $reservation->branch_id;
-                                $notification->tittle = 'Incumplimiento de convivencia';
-                                $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                                $notification->type = 'Barbero';
-                                $notification->save();
-                            }
-                        }
-
-                        DB::commit();
-                        return response()->json(1, 200);
-                    }
-                } //if de place
-                if ($reservation->timeClock == NUll) {
-                    $reservation->timeClock = now();
-                    $reservation->save();
-                    DB::commit();
-                    return response()->json(0, 200);
-                } 
-                else { //si ya ha comenzado a contar el reloj de los tres minutos
-                    $horaActual = now();
-                    // Convertir las cadenas de tiempo a objetos Carbon
-                    $currentTime = Carbon::parse($horaActual);
-                    $startTime = $reservation->timeClock;
-                    //restar 20 segundos a hora actual
-                    $currentTime->subSeconds(20);
-                    // Calcular la diferencia en minutos
-                    $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);
-                    if ($diferenciaEnMinutos >= 3) {
-                        $professional = $this->professionalService->professionals_state($data['branch_id'], $reservation->id);
-                        if (!empty($professional)) {
-                            $firstProfessional = $professional[0];
-                            $dataReasigned = [
-                                'reservation_id' => $reservation->id,
-                                'professional_id' => $firstProfessional->id,
-                                'client_id' => $reservation->car->clientProfessional->client_id
-
-                            ];
-                         //   Log::info("Reasignar Cliente a barbero en segundo plano - place = 1");
-                            $this->tailService->reasigned_client($dataReasigned);
-                            $reservation->timeClock = now();
-                            $reservation->save();
-                            //consulta para despues asignar la no convivencia
-                            $professionalConv = Professional::find($data['professional_id']);
-                            if ($professionalConv->charge->name != 'Barbero y Encargado') {
-                                $branchrule = BranchRule::whereHas('rule', function ($query) use ($data) {
-                                    $query->where('type', 'Tiempo');
-                                })->where('branch_id', $data['branch_id'])->first();
-                                $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();
-                                if ($existencia != null && $existencia->estado != 0) {
-                                    $professionalConv->branchrules()->updateExistingPivot($branchrule->id, ['estado' => 0]);
-                                    $notification = new Notification();
-                                    $notification->professional_id = $data['professional_id'];
-                                    $notification->branch_id = $reservation->branch_id;
-                                    $notification->tittle = 'Incumplimiento de convivencia';
-                                    $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                                    $notification->type = 'Barbero';
-                                    $notification->save();
-                                }
-                            }
-
-                            DB::commit();
-                            return response()->json(1, 200);
-                        } else { //si no hay barbero disponible
-                            $reservation->timeClock = now();
-                            $reservation->save();
-                            $professionalConv = Professional::find($data['professional_id']);
-                            if ($professionalConv->charge->name != 'Barbero y Encargado') {
-                                $branchrule = BranchRule::whereHas('rule', function ($query) use ($data) {
-                                    $query->where('type', 'Tiempo');
-                                })->where('branch_id', $data['branch_id'])->first();
-                                $existencia = BranchRuleProfessional::whereDate('data', Carbon::now())->where('branch_rule_id', $branchrule->id)->where('professional_id', $data['professional_id'])->first();
-                                if ($existencia != null && $existencia->estado != 0) {
-                                    $professionalConv->branchrules()->updateExistingPivot($branchrule->id, ['estado' => 0]);
-                                    $notification = new Notification();
-                                    $notification->professional_id = $data['professional_id'];
-                                    $notification->branch_id = $reservation->branch_id;
-                                    $notification->tittle = 'Incumplimiento de convivencia';
-                                    $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                                    $notification->type = 'Barbero';
-                                    $notification->save();
-                                }
-                            }
-                            DB::commit();
-                            return response()->json(0, 200);
-                        }
-                    }
-                } //else de si ya comenzo a contar el reloj
-
-            } else { //si no tiene reservacion
-                DB::commit();
-                return response()->json(0, 200);
-            }
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
-        }
-    }
     
       
-  public function reasigned_secound_plain(Request $request)
+    public function reasigned_secound_plain(Request $request)
     {
         //Log::info("Reasignar Cliente a barbero en segundo plano");
         try {
@@ -1748,16 +944,10 @@ class TailController extends Controller
             // Verificar si el campo 'place' está presente en la solicitud
             if ($request->has('place')) {
                 $data['place'] = $request->input('place');
-                // Realiza las acciones necesarias con el campo 'place'
-                //Log::info("Campo 'place' presente con valor: " . $data['place']);
             } else {
-                // Realiza las acciones necesarias cuando 'place' no está presente
-                //Log::info("Campo 'place' no está presente");
                 $data['place'] = 1;
             }
             $today = Carbon::today();
-            //Saber si esta disponible distinto [0, 2, 3]
-            //if ($this->hasPendingReservations($data)) return response()->json(0, 200);
             $reservationAttended = Reservation::where('branch_id', $data['branch_id'])->whereHas('car.clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
             })->whereHas('tail', function ($query) {
@@ -1814,11 +1004,8 @@ class TailController extends Controller
                     Log::info($diferenciaEnMinutos);
                     if ($diferenciaEnMinutos >= 3) {
                         $professional = $this->professionalService->professionals_state1($data['branch_id'], $reservation->id);
-                        //Log::info('Professional disponible');
-                        //Log::info($professional);
                         if ($professional->isNotEmpty()) {
-                        //Log::info('Primer Professional disponible');
-                        //Log::info($professional[0]);
+   
                         $firstProfessional = $professional[0];
                         $dataReasigned = [
                             'reservation_id' => $reservation->id,
@@ -1850,7 +1037,6 @@ class TailController extends Controller
                 } //else de si ya comenzo a contar el reloj
 
             }elseif ($reservation != null && ($reservation->car->select_professional == 1 || $reservation->tail->attended == 3)) {
-                Log::info('Es un seleccionado o esta en solicitud de rechazo');
                 if ($reservation->timeClock == NUll) {                    
                     //Log::info('No se le habia actualizado el tiempo del reloj');
                     $reservation->timeClock = now();
@@ -1863,8 +1049,6 @@ class TailController extends Controller
                     $currentTime->subSeconds(20);
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);                    
-                    Log::info('Diferencia de minutos:');
-                    Log::info($diferenciaEnMinutos);
                     if ($diferenciaEnMinutos >= 3){
                         $reservation->timeClock = now();
                         $reservation->save();
@@ -1886,51 +1070,9 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
-
-    private function checkConvivencia_ANTERIOR($professional_id, $branchId, $today)
-    {        
-        Log::info('Entra a actualizar la convivencia y registrar la notificación');
-        Log::info($professional_id);
-        $professionalConv = Professional::where('id', $professional_id)->first();
-        if ($professionalConv->charge->name != 'Barbero y Encargado') {
-            $branchrule = BranchRule::whereHas('rule', function ($query) {
-                    $query->where('type', 'Tiempo');
-                })
-                ->where('branch_id', $branchId)
-                ->first();
-
-            $existencia = BranchRuleProfessional::whereDate('data', $today)
-                ->where('branch_rule_id', $branchrule->id)
-                ->where('professional_id', $professional_id)
-                ->first();
-
-            if ($existencia && $existencia->estado != 0) {
-                Log::info('actualizo la convivencia y registro la notificación');
-                $professionalConv->branchrules()->updateExistingPivot($branchrule->id, ['estado' => 0]);
-
-                $notification = new Notification();
-                $notification->professional_id = $professional_id;
-                $notification->branch_id = $branchId;
-                $notification->tittle = 'Incumplimiento de convivencia';
-                $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                $notification->type = 'Barbero';
-                $notification->save();
-            }
-            $branchProfessional = BranchProfessional::where('branch_id', $branchId)
-                                                ->where('professional_id', $professional_id)
-                                                ->firstOrFail();
-                    // Asignar el siguiente número de llegada
-            $branchProfessional->living = 1;
-
-            // Guardar los cambios
-            $branchProfessional->save();
-        }
-    }
     
-       private function checkConvivencia($professional_id, $branchId, $today)
+    private function checkConvivencia($professional_id, $branchId, $today)
     {        
-        Log::info('Entra a actualizar la convivencia y registrar la notificación');
-        Log::info($professional_id);
         $professionalConv = Professional::where('id', $professional_id)->first();
         if ($professionalConv->charge->name != 'Barbero y Encargado') {
             $branchrule = BranchRule::whereHas('rule', function ($query) {
@@ -1945,7 +1087,6 @@ class TailController extends Controller
                 ->first();
 
             if ($existencia && $existencia->estado != 0) {
-                Log::info('actualizo la convivencia y registro la notificación');
                 $existencia->estado = 0;
                 $existencia->save();
 
@@ -1987,7 +1128,6 @@ class TailController extends Controller
             })->where('aleatorie', 1)->get();
 
             if ($tails->isEmpty()) {
-                Log::info('No hay aleatorie');
                 return response()->json(0, 200);
             }
 
@@ -2012,10 +1152,6 @@ class TailController extends Controller
                     ->where('professional_id', $data['professional_id'])
                     ->with('branchService.service')
                     ->get();
-                    /*
-                     $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
-            }, '=', count($services))
-                    */
 
                 $service_professional_id = $service_professionals->pluck('branchService.service.id')->toArray();
 
@@ -2023,9 +1159,7 @@ class TailController extends Controller
                 $service_professional_id_collection = collect($service_professional_id);
                 $diff = $services_id_collection->diff($service_professional_id_collection);
 
-               // Log::info($diff);
                 if ($diff->isEmpty()) {
-                   // Log::info('Realiza todos los servicios');
 
                     $client = $car->clientProfessional->client;
                     //$professional = Professional::find($data['professional_id']);
@@ -2034,10 +1168,8 @@ class TailController extends Controller
 
                     $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
                     if (!$client_professional) {
-                      //  Log::info("No existe relación cliente-profesional");
                         $professional->clients()->attach($client->id);
                         $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
-                      //  Log::info($client_professional_id);
                     } else {
                         $client_professional_id = $client_professional->pivot->id;
                     }
@@ -2085,10 +1217,8 @@ class TailController extends Controller
 
        // Log::info('$reservations');
         if ($reservations->isEmpty()) {
-            Log::info('No tiene reservas');
             $this->setReservationTimes($reservation, $horaActual, $tiempoReserva);
         } else {
-            Log::info('Tiene reservas reasigned aleatorie');
             $nuevaHoraInicio = $this->findAvailableTimeSlot($reservations, $horaActual, $tiempoReserva);
             $this->setReservationTimes($reservation, $nuevaHoraInicio, $tiempoReserva);
         }
@@ -2109,7 +1239,6 @@ class TailController extends Controller
         $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
 
         foreach ($reservations as $reservation1) {
-            Log::info('Revisando reservas Aleatorio');
             $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
             $final_hourMin = $this->convertirHoraAMinutos($reservation1->final_hour);
             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
@@ -2135,16 +1264,11 @@ class TailController extends Controller
             return $item->branchService->service->id;
         });
 
-        // Añadir logging para depuración
-        Log::info('Mapa de profesionales de servicio:', $serviceProfessionalMap->toArray());
-
         foreach ($servicesOrders as $service) {
             $serv = $service->branchServiceProfessional->branchService->service;
-            Log::info('Revisando servicio:', ['id' => $serv->id, 'nombre' => $serv->name]);
 
             // Buscar el profesional de servicio correspondiente en el mapa
             $serviceProfessional = $serviceProfessionalMap->get($serv->id);
-            Log::info('Profesional de servicio encontrado:', $serviceProfessional ? $serviceProfessional->toArray() : 'No encontrado');
 
             if ($serviceProfessional) {
                 $percent = $serviceProfessional->percent ?? 0;
@@ -2158,15 +1282,10 @@ class TailController extends Controller
                 $order->percent_win = $percent ? $serv->price_service * $percent / 100 : $serv->price_service;
                 $order->price = $serv->price_service;
                 $order->request_delete = false;
-
-                // Añadir logging para la creación de la orden
-                Log::info('Creando nueva orden:', $order->toArray());
-
                 $order->save();
 
                 // Eliminar el servicio original después de reasignar
                 $service->delete();
-                Log::info('Servicio original eliminado:', ['id' => $service->id]);
             }
         }
     }
@@ -2179,8 +1298,6 @@ class TailController extends Controller
     public function updated_aleatorie(Request $request)
     {
         try {
-
-            Log::info("Modificar estado del aleatorie");
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
                 'aleatorie' => 'required|numeric'

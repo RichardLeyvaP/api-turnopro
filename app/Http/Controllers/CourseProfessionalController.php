@@ -78,7 +78,7 @@ class CourseProfessionalController extends Controller
     public function show_Notin(Request $request)
     {
         try {             
-            Log::info("Dado un curso devuelve los professionales asocoados a el");
+            Log::info("Dado un curso devuelve los professionales asociados a el");
             $data = $request->validate([
                 'course_id' => 'required|numeric'
             ]);

@@ -23,28 +23,6 @@ class BranchServiceController extends Controller
         }
     }
 
-    /*public function store(Request $request)
-    {
-        Log::info("Asignar servicio a una sucursal");
-        Log::info($request);
-        try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'service_id' => 'required|numeric',
-                'ponderation' => 'nullable'
-            ]);
-            $branch = Branch::find($data['branch_id']);
-            $service = Service::find($data['service_id']);
-
-            $branch->services()->attach($service->id, ['ponderation' => $data['ponderation']]);
-
-            return response()->json(['msg' => 'Servicio asignado correctamente a la sucursal'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => 'Error interno del sistema'], 500);
-        }
-    }*/
-
     public function store(Request $request)
     {
         Log::info("Asignar servicio a una sucursal");
@@ -119,56 +97,6 @@ class BranchServiceController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los servicios"], 500);
         }
     }
-
-
-    /*public function show(Request $request)
-    {
-        try {
-            Log::info("Entra a buscar los servicio q brinda una sucursal o la sucursales donde se brinda determinado servicio");
-            $data = $request->validate([
-                'branch_id' => 'sometimes|numeric'
-            ]);
-
-            /*$services = Service::whereHas('branchServices', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-               })->get()->map(function ($service){
-                $branchService = $service->branches->first()->pivot;
-                return [
-                    'id' => $service->id,
-                    'name' => $service->name,
-                    'simultaneou' => $service->simultaneou,
-                    'price_service' => $service->price_service,
-                    'type_service' => $service->type_service,
-                    'profit_percentaje' => $service->profit_percentaje,
-                    'duration_service' => $service->duration_service,
-                    'image_service' => $service->image_service,
-                    'ponderation' => $branchService // Verificar si $branchService es null
-                ];
-               });*/
-    /*$services = [];
-            if ($data['branch_id'] != null) {
-                $branch = Branch::find($data['branch_id']);
-                $services = $branch->services->map(function ($service) {
-                    return [
-                        'id' => $service->id,
-                        'name' => $service->name,
-                        'price_service' => $service->price_service,
-                        'type_service' => $service->type_service,
-                        'profit_percentaje' => $service->profit_percentaje,
-                        'duration_service' => $service->duration_service,
-                        'image_service' => $service->image_service,
-                        'service_comment' => $service->service_comment,
-                        'ponderation' => $service->pivot->ponderation
-                    ];
-                })->sortBy('name')->sortBy('ponderation')->values();
-            }
-
-            return response()->json(['services' => $services], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar los servicios"], 500);
-        }
-    }*/
 
     public function show(Request $request)
     {
@@ -252,23 +180,6 @@ class BranchServiceController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el servicio en esta sucursal'], 500);
         }
     }
-
-    /*public function destroy(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'service_id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
-            ]);
-            $service = Service::find($data['service_id']);
-            $branch = Branch::find($data['branch_id']);
-            $branch->services()->detach($service->id);
-            return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => 'Error al eliminar el servicio en esta sucursal'], 500);
-        }
-    }*/
 
     public function destroy(Request $request)
     {

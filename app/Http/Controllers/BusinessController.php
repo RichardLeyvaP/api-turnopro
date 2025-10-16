@@ -68,23 +68,6 @@ class BusinessController extends Controller
                 ];
                 }
             }
-
-            /*// Agregar las enrollments al resultado
-            foreach ($enrollments as $enrollment) {
-                $resultArray[] = [
-                    'id' => $enrollment->id,
-                    'icon'=> "mdi-school",
-                    'title' => $enrollment->name,
-                    'subtitle' => 'Academia', 
-                    'phone' => $enrollment->phone, 
-                    'location' => $enrollment->address, 
-                    'location_link' => $enrollment->location,
-                    'phone_link' => "https://wa.me/".$enrollment->phone,
-                    'image' => $enrollment->image_data,
-                    'business_id' => $enrollment->id,
-                    'type' => 'Academia'
-                ];
-            }*/
             return response()->json(['business' => $resultArray], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -146,8 +129,6 @@ class BusinessController extends Controller
             $business->api_url = $business_data['api_url'];
             $business->code = $codigo;
             $business->save();
-            Log::info('Negocio');
-            Log::info($business);
             $filename = "business/default.jpg"; 
             if ($request->hasFile('image_url')) {
                $filename = $request->file('image_url')->storeAs('business',$business->id.'.'.$request->file('image_url')->extension(),'public');

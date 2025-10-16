@@ -20,7 +20,6 @@ class ProfessionalWorkPlaceController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar los puestos de trabajos por branches");
             return response()->json(['workplaces' => Branch::with('professionals')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -96,7 +95,6 @@ class ProfessionalWorkPlaceController extends Controller
     public function show(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar los puestos de trabajo de un professionals");
             $data = $request->validate([
                 'professional_id' => 'required|numeric'
             ]);
@@ -112,7 +110,6 @@ class ProfessionalWorkPlaceController extends Controller
     public function workplace_show_professional(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar el puestos de trabajo de un professionals");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'charge' => 'required'
@@ -143,7 +140,6 @@ class ProfessionalWorkPlaceController extends Controller
     public function workplace_show_professional2(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar el puestos de trabajo de un professionals");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
@@ -167,7 +163,6 @@ class ProfessionalWorkPlaceController extends Controller
     public function workplace_professional_day(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar el puesto de trabajo de un professionals");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
@@ -196,7 +191,7 @@ class ProfessionalWorkPlaceController extends Controller
      */
     public function update(Request $request)
     {
-        Log::info("Actualizar Productos a un almacen");
+        Log::info("Actualizar puesto de trabajo de un profesional");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -225,8 +220,6 @@ class ProfessionalWorkPlaceController extends Controller
      */
     public function destroy(Request $request)
     {
-        Log::info("Actualizar Productos a un almacen");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',

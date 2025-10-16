@@ -55,8 +55,6 @@ class CommentController extends Controller
              }
             $comment->client_look = $filename;
             $comment->save();
-            //$client->client_image = $filename;
-            //$client->save();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -165,15 +163,6 @@ class CommentController extends Controller
                 'look' => 'required'
             ]); 
             $comment = Comment::find($data['id']);
-            /*if ($comment->client_look) {
-                $destination=public_path("storage\\".$comment->image_url);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }
-                }
-                if ($request->hasFile('client_look')) {
-                    $filename =$request->file('client_look')->storeAs('comments',$comment->id.'.'.$request->file('client_look')->extension(),'public');
-                }*/
                 $filename = $comment->client_look;
                 if ($request->hasFile('client_look')) {
                     if($comment->client_look != 'comments/default.jpg'){

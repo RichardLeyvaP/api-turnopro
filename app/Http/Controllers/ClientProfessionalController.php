@@ -13,7 +13,6 @@ class ClientProfessionalController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Devuelve los profrofessionales con susrespectivos cientes");
             return response()->json(['professional' => Professional::with('clients')->get()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -23,7 +22,7 @@ class ClientProfessionalController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Asignar empleado a atender cliente");
+        Log::info("Asignar professional a atender cliente");
         Log::info($request);
         try {
             $data = $request->validate([
@@ -44,25 +43,6 @@ class ClientProfessionalController extends Controller
         return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
     }
-
-    /*public function client_professional($data)
-    {
-        try {             
-            Log::info( "Entra a buscar los clientes atendidos por un professional");        
-            $client_professional = ClientProfessional::where('client_professional.client_id',$data['client_id'])->where('client_professional.professional_id',$data['professional_id'])->first();
-            if (!$client_professional) {
-                $clientprofessional = new ClientProfessional();
-                $clientprofessional->client_id = $data['client_id'];
-                $clientprofessional->professional_id = $data['professional_id'];
-                $clientprofessional->save();
-            }
-            return $client_professional->id;
-        } catch (\Throwable $th) {  
-            Log::error($th);
-        return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
-        }
-    }*/
-
     public function show(Request $request)
     {
         try {             

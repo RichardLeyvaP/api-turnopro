@@ -132,38 +132,7 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
     }
-    /*public function services_professional_branch(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'professional_id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
-            ]);
-            $serviceModels = BranchServiceProfessional::with(['branchService.service'])
-            ->whereHas('branchService.branch', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            })
-            ->where('professional_id', $data['professional_id'])
-            ->get(['branch_service_id', 'type_service', 'percent']);
 
-        $formattedData = [];
-        foreach ($serviceModels as $branchservprof) {
-            $branchService = $branchservprof->branchService;
-            $service = $branchService->service;
-            $formattedData[] = [
-                'id' => $branchservprof->branch_service_id,
-                "name" => $service->name,
-                "type_service" => $branchservprof->type_service,
-                "image_service" => $service->image_service,
-                "profit_percentaje" => $branchservprof->percent,
-            ];
-        }
-
-        return response()->json(['branchServices' => $formattedData], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
-        }
-    }*/
     public function services_professional_branch_web(Request $request)
     {
         try {
@@ -235,37 +204,6 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
     }
-
-    /*public function store(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_service_id' => 'required|numeric',
-                'professional_id' => 'required|numeric',
-                'percent' => 'nullable|numeric',
-                'type_service' => 'nullable'
-            ]);
-            $branchservice = BranchService::find($data['branch_service_id']);
-            $professional = professional::find($data['professional_id']);
-            if ($data['type_service'] == 'Regular') {
-                $data['percent'] = $branchservice->service->profit_percentaje;
-                $data['type_service'] = 'Regular';
-            }
-            Log::info($data);
-
-            $professional->branchservices()->attach($branchservice->id, ['percent' => $data['percent'], 'type_service' => $data['type_service']]);
-
-            //$psersonservice = new BranchServiceProfessional();
-            //$psersonservice->branch_service_id = $data['branch_service_id'];
-            //$psersonservice->professional_id = $data['professional_id'];
-            //$psersonservice->save();
-
-            return response()->json(['msg' => 'Servicio asignado correctamente a este trabajador'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
-        }
-    }*/
 
     public function store(Request $request)
     {
@@ -347,37 +285,6 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
-    /*public function show(Request $request)
-    {
-        try {
-            Log::info("Entra a buscar los srvicios que realiza una branch");
-            $data = $request->validate([
-                'branch_id' => 'nullable|numeric'
-            ]);
-            $branch = Branch::find($data['branch_id']);
-            $services = $branch->services->map(function ($service) {
-                return [
-                    'id' => $service->pivot->id,
-                    'service_id' => $service->id,
-                    'name' => $service->name,
-                    'price_service' => $service->price_service,
-                    'type_service' => $service->type_service,
-                    'profit_percentaje' => $service->profit_percentaje,
-                    'duration_service' => $service->duration_service,
-                    'image_service' => $service->image_service,
-                    'service_comment' => $service->service_comment,
-                    'ponderation' => $service->pivot->ponderation
-                ];
-            })->sortBy('ponderation')->values();
-            //$result = BranchServiceProfessional::with('branchService.service', 'professional')->find($data['id']);
-
-            return response()->json(['branchServices' => $services], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
-        }
-    }*/
-
     public function show(Request $request)
     {
         try {
@@ -447,33 +354,7 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
-    /*public function services_professional_branch_free(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'professional_id' => 'required|numeric',
-                'branch_id' => 'required|numeric'
-            ]);
-            $ids = BranchServiceProfessional::whereHas('branchService.branch', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->whereHas('professional', function ($query) use ($data){
-                $query->where('id', $data['professional_id']);
-            })->get()->pluck('branch_service_id'); 
-            $serviceModels = BranchService::whereNotIn('id', $ids)->where('branch_id', $data['branch_id'])->get()->map(function ($branchserv) {
-                $service = $branchserv->service;
-                return [
-                    'id' => $branchserv->id,
-                    "name" => $service->name,
-                    "type_service" => $service->type_service,
-                    "image_service" => $service->image_service,
-                    "profit_percentaje" => $service->profit_percentaje,
-                ];
-            });                 
-            return response()->json(['branchServices' => $serviceModels], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
-        }
-    }*/
+    
     public function professionals_branch_service(Request $request)
     {
         try {
@@ -505,7 +386,6 @@ class BranchServiceProfessionalController extends Controller
     public function branch_service_professional($data)
     {
         try {
-            Log::info("Asignar");
             $branchServiceProfessional = BranchServiceProfessional::where('branch_service_id', $data['branch_service_id'])->where('professional_id', $data['professional_id'])->first();
             if (!$branchServiceProfessional) {
                 $branchServiceProfessional = new BranchServiceProfessional();
@@ -559,23 +439,6 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => 'Error al actualizar el servicio a este empleado'], 500);
         }
     }
-
-    /*public function destroy(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_service_id' => 'required|numeric',
-                'professional_id' => 'required|numeric'
-            ]);
-            $branchService = BranchService::find($data['branch_service_id']);
-            $professional = Professional::find($data['professional_id']);
-            $branchService->branchServiceProfessional()->detach($professional->id);
-            return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
-        }
-    }*/
 
     public function destroy(Request $request)
     {

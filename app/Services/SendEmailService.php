@@ -17,9 +17,6 @@ class SendEmailService {
     {
       //  $logoUrl = 'https://api2.simplifies.cl/api/images/image/imagen_reservas.png'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'product_stock';        
-        
-
-              Log::info($client_email);
               $mail = new Send_mail('logoUrl','client_name','','$data_reservation',$template,'$start_time','$branch_name','');
               $mail->product = $product;
               $mail->store = $store;
@@ -55,7 +52,6 @@ class SendEmailService {
             $branch_name = null; // o manejar de acuerdo a tus necesidades
             $branch_address = null;
         }
-              Log::info($client_email);
               $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type,'');
               $mail->id_reservation = $id_reservation;
               $mail->branch_address = $branch_address;
@@ -90,7 +86,6 @@ class SendEmailService {
             $branch_name = null; // o manejar de acuerdo a tus necesidades
             $branch_address = null;
         }
-              Log::info($client_email);
               $mail = new Send_mail($logoUrl, $client_name,$name_professional,$data_reservation,$template,$start_time,$branch_name,$type,'');
               $mail->id_reservation = $id_reservation;
               $mail->branch_address = $branch_address;
@@ -105,13 +100,10 @@ class SendEmailService {
     {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'restaurar_pass';
-        Log::info('estoy en emailRecuperarPass($client_email,$client_name, $usser, $pass)');
 
-              Log::info($client_email);
               $mail = new Send_mail($logoUrl, $client_name,'','$data_reservation',$template,'$start_time','$branch_name','');            
               $mail->usser = $usser;
               $mail->pass = $pass;
-              Log::info('estoy en emailRecuperarPass($client_email,$client_name, $usser, $pass)-222');
               
               $this->sendEmail($client_email,$mail,'Restaurar Contraseña');
 
@@ -128,8 +120,6 @@ class SendEmailService {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'cierre_de_caja';
        
-
-              Log::info($client_email);
               $mail = new Send_mail($logoUrl, '$client_name','','$data_reservation',$template,'$start_time','$branch_name',$type);
               $mail->branchBusinessName = $branchBusinessName;
               $mail->branchName = $branchName;
@@ -147,8 +137,6 @@ class SendEmailService {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'cierre_de_caja_parcial';
        
-
-              Log::info($client_email);
               $mail = new Send_mail($logoUrl, '$client_name','','$data_reservation',$template,'$start_time','$branch_name',$type);
               $mail->branchBusinessName = $branchBusinessName;
               $mail->branchName = $branchName;
@@ -189,8 +177,7 @@ class SendEmailService {
     ) {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'cierre_de_caja_mensual'; // Asegúrate de que este es el nombre correcto de tu plantilla de correo
-    
-        Log::info($client_email);
+   
         $mail = new Send_mail($logoUrl, '$client_name', '', '$data_reservation', $template, '$start_time', '$branch_name', $type);
         $mail->branchBusinessName = $branchBusinessName;
         $mail->branchName = $branchName;
@@ -231,8 +218,7 @@ class SendEmailService {
     ) {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'cierre_de_caja_mensual_ejecutado'; // Asegúrate de que este es el nombre correcto de tu plantilla de correo
-    
-        Log::info($client_email);
+
         $mail = new Send_mail($logoUrl, '$client_name', '', '$data_reservation', $template, '$start_time', '$branch_name', $type);
         $mail->branchBusinessName = $branchBusinessName;
         $mail->branchName = $branchName;
@@ -251,9 +237,7 @@ class SendEmailService {
     {
         $logoUrl = 'https://i.pinimg.com/originals/6a/8a/39/6a8a3944621422753697fc54d7a5d6c1.jpg'; // Reemplaza esto con la lógica para obtener la URL dinámicamente
         $template = 'targeta_regalo';
-       
 
-              Log::info($client_email);
               $mail = new Send_mail($logoUrl, $client_name,'','$data_reservation',$template,'$start_time','$branch_name','');
              
               $mail->client_name = $client_name;
@@ -269,9 +253,8 @@ class SendEmailService {
     public function sendEmail($client_email,$mail,$subject){
           Mail::to($client_email)
         ->send($mail->from('reservas@simplifies.cl', 'Simplifies')
-                    ->subject($subject));       
+                    ->subject($subject));    
       
-        Log::info( "Enviado send_email");
     }
 
 }

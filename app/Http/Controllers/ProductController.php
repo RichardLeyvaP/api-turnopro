@@ -30,19 +30,6 @@ class ProductController extends Controller
         }
     }
 
-    /*public function product_branch(Request $request)
-    {
-        try {
-            $data = $request->validate([
-               'branch_id' => 'required|numeric'
-           ]);
-           $result = Product::join('product_store','product_store.product_id','=','products.id')->join('stores','stores.id','=','product_store.store_id')->where('stores.id',$data['branch_id'])->get(['products.*']);
-           return response()->json(['branch_products' => $result], 200);
-       } catch (\Throwable $th) {
-           return response()->json(['msg' => "Error al mostrar los productos por almacen"], 500);
-       }
-    }*/
-
     public function store(Request $request)
     {
         Log::info("Guardar Producto");
@@ -95,7 +82,6 @@ class ProductController extends Controller
             $data = $request->validate([
                 'Date' => 'required|date'
            ]);
-           Log::info('Obtener los cars');
            $branches = Branch::all();
            $result = [];
            $i = 0;
@@ -141,9 +127,7 @@ class ProductController extends Controller
                     $query->selectRaw('product_id, SUM(cant) as total_cashier')
                         ->groupBy('product_id')
                         ->whereDate('data', Carbon::now())->where('cashiersales.branch_id', $data['branch_id']);
-                }])/*->whereHas('productStores', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                    })*/
+                }])
                 ->get()
                 ->map(function ($product) {
                     $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
@@ -178,9 +162,7 @@ class ProductController extends Controller
                     $query->selectRaw('product_id, SUM(cant) as total_cashier')
                         ->groupBy('product_id')
                         ->whereDate('data', Carbon::now());
-                }])/*->whereHas('productStores', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                    })*/
+                }])
                 ->get()
                 ->map(function ($product) {
                     $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
@@ -206,47 +188,6 @@ class ProductController extends Controller
                     ];
                 })->sortByDesc('orders_count')->values();
             }
-            
-        
-        //return $products;
-            ///}
-            /*return $products = Product::with(['orders' => function ($query) {
-                $query->selectRaw('SUM((price / sale_price) * sale_price) as total_sale_price');
-            }])
-            ->withSum('productsales', 'cant')
-            ->get();*/
-        
-            /*$products = Product::withCount(['orders', 'productSales'])
-            ->get()->map(function ($query){
-                return [
-                    'id' => $query->id,
-                    'name' => $query->name,
-                    'reference' => $query->reference,
-                    'code' => $query->code,
-                    'description' => $query->description,
-                    'status_product' => $query->status_product,
-                    'purchase_price' => $query->purchase_price,
-                    'sale_price' => $query->sale_price,
-                    'image_product' => $query->image_product,
-                    'product_category_id' => $query->product_category_id,
-                    'created_at' => $query->created_at,
-                    'updated_at' => $query->updated_at,
-                    'orders_count' => $query->orders_count,
-                ];
-            });*/
-           //if ($data['branch_id'] !=0) {
-            /*Log::info('Es branch');
-            $products = Product::withCount(['orders' => function ($query){
-                $query->whereDate('data', Carbon::now());
-            }])->whereHas('productStores', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-            })->orderByDesc('orders_count')->get();
-           //}
-           /*else {
-            Log::info('bussines');
-            $products = Product::withCount('orders')->orderByDesc('orders_count')->get();
-           }*/
-        
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
         Log::error($th);
@@ -272,9 +213,7 @@ class ProductController extends Controller
             },'cashiersales' => function ($query)  use($data){
                 $query->selectRaw('product_id, SUM(cant) as total_cashier')
                     ->groupBy('product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->where('cashiersales.branch_id', $data['branch_id']);
-            }])/*->whereHas('productStores', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-                })*/
+            }])
             ->get()
             ->map(function ($product) {
                 $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
@@ -299,7 +238,6 @@ class ProductController extends Controller
                 ];
             })->sortByDesc('orders_count')->values();
             }else {
-                Log::info('Es Administrador');
             $products = Product::with(['orders' => function ($query) use($data){
                 $query->selectRaw('SUM(cant) as total_sale_price')
                     ->groupBy('product_store.product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']); // Agrupar por el ID del producto en la tabla intermedia
@@ -309,9 +247,7 @@ class ProductController extends Controller
             },'cashiersales' => function ($query)  use($data){
                 $query->selectRaw('product_id, SUM(cant) as total_cashier')
                     ->groupBy('product_id')->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
-            }])/*->whereHas('productStores', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-                })*/
+            }])
             ->get()
             ->map(function ($product) {
                 $total_sale_price = $product->orders->isEmpty() ? 0 : $product->orders->first()->total_sale_price;
@@ -337,24 +273,7 @@ class ProductController extends Controller
                 ];
             })->sortByDesc('orders_count')->values();
             }
-           //if ($data['branch_id'] !=0) {
-            /*Log::info('Es branch');
-            /*$products = Product::withCount(['orders' => function ($query) use ($data){
-                $query->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
-            }])->whereHas('productStores', function ($query) use ($data){
-            $query->where('branch_id', $data['branch_id']);
-            })->orderByDesc('orders_count')->get();
-            /*return $products = Product::whereHas(['orders' => function ($query) use ($data){
-                $query->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->whereHas('car.reservation', function ($query) use ($data){
-                    $query->where('branch_id', $data['branch_id']);
-                });
-            }])->get();*/
-           /*}
-           else {
-            Log::info('bussines');
-            $products = Product::withCount('orders')->orderByDesc('orders_count')->get();
-           }*/
-        
+           
           return response()->json($products, 200, [], JSON_NUMERIC_CHECK);
        } catch (\Throwable $th) {
         Log::error($th);
@@ -368,14 +287,6 @@ class ProductController extends Controller
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric'
             ]);
-            /*Log::info("entra a buscar los stores de una branch");
-            return response()->json(['stores' => Store::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-            })->get()
-            $data = $request->validate([
-                'business_id' => 'required|numeric'
-            ]);*/
-           Log::info('Obtener los productos');
            if ($data['branch_id'] !=0) {
             $products = ProductStore::whereColumn('product_exit', '<=', 'stock_depletion')->whereHas('store.branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
@@ -441,12 +352,9 @@ class ProductController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("Editar");
-            Log::info($request);
             $request->merge([
-    'commission_rate' => $request->commission_rate === 'null' ? null : $request->commission_rate
-]);
+                'commission_rate' => $request->commission_rate === 'null' ? null : $request->commission_rate
+            ]);
             $product_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|min:3',

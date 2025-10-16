@@ -41,12 +41,9 @@ class ProductSaleController extends Controller
             $productstore->save();
 
             $price = $productstore->product->value('sale_price');
-            Log::info($price);
             $productSale = ProductSale::where('enrollment_id', $data['enrollment_id'])->where('product_store_id', $data['id'])->where('course_id', $data['course_id'])->where('student_id', $data['student_id'])->whereDate('data', Carbon::now())->first();
             
             if ($productSale) {
-                Log::info('Existe');
-                Log::info($productSale);
                 $productSale->cant = $productSale->cant + $data['cant'];
                 $productSale->price = $productSale->price + $price*$data['cant'];
                 $productSale->save();
@@ -62,23 +59,6 @@ class ProductSaleController extends Controller
                 $productSale->data = Carbon::now();
                 $productSale->save();
             }
-            //$productSale = new ProductSale();
-            //agregar a finanzas a ingresos
-            /*$finance = Finance::where('enrollment_id', $data['enrollment_id'])->where('revenue_id', 4)->whereDate('data', Carbon::now())->first();
-            if($finance){
-                Log::info('existe');
-                $finance->operation = 'Ingreso';
-                $finance->amount = $finance->amount + $price*$data['cant'];
-                $finance->comment = 'Venta de Productos';
-                $finance->enrollment_id = $data['enrollment_id'];
-                $finance->type = 'Academia';
-                $finance->revenue_id = 4;
-                $finance->data = Carbon::now();                
-                $finance->file = '';
-                $finance->save();
-            }
-            else{
-                Log::info('no existe');*/
                 $finance = Finance::orderBy('control', 'desc')->first();
                 if($finance)
                     {
@@ -118,7 +98,6 @@ class ProductSaleController extends Controller
                 'enrollment_id' => 'required|numeric',
                 'student_id' => 'required|numeric'
             ]);
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
             $productStudent = ProductSale::where('course_id', $data['course_id'])->where('enrollment_id', $data['enrollment_id'])->where('student_id', $data['student_id'])->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
@@ -153,13 +132,11 @@ class ProductSaleController extends Controller
      */
     public function destroy(Request $request)
     {
-        Log::info("Eliminacion de compra de Productos");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
 
             ]);
-            Log::info($data);
             $productSale = ProductSale::find($data['id']);
             $productstore = ProductStore::where('id', $productSale->product_store_id)->first();
             $productstore->product_quantity = $productSale->cant;

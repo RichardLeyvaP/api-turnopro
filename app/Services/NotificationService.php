@@ -20,12 +20,6 @@ class NotificationService
         $recipientNumber = $request->telefone_client;
         //$message = 'Usted va ser atendido aproximadamente en 3 minutos';
     
-        Log::info('Twilio SID: ' . $twilioSid);
-        Log::info('Twilio Token: ' . $twilioToken);
-        Log::info('Twilio WhatsApp Number: ' . $twilioWhatsAppNumber);
-        Log::info('Recipient Number inicial: ' . $recipientNumber);
-        Log::info('Recipient Number twilioTemplateSid: ' . $twilioTemplateSid);
-    
         if (empty($recipientNumber)) {
             return back()->with(['error' => 'El número de teléfono es obligatorio.']);
         }
@@ -50,9 +44,7 @@ class NotificationService
                     ]),
                 ]
             );
-    
-            Log::info('Message sent successfully');
-    
+        
             return back()->with(['success' => 'WhatsApp message sent successfully!']);
         } catch (Exception $e) {
             Log::error('Error sending WhatsApp message: ' . $e->getMessage());
@@ -70,7 +62,6 @@ class NotificationService
         $recipientNumber = $phone;
 
         if (empty($recipientNumber)) {
-            Log::error('El número de teléfono es obligatorio.');
             return false; // Indica que el envío falló
         }
 
@@ -96,7 +87,6 @@ class NotificationService
                 ]
             );
 
-            Log::info('Mensaje enviado exitosamente a ' . $recipientNumber);
             return true; // Indica que el envío fue exitoso
         } catch (Exception $e) {
             Log::error('Error enviando mensaje de WhatsApp: ' . $e->getMessage());
@@ -140,8 +130,6 @@ class NotificationService
                     ]),
                 ]
             );
-
-            Log::info('Message sent successfully'. $twilio);
 
             return true;
         } catch (Exception $e) {

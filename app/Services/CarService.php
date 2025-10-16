@@ -28,7 +28,6 @@ class CarService {
     //Actualizar el monto del carro
     public function car_amount_updated($car_id, $amount)
     {
-            Log::info("Actualiza el monto del carro");
             $car = $this->show($car_id);
             $car->amount = $car->amount + $amount;
             $car->save();

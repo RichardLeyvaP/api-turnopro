@@ -24,9 +24,6 @@ class StudentController extends Controller
     public function index()
     {
         try { 
-            
-            Log::info( "entra a cliente");
-
             return response()->json(['clients' => Student::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -113,14 +110,6 @@ class StudentController extends Controller
 
                 ];
             });
-            /*$students = Student::all()->map(function ($student){
-                return [
-                    'id' => $student->id,
-                    'name' => $student->name.' '.$student->surname.' '.$student->second_surname,
-                    'client_image' => $student->student_image
-
-                ];
-            });*/
             return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -203,14 +192,6 @@ class StudentController extends Controller
                 $sumaAmountPay += $pago['amount_pay'];
                 }
             }
-            /*foreach ($productSales as $productSale){
-                //return $productData = $productSale;
-                $productsArray = [
-                    'price' => $productSale['price'],
-                    'cant' => $productSale['cant'],
-                    'product' => $productSale['product_store']
-                ];
-            }*/
             $productSales = $student->productsales;
 
             foreach ($productSales as $productSale) {
@@ -239,10 +220,6 @@ class StudentController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar");
-
-
             $data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
@@ -252,7 +229,6 @@ class StudentController extends Controller
                 'phone' => 'required|max:15'
             ]);
             
-            Log::info($request['student_image']);
             $student = Student::find($data['id']);
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|unique:students,email,' . $student->id,

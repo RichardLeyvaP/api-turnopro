@@ -77,8 +77,6 @@ class WorkerPurchaseController extends Controller
             $notification->description = 'Profesional ' . $professional->name . ' solicita comprar' . $validatedData['cant'] . $product->name;
             $notification->type = 'Cajera';
             $branch->notifications()->save($notification);
-            Log::info('WorkerPurchase creada:', ['workerPurchase' => $workerPurchase]);
-
             DB::commit();
             return response()->json($workerPurchase, 201);
         } catch (\Exception $e) {
@@ -96,8 +94,6 @@ class WorkerPurchaseController extends Controller
         $user = Auth::user();
         $userName = $user->name;
         $userId = $user->id;
-        Log::info("Actualizar estado de la solicitudes de productos");
-        Log::info($request);
         DB::beginTransaction();
         try {
             $validatedData = $request->validate([
@@ -205,12 +201,6 @@ class WorkerPurchaseController extends Controller
         $productStore->save();
 
         $this->actualizarProductExit($productStore, $workerPurchase->branch_id);
-
-        Log::info('Inventario actualizado por compra confirmada', [
-            'worker_purchase_id' => $workerPurchase->id,
-            'product_store_id' => $productStore->id,
-            'cant_deducted' => $workerPurchase->cant
-        ]);
     }
 
     protected function registerFinancialTransaction(WorkerPurchase $workerPurchase)
@@ -232,12 +222,6 @@ class WorkerPurchaseController extends Controller
         $finance->file = '';
         // $finance->car_id = null; // No necesario para compras de trabajadores
         $finance->save();
-
-        Log::info('Registro financiero creado', [
-            'finance_id' => $finance->id,
-            'worker_purchase_id' => $workerPurchase->id,
-            'amount' => $workerPurchase->total
-        ]);
     }
 
     protected function revertInventory(WorkerPurchase $workerPurchase)
@@ -252,12 +236,6 @@ class WorkerPurchaseController extends Controller
         if ($productStore) {
             $productStore->product_exit += $workerPurchase->cant;
             $productStore->save();
-
-            Log::info('Inventario revertido por cancelación', [
-                'worker_purchase_id' => $workerPurchase->id,
-                'product_store_id' => $productStore->id,
-                'cant_added' => $workerPurchase->cant
-            ]);
         }
     }
 
@@ -320,15 +298,6 @@ class WorkerPurchaseController extends Controller
 
                 $workerPurchases[] = $workerPurchase;
             }
-
-            // Registrar en logs
-            Log::info('Compra múltiple creada', [
-                'professional_id' => $validatedData['professional_id'],
-                'branch_id' => $validatedData['branch_id'],
-                'total_products' => count($workerPurchases),
-                'total_amount' => array_sum(array_column($workerPurchases, 'total'))
-            ]);
-
             DB::commit();
 
             return response()->json([

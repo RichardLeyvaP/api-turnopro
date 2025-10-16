@@ -32,94 +32,6 @@ class BoxController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store_ANTERIOR(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-            Log::info("Editar");
-            $data = $request->validate([
-                'branch_id' => 'required|numeric',
-                'cashFound' => 'nullable|numeric',
-                'existence' => 'nullable|numeric',
-                'extraction' => 'nullable|numeric',
-            ]);
-
-            $branch = Branch::find($data['branch_id']);
-            $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
-            $trace = [];
-            Log::info($box); 
-            if (!$box) {              
-                $box = new Box();
-                $box->existence = $data['cashFound'];
-                $box->extraction = $data['extraction'];
-            }else{                         
-                $box->existence += $data['cashFound'] - $data['extraction'];               
-                $box->extraction = $box->extraction + $data['extraction'];
-            }
-            $box->branch_id = $branch->id;
-            $box->cashFound = $data['cashFound'];
-            $box->data = Carbon::now();
-            $box->save();
-            if($data['extraction'] != 0){
-                Log::info('Existencia despues de la extraccion:'.$box->existence);
-                $trace = [
-                    'branch' => $branch->name,
-                    'cashier' => $request->nameProfessional,
-                    'client' => '',
-                    'amount' => $data['extraction'],
-                    'operation' => 'Extracción de la caja',
-                    'details' => '',
-                    'description' => ''
-                ];                
-                $this->traceService->store($trace);
-                Log::info('$trace extrae');
-                Log::info($trace);
-                $finance = Finance::orderBy('control', 'desc')->first();
-                if ($finance !== null) {
-                    $control = $finance->control + 1;
-                } else {
-                    $control = 1;
-                }
-                if ($request->hasFile('file')) {
-                    $filename = $request->file('file')->storeAs('finances', 'Gasto-'.Carbon::now()->format('Y-m-d').'.'.$control. '.' . $request->file('file')->extension(), 'public');
-                } else {
-                    $filename = '';
-                }
-                $comment = $request->comment;
-                $finance = new Finance();
-                $finance->control = $control++;
-                $finance->operation = 'Gasto';
-                $finance->amount = $data['extraction'];
-                $finance->comment = $comment;
-                $finance->branch_id = $request->branch_id;
-                $finance->type = 'Sucursal';
-                $finance->expense_id = 10;
-                $finance->data = Carbon::now();
-                $finance->file = $filename;
-                $finance->save();
-            }
-            if($data['cashFound'] != 0){
-                $trace = [
-                    'branch' => $branch->name,
-                    'cashier' => $request->nameProfessional,
-                    'client' => '',
-                    'amount' => $data['cashFound'],
-                    'operation' => 'Actualización de la caja',
-                    'details' => '',
-                    'description' => ''
-                ];
-                $this->traceService->store($trace);
-                Log::info('$trace actualiza');
-                Log::info($trace);
-            }
-            DB::commit();
-            return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::info($th);
-            DB::rollback();
-        return response()->json(['msg' => $th->getMessage().'Error al actualizar la caja'], 500);
-        }
-    }
     
      public function store(Request $request)
     {
@@ -140,7 +52,6 @@ class BoxController extends Controller
             $branch = Branch::find($data['branch_id']);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
             $trace = [];
-            Log::info($box); 
             if (!$box) {              
                 $box = new Box();
                 $box->existence = $data['cashFound'];
@@ -169,7 +80,6 @@ class BoxController extends Controller
 
             $box->save();
             if($data['extraction'] != 0){
-                Log::info('Existencia despues de la extraccion:'.$box->existence);
                 $trace = [
                     'branch' => $branch->name,
                     'cashier' => $request->nameProfessional,
@@ -180,8 +90,6 @@ class BoxController extends Controller
                     'description' => ''
                 ];                
                 $this->traceService->store($trace);
-                Log::info('$trace extrae');
-                Log::info($trace);
                 $finance = Finance::orderBy('control', 'desc')->first();
                 if ($finance !== null) {
                     $control = $finance->control + 1;
@@ -217,8 +125,6 @@ class BoxController extends Controller
                     'description' => ''
                 ];
                 $this->traceService->store($trace);
-                Log::info('$trace actualiza');
-                Log::info($trace);
             }
             DB::commit();
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
@@ -239,7 +145,6 @@ class BoxController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->get();
-            Log::info($box);
             return response()->json(['box' => $box], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -254,7 +159,7 @@ class BoxController extends Controller
     {
         try {
 
-            Log::info("Editar");
+            Log::info("Editar Caja BoxCoseController");
             $request->merge([
                 'cashFound' => $request->cashFound === 'null' ? null : $request->cashFound
             ]);
@@ -268,7 +173,6 @@ class BoxController extends Controller
             $branch = Branch::find($data['branch_id']);
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->first();
             $trace = [];
-            Log::info($box); 
             if (!$box) {              
                 $box = new Box();
                 $box->existence = $data['cashFound'];
@@ -302,8 +206,6 @@ class BoxController extends Controller
                     'description' => ''
                 ];                
                 $this->traceService->store($trace);
-                Log::info('$trace extrae');
-                Log::info($trace);
             }
             if($data['cashFound'] != 0){
                 $trace = [
@@ -316,8 +218,6 @@ class BoxController extends Controller
                     'description' => ''
                 ];
                 $this->traceService->store($trace);
-                Log::info('$trace actualiza');
-                Log::info($trace);
             }
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
         } catch (\Throwable $th) {

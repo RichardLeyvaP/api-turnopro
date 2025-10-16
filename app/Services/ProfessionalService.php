@@ -83,15 +83,11 @@ class ProfessionalService
 
     public function verifi_tec_prof($email, $branch_id)
     {
-        /*$professionals = Professional::where('email', $email)->whereHas('branches', function ($query) use ($branch_id){
-            $query->where('branch_id', $branch_id);
-        })->first();*/
         $professionals = Professional::whereHas('user', function ($query) use ($email) {
             $query->where('name', $email);
         })->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->first();
-        Log::info($professionals);
         if ($professionals) {
             if (($professionals->charge->name == 'Barbero') || ($professionals->charge->name == 'Tecnico') || ($professionals->charge->name == 'Encargado') || ($professionals->charge->name == 'Coordinador')  || ($professionals->charge->name == 'Barbero y Encargado')) {
                 if ($professionals->charge->name == 'Barbero') { //charge_id == 1
@@ -135,58 +131,8 @@ class ProfessionalService
         }
     }
 
-    /*public function branch_professionals_service($branch_id, $services)
-    {
-        $totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
-        Log::info($totaltime);
-        //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
-        $professionals = Professional::whereHas('branches', function ($query) use ($branch_id, $services) {
-
-            $query->where('branch_id', $branch_id);
-        })->whereHas('branchServices', function ($query) use ($services) {
-            $query->whereIn('service_id', $services);
-        }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('id', 1);
-        })->get();
-        Log::info($professionals);
-        return $professionals;
-    }*/
-
-    /*public function encontrarHoraDisponible($timeService, $horaActual, $arrayHoras) {
-        // Convertir la hora actual a un objeto Carbon para facilitar la comparación
-        $horaActualCarbon = Carbon::createFromFormat('H:i', $horaActual);
-    
-        foreach ($arrayHoras as $hora) {
-            Log::info('$horaActualCarbon');
-            Log::info($horaActualCarbon);
-            Log::info('$hora');
-            Log::info($hora);
-            // Convertir la hora del array a un objeto Carbon para comparar
-            $horaCarbon = Carbon::createFromFormat('H:i', $hora);
-            
-            // Verificar si la hora del array es mayor que la hora actual
-            if ($horaCarbon->gt($horaActualCarbon)) {
-                // Calcular la diferencia entre la hora del array y la hora actual
-                $diferenciaMinutos = $horaCarbon->diffInMinutes($horaActualCarbon);
-                Log::info('$diferenciaMinutos');
-                Log::info($diferenciaMinutos);
-                // Verificar si la diferencia de tiempo es mayor o igual al tiempo de servicio
-                if ($diferenciaMinutos >= ($timeService)) {
-                    return $horaActualCarbon->format('H:i'); // Devolver la hora actual
-                } else {
-                    // Actualizar la hora actual y continuar el bucle
-                    $horaActualCarbon = $horaCarbon;
-                }
-            }
-        }
-    
-        // Si no se encuentra ninguna hora disponible, devolver la última hora del array
-        return $arrayHoras[count($arrayHoras) - 1];
-    }*/
-
     private function encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation)
     {
-        Log::info('Revisando reservas coordinador estado del professionals');
         $encontrado = false;
         $nuevaHoraInicio = $horaActual;
         $total_timeMin = $this->convertirHoraAMinutos($tiempoReserva);
@@ -198,35 +144,7 @@ class ProfessionalService
                 $encontrado = true;
                 break;
             }
-            /*elseif ($reservation1->from_home == 1 && $reservation1->confirmation == 1) {
-                $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
-            $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
-            if (isset($reservations[$index + 1])) {
-                $nextReservation = $reservations[$index + 1];
-                $final_hour_next = Carbon::parse($nextReservation->final_hour);
-                $final_hour_nextMin = $this->convertirHoraAMinutos($final_hour_next->format('H:i'));
-
-                if (($final_hour_nextMin + $total_timeMin) <= $start_timeMin) {
-                    $nuevaHoraInicio = Carbon::parse($final_hour_next)->format('H:i');//$final_hour_next;
-                    $encontrado = true;
-                    break;
-                }else {
-                        $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
-                        $encontrado = true;
-                        break;
-                }
-            } else {
-                if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin) {
-                    $nuevaHoraInicio = $nuevaHoraInicio->format('H:i');
-                    $encontrado = true;
-                    break;
-                }else {
-                    $nuevaHoraInicio = Carbon::parse($reservation1->final_hour)->format('H:i');
-                            $encontrado = true;
-                            break;
-                }
-            }
-            }*/elseif ($reservation1->from_home == 0 && $car->select_professional == 1) {
+            elseif ($reservation1->from_home == 0 && $car->select_professional == 1) {
                 $nuevaHoraInicio = $reservation1->final_hour;
                 $encontrado = true;
                 break;
@@ -253,7 +171,6 @@ class ProfessionalService
     public function branch_professionals_service_tottem($branch_id, $services, $professional_id, $reservation)//Cambio 31-08-24
     {
         try{
-        Log::info('Entra a buscar los professionales el coordinador');
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
@@ -308,16 +225,12 @@ class ProfessionalService
                 ->orderByDesc('start_time')
                 ->get();
                 if ($reservations->isEmpty()) {
-                    Log::info('Reservaciones vacias');
-                    Log::info($reservation);
                     $professional->start_time = date('H:i');
                     $professional->free = 'Libre';
                     $availableProfessionals[] = $professional;
                 }else {
-                    Log::info('Con Reservaciones');
                     $nuevaHoraInicio = $this->encontrarIntervaloLibreOld($reservations, $horaActual, $tiempoReserva, $reservation);                    
                     if ($nuevaHoraInicio == $horaActual->format('H:i')) {
-                        Log::info('Linea 314');
                         $professional->free = 'Libre';
                     }else {
                         $professional->free = 'Ocupado';
@@ -325,8 +238,6 @@ class ProfessionalService
                     $professional->start_time = $nuevaHoraInicio;
                     $availableProfessionals[] = $professional;
                     $firstReservation = $reservations->first();
-                    Log::info('Primera reserva que tiene'.$professional);
-                    Log::info($firstReservation);
                     if (in_array($firstReservation->tail->attended, [1, 11, 111, 4, 5, 33])) { // Cambia 'estado1', 'estado2', etc., por los estados específicos
                         $professional->free = 'Ocupado';
                     }
@@ -352,9 +263,6 @@ class ProfessionalService
                 ->whereHas('workplace', function ($query) use ($branch_id) {
                     $query->where('busy', 1)->where('branch_id', $branch_id);
                 })->first();
-        
-            Log::info('Puesto de trabajo');
-            Log::info($workplaceProfessional);
             if ($workplaceProfessional) {
                 $professional->position = $workplaceProfessional->workplace->name;
             }else {
@@ -363,7 +271,6 @@ class ProfessionalService
             if ($professional->state == 2) {
                 if ($professional->colacion_time != NUll) {
                     //return 'Esta en colacion'.$professional->colacion_time;
-                    Log::info('Esta en colacion'.$professional->colacion_time);
                     $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                 if (Carbon::parse($professional->start_time) < $colacion_time){
                     $reservs = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
@@ -389,21 +296,6 @@ class ProfessionalService
                 $professional->position = 'COLACIÓN';
             }
         }
-        
-
-       /* unset($professional); // Romper la referencia
-
-        // Ordenar por 'state' y luego por 'start_time'
-        usort($returnedProfessionals, function ($a, $b) {
-            // Primero comparar por 'state'
-            if ($a->state != $b->state) {
-                return $a->state - $b->state;
-            }
-            // Si 'state' es igual, comparar por 'start_time'
-            return strtotime($a->start_time) - strtotime($b->start_time);
-        });
-
-        return $returnedProfessionals;*/
         $returnedProfessionals = collect($returnedProfessionals)->sortBy([
             ['state', 'asc'],
             ['start_time', 'asc']
@@ -464,7 +356,6 @@ class ProfessionalService
                 $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
                     ->whereDate('endDate', '>=', $fechaDada)
                     ->first();
-                Log::info($vacation);
                 if (!$vacation) {
                     //Log::info();
                     $professionals[] = $professional1;
@@ -481,33 +372,18 @@ class ProfessionalService
                     ->sortBy('start_time')
                     ->map(function ($query) use ($current_time, $professional) {
                         $attended_values = [1, 11, 111, 4, 5, 33];
-                        // Comprobación de start_time y attended
-                        Log::info('Resevaciones');
-                        Log::info($query);
                         $attended = (int) $query->tail->attended;
-                        Log::info('El valor de attended es:'.$attended);
                         if (($attended !== 0 && $attended !==3) || $query->tail->aleatorie != 1) {
-                            // El valor de attended es distinto de 0 y 3 esta atendiendo
-                            Log::info('El valor de attended es distinto de 0 y 3.');
                             $professional->attended = 1;
                             $professional->finalHourAttended = $query->final_hour;
                         } else {
-                            // El valor de attended es 0 o 3
-                            Log::info('El valor de attended es 0 o 3.');
                             $professional->attended = 0;
                             $professional->finalHourAttended = '';
                         }
                         if ($query->confirmation == 4 && $query->from_home == 1) {
-                             Log::info('Msg-Este profesional no esta libre:'.$professional->name);
-                            Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
-                            Log::info('Professional id' . $professional->id);
-                            Log::info('Tiempoo inicio de la reserva' . $query->start_time);
-                            Log::info('Tiempoo total de la reserva' . $query->total_time);
                             $start_time = $current_time;
                             $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->total_time) - strtotime('TODAY'));
-                            Log::info('Tiempoo inicio de la reserva actualizado' . $start_time);
-                            Log::info('Tiempoo final de la reserva' . $final_hour);
-                            return [
+                             return [
                                 'start_time' => $start_time,
                                 'final_hour' => $final_hour
                             ];
@@ -517,8 +393,6 @@ class ProfessionalService
                             'final_hour' => $query->final_hour
                         ];
                     });
-                Log::info('$reservations');
-                Log::info($reservations);
                 // Decodificar la entrada JSON a un array de objetos
                 $entrada = json_decode($reservations, true);
                 //return $entrada[0];
@@ -555,8 +429,6 @@ class ProfessionalService
         foreach ($returnedProfessionals as $professional) {
             if ($professional->state == 2) {
                 if ($professional->colacion_time != NUll) {
-                    //return 'Esta en colacion'.$professional->colacion_time;
-                    Log::info('Esta en colacion'.$professional->colacion_time);
                     $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                 if (Carbon::parse($professional->start_time) < $colacion_time){
                     $reservs = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
@@ -578,11 +450,6 @@ class ProfessionalService
                             }
                         }
                     }
-                    /*if($reserv != Null && Carbon::parse($reserv->start_time) >= $colacion_time->addMinutes($totalTiempo)){
-                        $professional->start_time = Carbon::parse($professional->colacion_time)->addMinutes(60)->format('H:i');
-                    } else {                        
-                        $professional->start_time = Carbon::parse($reserv->final_hour)->format('H:i');
-                    }*/
                     $professional->start_time = $colacion_time->format('H:i');
                     
                 }
@@ -592,32 +459,22 @@ class ProfessionalService
             $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
                 $query->where('professional_id', $professional->id);
             })->orderByDesc('finished_at')->whereDate('data', Carbon::now())->first();
-            Log::info('Valor de end_time del professional '.$professional->name.':'.$professional->end_time);
             if ($reservation != null && $professional->end_time == null) {
-                Log::info('end_time:'.$professional->end_time);
-                Log::info('1er if Profesional:'.$professional->name);
                 $professional->disponible = $reservation->finished_at->format('H:i:s');
             }
             else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
-                Log::info('end_time:'.$professional->end_time);
-                Log::info('2do if Profesional:'.$professional->name);
-                /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
                 // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
                 $endTime = Carbon::parse($professional->end_time);
                 $lastReservationTime = Carbon::parse($reservation->finished_at);
 
                 // Comparar y decidir el tiempo que se asignará a `disponible`
                 if ($lastReservationTime->gt($endTime)) {
-                    Log::info('Tiempo de la última reserva es mayor que end_time:');
-                    Log::info($lastReservationTime);
                     $professional->disponible = $lastReservationTime->format('H:i:s');
                 } else {
-                    Log::info('Tiempo de end_time o no hay última reserva');
                     $professional->disponible = $endTime->format('H:i:s');
                 }
             }
             else {
-                Log::info('3ro if Profesional:'.$professional->name);
                 $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
                 if ($record != null) {
                     $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
@@ -628,13 +485,10 @@ class ProfessionalService
                 
             }
             if ($professional->attended != 0) {
-                Log::info('El professional esta atendiendo:'.$professional->name);
                 $finalHourAttended = Carbon::parse($professional->finalHourAttended);
                 $disponible = Carbon::parse($professional->disponible);
 
                 if ($finalHourAttended->gt($disponible)) {
-                    // finalHourAttended es mayor (posterior) que disponible
-                    Log::info('La hora final del que esta atendiendo es mayor que la hora disponible.');
                     // Aquí puedes agregar la lógica que necesites
                     $professional->disponible = $finalHourAttended->format('H:i:s');
                 }
@@ -649,7 +503,7 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales:'.$returnedProfessionals);
+        Log::info('Orden de los professionales (branch_professionals_serviceOld):'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -714,33 +568,18 @@ class ProfessionalService
                     ->sortBy('start_time')
                     ->map(function ($query) use ($current_time, $professional) {
                         $attended_values = [1, 11, 111, 4, 5, 33];
-                        // Comprobación de start_time y attended
-                        Log::info('Resevaciones');
-                        Log::info($query);
-                        $attended = (int) $query->tail->attended;
-                        Log::info('El valor de attended es:'.$attended);
+                          $attended = (int) $query->tail->attended;
                         if (($attended !== 0 && $attended !==3) || $query->tail->aleatorie != 1) {
-                            // El valor de attended es distinto de 0 y 3 esta atendiendo
-                            Log::info('El valor de attended es distinto de 0 y 3.');
                             $professional->attended = 1;
                             $professional->finalHourAttended = $query->final_hour;
                         } else {
-                            // El valor de attended es 0 o 3
-                            Log::info('El valor de attended es 0 o 3.');
                             $professional->attended = 0;
                             $professional->finalHourAttended = '';
                         }
                         if ($query->confirmation == 4 && $query->from_home == 1) {
-                             Log::info('Msg-Este profesional no esta libre:'.$professional->name);
-                            Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
-                            Log::info('Professional id' . $professional->id);
-                            Log::info('Tiempoo inicio de la reserva' . $query->start_time);
-                            Log::info('Tiempoo total de la reserva' . $query->total_time);
-                            $start_time = $current_time;
+                             $start_time = $current_time;
                             $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->total_time) - strtotime('TODAY'));
-                            Log::info('Tiempoo inicio de la reserva actualizado' . $start_time);
-                            Log::info('Tiempoo final de la reserva' . $final_hour);
-                            return [
+                               return [
                                 'start_time' => $start_time,
                                 'final_hour' => $final_hour
                             ];
@@ -750,8 +589,6 @@ class ProfessionalService
                             'final_hour' => $query->final_hour
                         ];
                     });
-                Log::info('$reservations');
-                Log::info($reservations);
                 // Decodificar la entrada JSON a un array de objetos
                 $entrada = json_decode($reservations, true);
                 //return $entrada[0];
@@ -776,8 +613,6 @@ class ProfessionalService
                 //comprobar estado de colacion
                 if ($professional->state == 2) {
                     if ($professional->colacion_time != NUll) {
-                        //return 'Esta en colacion'.$professional->colacion_time;
-                        Log::info('Esta en colacion'.$professional->colacion_time);
                         $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                     if (Carbon::parse($professional->start_time) < $colacion_time){
                         $reservs = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
@@ -809,38 +644,26 @@ class ProfessionalService
                 $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
                     $query->where('professional_id', $professional->id);
                 })->orderByDesc('finished_at')->whereDate('data', Carbon::now())->first();
-                Log::info('Valor de end_time del professional '.$professional->name.':'.$professional->end_time);
                 if ($reservation != null && $professional->end_time == null) {
-                    Log::info('end_time:'.$professional->end_time);
-                    Log::info('1er if Profesional:'.$professional->name);
                     $professional->disponible = $reservation->finished_at->format('H:i:s');
                 }
                 else if ($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && $reservation) {
-                    Log::info('end_time:'.$professional->end_time);
-                    Log::info('2do if Profesional:'.$professional->name);
-                    /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
                     // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
                     $endTime = Carbon::parse($professional->end_time);
                     $lastReservationTime = Carbon::parse($reservation->finished_at);
     
                     // Comparar y decidir el tiempo que se asignará a `disponible`
                     if ($lastReservationTime->gt($endTime)) {
-                        Log::info('Tiempo de la última reserva es mayor que end_time:');
-                        Log::info($lastReservationTime);
                         $professional->disponible = $lastReservationTime->format('H:i:s');
                     } else {
-                        Log::info('Tiempo de end_time o no hay última reserva');
                         $professional->disponible = $endTime->format('H:i:s');
                     }
                 }
                 else if($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && !$reservation){
-                    Log::info('end_time:'.$professional->end_time);
-                    Log::info('5do if Profesional:'.$professional->name);
                     $endTime = Carbon::parse($professional->end_time);
                         $professional->disponible = $endTime->format('H:i:s');
                 }
                 else {
-                    Log::info('3ro if Profesional:'.$professional->name);
                     $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
                     if ($record != null) {
                         $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
@@ -851,13 +674,10 @@ class ProfessionalService
                     
                 }
                 if ($professional->attended != 0) {
-                    Log::info('El professional esta atendiendo:'.$professional->name);
                     $finalHourAttended = Carbon::parse($professional->finalHourAttended);
                     $disponible = Carbon::parse($professional->disponible);
     
                     if ($finalHourAttended->gt($disponible)) {
-                        // finalHourAttended es mayor (posterior) que disponible
-                        Log::info('La hora final del que esta atendiendo es mayor que la hora disponible.');
                         // Aquí puedes agregar la lógica que necesites
                         $professional->disponible = $finalHourAttended->format('H:i:s');
                     }
@@ -878,7 +698,7 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales:'.$returnedProfessionals);
+        Log::info('Orden de los professionales (branch_professionals_service):'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -943,32 +763,18 @@ class ProfessionalService
                     ->sortBy('start_time')
                     ->map(function ($query) use ($current_time, $professional) {
                         $attended_values = [1, 11, 111, 4, 5, 33];
-                        // Comprobación de start_time y attended
-                        Log::info('Resevaciones');
-                        Log::info($query);
                         $attended = (int) $query->tail->attended;
                         Log::info('El valor de attended es:'.$attended);
                         if (($attended !== 0 && $attended !==3) || $query->tail->aleatorie != 1) {
-                            // El valor de attended es distinto de 0 y 3 esta atendiendo
-                            Log::info('El valor de attended es distinto de 0 y 3.');
                             $professional->attended = 1;
                             $professional->finalHourAttended = $query->final_hour;
                         } else {
-                            // El valor de attended es 0 o 3
-                            Log::info('El valor de attended es 0 o 3.');
                             $professional->attended = 0;
                             $professional->finalHourAttended = '';
                         }
                         if ($query->confirmation == 4 && $query->from_home == 1) {
-                             Log::info('Msg-Este profesional no esta libre:'.$professional->name);
-                            Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
-                            Log::info('Professional id' . $professional->id);
-                            Log::info('Tiempoo inicio de la reserva' . $query->start_time);
-                            Log::info('Tiempoo total de la reserva' . $query->total_time);
-                            $start_time = $current_time;
+                                 $start_time = $current_time;
                             $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->total_time) - strtotime('TODAY'));
-                            Log::info('Tiempoo inicio de la reserva actualizado' . $start_time);
-                            Log::info('Tiempoo final de la reserva' . $final_hour);
                             return [
                                 'start_time' => $start_time,
                                 'final_hour' => $final_hour
@@ -979,8 +785,6 @@ class ProfessionalService
                             'final_hour' => $query->final_hour
                         ];
                     });
-                Log::info('$reservations');
-                Log::info($reservations);
                 // Decodificar la entrada JSON a un array de objetos
                 $entrada = json_decode($reservations, true);
                 //return $entrada[0];
@@ -1005,8 +809,6 @@ class ProfessionalService
                 //comprobar estado de colacion
                 if ($professional->state == 2) {
                     if ($professional->colacion_time != NUll) {
-                        //return 'Esta en colacion'.$professional->colacion_time;
-                        Log::info('Esta en colacion'.$professional->colacion_time);
                         $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
                     if (Carbon::parse($professional->start_time) < $colacion_time){
                         $reservs = $professional->reservations()->where('branch_id', $branch_id)->where('confirmation', 4)
@@ -1038,38 +840,26 @@ class ProfessionalService
                 $reservation = Reservation::where('branch_id', $branch_id)->where('confirmation', 2)->whereHas('car.clientProfessional', function ($query) use ($professional) {
                     $query->where('professional_id', $professional->id);
                 })->orderByDesc('finished_at')->whereDate('data', Carbon::now())->first();
-                Log::info('Valor de end_time del professional '.$professional->name.':'.$professional->end_time);
                 if ($reservation != null && $professional->end_time == null) {
-                    Log::info('end_time:'.$professional->end_time);
-                    Log::info('1er if Profesional:'.$professional->name);
                     $professional->disponible = $reservation->finished_at->format('H:i:s');
                 }
                 else if ($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && $reservation) {
-                    Log::info('end_time:'.$professional->end_time);
-                    Log::info('2do if Profesional:'.$professional->name);
-                    /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
                     // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
                     $endTime = Carbon::parse($professional->end_time);
                     $lastReservationTime = Carbon::parse($reservation->finished_at);
     
                     // Comparar y decidir el tiempo que se asignará a `disponible`
                     if ($lastReservationTime->gt($endTime)) {
-                        Log::info('Tiempo de la última reserva es mayor que end_time:');
-                        Log::info($lastReservationTime);
                         $professional->disponible = $lastReservationTime->format('H:i:s');
                     } else {
-                        Log::info('Tiempo de end_time o no hay última reserva');
                         $professional->disponible = $endTime->format('H:i:s');
                     }
                 }
                 else if($professional->end_time != null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString() && !$reservation){
-                    Log::info('end_time:'.$professional->end_time);
-                    Log::info('5do if Profesional:'.$professional->name);
                     $endTime = Carbon::parse($professional->end_time);
                         $professional->disponible = $endTime->format('H:i:s');
                 }
                 else {
-                    Log::info('3ro if Profesional:'.$professional->name);
                     $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
                     if ($record != null) {
                         $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
@@ -1080,13 +870,10 @@ class ProfessionalService
                     
                 }
                 if ($professional->attended != 0) {
-                    Log::info('El professional esta atendiendo:'.$professional->name);
                     $finalHourAttended = Carbon::parse($professional->finalHourAttended);
                     $disponible = Carbon::parse($professional->disponible);
     
                     if ($finalHourAttended->gt($disponible)) {
-                        // finalHourAttended es mayor (posterior) que disponible
-                        Log::info('La hora final del que esta atendiendo es mayor que la hora disponible.');
                         // Aquí puedes agregar la lógica que necesites
                         $professional->disponible = $finalHourAttended->format('H:i:s');
                     }
@@ -1107,43 +894,13 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales:'.$returnedProfessionals);
+        Log::info('Orden de los professionales (branch_professionals_service_tottem1):'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el ProfessionalService(branch_professionals_service): " . $e->getMessage());
         }
-    }
-    
-    /**
-     * Método para calcular la hora disponible de un profesional considerando colación, reservas, y tiempo de cierre.
-     */
-    private function calcularDisponibilidad($professional, $totalTiempo, $reservations, $startTime, $closingTime, $current_time)
-    {
-        // Aquí puedes añadir la lógica de cálculo de disponibilidad basado en colación, reservas, etc.
-        // Si el profesional tiene colación o está ocupado, calcular su próxima disponibilidad.
-        
-        // Ejemplo simplificado de cómo calcularlo:
-        if ($professional->state == 2 && $professional->colacion_time) {
-            $colacion_time = Carbon::parse($professional->colacion_time)->addMinutes(60);
-            if (Carbon::parse($current_time) < $colacion_time) {
-                return $colacion_time->format('H:i');
-            }
-        }
-
-        // Si tiene reservas activas, calcular su disponibilidad basado en el tiempo de la última reserva.
-        if ($reservations->isNotEmpty()) {
-            $lastReservation = $reservations->last();
-            $endReservation = Carbon::parse($lastReservation->final_hour);
-            if ($endReservation->addMinutes($totalTiempo)->format('H:i:s') <= $closingTime) {
-                return $endReservation->format('H:i');
-            }
-        }
-
-        // Si no hay restricciones, devolver el tiempo de inicio del turno o el actual.
-        return max(Carbon::parse($startTime)->format('H:i'), $current_time);
-    }
-    
+    }   
     
 
     public function professional_reservations_time($branch_id, $professional_id, $day)
@@ -1608,152 +1365,6 @@ class ProfessionalService
         }
     }
 
-    /*public function branch_professionals_service($branch_id, $services)
-    {
-        $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
-        $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
-        $startTime = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
-        $closingTime = Carbon::now()->setTime(23, 59, 59)->format('H:i:s');
-        $current_date = Carbon::now()->format('Y-m-d');
-        $availableProfessionals = [];
-        $fechaDada = Carbon::now()->format('Y-m-d');
-        //return Carbon::now()->addMinutes($totalTiempo);
-        if (Carbon::now()->addMinutes($totalTiempo) >  Carbon::parse($closingTime)) {
-            return $availableProfessionals = [];
-        } else {
-            $professionals1 = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
-                $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
-            }, '=', count($services))
-                ->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
-                })
-                ->where('state', 1)
-                ->join('branch_professional', function ($join) use ($branch_id) {
-                    $join->on('professionals.id', '=', 'branch_professional.professional_id')
-                        ->where('branch_professional.branch_id', '=', $branch_id)
-                        ->where('branch_professional.arrival', '!=', NULL);
-                })
-                ->select(
-                    'professionals.id',
-                    'professionals.name',
-                    'professionals.surname',
-                    'professionals.second_surname',
-                    'professionals.email',
-                    'professionals.phone',
-                    'professionals.charge_id',
-                    'professionals.state',
-                    'professionals.image_url',
-                    'branch_professional.arrival',
-                    'branch_professional.living'
-                )->orderByRaw('branch_professional.living ASC')
-                ->orderBy('branch_professional.arrival', 'asc')
-                ->get();
-            foreach ($professionals1 as $professional1) {
-                $vacation = Vacation::where('professional_id', $professional1->id)->whereDate('startDate', '<=', $fechaDada)
-                    ->whereDate('endDate', '>=', $fechaDada)
-                    ->first();
-                Log::info($vacation);
-                if (!$vacation) {
-                    //Log::info();
-                    $professionals[] = $professional1;
-                }
-            }
-            $current_time = now()->format('H:i:s');
-            $duration = 0;
-            $cantAleatorie = 0;
-            $proAleatorie = 0;
-            $reservationAleatorie = Reservation::where('branch_id', $branch_id)->whereHas('tail', function ($query){
-                $query->where('aleatorie', 1);
-            })->where('start_time', '<', Carbon::now()->format('H:i'))->get();
-            if($reservationAleatorie){
-                foreach($reservationAleatorie as $aleatorie){
-                    $duration += $this->convertirHoraAMinutos($aleatorie->total_time);
-                }
-            }
-            $cantAleatorie = $reservationAleatorie->count();
-            $promAleatorie = $duration/$cantAleatorie;
-            Log::info('Duracion de los servcios');
-            Log::info($duration);
-            Log::info('Promedio de aleatories services');
-            Log::info($promAleatorie);
-            foreach ($professionals1 as $professional) {
-                $reservations = $professional->reservations()->where('branch_id', $branch_id)->whereIn('confirmation', [1, 4])
-                    ->whereDate('data', $current_date)
-                    ->whereHas('tail', function ($subquery) {
-                        $subquery->where('aleatorie', '!=', 1);
-                    })
-                    ->get()
-                    ->sortBy('start_time')
-                    ->map(function ($query) use ($current_time, $professional, $promAleatorie) {
-                        $attended_values = [1, 11, 111, 4, 5, 33];
-                        // Comprobación de start_time y attended
-                        Log::info('Resevaciones');
-                        Log::info($query);
-                        if ($query->confirmation == 4 && $query->from_home == 1) {
-                             Log::info('Msg-Este profesional no esta libre');
-                            Log::info('Entrando a verificar el horario de la reserva que esta en atendiendose');
-                            Log::info('Pprofessional id' . $professional->id);
-                            Log::info('Tiempoo inicio de la reserva' . $query->start_time);
-                            Log::info('Tiempoo total de la reserva' . $query->total_time);
-                            $start_time = Carbon::parse($current_time)->addMinutes($promAleatorie)->toTimeString();//$current_time;//Carbon::parse($current_time)->addMinutes($promAleatorie)->toTimeString()
-                            $final_hour = date('H:i:s', strtotime($start_time) + strtotime($query->total_time) - strtotime('TODAY'));
-                            Log::info('Tiempoo inicio de la reserva actualizado' . $start_time);
-                            Log::info('Tiempoo final de la reserva' . $final_hour);
-                            return [
-                                'start_time' => $start_time,
-                                'final_hour' => $final_hour
-                            ];
-                        }
-                        return [
-                            'start_time' => Carbon::parse($query->start_time)->addMinutes($promAleatorie)->toTimeString(),//$query->start_time,
-                            'final_hour' => Carbon::parse($query->final_hour)->addMinutes($promAleatorie)->toTimeString()//$query->final_hour
-                        ];
-                    });
-                Log::info('$reservations');
-                Log::info($reservations);
-                // Decodificar la entrada JSON a un array de objetos
-                $entrada = json_decode($reservations, true);
-                //return $entrada[0];
-                if ($reservations->isEmpty()) {
-                    if (Carbon::now() < Carbon::parse($startTime)) {
-                        $timeOpen = Carbon::parse($startTime)->format('H:i');
-                        $professional->start_time = Carbon::parse($timeOpen)->addMinutes($promAleatorie)->toTimeString();//Carbon::parse($startTime)->format('H:i');//
-                        $availableProfessionals[] = $professional;
-                    } else {
-                        $timeOpen = date('H:i');
-                        $professional->start_time = Carbon::parse($timeOpen)->addMinutes($promAleatorie)->toTimeString();//date('H:i');//
-                        $availableProfessionals[] = $professional;
-                    }
-                } else {
-                    //$arrayHoras = $this->professional_reservations_time1($branch_id, $professional->id, $current_date);
-                    //return $arrayHoras;
-                    $timeFound = $this->encontrarHoraDisponible($totalTiempo, $entrada, $startTime);
-                    $professional->start_time = Carbon::parse($timeFound)->addMinutes($promAleatorie)->toTimeString();//$timeFound;//
-                    $availableProfessionals[] = $professional;
-                    //break;
-                } //else
-            } //for
-        } //else
-        //return $availableProfessionals;
-
-        $returnedProfessionals = [];
-
-        foreach ($availableProfessionals as $professional) {
-            $time = strtotime($professional->start_time);
-            if ($time + ($totalTiempo * 60) <= strtotime($closingTime)) {
-                // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
-                $returnedProfessionals[] = $professional;
-            }
-        }
-
-        usort($returnedProfessionals, function ($a, $b) {
-            return strtotime($a['start_time']) - strtotime($b['start_time']);
-        });
-
-        return $returnedProfessionals;
-    }*/
-
-
     ///nuevo metodo
     function encontrarHoraDisponible($timeService, $arrayIntervalos, $startTime)
     {
@@ -1765,83 +1376,29 @@ class ProfessionalService
             $horaActual = Carbon::parse($startTime);
         }
 
-        // Convertir la hora de inicio del primer intervalo a Carbon para comparar
-        //$primerIntervaloInicio = Carbon::createFromFormat('H:i:s', $arrayIntervalos[0]['start_time']);
-
-        // Si la hora actual es menor que la del primer intervalo, devuelve la hora final del último intervalo
-        //if ($horaActualCarbon->lt($primerIntervaloInicio)) {
-        //return end($arrayIntervalos)['final_hour'];
-        //}
-        //$auxActual = $horaActual->addMinutes($timeService);
         $i = 0;
-        Log::info('$horaActual');
-        Log::info($horaActual);
         foreach ($arrayIntervalos as $key => $intervalo) {
             $auxActual = Carbon::now();
             $horaInicioActual = Carbon::createFromFormat('H:i:s', $intervalo['start_time']);
             $horaFinActual = Carbon::createFromFormat('H:i:s', $intervalo['final_hour']);
-            Log::info('horaInicioActual');
-            Log::info($horaInicioActual);
-            Log::info('horaFinActual');
-            Log::info($horaFinActual);
-            Log::info('horaActual');
-            Log::info($horaActual);
             if ($horaActual > $horaInicioActual && $horaActual > $horaFinActual) {
                 continue;
             } else {
                 $nuevaHora = $horaActual->copy()->addMinutes($timeService);
-                Log::info('$nuevaHora----');
-                Log::info($nuevaHora);
-                Log::info($horaInicioActual);
-                Log::info('horaFinActual');
                 if ($nuevaHora <= $horaInicioActual) {
-                    Log::info('Respuesta 1');
                     return $horaActual->format('H:i');
                 } else {
                     if ($horaActual->between($horaInicioActual, $horaFinActual)) {
                         $horaActual = $horaFinActual;
-                        Log::info($i++);
+                        $i++;
                         continue;
                     } else {
                         $horaActual = $horaFinActual;
                     }
                 }
             }
-
-            /*// Si la hora actual está dentro del intervalo, continuamos al siguiente intervalo
-            if ($horaActualCarbon->between($horaInicioActual, $horaFinActual)) {
-                Log::info('Resp0');
-                continue;
-            }*/
-
-            // Si la hora actual es posterior al final del intervalo actual y no hay más intervalos después, devolvemos la hora actual
-            /*if ($horaActualCarbon->gt($horaFinActual) && !isset($arrayIntervalos[$key + 1])) {
-                Log::info('Resp1');
-                return $horaActual;
-            }*/
-
-            // Si hay intervalos posteriores, verificamos si el tiempo de servicio cabe y si el intervalo es mayor a la hora actual
-            /*if (isset($arrayIntervalos[$key + 1])) {
-                $horaInicioSiguiente = Carbon::createFromFormat('H:i:s', $arrayIntervalos[$key + 1]['start_time']);
-                $diferenciaMinutos = $horaInicioSiguiente->diffInMinutes($horaFinActual);
-                
-                if ($timeService <= $diferenciaMinutos && $horaInicioSiguiente->gt($horaActualCarbon)) {
-                    Log::info('Resp2');
-                    Log::info('horaInicioActual');
-                    Log::info($horaInicioActual);
-                    Log::info('horaFinActual');
-                    Log::info($horaFinActual);
-                    return $horaActual;
-                }
-            }*/
         } //endForm   
-        Log::info('Respuesta 2');
-        Log::info($horaActual->format('H:i'));
-
         return $horaActual->format('H:i');
-        //Log::info('Resp3');
-        // Si no se encuentra ninguna hora disponible, devolvemos la última hora del último intervalo
-        //return end($arrayIntervalos)['final_hour'];
         
     }
 
@@ -1849,10 +1406,6 @@ class ProfessionalService
 
     public function branch_professionals_serviceNew($branch_id, $services)
     {
-        // Ejemplo de uso
-        //$timeService = 20;
-        //$horaActual = '15:00';
-        //$arrayHoras = ['10:25', '10:30', '11:00', '11:15', '11:30','14:30'];
         $totalTiempo = Service::whereIn('id', $services)->get()->sum('duration_service');
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $start_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
@@ -1883,8 +1436,6 @@ class ProfessionalService
                             'final_hour' => $query->final_hour
                         ];
                     });
-                Log::info('$reservations');
-                Log::info($reservations);
                 // Decodificar la entrada JSON a un array de objetos
                 $entrada = json_decode($reservations, true);
                 //return $entrada[0];
@@ -1906,17 +1457,6 @@ class ProfessionalService
                     $horaFinal = $closingTime;
                     //$horaActual = Carbon::now()->format('H:i:s');
                     $horaActual = '08:30:60';
-                    //
-                    //
-                    //
-                    Log::info('$rangosHoras');
-                    Log::info($rangosHoras);
-                    Log::info('$tiempoServicio');
-                    Log::info($tiempoServicio);
-                    Log::info('$horaInicial');
-                    Log::info($horaInicial);
-                    Log::info('$horaActual');
-                    Log::info($horaActual);
 
 
                     $professional->start_time = $this->calcularHoraDisponible($horaInicial, $horaFinal, $rangosHoras, $tiempoServicio, $horaActual);
@@ -1963,19 +1503,10 @@ class ProfessionalService
         foreach ($rangosHoras as $rango) {
             $horaIniMinutos = $this->convertirHoraAMinutos($rango['start_time']);
             $horaFinMinutos = $this->convertirHoraAMinutos($rango['final_hour']);
-            Log::info('$horaIniMinutos');
-            Log::info($horaIniMinutos);
-            Log::info('$horaFinMinutos');
-            Log::info($horaFinMinutos);
-            Log::info('$horaInicialMinutos');
-            Log::info($horaInicialMinutos);
-
             // Comprobar si la hora inicial está dentro del rango actual
             if ($horaInicialMinutos < $horaIniMinutos) {
                 $resultHoras = $horaIniMinutos - $horaInicialMinutos;
                 if ($resultHoras >= $tiempoServicio) {
-                    Log::info('ESTOY ENTRANDO AQUI if 111if ($resultHoras >= $tiempoServicio) {');
-                    Log::info($resultHoras - $tiempoServicio);
                     return $this->convertirMinutosAHora($horaInicialMinutos);
                 } else {
                     $horaInicialMinutos = $horaFinMinutos;
@@ -1987,9 +1518,6 @@ class ProfessionalService
         if ($horaInicialMinutos < $horaFinalMinutos) {
             $resultHoras = $horaFinalMinutos - $horaInicialMinutos;
             if ($resultHoras >= $tiempoServicio) {
-                Log::info('ESTOY ENTRANDO AQUI if2222 ($resultHoras >= $tiempoServicio)');
-                Log::info($resultHoras - $tiempoServicio);
-
                 return $this->convertirMinutosAHora($horaInicialMinutos);
             } else {
                 return 'No tiene horario disponible';
@@ -2016,9 +1544,6 @@ class ProfessionalService
     {
         $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
         $start_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('start_time');
-        //$startTime = strtotime($start_time);
-        //Log::info('$startTime');
-        //Log::info($startTime);
         $professional = Professional::where('id', $professional_id)
             ->whereHas('branches', function ($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
@@ -2035,16 +1560,10 @@ class ProfessionalService
             $reservations = $professional->reservations->map(function ($reservation) {
                 $startFormatted = Carbon::parse($reservation->start_time)->format('H:i');
                 $finalMinutes = Carbon::parse($reservation->final_hour)->minute;
-                Log::info('$finalMinutes');
-                Log::info($finalMinutes);
                 $intervalos = [$startFormatted];
                 $startTime = Carbon::parse($startFormatted);
                 $finalFormatted = Carbon::parse($reservation->final_hour)->format('H:i');
-                Log::info('$finalFormatted');
-                Log::info($finalFormatted);
                 $finalTime = Carbon::parse($finalFormatted);
-                Log::info('$finalTime');
-                Log::info($finalTime);
                 // Agregar las horas intermedias de 15 en 15 minutos
                 while ($startTime->addMinutes(15) <= $finalTime) {
                     $intervalos[] = $startTime->format('H:i');
@@ -2070,9 +1589,6 @@ class ProfessionalService
             }
         } else {
             if ($currentDateTime->isToday()) {
-                // Verificar si la hora actual es menor que el primer start_time de las reservas del día
-                //$firstReservationStartTime = Carbon::parse($professional->reservations->first()->start_time);
-                //if ($currentDateTime->lessThan($firstReservationStartTime)) {
                 $startTime = Carbon::parse($start_time);
                 while ($startTime->addMinutes(15) <= $currentDateTime) {
                     $reservations[] = $startTime->format('H:i');
@@ -2127,8 +1643,6 @@ class ProfessionalService
                 $firstValidReservation = null;
 
                 $count = count($reservations);
-                Log::info('$count = count($reservations)');
-                Log::info($count = count($reservations));
                 for ($i = 0; $i < $count - 1; $i++) {
                     $startTime1 = strtotime($reservations[$i]->final_hour);
                     $startTime2 = strtotime($reservations[$i + 1]->start_time);
@@ -2169,68 +1683,6 @@ class ProfessionalService
         }
 
         return $returnedProfessionals;
-        /*$totaltime = Service::whereIn('id', $services)->get()->sum('duration_service');
-
-        $nombreDia = ucfirst(strtolower(Carbon::now()->locale('es_ES')->dayName));
-        $closing_time = Schedule::where('branch_id', $branch_id)->where('day', $nombreDia)->value('closing_time');
-        $closingTime = strtotime($closing_time);
-        Log::info($totaltime);
-        //return $branchServId = BranchService::whereIn('service_id', $services)->get()->pluck('id');
-        $professionals = Professional::where(function ($query) use ($services, $branch_id) {
-            foreach ($services as $service) {
-                $query->whereHas('branchServices', function ($q) use ($service, $branch_id) {
-                    $q->where('service_id', $service)->where('branch_id', $branch_id);
-                });
-            }
-        })->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero');
-        })->get();
-        Log::info($professionals);
-        $current_date = Carbon::now();
-        Log::info($current_date);
-        $availableProfessionals = [];
-        foreach ($professionals as $professional) {
-            $reservations = $professional->reservations()->whereHas('car.orders.branchServiceProfessional.branchService', function ($query) use ($branch_id){
-                $query->where('branch_id', $branch_id);
-            })
-                ->whereDate('data', $current_date)
-                ->where('start_time', '>=', $current_date->format('Y-m-d H:i:s'))
-                ->orderBy('start_time')
-                ->get();
-
-                if ($reservations->isEmpty()) {
-                    // Si no hay reservas, agregar el profesional con hora actual como tiempo de inicio
-                    $professional->start_time = $current_date->format('H:i:s');
-                    $availableProfessionals[] = $professional;
-                } else {
-                    $previousReservationEndTime = null;
-
-                foreach ($reservations as $reservation) {
-                    $startTime = strtotime($reservation->start_time);
-                    $finalHour = strtotime($reservation->final_hour);
-                    $currentTime = time();
-                    
-                    // Comprobar si la reserva cumple con las condiciones
-                    if ($previousReservationEndTime === null && (($startTime-$previousReservationEndTime) >= ($totaltime * 60))) {
-                        $professional->start_time = $reservation->final_hour;
-                        $availableProfessionals[] = $professional;
-                        break;
-                    }
-                    $previousReservationEndTime = strtotime($reservation->final_hour);
-                }
-            }
-        }
-        //return $availableProfessionals;
-        $returnedProfessionals = [];
-        foreach ($availableProfessionals as $professional) {
-            $time = strtotime($professional->start_time);
-            if ($time<=$closingTime) {
-                // Si el tiempo final es menor o igual al horario de cierre, agregar al profesional a la lista de devolución
-                $returnedProfessionals[] = $professional;
-            }
-        }
-
-        return $returnedProfessionals;*/
     }
     public function get_professionals_service($data)
     {
@@ -2278,12 +1730,9 @@ class ProfessionalService
         ];
         return $result;
     }
-
     
-    
-     public function professionals_ganancias_branch_date_ANTERIOR($data)
+    public function professionals_ganancias_branch_date($data)
     {
-        Log::info('Obtener los cars');
         $fecha = Carbon::now();
         if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
@@ -2324,157 +1773,6 @@ class ProfessionalService
                 $totalPercentWin += $order->percent_win;
             }
         }
-        /*$totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            $winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                'Servicios Regulares' => $ServiceRegular->count(),
-                'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
-                'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
-                'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];*/
-            $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            //$winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            $payments = ProfessionalPayment::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $professional->id)
-                ->whereDate('date', $fecha)
-                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
-                ->get();
-                $convivencia = 0;
-                $service = 0;
-                $bonos = 0;
-                foreach ($payments as $payment) {
-                    if ($payment->type == 'Bono convivencias') {
-                            $convivencia += $payment->amount;
-                        } 
-                    if($payment->type == 'Bono servicios'){
-                        $service += $payment->amount;
-                    }
-                    $bonos += $payment->amount;
-                }
-                $totalRetention = Retention::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $professional->id)->whereDate('data', $fecha)->sum('retention');
-                $winProfessional = $cars->sum(function ($car) {
-                    return $car->orders->sum(function ($order) {
-                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                    });
-                });
-                $retentionProfess = $retentionPorcent ? $winProfessional * $retentionPorcent / 100 : $winProfessional;
-                $amountConvivencia = $winProfessional - $retentionProfess;
-                $amountService = $amountConvivencia - $convivencia;
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                // 'Servicios Regulares' => $ServiceRegular->count(),
-                // 'Servicios Especiales' => $ServiceEspecial->count(),
-                // 'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Total Servicios' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $totalRetention ? number_format(round($totalRetention, 2), 2) : (number_format(round($retentionProfess, 2), 2)), //monto generado percent_win % calculando la retención
-                // 'Gan.Serv C/Convivencias' => number_format(round($amountConvivencia, 2), 2),
-                'Gan.Serv S/Convivencias' => number_format(round($amountService, 2), 2),
-                'Bonos' => number_format(round($bonos, 2), 2),
-                'Total' => number_format(round($amountService + $winTips + $bonos, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];
-        }
-        if ($data['charge'] == 'Tecnico') {
-            $cars = Car::with('reservation')
-                ->where('pay', 1)
-                ->where('tecnico_id', $data['professional_id'])
-                ->whereHas('reservation', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now());
-                })
-                ->get();
-            $amountGenral = $cars->sum('technical_assistance') * 5000;
-            return $result = [
-                'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2)
-            ];
-        } else {
-            return $result = [];
-        }
-    }
-    
-      public function professionals_ganancias_branch_date($data)
-    {
-        Log::info('Obtener los cars');
-        $fecha = Carbon::now();
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
-            $professional = Professional::where('id', $data['professional_id'])->first();
-            $cars = Car::whereHas('reservation', function ($query) use ($data, $fecha) {
-                $query->where('branch_id', $data['branch_id'])->whereDate('data', $fecha);
-            })->whereHas('clientProfessional', function ($query) use ($data) {
-                $query->where('professional_id', $data['professional_id']);
-            })->where('pay', 1)->get();
-            $carIds = $cars->pluck('id');
-            $services = 0;
-            $products = 0;
-            $totalClients = 0;
-            //foreach ($cars as $car) {
-            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
-            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
-            $services = $orderServ->count();
-            //$services = $services + count($car->orders->where('is_product', 0));
-            //$products = $products + count($car->orders->where('is_product', 1));
-            $products = $orderProd->sum('cant');
-            //}
-            $ServiceEspecial = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
-                $query->where('type_service', 'Especial');
-            })->get();
-            $ServiceRegular = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
-                $query->where('type_service', 'Regular');
-            })->get();
-            $totalClients = $cars->count();
-            $amountGenral = $cars->sum('amount');
-            /*$winProfessional =$cars->sum(function ($car){
-            return $car->orders->sum('percent_win');
-        });*/
-        $totalPrice = 0;
-        $totalPercentWin = 0;
-        foreach ($ServiceEspecial as $order) {
-            if ($order->meta == 1) {
-                $totalPrice += $order->price;
-            } elseif ($order->meta == 0) {
-                $totalPercentWin += $order->percent_win;
-            }
-        }
-        /*$totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            $winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                'Servicios Regulares' => $ServiceRegular->count(),
-                'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
-                'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
-                'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];*/
             $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
             //$winProfessional = $orderServ->sum('percent_win');
             $retentionPorcent = $professional->retention ? $professional->retention : 0;
@@ -2544,121 +1842,9 @@ class ProfessionalService
             return $result = [];
         }
     }
-    
-    
-     public function professionals_ganancias_branch_Periodo_ANTERIOR($data, $startDate, $endDate)
+        
+    public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
     {
-        Log::info('Obtener los cars');
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
-            $professional = Professional::where('id', $data['professional_id'])->first();
-            $cars = Car::whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
-                $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
-            })->whereHas('clientProfessional', function ($query) use ($data) {
-                $query->where('professional_id', $data['professional_id']);
-            })->where('pay', 1)->get();
-            $carIds = $cars->pluck('id');
-            $services = 0;
-            $products = 0;
-            $totalClients = 0;
-            //foreach ($cars as $car) {
-            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
-            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
-            $services = $orderServ->count();
-            //$services = $services + count($car->orders->where('is_product', 0));
-            //$products = $products + count($car->orders->where('is_product', 1));
-            $products = $orderProd->sum('cant');
-            //}
-            $ServiceEspecial = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
-                $query->where('type_service', 'Especial');
-            })->get();
-            $ServiceRegular = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
-                $query->where('type_service', 'Regular');
-            })->get();
-            $totalClients = $cars->count();
-            $amountGenral = $cars->sum('amount');
-            /*$winProfessional =$cars->sum(function ($car){
-            return $car->orders->sum('percent_win');
-        });*/
-        $totalPrice = 0;
-        $totalPercentWin = 0;
-        foreach ($ServiceEspecial as $order) {
-            if ($order->meta == 1) {
-                $totalPrice += $order->price;
-            } elseif ($order->meta == 0) {
-                $totalPercentWin += $order->percent_win;
-            }
-        }
-        $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            //$winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            $payments = ProfessionalPayment::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $professional->id)
-                ->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
-                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
-                ->get();
-                $convivencia = 0;
-                $service = 0;
-                $bonos = 0;
-                foreach ($payments as $payment) {
-                    if ($payment->type == 'Bono convivencias') {
-                            $convivencia += $payment->amount;
-                        } 
-                    if($payment->type == 'Bono servicios'){
-                        $service += $payment->amount;
-                    }
-                    $bonos += $payment->amount;
-                }
-                $totalRetention = Retention::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $professional->id)->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate)->sum('retention');
-                $winProfessional = $cars->sum(function ($car) {
-                    return $car->orders->sum(function ($order) {
-                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                    });
-                });
-                $retentionProfess = $retentionPorcent ? $winProfessional * $retentionPorcent / 100 : $winProfessional;
-                $amountConvivencia = $winProfessional - $retentionProfess;
-                $amountService = $amountConvivencia - $convivencia;
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                // 'Servicios Regulares' => $ServiceRegular->count(),
-                // 'Servicios Especiales' => $ServiceEspecial->count(),
-                // 'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Total Servicios' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $totalRetention ? number_format(round($totalRetention, 2), 2) : (number_format(round($retentionProfess, 2), 2)), //monto generado percent_win % calculando la retención
-                // 'Gan.Serv C/Convivencias' => number_format(round($amountConvivencia, 2), 2),
-                'Gan.Serv S/Convivencias' => number_format(round($amountService, 2), 2),
-                'Bonos' => number_format(round($bonos, 2), 2),
-                'Total' => number_format(round($amountService + $winTips + $bonos, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];
-        }
-        if ($data['charge'] == 'Tecnico') {
-            $cars = Car::with('reservation')
-                ->where('pay', 1)
-                ->where('tecnico_id', $data['professional_id'])
-                ->whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
-                    $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
-                })
-                ->get();
-            $amountGenral = $cars->sum('technical_assistance') * 5000;
-            return $result = [
-                'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2)
-            ];
-        } else {
-            return $result = [];
-        }
-    }
-    
-      public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
-    {
-        Log::info('Obtener los cars');
         if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
@@ -2768,10 +1954,9 @@ class ProfessionalService
         }
     }
     
-   
-       public function professionals_ganancias_branch_month_ANTERIOR($data, $mes, $year)
+      
+    public function professionals_ganancias_branch_month($data, $mes, $year)
     {
-        Log::info('Obtener los cars');
         if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $mes, $year) {
@@ -2811,156 +1996,6 @@ class ProfessionalService
                 $totalPercentWin += $order->percent_win;
             }
         }
-        /*$totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            $winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                'Servicios Regulares' => $ServiceRegular->count(),
-                'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
-                'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
-                'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];*/
-            $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            //$winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            $payments = ProfessionalPayment::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $professional->id)
-                ->whereMonth('date', $mes)->whereYear('date', $year)
-                ->whereIn('type', ['Bono convivencias', 'Bono productos', 'Bono servicios'])
-                ->get();
-                $convivencia = 0;
-                $service = 0;
-                $bonos = 0;
-                foreach ($payments as $payment) {
-                    if ($payment->type == 'Bono convivencias') {
-                            $convivencia += $payment->amount;
-                        } 
-                    if($payment->type == 'Bono servicios'){
-                        $service += $payment->amount;
-                    }
-                    $bonos += $payment->amount;
-                }
-                $totalRetention = Retention::where('branch_id', $data['branch_id'])
-                ->where('professional_id', $professional->id)->whereMonth('data', $mes)->whereYear('data', $year)->sum('retention');
-                $winProfessional = $cars->sum(function ($car) {
-                    return $car->orders->sum(function ($order) {
-                        return ($order->meta == 1 ? $order->price : 0) + ($order->meta == 0 ? $order->percent_win : 0);
-                    });
-                });
-                $retentionProfess = $retentionPorcent ? $winProfessional * $retentionPorcent / 100 : $winProfessional;
-                $amountConvivencia = $winProfessional - $retentionProfess;
-                $amountService = $amountConvivencia - $convivencia;
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                // 'Servicios Regulares' => $ServiceRegular->count(),
-                // 'Servicios Especiales' => $ServiceEspecial->count(),
-                // 'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Total Servicios' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $totalRetention ? number_format(round($totalRetention, 2), 2) : (number_format(round($retentionProfess, 2), 2)), //monto generado percent_win % calculando la retención
-                // 'Gan.Serv C/Convivencias' => number_format(round($amountConvivencia, 2), 2),
-                'Gan.Serv S/Convivencias' => number_format(round($amountService, 2), 2),
-                'Bonos' => number_format(round($bonos, 2), 2),
-                'Total' => number_format(round($amountService + $winTips + $bonos, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];
-        }
-        if ($data['charge'] == 'Tecnico') {
-            $cars = Car::with('reservation')
-                ->where('pay', 1)
-                ->where('tecnico_id', $data['professional_id'])
-                ->whereHas('reservation', function ($query) use ($data, $mes, $year) {
-                    $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
-                })
-                ->get();
-            $amountGenral = $cars->sum('technical_assistance') * 5000;
-            return $result = [
-                'Clientes Atendidos' => $cars->sum('technical_assistance'),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2)
-            ];
-        } else {
-            return $result = [];
-        }
-    }
-    
-     public function professionals_ganancias_branch_month($data, $mes, $year)
-    {
-        Log::info('Obtener los cars');
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
-            $professional = Professional::where('id', $data['professional_id'])->first();
-            $cars = Car::whereHas('reservation', function ($query) use ($data, $mes, $year) {
-                $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
-            })->whereHas('clientProfessional', function ($query) use ($data) {
-                $query->where('professional_id', $data['professional_id']);
-            })->where('pay', 1)->get();
-            $carIds = $cars->pluck('id');
-            $services = 0;
-            $products = 0;
-            $totalClients = 0;
-            //foreach ($cars as $car) {
-            $orderServ = Order::whereIn('car_id', $carIds)->where('is_product', 0)->get();
-            $orderProd = Order::whereIn('car_id', $carIds)->where('is_product', 1)->get();
-            $services = $orderServ->count();
-            //$services = $services + count($car->orders->where('is_product', 0));
-            //$products = $products + count($car->orders->where('is_product', 1));
-            $products = $orderProd->sum('cant');
-            //}
-            $ServiceEspecial = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
-                $query->where('type_service', 'Especial');
-            })->get();
-            $ServiceRegular = Order::whereIn('car_id', $carIds)->where('is_product', 0)->whereHas('branchServiceProfessional', function ($query) {
-                $query->where('type_service', 'Regular');
-            })->get();
-            $totalClients = $cars->count();
-            $amountGenral = $cars->sum('amount');
-            /*$winProfessional =$cars->sum(function ($car){
-                return $car->orders->sum('percent_win');
-            });*/
-            $totalPrice = 0;
-        $totalPercentWin = 0;
-        foreach ($ServiceEspecial as $order) {
-            if ($order->meta == 1) {
-                $totalPrice += $order->price;
-            } elseif ($order->meta == 0) {
-                $totalPercentWin += $order->percent_win;
-            }
-        }
-        /*$totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
-            $winProfessional = $orderServ->sum('percent_win');
-            $retentionPorcent = $professional->retention ? $professional->retention : 0;
-            $winTips = intval($cars->sum('tip') * 0.80);
-            return $result = [
-                'Clientes Atendidos' => $totalClients,
-                'Clientes Aleatorios' => $cars->where('select_professional', 0)->count(),
-                'Clientes Seleccionados' => $cars->where('select_professional', 1)->count(),
-                'Productos Vendidos' => $products,
-                'Cantidad de Servicios' => $services,
-                'Servicios Regulares' => $ServiceRegular->count(),
-                'Servicios Especiales' => $ServiceEspecial->count(),
-                'Monto Servicios Especial' => $totalAmount,
-                'Propina' => number_format(round($cars->sum('tip'), 2), 2),
-                'Propina 80%' => number_format(round($winTips, 2), 2),
-                'Monto Generado' => number_format(round($amountGenral, 2), 2), //suma productos y servicios
-                'Retención' => $retentionPorcent ? number_format(round($winProfessional * $retentionPorcent / 100, 2), 2) : 0, //monto generado percent_win % calculando la retención
-                'Ganancia Barbero' => number_format(round($winProfessional, 2), 2), //monto generado percent_win 
-                'Monto Líquido' => $retentionPorcent ? number_format(round($winProfessional - ($winProfessional * $retentionPorcent / 100) + $winTips, 2), 2) : number_format(round($winProfessional + $winTips, 2), 2), //ganancia barbero - retencion + propinas 80%
-            ];*/
             $totalAmount = number_format(round($totalPrice + $totalPercentWin, 2), 2);
             //$winProfessional = $orderServ->sum('percent_win');
             $retentionPorcent = $professional->retention ? $professional->retention : 0;
@@ -3075,29 +2110,20 @@ class ProfessionalService
                     ->whereDate('data', Carbon::now())
                     ->first();
                     if ($reservation != null && $professional->end_time == null) {
-                        Log::info('end_time Reasigned:'.$professional->end_time);
-                        Log::info('1er if Profesional Reasigned:'.$professional->name);
                         $professional->disponible = $reservation->finished_at->format('H:i:s');
                     }
                     else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
-                        Log::info('end_time Reasigned:'.$professional->end_time);
-                        Log::info('2do if Profesional Reasigned:'.$professional->name);
-                        /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
                         // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
                         $endTime = Carbon::parse($professional->end_time);
                         $lastReservationTime = Carbon::parse($reservation->finished_at);
         
                         // Comparar y decidir el tiempo que se asignará a `disponible`
                         if ($lastReservationTime->gt($endTime)) {
-                            Log::info('Tiempo de la última reserva es mayor que end_time Reasigned:');
-                            Log::info($lastReservationTime);
                             $professional->disponible = $lastReservationTime->format('H:i:s');
                         } else {
-                            Log::info('Tiempo de end_time o no hay última reserva Reasigned');
                             $professional->disponible = $endTime->format('H:i:s');
                         }
                     }else {
-                        Log::info('3ro if Profesional Reasigned:'.$professional->name);
                         $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
                         if ($record != null) {
                             $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');
@@ -3120,8 +2146,6 @@ class ProfessionalService
         // Convertir el campo telefono a string
         // Iterar sobre los profesionales
         foreach ($returnedProfessionals as $professional) {
-            Log::info('Professional analizando');
-            Log::info($professional);
             // Convertir el campo teléfono a string
             $professional->phone = (string) $professional->phone;
             $professionalCharge = Professional::where('id', $professional->id)->first();
@@ -3133,20 +2157,14 @@ class ProfessionalService
                 ->where('state', 1)
                 ->whereHas('workplace', function ($query) use ($branch_id) {
                     $query->where('busy', 1)->where('branch_id', $branch_id);
-                })->first();
-        
-            Log::info('Puesto de trabajo');
-            Log::info($workplaceProfessional);
+                })->first();       
         
             $current_date = Carbon::now();
             $nuevaHoraInicio = Carbon::now();
        
             if ($workplaceProfessional) {
-                 Log::info('log 1)');
                 $professional->position = $workplaceProfessional->workplace->name;
-                Log::info($professional->position);
                 $professional->charge_id = $charge;
-          Log::info($professional->charge_id);
                 $attended = $professional->reservations()
                     ->where('branch_id', $reservation->branch_id)
                     ->where('confirmation', 4)
@@ -3155,11 +2173,9 @@ class ProfessionalService
                         $subquery->whereIn('attended', [1, 11, 111, 4, 5, 33]);
                     })
                     ->get();
-          Log::info('log 3)');
                 if ($attended->isNotEmpty()) {
-                    Log::info('Está atendiendo');
+                    
                 } else {
-                      Log::info('log 4)');
                     $reservations = $professional->reservations()
                         ->where('branch_id', $reservation->branch_id)
                         ->where('confirmation', 4)
@@ -3169,33 +2185,25 @@ class ProfessionalService
                         })
                         ->orderBy('start_time')
                         ->get();
-          Log::info('log 5)');
                     if ($reservations->isEmpty()) {
-                        Log::info('No tiene reservas, lo agrego como libre');
                         $professionalFree[] = $professional;
                     } else {
-                          Log::info('log 6)');
                         foreach ($reservations as $reservation1) {
                             // Comprobación de start_time y attended
-                            Log::info('Reservaciones');
-                            Log::info($reservation1);
                             $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
         
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
-                                Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
                                 $professionalFree[] = $professional;
                                 break;
                             }else{
                                 break;
                             }
                         }
-                          Log::info('log 7)');
                     }
                 }
             }
         }
-  Log::info('log 8)');
         return $professionalFree;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -3206,12 +2214,7 @@ class ProfessionalService
     public function professionals_state_tottem($branch_id, $services)//cambio 31-08-24
     {
         try{
-        //$reservation = Reservation::find($reservation_id);
-        //$orders = Order::where('car_id', $reservation->car_id)->get()->pluck('branch_service_professional_id');
-        //$services = $servs;
         $total_timeMin = Service::whereIn('id', $services)->get()->sum('duration_service');
-        //$total_timeMin = $this->convertirHoraAMinutos($totalTiempo);
-        //$branchId = 1; // Reemplaza con el ID de la sucursal que estás buscando
         $currentTime = Carbon::now();
 
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
@@ -3241,47 +2244,10 @@ class ProfessionalService
             ->orderBy('branch_professional.living', 'asc')
             ->orderBy('branch_professional.arrival', 'asc')
             ->get();
-            Log::info('Professionales trabajando que realizan ese servicio');
-            Log::info($professionals);
-
-            /*$returnedProfessionals = $professionals->map(function($professional) use ($branch_id) {
-                $reservation = Reservation::where('branch_id', $branch_id)
-                    ->where('confirmation', 2)
-                    ->whereHas('car.clientProfessional', function ($query) use ($professional) {
-                        $query->where('professional_id', $professional->id);
-                    })->orderByDesc('updated_at')
-                    ->whereDate('data', Carbon::now())
-                    ->first();
-            
-                if ($reservation != null) {
-                    $professional->disponible = $reservation->updated_at->format('H:i');
-                } else {
-                    $record = Record::where('professional_id', $professional->id)
-                        ->where('branch_id', $branch_id)
-                        ->whereDate('start_time', Carbon::now())
-                        ->orderByDesc('start_time')
-                        ->first();
-            
-                    $professional->disponible = Carbon::parse($record->start_time)->format('H:i');
-                }
-            
-                return $professional;
-            });
-            
-            $returnedProfessionals = $returnedProfessionals->sortBy(function ($professional) {
-                return [
-                    strtotime($professional->disponible),
-                    $professional->living,
-                    $professional->arrival
-                ];
-            });
-            */
         $professionalFree = [];
         // Convertir el campo telefono a string
         // Iterar sobre los profesionales
         foreach ($professionals as $professional) {
-            Log::info('Professional analizando');
-            Log::info($professional);
             // Convertir el campo teléfono a string
             $professional->phone = (string) $professional->phone;
         
@@ -3292,9 +2258,6 @@ class ProfessionalService
                 ->whereHas('workplace', function ($query) use ($branch_id) {
                     $query->where('busy', 1)->where('branch_id', $branch_id);
                 })->first();
-        
-            Log::info('Puesto de trabajo');
-            Log::info($workplaceProfessional);
         
             $current_date = Carbon::now();
             $nuevaHoraInicio = Carbon::now();
@@ -3313,7 +2276,7 @@ class ProfessionalService
                     ->get();
         
                 if ($attended->isNotEmpty()) {
-                    Log::info('Está atendiendo');
+                    
                 } else {
                     $reservations = $professional->reservations()
                         ->where('branch_id', $branch_id)
@@ -3326,19 +2289,14 @@ class ProfessionalService
                         ->get();
         
                     if ($reservations->isEmpty()) {
-                        Log::info('No tiene reservas, lo agrego como libre');
                         $professional->start_time = Carbon::now()->format('H:i');
                         $professionalFree[] = $professional;
                     } else {
                         foreach ($reservations as $reservation1) {
-                            // Comprobación de start_time y attended
-                            Log::info('Reservaciones');
-                            Log::info($reservation1);
                             $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
         
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
-                                Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
                                 $professional->start_time = Carbon::now()->format('H:i');
                                 $professionalFree[] = $professional;
                                 break;
@@ -3357,14 +2315,7 @@ class ProfessionalService
             throw new \RuntimeException("Error al ejecutar el Professionalservice(professionals_state_tottem): " . $e->getMessage());
         }
     }
-    
-    
-    //
-    //
-    //
-    //
-    //METODOS NUEVOS
-    
+        
     public function professionals_state1($branch_id, $reservation_id)//cambio 31-08-24
     {
         try{
@@ -3422,9 +2373,6 @@ class ProfessionalService
             $professionalCharge = Professional::where('id', $professional->id)->first();
             $charge = $professionalCharge->charge->name;
             $professional->charge_id = $charge;
-            Log::info('Professional analizando');
-            Log::info($professional);        
-          Log::info($professional->charge_id);
                 $attended = $professional->reservations()
                     ->where('branch_id', $branch_id)
                     ->where('confirmation', 4)
@@ -3434,9 +2382,9 @@ class ProfessionalService
                     })
                     ->get();
                 if ($attended->isNotEmpty()) {
-                    Log::info('Está atendiendo');
+                    
                 } else {
-                      Log::info('log 4)');
+                      
                     $reservations = $professional->reservations()
                         ->where('branch_id', $branch_id)
                         ->where('confirmation', 4)
@@ -3447,19 +2395,13 @@ class ProfessionalService
                         ->orderBy('start_time')
                         ->get();
                     if ($reservations->isEmpty()) {
-                        Log::info('No tiene reservas, lo agrego como libre');
                         $professionalFree[] = $professional;
                     } else {
-                          Log::info('log 6)');
                         foreach ($reservations as $reservation1) {
-                            // Comprobación de start_time y attended
-                            Log::info('Reservaciones');
-                            Log::info($reservation1);
                             $start_timeMin = $this->convertirHoraAMinutos($reservation1->start_time);
                             $nuevaHoraInicioMin = $this->convertirHoraAMinutos($nuevaHoraInicio->format('H:i'));
         
                             if (($nuevaHoraInicioMin + $total_timeMin) <= $start_timeMin && $reservation1->confirmation !=4) {
-                                Log::info('Cabe antes de la primera reserva despues de la hora actual que possee en la cola');
                                 $professionalFree[] = $professional;
                                 break;
                             }else{
@@ -3485,29 +2427,20 @@ class ProfessionalService
                     ->whereDate('data', Carbon::now())
                     ->first();
                     if ($reservation != null && $professional->end_time == null) {
-                        Log::info('end_time Reasigned:'.$professional->end_time);
-                        Log::info('1er if Profesional Reasigned:'.$professional->name);
                         $professional->disponible = $reservation->finished_at->format('H:i:s');
                     }
                     else if ($professional->end_time !== null && Carbon::parse($professional->end_time)->toDateString() == Carbon::now()->toDateString()) {
-                        Log::info('end_time Reasigned:'.$professional->end_time);
-                        Log::info('2do if Profesional Reasigned:'.$professional->name);
-                        /*$professional->disponible = Carbon::parse($professional->end_time)->format('H:i');*/
                         // Convertir end_time y el tiempo de la última reserva en instancias de Carbon
                         $endTime = Carbon::parse($professional->end_time);
                         $lastReservationTime = Carbon::parse($reservation->finished_at);
         
                         // Comparar y decidir el tiempo que se asignará a `disponible`
                         if ($lastReservationTime->gt($endTime)) {
-                            Log::info('Tiempo de la última reserva es mayor que end_time Reasigned:');
-                            Log::info($lastReservationTime);
                             $professional->disponible = $lastReservationTime->format('H:i:s');
                         } else {
-                            Log::info('Tiempo de end_time o no hay última reserva Reasigned');
                             $professional->disponible = $endTime->format('H:i:s');
                         }
                     }else {
-                        Log::info('3ro if Profesional Reasigned:'.$professional->name);
                         $record = Record::where('professional_id', $professional->id)->where('branch_id', $branch_id)->whereDate('start_time', Carbon::now())->orderByDesc('start_time')->first();
                         if ($record != null) {
                             $professional->disponible = Carbon::parse($record->start_time)->format('H:i:s');

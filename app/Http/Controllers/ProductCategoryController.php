@@ -192,9 +192,6 @@ class ProductCategoryController extends Controller
 
     public function store(Request $request)
     {
-
-        Log::info("crear categoría de producto");
-        Log::info($request);
         try {
              $product_category_data = $request->validate([
                 'name' => 'required|max:50',
@@ -222,8 +219,6 @@ class ProductCategoryController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar");
              $product_category_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
@@ -232,7 +227,6 @@ class ProductCategoryController extends Controller
                 //'commission_rate' => 'nullable|numeric',
               
             ]);
-            Log::info($request);
             $product_category = ProductCategory::find( $product_category_data['id']);
             $product_category->name =  $product_category_data['name'];
             $product_category->description =  $product_category_data['description'];

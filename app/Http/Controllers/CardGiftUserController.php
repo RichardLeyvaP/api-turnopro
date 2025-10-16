@@ -52,12 +52,6 @@ class CardGiftUserController extends Controller
                 //'number_notification' => 'nullable|numeric'
             ]);
             $user = User::find($data['user_id']);
-            /*if ($user->professional) {                
-            return $user->professional;
-            }
-            else{
-                return $user->client;
-            }*/
             do {
                 // Genera un código alfanumérico aleatorio
                 $codigo = Str::random(8);
@@ -65,7 +59,6 @@ class CardGiftUserController extends Controller
                 // Verifica si el código ya existe en la base de datos
             } while (CardGiftUser::where('code', $codigo)->exists());
             $cardGift = CardGift::find($data['card_gift_id']);
-            Log::info($cardGift);
             $cardGiftUser = new CardGiftUser();
             $cardGiftUser->user_id = $data['user_id'];
             $cardGiftUser->card_gift_id = $data['card_gift_id'];
@@ -91,30 +84,15 @@ class CardGiftUserController extends Controller
                     ->pluck('email');
                     $mergedEmails = $emails->merge($client_email);
 
-                    Log::info('$mergedEmails correos a enviar la tarjeta de regalo');
-            Log::info($mergedEmails);
-            foreach ($mergedEmails as $email) {
-                try {
-                    $this->sendEmailService->emailGitCard($email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
-                } catch (\Swift_TransportException $e) {
-                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
-                } catch (\Exception $e) {
-                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
-                }
-            }
-            ///Aqui enviar codido por correo $user->email
-            //$this->sendEmailService->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
-            //SendEmailJob::dispatch()->emailGitCard($client_email, $client_name, $code, $value_card,$expiration_date);
-            /*$data = [
-                'send_gift_card' => true, // Indica que es un correo de envío de tarjeta de regalo
-                'client_email' => $client_email,
-                'client_name' => $client_name,
-                'code' => $code,
-                'value_card' => $value_card,
-                'expiration_date' => $expiration_date,
-            ];
-            
-            SendEmailJob::dispatch($data);*/
+                    foreach ($mergedEmails as $email) {
+                        try {
+                            $this->sendEmailService->emailGitCard($email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
+                        } catch (\Swift_TransportException $e) {
+                            Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                        } catch (\Exception $e) {
+                            Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                        }
+                    }
             
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente'], 200);
         } catch (TransportException $e) {
@@ -179,73 +157,7 @@ class CardGiftUserController extends Controller
             } catch (\Throwable $th) {  
             Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
-        }
-        
-        
-        
-        
-    //   try {             
-    //         Log::info("Dado una cardGift devuelve los clientes que tienen asignado");
-    //         $request->validate([
-    //             'card_gift_id' => 'required|numeric',
-    //             'branch_id' => 'required|numeric'
-    //         ]);
-    //         $now = Carbon::now();
-    //      // Retrieve all CardGift instances with the specified business_id
-    //          /*$cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])->where('card_gift_id', $request->card_gift_id)->get()->map(function ($query) use($now){
-    //             $cardGift = $query->cardGift;
-    //             $client = $query->user->client;
-    //             $professional = $query->user->professional;
-    //             return [
-    //                 'id' => $query->id,
-    //                 'code' => $query->code,
-    //                 'issue_date' => $query->issue_date,
-    //                 'exist' => $query->exist,
-    //                 'expiration_date' =>$query->expiration_date,
-    //                 'value' => $cardGift->value,
-    //                 'name' => $cardGift->name,
-    //                 'state' => $query->state,
-    //                 'image_cardgift' => $cardGift->image_cardgift.'?$'.$now,
-    //                 'userName' => $client ? $client->name : $professional->name,
-    //                 'image_url' => $client ? $client->client_image.'?$'.$now : $professional->image_url.'?$'.$now
-    //             ];
-    //          });*/
-    //          $cardGifts = CardGiftUser::with(['cardGift', 'user.professional', 'user.client'])
-    //         ->where('card_gift_id', $request->card_gift_id)
-    //         ->WhereDoesntHave('user.client.clientProfessionals.cars.reservation')->orWhereHas('user.client.clientProfessionals.cars.reservation', function ($query) use ($request) {
-    //             $query->where('branch_id', $request->branch_id);
-    //         })
-    //         ->whereDoesntHave('user.professional.branches')->orWhereHas('user.professional.branches', function ($query) use ($request) {
-    //             $query->where('branch_id', $request->branch_id);
-    //         })
-    //         ->get()
-    //         ->map(function ($query) use($now) {
-    //             $cardGift = $query->cardGift;
-    //             $client = $query->user->client;
-    //             $professional = $query->user->professional;
-    //             return [
-    //                 'id' => $query->id,
-    //                 'code' => $query->code,
-    //                 'issue_date' => $query->issue_date,
-    //                 'exist' => $query->exist,
-    //                 'expiration_date' => $query->expiration_date,
-    //                 'value' => $cardGift->value,
-    //                 'name' => $cardGift->name,
-    //                 'state' => $query->state,
-    //                 'image_cardgift' => $cardGift->image_cardgift . '?$' . $now,
-    //                 'userName' => $client ? $client->name : $professional->name,
-    //                 'image_url' => $client ? $client->client_image . '?$' . $now : $professional->image_url . '?$' . $now
-    //             ];
-    //         });
-             
-    //             return response()->json(['cardgiftUser' => $cardGifts],200, [], JSON_NUMERIC_CHECK); 
-          
-    //         } catch (\Throwable $th) {  
-    //         Log::error($th);
-    //     return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
-    //     }
-    
-    
+        }   
     
     }
 
@@ -303,7 +215,6 @@ class CardGiftUserController extends Controller
                 'code' => 'required'
             ]);
             $cardGiftUser = CardGiftUser::where('state', 'Activa')->where('code', $data['code'])->get()->value('exist');
-            Log::info($cardGiftUser);
             return response()->json($cardGiftUser ? $cardGiftUser : 0, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::info($th);

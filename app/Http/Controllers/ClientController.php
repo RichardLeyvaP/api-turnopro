@@ -47,48 +47,7 @@ class ClientController extends Controller
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
-
-  
-    
-    public function client_branch_ANTERIOR(Request $request)
-    {
-        try {
-
-            $data = $request->validate([
-                'branch_id' => 'nullable|numeric'
-            ]);
-
-            Log::info("entra a cliente");
-            Log::info("Sucursal");
-            Log::info($data['branch_id']);
-            $now = Carbon::now();
-            $dates = [];
-                $clients = Client::with('user')->whereHas('professionals.branches', function($query) use ($data) {
-                    
-                    $query->where('branches.id', $data['branch_id']);
-                })
-                ->orWhereDoesntHave('professionals.branches') 
-                ->distinct()
-                ->get()->unique('id');
-                $dates = $clients->map(function ($client) use ($now){
-                    return [
-                        'id' => $client->id,
-                        'name' => $client->name,
-                        'email' => $client->email,
-                        'phone' => $client->phone,
-                        'client_image' => $client->client_image.'?$'.$now,
-                        'user_id' => $client->user_id
-                    ];
-                });
-                        
-            return response()->json(['clients' => $dates], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-
-            return response()->json(['msg' => "Error al mostrar los clientes"], 500);
-        }
-    }
-    
+   
     public function client_branch(Request $request)
     {
         try {
@@ -96,10 +55,6 @@ class ClientController extends Controller
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric'
             ]);
-
-            Log::info("entra a cliente");
-            Log::info("Sucursal");
-            Log::info($data['branch_id']);
             $now = Carbon::now();
             $dates = [];
             $clients = Client::whereHas('clientProfessionals.cars.reservations', function ($query) use ($data) {
@@ -130,8 +85,6 @@ class ClientController extends Controller
     public function index_autocomplete()
     {
         try {
-
-            Log::info("entra a cliente");
             $clients = Client::with('user')->get()->map(function ($client) {
                 return [
                     'id' => $client->id,
@@ -147,59 +100,8 @@ class ClientController extends Controller
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
-
-    public function client_reservation_ANTERIOR(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric'
-            ]);
-            $clients = [];
-            Log::info("entra a cliente");
-            $concatenatedServices = '';
-            $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('confirmation', 1)->orderBy('start_time')->with('car.clientProfessional.client', 'car.orders.branchServiceProfessional.branchService.service')->get();
-            foreach ($reservations as $reservation) {
-                $client = $reservation['car']['clientProfessional']['client'];
-                $professional = $reservation['car']['clientProfessional']['professional'];
-                // Asegurarse de que $servicesOrders sea una colección
-                $servicesOrders = $reservation['car']['orders'] ? collect($reservation['car']['orders'])->where('is_product', 0) : collect();
-            
-                $concatenatedServices = '';
-                $serviceNames = [];
-
-                foreach ($servicesOrders as $servicesOrder) {
-                    $serviceName = $servicesOrder->branchServiceProfessional->branchService->service->name ?? '';
-                    if ($serviceName) {
-                        $serviceNames[] = $serviceName;
-                        // Concatenar el nombre del servicio a la variable
-                        //$concatenatedServices .= $serviceName . ', ';
-                    }
-                }
-                $concatenatedServices = implode(', ', $serviceNames);
-                    
-                $clients[] = [
-                    'id' => $reservation['id'],
-                    'name' => $client['name'],
-                    'email' => $client['email'],
-                    'client_image' => $client['client_image'],
-                    'professionalName' => $professional['name'],
-                    'start_time' => $reservation['start_time'],
-                    'final_hour' => $reservation['final_hour'],
-                    'services' => $concatenatedServices
-                ];
-                
-                // Eliminar la coma final y el espacio
-                //$concatenatedServices = rtrim($concatenatedServices, ', ');
-            }
-            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-
-            return response()->json(['msg' => $th->getmessage()."Error al mostrar los clientes"], 500);
-        }
-    }
     
-     public function client_reservation(Request $request)
+    public function client_reservation(Request $request)
     {
 
         try {
@@ -207,7 +109,6 @@ class ClientController extends Controller
                 'branch_id' => 'required|numeric'
             ]);
             $clients = [];
-            Log::info("entra a cliente");
             $concatenatedServices = '';
             $reservations = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->where('confirmation', 1)->orderBy('start_time')->with([
         'car.clientProfessional.client',
@@ -254,104 +155,6 @@ class ClientController extends Controller
             Log::error($th);
 
             return response()->json(['msg' => $th->getmessage()."Error al mostrar los clientes"], 500);
-        }
-    }
-
-
-    
-    public function client_autocomplete1_ANTERIOR(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric'
-            ]);
-            $clients = User::where(function ($query) use ($data) {
-                $query->whereHas('client.clientProfessionals.cars.reservation', function ($subQuery) use ($data) {
-                    $subQuery->where('branch_id', $data['branch_id']);
-                });
-            })->orWhere(function ($query) use ($data) {
-                $query->whereHas('professional.branches', function ($subQuery) use ($data) {
-                    $subQuery->where('branch_id', $data['branch_id']);
-                });
-            })->distinct('id')->get()->map(function ($user) {
-                $name = '';
-                $image = '';
-                $id = '';
-                if ($client =$user->client) { 
-                    $name = $client->name;
-                    $image = $client->client_image;
-                    $id = $client->id;
-                    $reservations = Reservation::whereHas('car', function ($query) use ($client) {
-                        $query->where('pay', 1)->whereHas('clientProfessional', function ($query) use ($client){
-                            $query->where('client_id', $client->id);
-                        });
-                    })->orderByDesc('data')->limit(12)->get();
-                    if ($reservations->isEmpty())
-                    {
-                        $details = [
-                        'professionalName' => "Ninguno",
-                        'imageLook' => 'comments/default_profile.jpg',
-                        'image_url' => '',
-                        'cantVisit' => 0,
-                        'endLook' => 'No hay comentarios',
-                        'lastVisit' => 'No ha sido atendido',
-                        'frecuencia' => "No Frecuente"
-                    ];
-                }
-                else{
-                $countReservations = $reservations->count();
-            if ($countReservations >= 12) {
-                $currentYear = Carbon::now()->year;
-    
-                $fiel = $reservations->filter(function ($reservation) use ($currentYear) {
-                    return Carbon::parse($reservation->data)->year == $currentYear;
-                })->count();
-                if ($fiel >= 12) {
-                    $frecuencia = "Fiel";
-                }
-            } elseif ($countReservations >= 3) {
-                $frecuencia = "Frecuente";
-            } else {
-                $frecuencia = "No Frecuente";
-            }
-
-            $comment = Comment::whereHas('clientProfessional', function ($query) use ($client) {
-                $query->where('client_id', $client->id);
-            })->orderByDesc('data')->orderByDesc('updated_at')->first();
-
-            $reservation = $reservations->first();
-            // Aquí es donde hacemos el cambio
-        $professional = $reservation->car->clientProfessional->professional()->withTrashed()->first();
-            $details = [
-                'professionalName' => $professional ? $professional->name : '',
-                'image_url' => $professional ? $professional->image_url : 'professionals/default_profile.jpg',
-                'imageLook' => $comment ? ($comment->client_look ? $comment->client_look : 'comments/default_profile.jpg') : 'comments/default_profile.jpg',
-                'cantVisit' => $reservations->count(),
-                'endLook' => $comment ? $comment->look : null,
-                'lastVisit' => $reservation->data,
-                'frecuencia' => $frecuencia,
-            ];
-                    }
-                }
-                if ($professional = $user->professional) {
-                    $id = $professional->id;
-                    $name = $professional->name;
-                    $image = $professional->image_url;
-                    $details = [];
-                }
-                return [
-                    'id' => $id,
-                    'name' => $name,
-                    'client_image' => $image,
-                    'user_id' => $user->id,
-                    'details' => $details
-
-                ];
-            });
-            return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar la professionala"], 500);
         }
     }
     
@@ -490,7 +293,6 @@ class ClientController extends Controller
             $data = $request->validate([
                 'Date' => 'required|date'
             ]);
-            Log::info('Obtener los cars');
             $branches = Branch::all();
             $result = [];
             $i = 0;
@@ -556,15 +358,10 @@ class ClientController extends Controller
             }
             $client = new Client();
             $client->name = $request->name;
-            //$client->surname = $request->surname;
-            //$client->second_surname = $request->second_surname;
             $client->email = $request->email;
             $client->phone = $request->phone;
             $client->user_id = $user->id;
-            //$client->client_image = 'comments/default.jpg';
             $client->save();
-            Log::info($client);
-          //  $filename = "image/default.png";
             $filename = "clients/default_profile.jpg";
             if ($request->hasFile('client_image')) {
                 $filename = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
@@ -582,20 +379,12 @@ class ClientController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar");
-
-
             $clients_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
-                //'surname' => 'required|max:50',
-                //'second_surname' => 'required|max:50',
                 'email' => 'required|max:50|email',
                 'phone' => 'required|max:15|string',
-                //'user_id' => 'required|numeric'
             ]);
-            Log::info($request['client_image']);
             $client = Client::find($clients_data['id']);
             if ($request->hasFile('client_image'))
             if ($client->client_image != 'clients/default_profile.jpg') {
@@ -606,50 +395,14 @@ class ClientController extends Controller
                 $client->client_image = $request->file('client_image')->storeAs('clients', $client->id . '.' . $request->file('client_image')->extension(), 'public');
             }
             $client->name = $clients_data['name'];
-            //$client->surname = $clients_data['surname'];
-            //$client->second_surname = $clients_data['second_surname'];
             $client->email = $clients_data['email'];
             $client->phone = $clients_data['phone'];
-            //$client->user_id = $clients_data['user_id'];
-            //$client->client_image = $filename;
             $client->save();
 
             return response()->json(['msg' => 'Cliente actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::info($th);
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el cliente'], 500);
-        }
-    }
-
-    public function destroy_ANTERIOR(Request $request)
-    {
-        try {
-
-            $clients_data = $request->validate([
-                'id' => 'required|numeric'
-            ]);
-            Log::info('Eliminación de cliente id: ');
-            Log::info($clients_data['id']);
-            $client = Client::find($clients_data['id']);
-            if ($client->client_image != "clients/default_profile.jpg") {
-                $destination = public_path("storage\\" . $client->client_image);
-                if (File::exists($destination)) {
-                    File::delete($destination);
-                }
-            }
-            
-            //User::destroy($client->user_id);
-            $user = User::find($client->user_id);
-            if ($user) {
-                Client::destroy($clients_data['id']);
-            }else{         
-                Client::destroy($clients_data['id']);  
-            User::destroy($user->id);
-            }
-            return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage().'Error al eliminar el cliente'], 500);
         }
     }
     
@@ -661,15 +414,8 @@ class ClientController extends Controller
                 'id' => 'required|numeric'
             ]);
             // Obtener el usuario autenticado
-        $professUser= Auth::user();
-        // Imprimir en el log el nombre del usuario que accede
-        Log::info("El usuario : ");
-        Log::info($professUser->name);
-        Log::info(" está intentando eliminar un cliente con id: ");
-        Log::info($clients_data['id']);
-        
+            $professUser= Auth::user();        
             if ($professUser->professional->charge->name != "Administrador") {
-                Log::info('No elimina al cliente no es Administrador');
                 return response()->json(['msg' => 'cliente no eliminado no es administrador'], 200);
             }
             $client = Client::find($clients_data['id']);
@@ -687,8 +433,6 @@ class ClientController extends Controller
                 Client::destroy($clients_data['id']);  
             User::destroy($user->id);
             }
-
-
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -716,9 +460,6 @@ class ClientController extends Controller
                           ->havingRaw('COUNT(*) > 3');
                 })
                 ->get();
-                /*$clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate, $data) {
-                        $query->where('branch_id', $data['branch_id'])->whereDate('data', $currentDate);
-                }])->has('reservations', '>', 3)->get();*/
             }else{
                 $clientesConMasDeTresReservas = Client::whereHas('reservations', function ($query) use ($currentDate, $data) {
                     $query->whereDate('data', $currentDate);
@@ -728,15 +469,7 @@ class ClientController extends Controller
                           ->havingRaw('COUNT(*) > 3');
                 })
                 ->get();
-                /*$clientesConMasDeTresReservas = Client::withCount(['reservations'=> function ($query) use ($currentDate){
-                    $query->whereDate('data', $currentDate);
-                }])->has('reservations', '>', 3)->get();*/
-            }
-            /*
-            $query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
-                        $query->where('branch_id', $data['branch_id']);
-                    });*/
-            
+            }            
             $cantidadClientes = $clientesConMasDeTresReservas->count();
 
             return response()->json($cantidadClientes, 200, [], JSON_NUMERIC_CHECK);
@@ -755,30 +488,17 @@ class ClientController extends Controller
             ]);
             Log::info($data);
             if ($data['branch_id'] !=0) {
-                Log::info('es una branch');
                 $clientesConMasDeTresReservas = Client::withCount(['reservations' => function ($query) use ($data) {
-                    ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
                         $query->where('branch_id', $data['branch_id']);
-                    ///});
                 }])->get()->map(function ($query){
-                    /*$yearCant = 0;
-                    $yearCant = $query->whereHas('reservations', function ($query){
-                        $query->whereYear('data', Carbon::now()->format('Y'));
-                    })->count();*/
                     if($query->reservations_count >= 12){
                         $frecuence = 'Fiel';
-                        Log::info('Es Fiel');                        
-                        Log::info($frecuence);
-                    }
+                        }
                     if($query->reservations_count >= 2){
                         $frecuence = 'Frecuente';
-                        Log::info('Es Frecuente');  
-                        Log::info($frecuence);
-                    } 
+                      } 
                     else{
                         $frecuence = 'No Frecuente';
-                        Log::info('No es frecuente');                        
-                        Log::info($frecuence);
                     }                    
                     return [
                         'name' => $query->name.' '.$query->surname.' ' .$query->second_surname,
@@ -787,30 +507,18 @@ class ClientController extends Controller
                         'client_image' =>$query->client_image,
                         'frecuence' =>  $frecuence,
                         'cant_visist' => $query->reservations_count,
-                        //'year' => $yearCant
                     ];
                 });
             }else{
                 $clientesConMasDeTresReservas = Client::withCount('reservations')->get()->map(function ($query){
-                    Log::info('bussines');
-                    /*$yearCant = 0;
-                    $yearCant = $query->whereHas('reservations', function ($query){
-                        $query->whereYear('data', Carbon::now()->format('Y'));
-                    })->count();*/
                     if($query->reservations_count >= 12){
                         $frecuence = 'Fiel';
-                        Log::info('Es fiel');                        
-                        Log::info($frecuence);
                     }
                     if($query->reservations_count >= 2){
                         $frecuence = 'Frecuente';
-                        Log::info('Es frecuente');  
-                        Log::info($frecuence);
                     } 
                     else{
                         $frecuence = 'No Frecuente';
-                        Log::info('No es frecuente');                        
-                        Log::info($frecuence);
                     }                    
                     return [
                         'name' => $query->name.' '.$query->surname.' ' .$query->second_surname,
@@ -823,72 +531,6 @@ class ClientController extends Controller
                     ];
                 });
             }
-            
-
-            //$cantidadClientes = $clientesConMasDeTresReservas->count();
-
-            return response()->json($clientesConMasDeTresReservas, 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
-        }
-    }
-
-    public function clients_frecuence_periodo_ANTERIOR(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_id' => 'nullable',
-                'startDate' => 'nullable',
-                'endDate' => 'nullable'
-            ]);
-            Log::info($data);
-                Log::info('es una branch');
-                
-                $clientesConMasDeTresReservas = Client::whereHas('clientProfessionals.cars.reservation', function ($query) use ($data) {
-                    $query->where('branch_id', $data['branch_id']);
-                })->withCount(['reservations' => function ($query) use ($data) {
-                    ///$query->whereDate('data', '=', $currentDate)->whereHas('car.clientProfessional.professional.branches', function ($query) use ($data){
-                        $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate']);
-                    ///});
-                }])->get()->map(function ($query) use ($data){
-                    $reservation = Reservation::where('branch_id', $data['branch_id'])->whereDate('data', '>=', $data['startDate'])->whereDate('data', '<=', $data['endDate'])->whereHas('car.clientProfessional', function ($reservation) use ($query){
-                        $reservation->where('client_id', $query->id);
-                    })->orderByDesc('data')->first();
-                    /*$yearCant = 0;
-                    $yearCant = $query->whereHas('reservations', function ($query){
-                        $query->whereYear('data', Carbon::now()->format('Y'));
-                    })->count();*/
-                    if($query->reservations_count >= 12){
-                        $frecuence = 'Fiel';
-                        Log::info('Es Fiel');                        
-                        Log::info($frecuence);
-                    }
-                    if($query->reservations_count >= 2 && $query->reservations_count < 12){
-                        $frecuence = 'Frecuente';
-                        Log::info('Es Frecuente');  
-                        Log::info($frecuence);
-                    } 
-                    else if($query->reservations_count < 2){
-                        $frecuence = 'No Frecuente';
-                        Log::info('No es frecuente');                        
-                        Log::info($frecuence);
-                    }                    
-                    return [
-                        'name' => $query->name.' '.$query->surname.' ' .$query->second_surname,
-                        'email' =>$query->email,
-                        'phone' =>$query->phone,
-                        'client_image' =>$query->client_image,
-                        'frecuence' =>  $frecuence,
-                        'cant_visist' => $query->reservations_count,
-                        'data' => $reservation ? $reservation->data : 'No ha sido atendido'
-                    ];
-                })->values();
-            
-            
-
-            //$cantidadClientes = $clientesConMasDeTresReservas->count();
-
             return response()->json($clientesConMasDeTresReservas, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -956,32 +598,12 @@ class ClientController extends Controller
             return response()->json(['msg' => $th->getMessage() . " Error del servidor"], 500);
         }
     }
-
-    public function client_email_phoneAnteriorrrr(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'email' => 'required'
-            ]);
-            Log::info($data['email']);
-            $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$request->email)->get();
-            Log::info('Clientes encontrados');
-            Log::info($clients);
-            return response()->json(['client' => $clients], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
-        }
-    }
-
-
     public function client_email_phone(Request $request)
     {
         try {
             $data = $request->validate([
                 'email' => 'required'
             ]);
-            Log::info($data['email']);
             $input = $request->email;
 
            
@@ -992,11 +614,7 @@ class ClientController extends Controller
                     $data['email'] = $input;
                 }
             }
-    
-            Log::info('Valor de entrada modificado: ' . $input);
-                $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$data['email'])->get();
-            Log::info('Clientes encontrados');
-            Log::info($clients);
+            $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$data['email'])->get();
             return response()->json(['client' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -1039,96 +657,4 @@ class ClientController extends Controller
         }
     }
 
-    /*public function handleClientIncognito(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => [
-                'required',
-                'string',
-                'max:255'
-            ]
-        ], [
-            'name.required' => 'El nombre es requerido',
-            'name.string' => 'El nombre debe ser texto',
-        ]);
-
-        if ($validator->fails()) {
-            Log::warning('Validación fallida para creación de cliente', [
-                'errors' => $validator->errors()->all(),
-                'input' => $request->all()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $name = $request->input('name');
-
-            // Buscar client incluyendo eliminados
-            $client = Client::withTrashed()
-                    ->where('name', 'like', $name)
-                    ->first();
-
-            if (!$client) {
-                Log::info("Client no encontrado, creando nuevos registros", ['name' => $name]);
-
-                // Generar datos de prueba chilenos si no se proporcionaron
-                $cleanName = preg_replace('/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/', '', $name);
-                $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.cl';
-                $phone = '+569' . rand(10000000, 99999999);
-
-                // 1. Crear User con soft delete
-                $user = User::create([
-                    'name' => $name,
-                    'email' => $email,
-                    'password' => Hash::make($phone . $name)
-                ]);
-                $user->delete(); // Soft delete inmediato
-
-                // 2. Crear Client con soft delete
-                    $client = new Client();
-                    $client->name = $name;
-                    $client->email = $email;
-                    $client->phone = $phone;
-                    $client->user_id = $user->id;
-                    $client->client_image = 'clients/default_profile.jpg';
-                    $client->save();
-                $client->delete(); // Soft delete inmediato
-
-                Log::info("Nuevos registros creados y marcados como eliminados", [
-                    'user_id' => $user->id,
-                    'client_id' => $client->id,
-                    'email' => $email,
-                    'phone' => $phone
-                ]);
-            } else {
-                // Si existe, obtener el user relacionado (incluyendo eliminados)
-                $user = User::withTrashed()->find($client->user_id);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => $client->wasRecentlyCreated ? 'Cliente creado exitosamente' : 'Cliente encontrado',
-                     'user' => $user,
-                    'client' => $client
-            ]);
-
-        } catch (Exception $e) {
-            Log::error("Error en handleClientRequest", [
-                'name' => $request->input('name'),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al procesar el cliente',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }*/
 }

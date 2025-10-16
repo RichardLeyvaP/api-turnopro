@@ -22,7 +22,6 @@ class ProductStoreController extends Controller
     public function index()
     {
         try {
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
             $productStore = ProductStore::with('product', 'store')->where('product_exit', '>', 0)->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
@@ -52,7 +51,6 @@ class ProductStoreController extends Controller
     public function showStoresProductsold(Request $request)
     {
         try {
-            Log::info("Entra a buscar los stores y productos");
             $stores = Store::all('id', 'address', 'reference');
             $products = Product::all('id', 'name', 'image_product');
             return response()->json([
@@ -68,7 +66,6 @@ class ProductStoreController extends Controller
     public function showStoresProducts(Request $request)
     {
         try {
-            Log::info("Entra a buscar los stores y productos");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable|numeric'
@@ -115,18 +112,14 @@ class ProductStoreController extends Controller
              ->first();
 
             if ($existingRelation) {                
-                if ($existingRelation->trashed()) {
-                    Log::info("Relación existía pero estaba eliminada lógicamente. Restaurando...");
-                    
+                if ($existingRelation->trashed()) {                    
                     // Actualizar todos los campos incluyendo deleted_at en una sola operación
                     $existingRelation->restore();
                     $existingRelation->product_quantity = $data['product_quantity'];
                     $existingRelation->product_exit = $data['product_quantity'];
                     $existingRelation->stock_depletion = $data['stock_depletion'];
                     $existingRelation->save();
-                } else {
-                    Log::info("Relación existe y está activa. Actualizando existencias...");
-                    
+                } else {                    
                     // Sumar a la existencia actual
                     $existingRelation->product_quantity = $data['product_quantity'];
                     $existingRelation->product_exit += $data['product_quantity'];
@@ -134,7 +127,6 @@ class ProductStoreController extends Controller
                     $existingRelation->save();
                 }
             } else {
-                Log::info("No existía relación. Creando nueva...");
                 $newRelation = new ProductStore();
                 $newRelation->product_id = $data['product_id'];
                 $newRelation->store_id = $data['store_id'];
@@ -153,7 +145,6 @@ class ProductStoreController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
             $productStore = ProductStore::where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
                 return [
                     'id' => $query->id,
@@ -186,9 +177,7 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric'
             ]);
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el de una branch");
             if ($data['branch_id'] != 0) {
-                Log::info("No es Administrador");
                 $productStore = ProductStore::whereHas('store.branches', function ($query) use ($data) {
                     $query->where('branch_id', $data['branch_id']);
                 })->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
@@ -245,9 +234,7 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric'
             ]);
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el de una branch");
             if ($data['branch_id'] != 0) {
-                Log::info("No es Administrador");
                 $productStore = ProductStore::where(function($query) use ($data) {
                     // 1. Almacenes relacionados con la sucursal especificada en $data
                     $query->whereHas('store.branches', function ($q) use ($data) {
@@ -344,58 +331,6 @@ class ProductStoreController extends Controller
         }
     }
 
-    /*public function subtractProductExit(Request $request)
-    {
-        // Validar la solicitud
-        $request->validate([
-            'id' => 'required|integer|exists:product_store,id',
-            'quantity' => 'required|integer|min:1', // La cantidad debe ser un entero positivo
-        ]);
-
-        // Obtener la cantidad a restar
-        $quantityToSubtract = $request->input('quantity');
-        $id = $request->input('id');
-
-        // Iniciar una transacción de base de datos
-        DB::beginTransaction();
-
-        try {
-            // Obtener el registro de ProductStore por su ID
-            $productStore = ProductStore::findOrFail($id);
-
-            // Calcular el nuevo valor de product_exit
-            $newProductExit = max($productStore->product_exit - $quantityToSubtract, 0);
-
-            // Actualizar el campo product_exit
-            $productStore->product_exit = $newProductExit;
-
-            // Guardar los cambios en la base de datos
-            $productStore->save();
-
-            // Confirmar la transacción
-            DB::commit();
-
-            // Respuesta exitosa
-            return response()->json([
-                'success' => true,
-                'message' => "Se restaron $quantityToSubtract unidades correctamente.",
-                'new_product_exit' => $newProductExit,
-            ]);
-        } catch (\Exception $e) {
-            // Revertir la transacción en caso de error
-            DB::rollBack();
-
-            // Log del error
-            Log::error('Error al restar unidades de product_exit: ' . $e->getMessage());
-
-            // Respuesta de error
-            return response()->json([
-                'success' => false,
-                'message' => 'Hubo un error al restar las unidades.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }*/
     public function subtractProductExit(Request $request)
     {
         // Validar la solicitud
@@ -464,7 +399,6 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric'
             ]);
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
             $productStore = ProductStore::whereHas('store.enrollments', function ($query) use ($data) {
                 $query->where('enrollments.id', $data['enrollment_id']);
             })->where('product_exit', '>', 0)->with('product', 'store')->get()->map(function ($query) {
@@ -499,7 +433,6 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric'
             ]);
-            Log::info("Entra a buscar los almacenes con los productos pertenecientes en el");
             $productStore = ProductStore::whereHas('store.enrollments', function ($query) use ($data) {
                 $query->where('enrollments.id', $data['enrollment_id']);
             })->where('product_exit', '>', 0)->whereHas('product', function ($query) {
@@ -525,7 +458,6 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-            Log::info("Entra a buscar los productos de la branch");
             $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
                 $query->where('status_product', 'En venta');
             })->whereHas('store.branches', function ($query) use ($data) {
@@ -553,9 +485,6 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
-
-            Log::info("Buscando productos de la branch para venta a profesionales");
-
             $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
                 $query->where('status_product', 'En venta');
             })->whereHas('store.branches', function ($query) use ($data) {
@@ -596,7 +525,6 @@ class ProductStoreController extends Controller
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric'
             ]);
-            Log::info("Entra a buscar los productos de la academia");
             $productStores = ProductStore::whereHas('product', function ($query) use ($data) {
                 $query->where('status_product', 'En venta');
             })->whereHas('store.enrollments', function ($query) use ($data) {
@@ -639,7 +567,6 @@ class ProductStoreController extends Controller
 
             $productsArray = $productStores->map(function ($productStore) {
                 $product = $productStore->product;
-                Log::info('Producto' . $product);
                 if ($product) {
                     return [
                         'id' => $productStore->id,
@@ -683,41 +610,10 @@ class ProductStoreController extends Controller
             $store = Store::find($data['store_id']);
             $productstore = $store->products()->wherePivot('product_id', $product->id)->first();
             if ($productstore) {
-                //return $productstore->pivot;
-                //$productstore->product_exit += $data['product_quantity'];
-                //$productstore->product_quantity = $data['product_quantity'];
-                //$productstore->save();
-                //$existencia = $data['product_quantity'] + $productstore->pivot['product_exit'];
                 $product->stores()->updateExistingPivot($store->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
             } else {
                 $store->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity'], 'stock_depletion' => $data['stock_depletion']]);
             }
-            /*if($request->has('branch_id') && $data['branch_id'] != null){
-            $productStore = $store->products()
-                ->wherePivot('product_id', $product->id)
-                ->wherePivot('branch_id', $data['branch_id'])
-                ->first();
-            if ($productStore) {
-                Log::info('tiene valor');
-                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
-                $productstore->product_exit = $data['product_quantity'];
-                $productstore->product_quantity = $data['product_quantity'];
-                $productstore->save();
-            }
-            }
-            else{
-                $productStore = $store->products()
-                ->wherePivot('product_id', $product->id)
-                ->wherePivot('enrollment_id', $data['enrollment_id'])
-                ->first();
-            if ($productStore) {
-                Log::info('tiene valor');
-                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
-                $productstore->product_exit = $data['product_quantity'];
-                $productstore->product_quantity = $data['product_quantity'];
-                $productstore->save();
-            }*/
-            //}
             return response()->json(['msg' => 'Asignación actualizada correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -797,7 +693,6 @@ class ProductStoreController extends Controller
             $store = Store::find($data['store_id']);
             $product = $store->products()->wherePivot('product_id', $product->id)->first();
             $productstore = $product->pivot;
-            Log::info('Relacion producto almacen:' . $productstore);
             if ($productstore != null) {
                 $existencia = $productstore->product_exit - $data['product_quantity'];
                 $product->stores()->updateExistingPivot($store->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $existencia]);
@@ -807,16 +702,6 @@ class ProductStoreController extends Controller
             //aumentar
             $storeM = Store::find($data['store_idM']);
             $storeDestino = Store::findOrFail($data['store_idM']);
-            //$productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first();
-            /*if ($productstoreM) {
-                //$existencia = $data['product_quantity'] + $productstoreM->pivot['product_exit'];
-                $existencia = $productstoreM->pivot['product_exit'] + $data['product_quantity'];
-                $storeM->products()->updateExistingPivot($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $existencia]);
-            } else {
-                $storeM->products()->attach($product->id, ['product_quantity' => $data['product_quantity'], 'product_exit' => $data['product_quantity']]);
-                $productstoreM = $storeM->products()->wherePivot('product_id', $product->id)->first();
-            }*/
-
             $existingRelation = ProductStore::withTrashed()
                 ->where('product_id', $product->id)
                 ->where('store_id', $storeDestino->id)
@@ -831,16 +716,12 @@ class ProductStoreController extends Controller
                     $existingRelation->product_quantity = $data['product_quantity'];
                     $existingRelation->product_exit = $data['product_quantity'];
                     $existingRelation->save();
-                } else {
-                    Log::info("El producto ya estaba en el destino y activo.");
-                    
+                } else {                    
                     // Sumar a la existencia actual
                     $existingRelation->product_exit += $data['product_quantity'];
                     $existingRelation->save();
                 }
-            } else {
-                Log::info("El producto no existía en el destino, creando nueva relación.");
-                
+            } else {                
                 // Crear nueva relación
                 $newRelation = new ProductStore();
                 $newRelation->product_id = $product->id;
@@ -849,9 +730,6 @@ class ProductStoreController extends Controller
                 $newRelation->product_exit = $data['product_quantity'];
                 $newRelation->save();
             }
-
-
-            //registro de movimiento de productos
 
             $movementprodct = new MovementProduct();
             $movementprodct->data = Carbon::now();
@@ -895,8 +773,6 @@ class ProductStoreController extends Controller
                             ->orWhereIn('store_int_id', $storeIds);
                     })->get();
                     foreach ($movements as $query) {
-                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
-                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
                         $storeInt = Store::where('id', $query->store_int_id)->first();
                         $storeOut = Store::where('id', $query->store_out_id)->first();
                         $product = Product::where('id', $query->product_id)->first();
@@ -918,8 +794,6 @@ class ProductStoreController extends Controller
                 } else {
                     $movements = MovementProduct::whereYear('data', $data['year'])->whereMonth('data', $request->mounth)->get();
                     foreach ($movements as $query) {
-                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
-                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
                         $storeInt = Store::where('id', $query->store_int_id)->first();
                         $storeOut = Store::where('id', $query->store_out_id)->first();
                         $product = Product::where('id', $query->product_id)->first();
@@ -970,12 +844,8 @@ class ProductStoreController extends Controller
                         }
                     }
                 } else {
-                    $movements = MovementProduct::whereYear('data', $data['year'])/*->where(function ($query) use($data){
-                        $query->orWhere('branch_out_id', $data['branch_id'])->orWhere('branch_int_id', $data['branch_id']);
-                    })*/->get();
+                    $movements = MovementProduct::whereYear('data', $data['year'])->get();
                     foreach ($movements as $query) {
-                        //$branchOut = Branch::where('id', $query->branch_out_id)->first();
-                        //$branchInt = Branch::where('id', $query->branch_int_id)->first();
                         $storeInt = Store::where('id', $query->store_int_id)->first();
                         $storeOut = Store::where('id', $query->store_out_id)->first();
                         $product = Product::where('id', $query->product_id)->first();

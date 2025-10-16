@@ -57,15 +57,12 @@ class PaymentMethodController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar un metodo de ingreso");
              $data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'type' => 'required|string|max:255',
                 'description' => 'nullable|string',
             ]);
-            Log::info($request);
             $method = PaymentMethod::find( $data['id']);
             $method->name = $data['name'];
             $method->type = $data['type'];

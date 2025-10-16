@@ -63,9 +63,6 @@ class ChargePermissionController extends Controller
                     'description' => $query->description,
                 ];
             });
-            /*$permissions = Permission::whereHas('charges', function ($query) use ($request){
-                $query->where('charge_id', $request->charge_id);
-            })->with('charges')->get();*/
                 return response()->json(['permissions' => $permissions],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
@@ -82,29 +79,7 @@ class ChargePermissionController extends Controller
                 'charge_id' => 'required|numeric'
             ]);
             $chragePermission = ChargePermission::where('charge_id', $request->charge_id)->get()->pluck('permission_id');
-            $permissions = Permission::whereNotIn('id', $chragePermission)->get();/*->map(function ($query){
-                return [
-                    'id' => $query->pivot->value('id'),
-                    'charge_id' => $query->pivot->charge_id,
-                    'permission_id' => $query->pivot->permission_id,
-                    'name' => $query->name,
-                    'module' => $query->module,
-                    'description' => $query->description,
-                ];
-            });
-            /*$permissions = $charge->permissions->whereNotIn('permission_id', $chragePermission)->map(function ($query){
-                return [
-                    'id' => $query->pivot->value('id'),
-                    'charge_id' => $query->pivot->charge_id,
-                    'permission_id' => $query->pivot->permission_id,
-                    'name' => $query->name,
-                    'module' => $query->module,
-                    'description' => $query->description,
-                ];
-            });*/
-            /*$permissions = Permission::whereHas('charges', function ($query) use ($request){
-                $query->where('charge_id', $request->charge_id);
-            })->with('charges')->get();*/
+            $permissions = Permission::whereNotIn('id', $chragePermission)->get();
                 return response()->json(['permissions' => $permissions],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  

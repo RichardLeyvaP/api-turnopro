@@ -11,7 +11,6 @@ class RuleController extends Controller
     {
         try { 
             
-            Log::info( "entra a buscar reglas");
             return response()->json(['rules' => Rule::all()], 200);
         } catch (\Throwable $th) {  
             Log::error($th);
@@ -32,9 +31,6 @@ class RuleController extends Controller
     }
     public function store(Request $request)
     {
-
-        Log::info("crear regla");
-        Log::info($request);
         try {
              $rule_data = $request->validate([
                 'name' => 'required|max:50',
@@ -63,7 +59,6 @@ class RuleController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar");
              $rule_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
@@ -71,7 +66,6 @@ class RuleController extends Controller
                 'type' => 'required|max:50'//, 
                 //'automatic' => 'required' 
             ]);
-            Log::info($request);
             $rule = Rule::find( $rule_data['id']);
             $rule->name =  $rule_data['name'];
             $rule->description =  $rule_data['description'];

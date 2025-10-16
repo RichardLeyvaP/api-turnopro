@@ -17,7 +17,6 @@ class ScheduleController extends Controller
     public function index()
     {
         try {
-            Log::info("mostrar Schedules");
             return response()->json(['Schedules' => Schedule::with(['branch'])->selectRaw("branch_id,id, day, DATE_FORMAT(start_time, '%h:%i:%p') as start_time, DATE_FORMAT(closing_time, '%h:%i:%p') as closing_time")->orderByRaw("FIELD(day, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')")->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -142,16 +141,7 @@ class ScheduleController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("store");
-        Log::info($request);
         try {
-            /*$SchedSchedule_data = $request->validate([
-                'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'),   
-                'start_time' => 'nullable',
-                'closing_time' => 'nullable',
-                'branch_id' => 'required|numeric',
-            ]);*/
-
             $validator = Validator::make($request->all(), [
                 'day' => 'required|max:50|unique:schedules,day,NULL,id,branch_id,' . $request->input('branch_id'),
                 'start_time' => 'nullable',
@@ -186,9 +176,6 @@ class ScheduleController extends Controller
                 'branch_id' => 'required|numeric',
                 'schedule' => 'nullable'
             ]);
-            
-            Log::info("data");
-            Log::info($data);
             $branch = Branch::find($data['branch_id']);
 
             // Iteramos sobre los horarios proporcionados
@@ -203,22 +190,6 @@ class ScheduleController extends Controller
                     ['start_time' => $startTime, 'closing_time' => $closingTime]
                 );
             }
-            /*$SchedSchedule_data = $request->validate([
-                'id' => 'required|numeric',
-                'day' => 'required|max:50|',
-                'start_time' => 'nullable',
-                'closing_time' => 'nullable',
-                'branch_id' => 'required|numeric',
-            ]);
-            
-
-            $SchedSchedule = Schedule::find($SchedSchedule_data['id']);
-            $SchedSchedule->day = $SchedSchedule_data['day'];
-
-            $SchedSchedule->start_time = $SchedSchedule_data['start_time'];
-            $SchedSchedule->closing_time = $SchedSchedule_data['closing_time'];
-            $SchedSchedule->branch_id = $SchedSchedule_data['branch_id'];
-            $SchedSchedule->save();*/
 
             return response()->json(['msg' => 'Horario actualizado correctamente'], 200);
         } catch (\Throwable $th) {

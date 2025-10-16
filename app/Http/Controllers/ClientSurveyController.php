@@ -29,13 +29,9 @@ class ClientSurveyController extends Controller
             'email' => 'required',
             'branch_id' => 'required|numeric'
         ]);
-        Log::info('Requesr Survey');
-            Log::info($request->email);
         $surveys = $request->input('survey_id');
         if (!empty($surveys)) {
             $client = Client::where('email', $request->email)->orwhere('phone', $request->email)->first();
-            Log::info('Cliente Encontrado');
-            Log::info($client);
         if (!empty($client)) {
             foreach ($surveys as $survey) {
                 $clientSurvey = new ClientSurvey();
@@ -46,15 +42,8 @@ class ClientSurveyController extends Controller
                 $clientSurvey->save();                
                 Log::info($clientSurvey);
             }        
-        //$client->surveys()->attach($surveys, ['data' => Carbon::now(), $request->branch_id]);
         }
         }
-        /*$clientSurvey = new ClientSurvey();
-        $clientSurvey->client_id = $client->id;
-        $clientSurvey->survey_id = $request->survey_id;
-        $clientSurvey->data = Carbon::now();*/
-        // Añade aquí otras asignaciones de datos según tus necesidades
-        //$clientSurvey->save();
         return response()->json(['msg' => 'Insertado Correctamente'], 200);
         } catch (\Throwable $th) {
             Log::error($th);

@@ -39,8 +39,6 @@ class Reservation extends Model
     public static function softDeleteExpiredReservations($branch_id, $professional_id)
     {
         $now = Carbon::now();
-        Log::info('Entra a verificar las BH no confirmada');
-        Log::info($now);
         return self::where('branch_id', $branch_id)
             ->where('confirmation', 1)
             ->where('from_home', 1)

@@ -31,8 +31,6 @@ class EnrollmentStoreController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar almacén a una academia");
-
         try {
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric',
@@ -78,7 +76,6 @@ class EnrollmentStoreController extends Controller
     public function show_notIn(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar los almacenes de una sucursal");
             $data = $request->validate([
                 'enrollment_id' => 'numeric'
             ]);
@@ -115,10 +112,6 @@ class EnrollmentStoreController extends Controller
             ]);
             $store = Store::find($data['store_id']);
             $enrollment = Enrollment::find($data['enrollment_id']);
-            Log::info('$store');
-            Log::info($store);
-            Log::info('$enrollment');
-            Log::info($enrollment);
             $enrollment->stores()->detach($store->id);
             return response()->json(['msg' => 'Almacén eliminado correctamente'], 200);
         } catch (\Throwable $th) {

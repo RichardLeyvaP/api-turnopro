@@ -15,7 +15,6 @@ class ServiceController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar servicios");
             $now = Carbon::now();
             $services = Service::all();
             foreach ($services as $service) {
@@ -97,19 +96,10 @@ class ServiceController extends Controller
         }
     }
 
-    /*public function service_show($data)
-    {
-        try {
-            return Service::find($data['id']);
-        } catch (\Throwable $th) {
-            return null;
-        }
-    }*/
-
     public function update(Request $request)
     {
         try{
-        Log::info("Editar");
+        Log::info("Editar servicio");
             Log::info($request);
             $data = $request->validate([
                 'id' => 'required',
@@ -122,7 +112,6 @@ class ServiceController extends Controller
                 'image_service' => 'nullable',
                 'service_comment' => 'nullable|min:3'
             ]);
-            Log::info($request->profit_percentaje);
             //$filename = "services/default.png";
             $service = Service::find($data['id']);
             if ($request->hasFile('image_service')) {
@@ -134,23 +123,6 @@ class ServiceController extends Controller
                 }    
                 $service->image_service = $request->file('image_service')->storeAs('services', $service->id . '.' . $request->file('image_service')->extension(), 'public');
             }
-            /*if($request->hasFile('image_service')){
-                Log::info('$request->hasFile(image_service)');
-                Log::info($request->hasFile('image_service'));
-                Log::info('$request->hasFile(image_service)');
-                Log::info($request->hasFile('image_service'));
-            if($service->image_service != $data['image_service'])
-                {
-                    $destination=public_path("storage\\".$service->image_service);
-                    if (File::exists($destination)) {
-                        File::delete($destination);
-                    }                    
-                    $service->image_service = $request->file('image_service')->storeAs('services',$service->id.'.'.$request->file('image_service')->extension(),'public');
-                }
-            }*/
-                //else{
-                   // $service->image_service = $filename;
-                //}
                 if($service->profit_percentaje){
                     $service->profit_percentaje = $request->profit_percentaje;
                 }

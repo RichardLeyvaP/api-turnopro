@@ -61,12 +61,6 @@ class OperationTipController extends Controller
                 'type' => 'required|string',
             ]);
             $control = 0;
-            /*$operationTip = OperationTip::where('branch_id', $data['branch_id'])->where('professional_id', $data['professional_id'])->whereDate('date', Carbon::now())->first();
-            if ($operationTip !== null) {
-                $operationTip->amount = $operationTip->amount + $data['amount'];
-                $operationTip->coffe_percent = $operationTip->coffe_percent + $data['coffe_percent'];
-                $operationTip->save();
-            } else {*/
                 $branch = Branch::find($data['branch_id']);
                 $operationTip = new OperationTip();
                 $operationTip->branch_id = $data['branch_id'];
@@ -78,39 +72,12 @@ class OperationTipController extends Controller
                 // Guardar el modelo
                 $operationTip->save();
             //}
-        
-            Log::info($request->input('car_ids'));
             if ($request->input('car_ids')) {
                 // Actualizar carros con professional_payment_id
-                Log::info('entra a pago los carros');
                 $carIds = $request->input('car_ids');
                 Car::whereIn('id', $carIds)->update(['operation_tip_id' => $operationTip->id]);
             }
-            /*if($data['coffe_percent']){
-                $finance = Finance::orderBy('control', 'desc')->first(); 
-            /*if ($finance !== null) {
-                $finance->amount = $finance->amount + $data['coffe_percent'];
-                $finance->save();
-            } else {
-                $finance = Finance::where('branch_id', $data['branch_id'])orderBy('control', 'desc')->first();*/
-                /*if ($finance) {
-                    $control = $finance->control + 1;
-                } else {
-                    $control = 1;
-                }
-                $finance = new Finance();
-                $finance->control = $control++;
-                $finance->operation = 'Ingreso';
-                $finance->amount = $data['coffe_percent'];
-                $finance->comment = 'Ingreso por concepto de 10% de propinas en sucursal  '.$branch->name;
-                $finance->branch_id = $data['branch_id'];
-                $finance->type = 'Sucursal';
-                $finance->revenue_id = 6;
-                $finance->data = Carbon::now();
-                $finance->file = '';
-                $finance->save();
-            //}
-            }*/
+            
             $professional = Professional::find($data['professional_id']);
             $finance = Finance::orderBy('control', 'desc')->first();
                             
@@ -121,7 +88,6 @@ class OperationTipController extends Controller
             else {
                 $control = 1;
             }
-            Log::info($control);
             $finance = new Finance();
                             $finance->control = $control++;
                             $finance->operation = 'Gasto';
@@ -324,66 +290,6 @@ class OperationTipController extends Controller
         }
     }
 
-    public function operation_tip_periodo_Ant(Request $request)
-    {
-        try {
-            $request->validate([
-                'branch_id' => 'required|exists:branches,id',
-                'startDate' => 'required|date',
-                'endDate' => 'required|date'
-            ]);
-
-            $branchId = $request->branch_id;
-
-            $payments = OperationTip::where('branch_id', $branchId)->whereDate('date', '>=', $request->startDate)->whereDate('date', '<=', $request->endDate)
-                ->get()->map(function ($query) use ($branchId){
-                    $professional = $query->professional;
-                    return [
-                        'id' => $query->id,
-                        'branch_id ' => $branchId,
-                        'professional_id' => $query->professional_id,
-                        'nameProfessional' => $professional->name . ' ' . $professional->surname . ' ' . $professional->second_surname,
-                        'image_url' => $professional->image_url,
-                        'date' => $query->date,
-                        'type' => $query->type,
-                        'coffe_percent' => $query->coffe_percent,
-                        'amount' => round($query->amount, 2)
-                    ];
-                });
-
-                // Calcular totales
-            $totalCoffePercent = $payments->sum('coffe_percent');
-            $totalAmount = $payments->sum('amount');
-                if($totalAmount){
-            // Agregar fila de total
-            $totalRow = [
-                'id' => '',
-                'branch_id' => '',
-                'professional_id' => '',
-                'nameProfessional' => 'Total',
-                'image_url' => '',
-                'date' => '',
-                'type' => '',
-                'coffe_percent' => $totalCoffePercent,
-                'amount' => $totalAmount
-            ];
-
-            $payments->push($totalRow);
-                }
-           
-            return response()->json($payments, 200);
-        } catch (ValidationException $e) {
-            Log::error($e);
-            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
-        } catch (QueryException $e) {
-            Log::error($e);
-            return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
-        } catch (\Exception $e) {
-            Log::error($e);
-            return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
-        }
-    }
-
     public function cashier_car_notpay(Request $request)
     {
         try {
@@ -391,7 +297,6 @@ class OperationTipController extends Controller
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric|exists:professionals,id'
             ]);
-              Log::info('Estas son las trazas');
             $cashier = Professional::where('id', $request->professional_id)->first();
             $nameCashier = $cashier->name;
             $branch = Branch::where('id', $data['branch_id'])->first();
@@ -413,22 +318,16 @@ class OperationTipController extends Controller
 
                 // Expresión regular para extraer los números después de 'Carro:'
                 $regex = '/Carro:\s*(\d+)/';
-                Log::info('Estas son las trazas');
                 // Iterar sobre los detalles y extraer los IDs
                 foreach ($traces as $trace) {
                     if (preg_match($regex, $trace->details, $matches)) {
                         $carIds[] = (int) $matches[1]; // El ID del carro está en $matches[1]
                     }
                 }
-                Log::info('$Id carros con propinas cajera', $carIds);
             //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
             $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])->where('pay', 1)->where('tip', '>', 0)->whereIn('id', $carIds)->get()->map(function ($car) {
-                //$ordersServices = count($car->orders->where('is_product', 0));
-                //$orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
-                //$tipProfessional = $car->tip * 0.80;
-                //$rest = $car->tip - $tipProfessional;
                 $tipCashier = $car->tip * 0.10;
                 $tipCoffe = $car->tip * 0.10;
                 $professional = $car->clientProfessional->professional;
@@ -510,52 +409,9 @@ class OperationTipController extends Controller
                 'charge' => 'nullable|string',
             ]);
             $payments = $this->professionalPaymentService->calculatePayments($data);
-            Log::info('Respuesta del ProfessionalPaymentService', [
-                'response' => $payments
-            ]);
-            // Obtener información del cajero, sucursal y su salario en esa sucursal
-            Log::info('Buscando información del profesional y sucursal');
             $professional = Professional::where('id', $data['professional_id'])->first();
             $branch = Branch::where('id', $data['branch_id'])->first();
-
             
-            Log::info('Información del profesional', ['name' => $professional->name]);
-            Log::info('Información de la sucursal', ['name' => $branch->name]);
-                       
-
-        Log::info('Resumen de cálculos', [
-            'totales_brutos' => [
-                //'sales' => $totalSalesBruto,
-                'tips' => $payments['tips']['tip_neto'],
-                'advances' => $payments['advances']['total_advance'],
-                'purchases' => $payments['workerPurchases']['total_purchases'],
-                //'orders' => $totalOrdersCommissionBruto,
-                'products' => $payments['products']['total_commission'],
-                'salary' => $payments['salary']['salary_bruto'],
-                'services' => $payments['cars']['total_combined']
-            ],
-            'totales_netos' => [
-                //'sales' => $totalSalesNeto,
-                'tips' => $payments['tips']['tip_neto'],
-                'advances' => $payments['advances']['total_advance'],
-                'purchases' => $payments['workerPurchases']['total_purchases'],
-                //'orders' => $totalOrdersCommissionNeto,
-                'products' => $payments['products']['commission_neto'],
-                'salary' => $payments['salary']['salary_neto'],
-                'services' => $payments['cars']['total_neto']
-            ],
-            'retencion_total' => [
-                //'sales' => $totalSalesBruto - $totalSalesNeto,
-                'tips' => $payments['tips']['tip_neto'],
-                'advances' => $payments['advances']['total_advance'],
-                'purchases' => $payments['workerPurchases']['total_purchases'],
-                //'orders' => $totalOrdersCommissionBruto - $totalOrdersCommissionNeto,
-                'products' => $payments['products']['retention_amount'],
-                'salary' => $payments['salary']['retention_salary'],
-                'services' => $payments['cars']['total_neto']
-            ]
-        ]);
-        
 
         return response()->json([
             // Totales
@@ -587,57 +443,6 @@ class OperationTipController extends Controller
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
-        }
-    }
-
-    public function cashier_car_notpay_original(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'branch_id' => 'required|numeric'
-            ]);
-            //$retention =  number_format(Professional::where('id', $data['professional_id'])->first()->retention/100, 2);
-            $cars = Car::where('operation_tip_id', Null)->whereHas('reservation', function ($query) use ($data) {
-                $query->where('branch_id', $data['branch_id']);
-            })->with(['reservation', 'clientProfessional.client', 'clientProfessional.professional'])->where('pay', 1)->where('tip', '>', 0)->get()->map(function ($car) {
-                //$ordersServices = count($car->orders->where('is_product', 0));
-                //$orderServ = Order::where('car_id', $car->id)->where('is_product', 0)->get();
-                //$tipProfessional = $car->tip * 0.80;
-                //$rest = $car->tip - $tipProfessional;
-                $tipCashier = $car->tip * 0.10;
-                $tipCoffe = $car->tip * 0.10;
-                $professional = $car->clientProfessional->professional;
-                $client = $car->clientProfessional->client;
-                return [
-                    'id' => $car->id,
-                    'professional_id' => $professional->id,
-                    'clientName' => $client->name . ' ' . $client->surname,
-                    'client_image' => $client->client_image ? $client->client_image : 'comments/default.jpg',
-                    'professionalName' => $professional->name . ' ' . $professional->surname,
-                    'image_url' => $professional->image_url,
-                    'branch_id' => $car->reservation->branch_id,
-                    'data' => $car->reservation->data,
-                    'tip' => $car->tip,
-                    'tipCashier' => $tipCashier,
-                    'tipCoffe' => $tipCoffe
-                ];
-            });
-
-            $professionals = Professional::whereHas('branches', function ($query) use ($data){
-                $query->where('branch_id', $data['branch_id']);
-               })->whereHas('charge', function ($query) {
-                $query->where('name', 'Cajero (a)');
-            })->get()->map(function ($query){
-                return [
-                    'id' => $query->id,
-                    'name' => $query->name.' '.$query->surname.' '.$query->second_surname,
-                    'charge' => $query->charge->name
-                ];
-               });
-            return response()->json(['cars' => $cars,'professionals' => $professionals], 200);
-        } catch (\Throwable $th) {
-            Log::error($th);
-            return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
 
@@ -749,13 +554,6 @@ class OperationTipController extends Controller
 
             // Llamar al servicio
             $result = $this->professionalPaymentService->calculatePayments($data);
-            
-            Log::info('Cálculo de pagos completado exitosamente', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id'],
-                'total_neto' => $result['total_neto'] ?? null
-            ]);
-
             // Obtener el rango de fechas del mes anterior
             // Rangos de fechas
         $currentMonthStart = now()->startOfMonth();
@@ -888,14 +686,6 @@ class OperationTipController extends Controller
             $data['startDate'] = $startDate->format('Y-m-d');
             $data['endDate'] = $endDate->format('Y-m-d');
 
-            Log::info('Mostrando datos de venta de productos', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id'],
-                'year' => $data['year'],
-                'month' => $data['month'],
-                'charge' => $data['charge'] ?? null
-            ]);
-
             $professional = Professional::where('id', $data['professional_id'])->first();
             $branch = Branch::where('id', $data['branch_id'])->first();
             $branchProfessional = BranchProfessional::where('branch_id', $data['branch_id'])
@@ -989,13 +779,6 @@ class OperationTipController extends Controller
             // Agregar fechas al array de datos para el servicio
             $data['startDate'] = $startDate->format('Y-m-d');
             $data['endDate'] = $endDate->format('Y-m-d');
-            Log::info('Mostrando datos de comision de propinas', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id'],
-                'startDate' => $data['startDate'] ?? null,
-                'endDate' => $data['endDate'] ?? null,
-                'charge' => $data['charge'] ?? null
-            ]);
 
             $professional = Professional::where('id', $data['professional_id'])->first();
             $branch = Branch::where('id', $data['branch_id'])->first();

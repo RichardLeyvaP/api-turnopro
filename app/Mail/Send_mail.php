@@ -192,9 +192,7 @@ class Send_mail extends Mailable
                     return [
                         Attachment::fromPath($filePath)
                     ];
-                } else {
-                    Log::error("El archivo $this->file no se encontró en la ubicación: $filePath");
-                }
+                } 
             }
             return [];
         } else {
