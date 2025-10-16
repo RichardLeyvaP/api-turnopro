@@ -22,11 +22,4 @@ class Box extends Model
     public function boxClose(){
         return $this->hasMany(BoxClose::class);
     }
-
-    
-    protected $casts = [
-        'cashFound' => 'double',
-        'extraction' => 'double',
-        'existence' => 'double'
-    ];
 }

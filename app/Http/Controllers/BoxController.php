@@ -160,8 +160,13 @@ class BoxController extends Controller
                 $box->extraction = $box->extraction + $data['extraction'];
             }
             $box->branch_id = $branch->id;
-            $box->cashFound = $data['cashFound'];
             $box->data = Carbon::now();
+
+            // Solo actualizamos cashFound si es un número mayor que 0
+            if ($data['cashFound'] !== null && is_numeric($data['cashFound']) && $data['cashFound'] > 0) {
+                $box->cashFound = $data['cashFound'];
+            }
+
             $box->save();
             if($data['extraction'] != 0){
                 Log::info('Existencia despues de la extraccion:'.$box->existence);

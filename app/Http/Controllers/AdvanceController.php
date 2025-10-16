@@ -267,7 +267,7 @@ class AdvanceController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo se permite un adelanto por quincena.',
-                ], 500);
+                ], 200);
             }
 
 
