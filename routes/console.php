@@ -20,6 +20,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Artisan::command('organize_queue', function () {
-     Log::info("Funcion ejecutandose cada 10 segundos");
+     
 })->purpose('Funcion de prueba, ejecutada en cierto tiempo por el sistema automatizado');
 

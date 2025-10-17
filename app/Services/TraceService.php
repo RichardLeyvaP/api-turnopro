@@ -27,8 +27,7 @@ class TraceService {
         return $trace;
         }
         catch (\Throwable $th) {
-            Log::error($th);
-            
+           
         }
             
         

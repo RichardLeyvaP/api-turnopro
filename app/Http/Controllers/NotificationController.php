@@ -31,18 +31,15 @@ class NotificationController extends Controller
 
     public function index()
     {
-        Log::info('entra a buscar las notificaciones por professional');
         try {
             return response()->json(['notifications' => Notification::with('professional', 'branch')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las notifocaciones"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info('Entra a registrar las notificaciones');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -138,14 +135,12 @@ class NotificationController extends Controller
 
             return response()->json(['msg' => 'Notifications creada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Notificacion creada correctamente"], 500);
         }
     }
 
     public function store2(Request $request)
     {
-        Log::info('Entra a registrar las notificaciones store2');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -167,14 +162,12 @@ class NotificationController extends Controller
 
             return response()->json(['msg' => 'Notifications creada correctamente desde Coordinador o Responsable '], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Notificacion no fue creada dio error "], 500);
         }
     }
 
     public function show(Request $request)
     {
-        Log::info('Dada una sucursal devuelve las notificaciones');
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -198,15 +191,12 @@ class NotificationController extends Controller
 
             return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
 
     public function whatsapp_notification(Request $request)
     {
-        Log::info('Enviar notificación WhatsApp');
-
         try {
             $data = $request->validate([
                 'telefone_client' => 'nullable'
@@ -235,7 +225,6 @@ class NotificationController extends Controller
             $response = Http::withToken($token)->post('https://graph.facebook.com/v15.0/113984608247982/messages', $body);
              return response()->json("Este es el número de celular " . $data['telefone_client'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notificaciones"], 500);
         }
     }
@@ -254,14 +243,12 @@ class NotificationController extends Controller
             Notification::truncate();
             return response()->json(['msg' => "Notificaciones eliminadas correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
 
     public function professional_show(Request $request)
     {
-        Log::info('Dada una sucursal y un professional devuelve las notificaciones');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -457,14 +444,12 @@ class NotificationController extends Controller
             }
             return response()->json(['notifications' => $notifications], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
 
     public function professional_show_web(Request $request)
     {
-        Log::info('Dada una sucursal y un professional devuelve las notificaciones');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -578,14 +563,12 @@ class NotificationController extends Controller
 
             return response()->json(['notifications' => $notifications, 'solicitudes' => $pendingCount], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
 
     public function update(Request $request)
     {
-        Log::info('Modificar el estado de una notificacion');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -602,13 +585,11 @@ class NotificationController extends Controller
                 ->update(['state' => 1]);
             return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Estado de la nitificacion modificado correctamente"], 500);
         }
     }
     public function update2(Request $request)
     {
-        Log::info('Modificar el estado de una notificacion update2');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -625,14 +606,12 @@ class NotificationController extends Controller
 
             return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
         }
     }
 
     public function update_state3(Request $request)
     {
-        Log::info('Modificar el estado de una notificacion de colacion y salida a 1');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -653,14 +632,12 @@ class NotificationController extends Controller
 
             return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
         }
     }
 
     public function update3(Request $request)
     {
-        Log::info('Modificar el estado de una notificacion update3');
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -681,14 +658,12 @@ class NotificationController extends Controller
 
             return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
         }
     }
 
     public function update_charge(Request $request)
     {
-        Log::info('Modificar el estado de una notificacion update_charge');
         try {
             $data = $request->validate([
                 'ids' => 'required|array',
@@ -710,7 +685,6 @@ class NotificationController extends Controller
 
             return response()->json(['msg' => 'Notificacion modificada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Estado de la notificacion modificado correctamente"], 500);
         }
     }
@@ -718,7 +692,6 @@ class NotificationController extends Controller
 
     public function destroy(Request $request)
     {
-        Log::info('Eliminar una notificacion');
         try {
             $data = $request->validate([
                 'id' => 'required|numeric'
@@ -728,7 +701,6 @@ class NotificationController extends Controller
             $notification->delete();
             return response()->json(['msg' => 'Notificacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al eliminar la notificacion"], 500);
         }
     }
@@ -818,9 +790,6 @@ class NotificationController extends Controller
                 'clientes' => $clientesFinales,
             ], 200);
         } catch (\Throwable $th) {
-            Log::error('Error al obtener los clientes: ' . $th->getMessage(), [
-                'exception' => $th,
-            ]);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

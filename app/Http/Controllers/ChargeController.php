@@ -17,7 +17,6 @@ class ChargeController extends Controller
         $branches = Branch::where('business_id', $branch_data['business_id'])->select('id', 'name', 'image_data')->get();
         return response()->json(['branches' => $branches, 'charges' => $charges], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los cargos"], 500);
         }
     }
@@ -26,8 +25,7 @@ class ChargeController extends Controller
     {
         try { 
             return response()->json(['charges' => Charge::all()], 200);
-        } catch (\Throwable $th) {  
-            Log::error($th);
+        } catch (\Throwable $th) { 
             return response()->json(['msg' => "Error al mostrar los cargos"], 500);
         }
     }
@@ -40,15 +38,11 @@ class ChargeController extends Controller
             ]);
             return response()->json(['client' => Charge::find($charge_data['id'])], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el cargo"], 500);
         }
     }
     public function store(Request $request)
     {
-
-        Log::info("crear cargo");
-        Log::info($request);
         try {
             $charge_data = $request->validate([
                 'name' => 'required|max:50',
@@ -66,7 +60,6 @@ class ChargeController extends Controller
 
             return response()->json(['msg' => 'Cargo insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al insertar el Cargo'], 500);
         }
     }
@@ -74,14 +67,11 @@ class ChargeController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar cargo");
             $charge_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
                 'description' => 'required|max:50',    
             ]);
-            Log::info($request);
             $store = Charge::find($charge_data['id']);
             $store->name = $charge_data['name'];
             $store->description = $charge_data['description'];
@@ -90,7 +80,6 @@ class ChargeController extends Controller
 
             return response()->json(['msg' => 'Cargo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al actualizar el Cargo'], 500);
         }
     }
@@ -106,7 +95,6 @@ class ChargeController extends Controller
 
             return response()->json(['msg' => 'Cargo eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el Cargo'], 500);
         }
     }

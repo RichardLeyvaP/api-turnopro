@@ -720,7 +720,6 @@ class MetaService
         }
         return $bonus;
     } catch (Exception $e) {
-        Log::info($e->getMessage());
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el MetaServie(bonus): " . $e->getMessage());
         }

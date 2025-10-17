@@ -70,13 +70,6 @@ class Finance extends Model
             $endDate = Carbon::now()->subMonth()->endOfMonth()->toDateString();
         }
         
-        Log::info('Calculando utilidad para rango de fechas:', [
-            'start' => $startDate,
-            'end' => $endDate,
-            'branch_id' => $branch_id,
-            'business_id' => $business_id
-        ]);
-
         // Crear consulta base
         $query = self::query()
                 ->whereDate('data', '>=', $startDate)
@@ -84,19 +77,15 @@ class Finance extends Model
         
         // Aplicar filtros según los parámetros
         if ($branch_id) {
-            Log::info("Filtrando por branch_id: $branch_id");
             $query->where('branch_id', $branch_id);
         } elseif ($business_id) {
-            Log::info("Filtrando por business_id: $business_id");
             $query->where(function($q) use ($business_id) {
                 $q->where('business_id', $business_id)
                   ->orWhereHas('branch', function($q) use ($business_id) {
                       $q->where('business_id', $business_id);
                   });
             });
-        } else {
-            Log::info('Sin filtros - cálculo global');
-        }
+        } 
 
         // Clonar la consulta para obtener los IDs
         $idsQuery = clone $query;
@@ -111,12 +100,6 @@ class Finance extends Model
         $income = $result->income ?? 0;
         $expense = $result->expense ?? 0;
         $utility = $income - $expense;
-        
-        Log::info('Resultados del cálculo:', [
-            'income' => $income,
-            'expense' => $expense,
-            'utility' => $utility
-        ]);
 
         return [
             'utility' => $utility,
@@ -126,10 +109,6 @@ class Finance extends Model
         ];
         
     } catch (\Exception $e) {
-        Log::error('Error en calculatePreviousMonthUtility: ' . $e->getMessage(), [
-            'exception' => $e,
-            'params' => ['branch_id' => $branch_id, 'business_id' => $business_id]
-        ]);
         throw $e; // Re-lanzar la excepción para que el controlador la capture
     }
 }

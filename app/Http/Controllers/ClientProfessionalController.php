@@ -15,15 +15,12 @@ class ClientProfessionalController extends Controller
         try {             
             return response()->json(['professional' => Professional::with('clients')->get()], 200);
         } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => "Error al mostrar los clientes atendidos por empleado"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Asignar professional a atender cliente");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
@@ -39,14 +36,12 @@ class ClientProfessionalController extends Controller
                 }
             return response()->json(['msg' => 'Empleado asignado correctamente al cliente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
     }
     public function show(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar los clientes atendidos por un empleado o el empleado que atendio a al cliente");
             $data = $request->validate([
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
@@ -58,8 +53,7 @@ class ClientProfessionalController extends Controller
                 return response()->json(['professional' => Professional::with('clients')->find($data['professional_id'])],200); 
             }
             
-            } catch (\Throwable $th) {  
-            Log::error($th);
+            } catch (\Throwable $th) { 
         return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
@@ -76,7 +70,6 @@ class ClientProfessionalController extends Controller
             $professional->clients()->updateExistingPivot($client->id);
             return response()->json(['msg' => 'Cliente reasignado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el cliente a es empleado'], 500);
         }
     }
@@ -93,7 +86,6 @@ class ClientProfessionalController extends Controller
             $professional->clients()->destroy($client->id);
             return response()->json(['msg' => 'Cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el cliente a es empleado'], 500);
         }
     }

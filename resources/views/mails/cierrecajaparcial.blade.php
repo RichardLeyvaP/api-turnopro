@@ -122,19 +122,6 @@
 
 <br>
 
-<!-- Tercera Tabla: Bonos 
-<table width="100%" style="border-collapse: collapse; border: 1.5px solid black;">
-    <tr style="background-color: rgba(0, 0, 0, 0.1); border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;"><strong>Totales</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;"><strong>Datos del Sistema</strong></td>
-        <td style="padding: 5px; text-align: right; line-height: 1;"><strong>Datos de la Cajera</strong></td>
-    </tr>
-    <tr style="border: 1.5px solid black;">
-        <td style="padding: 5px; text-align: left; line-height: 1;">Tipos de Ingresos</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($data['totalMount'], 2), 2) }}</td>
-        <td style="padding: 5px; text-align: right; line-height: 1;">{{ number_format(round($cashierData['totalMount'] ?? 0, 2), 2) }}</td>
-    </tr>
-</table>-->
 @if(isset($cashierData['difference']) && $cashierData['difference'] !== null)
     @php
         // Determinar color y estilo según el valor

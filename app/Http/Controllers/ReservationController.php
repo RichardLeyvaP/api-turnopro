@@ -50,14 +50,12 @@ class ReservationController extends Controller
             $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Guardar Reservacion");
         try {
             $data = $request->validate([
                 'start_time' => 'required',
@@ -83,7 +81,6 @@ class ReservationController extends Controller
 
             return response()->json(['msg' => 'Reservacion realizada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
     }
@@ -116,14 +113,12 @@ class ReservationController extends Controller
             });
             return response()->json(['reservations' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
         }
     }
     
     public function reservation_store(Request $request)
     {
-        Log::info("Guardar Reservacion reservation_store");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -137,7 +132,6 @@ class ReservationController extends Controller
                 'client_id' => 'nullable'
             ]);            
             $servs = $request->input('services');
-            Log::info($request);
                 $data['select_professional'] = 1;
             //}
             if ($request->has('from_home')) {
@@ -274,20 +268,14 @@ class ReservationController extends Controller
                     'id_reservation' => $id, // Destinatario (en este caso, se deja como null)
                     'code_reserva' => $code
                 ];
-
-                Log::info('Datos de la reservacio creada en reservation_store');
-                Log::info($data);
                 SendEmailJob::dispatch($data);
             }
                 DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {
-            Log::error($e);
             DB::rollback();
             return response()->json(['msg' => 'La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico '], 422);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
@@ -295,7 +283,6 @@ class ReservationController extends Controller
 
     public function reservation_store_tottem(Request $request)
     {
-        Log::info("Guardar Reservacion Tottem");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -311,7 +298,6 @@ class ReservationController extends Controller
                 'editedPhather' => 'nullable|array',
             ]);            
             $servs = $request->input('services');
-            Log::info($request);
             if ($request->has('select_professional')) {
                 $data['select_professional'] = $request->select_professional;
                 // Actualiza el campo 'living' a NULL para el branch_id dado
@@ -480,17 +466,12 @@ class ReservationController extends Controller
                     $notification->save();
              }
             }
-                Log::info("reservacion creada reservation_store_tottem");
-                Log::info($data);
                 DB::commit();
             return response()->json(['msg' => 'Reservación realizada correctamente'], 200);
         } catch (TransportException $e) {
-            Log::error($e);
             DB::rollback();
             return response()->json(['msg' => 'La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico '], 422);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
@@ -541,8 +522,6 @@ class ReservationController extends Controller
             return response()->json(intval($seg), 200);
         }
         } catch (\Throwable $th) {
-            //throw $th;
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -560,7 +539,6 @@ class ReservationController extends Controller
             })->where('branch_id', $data['branch_id'])->whereBetween('data', [$data['data'], Carbon::parse($data['data'])->addDays(7)])->orderBy('data')->orderBy('start_time')->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -603,7 +581,6 @@ class ReservationController extends Controller
             $sortedDates = collect($dates)->sortBy('startDate')->values()->all();
             return response()->json(['reservaciones' => $sortedDates], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -644,7 +621,6 @@ class ReservationController extends Controller
             }
             return response()->json(['reservaciones' => $sortedDates, 'professionals' => $professionalDates], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -661,12 +637,8 @@ class ReservationController extends Controller
             } else {
                 $reservations = Reservation::whereDate('data', now()->toDateString())->where('from_home', 1)->count();
             }
-
-            Log::info('$reservations');
-            Log::info($reservations);
             return response()->json($reservations, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -751,7 +723,6 @@ class ReservationController extends Controller
             //$reservationsString = implode(',', $reservations);
             return response(['cantReservations' => $reservations, 'reservations' => $reservationsData], 200, ['Content-Type' => 'application/json']);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -765,7 +736,6 @@ class ReservationController extends Controller
             $reservations = Reservation::with('car.clientProfessional.professional', 'car.clientProfessional.client')->where('id', $data['id'])->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -794,7 +764,6 @@ class ReservationController extends Controller
 
             return response()->json(['msg' => 'Reservacion actualizada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar la reservacion'], 500);
         }
     }
@@ -836,8 +805,6 @@ class ReservationController extends Controller
 
             return response()->json(['msg' => 'Correos de recordar reserva enviados'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error al hacer la reservacion'], 500);
         }
@@ -876,7 +843,6 @@ class ReservationController extends Controller
 
             //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);
         }
     }
@@ -906,7 +872,6 @@ class ReservationController extends Controller
 
             //return response()->json(['msg' => $msg], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);
         }
     }
@@ -917,8 +882,6 @@ class ReservationController extends Controller
             $data = $request->validate([
                 'reservation_id' => 'required|numeric',
             ]);
-            Log::info("Anunciando llegada reserva:");
-            Log::info($data['reservation_id']);
             $reservacion = Reservation::find($data['reservation_id']);
             $horaInicioReservacion = $reservacion->start_time;
 
@@ -950,7 +913,6 @@ class ReservationController extends Controller
                 return response()->json(5, 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getmessage() . 'Error al actualizar la reservacion'], 500);
         }
     }
@@ -1044,7 +1006,6 @@ class ReservationController extends Controller
           
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
         }
     }
@@ -1073,7 +1034,6 @@ class ReservationController extends Controller
                 $fechaHoy = Carbon::today();
             // Obtener la fecha formateada como 'YYYY-MM-DD'
                 $fechaFormateada = $fechaHoy->toDateString();
-                Log::info($fechaFormateada);
             foreach ($reservations as $reservation) {
                 // Si la reserva es del día actual y no está confirmada (confirmation = 0)
                 if ($reservation->confirmation == 0 && $reservation->data == $fechaFormateada) {                    
@@ -1150,7 +1110,6 @@ class ReservationController extends Controller
           
             return response()->json(['msg' => 'Cola creada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al crear la cola'], 500);
         }
     }
@@ -1204,7 +1163,6 @@ class ReservationController extends Controller
             })->orderBy('start_time')->whereDate('data', Carbon::parse($data['data']))->get();
             return response()->json(['reservaciones' => $reservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las reservaciones en esa fecha'], 500);
         }
     }
@@ -1239,7 +1197,6 @@ class ReservationController extends Controller
                     Notification::where('branch_id', $branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$data['id'])->update(['state' => 1]);
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la reservacion'], 500);
         }
     }
@@ -1276,7 +1233,6 @@ class ReservationController extends Controller
             $history = $this->reservationService->client_history($data);
             return response()->json(['clientHistory' => $history], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar la history'], 500);
         }
     }
@@ -1314,7 +1270,6 @@ class ReservationController extends Controller
             //todo *********Cerrando lógica de envio de correo**********************
             return response()->json(['Response' => "Email enviado correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al enviar el Email"], 500);
         }
     }

@@ -52,11 +52,9 @@ class CarController extends Controller
     public function index()
     {
         try {
-            Log::info("Entra a buscar los carros");
             $car = Car::with('clientProfessional.client', 'clientProfessional.professional')->get();
             return response()->json(['cars' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
         }
     }
@@ -82,7 +80,6 @@ class CarController extends Controller
                 return response()->json($cars->sum('amount') + $cars->sum('technical_assistance') * 5000, 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -426,7 +423,6 @@ class CarController extends Controller
                 return response()->json(['product' => $resultPproduct, 'service' => $resultService], 200);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -532,7 +528,6 @@ class CarController extends Controller
             }
             return response()->json($array, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -540,7 +535,6 @@ class CarController extends Controller
     public function cars_sum_amount_mounth(Request $request)
     {
         try {
-            Log::info("Entra a buscar las ganancias del mes");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
@@ -766,7 +760,6 @@ class CarController extends Controller
                 $lastUsedKey = Cache::get($lastKeyCacheKey);
                 if ($lastUsedKey && $lastUsedKey !== $cacheKey) {
                     Cache::forget($lastUsedKey);
-                    Log::info("Caché antigua eliminada (global): " . $lastUsedKey);
                 }
                 Cache::put($lastKeyCacheKey, $cacheKey, now()->addYear());
 
@@ -968,7 +961,6 @@ class CarController extends Controller
                 ], 200);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -1163,7 +1155,6 @@ class CarController extends Controller
                 'data' => 'nullable|date'
             ]);
 
-            Log::info("Recibiendo request para branch_cars_date", $data);
             $userId = $request->user()->id;
             // Cargar la sucursal solo si es necesaria para el proceso
             $branch = Branch::find($data['branch_id']);
@@ -1222,7 +1213,6 @@ class CarController extends Controller
                 'cars' => $cars
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error("Error al mostrar los carros: " . $th->getMessage());
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
         }
     }
@@ -1235,7 +1225,6 @@ class CarController extends Controller
                 'data' => 'nullable|date'
             ]);
 
-            Log::info("Recibiendo request para branch_cars", $data);
             $userId = $request->user()->id;
             // Cargar la sucursal solo si es necesaria para el proceso
             $branch = Branch::find($data['branch_id']);
@@ -1270,7 +1259,6 @@ class CarController extends Controller
 
                     // Determinar estado del carro en función de la cola (tail)
                     $tail = $car->reservation->tail;
-                    //Log::info($tail);
                     $state = $tail ? ($tail->attended == 2 ? 1 : ($tail->attended == 0 || $tail->attended == 3 ? 3 : 2)) : 0;
 
                     return [
@@ -1339,7 +1327,6 @@ class CarController extends Controller
                 'cashierclosebox' => $cashierclosebox ?? []
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error("Error al mostrar los carros: " . $th->getMessage());
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
         }
     }
@@ -1407,7 +1394,6 @@ class CarController extends Controller
             $cashierSales = CashierSale::where('branch_id', $data['branch_id'])->whereDate('data', Carbon::now())->get();
             return response()->json(['cars' => $cars, 'box' => $box, 'payments' => $payments, 'cashierSales' => $cashierSales], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
         }
     }
@@ -1575,15 +1561,12 @@ class CarController extends Controller
             }
             return response()->json(['cars' => $cars, 'orders' => $orderData, 'cashier' => $cashierData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los carros"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Guardar carro");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'client_professional_id' => 'required|numeric',
@@ -1596,7 +1579,6 @@ class CarController extends Controller
 
             return response()->json(['msg' => $car], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al insertar el carro'], 500);
         }
     }
@@ -1653,7 +1635,6 @@ class CarController extends Controller
             }
             return response()->json(['productscar' => $products, 'servicescar' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1739,8 +1720,6 @@ class CarController extends Controller
                 })->sortByDesc('data')->values();
             return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
-            Log::error("ok99");
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -1785,7 +1764,6 @@ class CarController extends Controller
 
             return response()->json(['car' => $groupedCars], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1824,7 +1802,6 @@ class CarController extends Controller
             $coursesIds = $cursesProf->pluck('id')->toArray();
             return response()->json(['cars' => $cars['detailed_cars'], 'courses' => $cursesProf, 'coursesIds' => $coursesIds,'products' =>$products, 'payments' => $payments], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1906,7 +1883,6 @@ class CarController extends Controller
             });
             return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -1975,7 +1951,6 @@ class CarController extends Controller
                 });
             return response()->json(['car' => $cars], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar ls ordenes"], 500);
         }
     }
@@ -2038,7 +2013,6 @@ class CarController extends Controller
 
             return response()->json(['carOrderDelete' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
     }
@@ -2086,7 +2060,6 @@ class CarController extends Controller
 
             return response()->json(['carOrderDelete' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las ordenes"], 500);
         }
     }
@@ -2100,7 +2073,6 @@ class CarController extends Controller
             $car = $this->carService->show($data['id']);
             return response()->json(['car' => $car], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }
@@ -2116,7 +2088,6 @@ class CarController extends Controller
             $car->save();
             return $car->id;
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
     }
@@ -2131,7 +2102,6 @@ class CarController extends Controller
             //$car = Car::join('client_professional', 'client_professional.id', '=', 'cars.client_professional_id')->join('clients', 'clients.id', '=', 'client_professional.client_id')->join('professionals', 'professionals.id', '=', 'client_professional.professional_id')->where('cars.id', $data['id'])->get(['clients.name as client_name', 'clients.surname as client_surname', 'clients.second_surname as client_second_surname', 'clients.email as client_email', 'clients.phone as client_phone', 'professionals.*', 'cars.*']);
             return response()->json(['car' => $car], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }
@@ -2139,7 +2109,6 @@ class CarController extends Controller
     public function reservation_services(Request $request)
     {
         try {
-            Log::info("Entra a buscar las reservaciones y los servicios de un cliente con un profesional");
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'client_id' => 'required|numeric',
@@ -2164,14 +2133,12 @@ class CarController extends Controller
 
             return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
     public function car_services(Request $request)
     {
         try {
-            Log::info("Entra a buscar las reservaciones y los servicios de un cliente con un profesional");
             $data = $request->validate([
                 'car_id' => 'required|numeric'
             ]);
@@ -2193,7 +2160,6 @@ class CarController extends Controller
 
             return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -2201,7 +2167,6 @@ class CarController extends Controller
     public function car_services2(Request $request)
     {
         try {
-            Log::info("Entra a buscar las reservaciones y los servicios de un cliente con un profesional");
             $data = $request->validate([
                 'car_id' => 'required|numeric'
             ]);
@@ -2281,7 +2246,6 @@ class CarController extends Controller
 
             return response()->json(['services' => $services, 'clientHistory' => $result], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
@@ -2290,9 +2254,6 @@ class CarController extends Controller
     public function update(Request $request)
     {
         try {
-
-            Log::info("Editar Carro");
-            Log::info($request);
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
@@ -2302,7 +2263,6 @@ class CarController extends Controller
             $car->save();
             return response()->json(['msg' => 'Carro actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al actualizar el carro'], 500);
         }
     }
@@ -2319,7 +2279,6 @@ class CarController extends Controller
             $car->save();
             return response()->json(['msg' => 'Se le ha dado propina para el profesional correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al dar propina para el profesional'], 500);
         }
     }
@@ -2357,21 +2316,12 @@ class CarController extends Controller
                     if ($payment->cash > 0) {                
                         // Decrementar el monto del pago en efectivo
                         $box->decrement('existence', $payment->cash);
-                        
-                        // Opcional: Registrar el movimiento
-                        Log::info("Decrementado {$payment->cash} de existence en caja", [
-                            'box_id' => $box->id,
-                            'payment_id' => $payment->id,
-                            'car_id' => $data['id']
-                        ]);
                     }                   
                     $payment->delete();
                 });
             } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                Log::error('Box record not found: ' . $e->getMessage());
                 throw new \Exception('No se encontró la caja registradora para esta sucursal');
             } catch (\Exception $e) {
-                Log::error('Payment processing error: ' . $e->getMessage());
                 throw $e;
             }
             $active = $car->active;
@@ -2420,14 +2370,12 @@ class CarController extends Controller
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar el carro'], 500);
         }
     }
 
     public function destroy_denegada(Request $request)
     {
-        Log::info("Denegar solicitud de edición o eliminación");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -2470,14 +2418,12 @@ class CarController extends Controller
             //$car->delete();
             return response()->json(['msg' => 'Solicitud denegada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al eliminar el carro'], 500);
         }
     }
 
     public function update_solicitud(Request $request)
     {
-        Log::info("Editar solicitud de  carro");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -2518,14 +2464,12 @@ class CarController extends Controller
             $branch->notifications()->save($notification);
                     return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al eliminar el carro'], 500);
         }
     }
 
     public function destroy_solicitud(Request $request)
     {
-        Log::info("Eliminar solivitud");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -2566,7 +2510,6 @@ class CarController extends Controller
             
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al eliminar el carro'], 500);
         }
     }

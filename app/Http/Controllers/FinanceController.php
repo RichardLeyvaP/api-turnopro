@@ -23,7 +23,6 @@ class FinanceController extends Controller
         try {
             return response()->json(['finances' => Finance::all()], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -35,8 +34,6 @@ class FinanceController extends Controller
     
     public function store(Request $request)
     {
-        Log::info("Guardar Finanza");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'control' => 'required|numeric',
@@ -52,9 +49,7 @@ class FinanceController extends Controller
                 'data' => 'required|date',
 
             ]);
-            //Log::info($data);
             $control = 0;
-            //Log::info($request->file('file'));
             if ($request->hasFile('file')) {
 
                 $filename = $data['operation'] . '-' . $data['data'] . '.'.$data['control'] . $request->file('file')->extension();
@@ -85,7 +80,6 @@ class FinanceController extends Controller
             $finance->save();
             return response()->json(['msg' => 'Operacion insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
@@ -107,7 +101,6 @@ class FinanceController extends Controller
                 'revenue_id' => 'nullable',
                 'data' => 'required|date'
             ]);
-            //Log::info($data);
             $finance = Finance::find($data['id']);
 
             if ($request->hasFile('file')) {
@@ -128,7 +121,6 @@ class FinanceController extends Controller
             $finance->save();
             return response()->json(['msg' => 'Operación editada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
         }
     }
@@ -184,7 +176,6 @@ class FinanceController extends Controller
             
             return response()->json(['finances' => $finances], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
         }
     }
@@ -346,7 +337,6 @@ class FinanceController extends Controller
 
             return response()->json($responseData, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -369,7 +359,6 @@ class FinanceController extends Controller
 
             return response()->json(['msg' => 'producto eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el producto'], 500);
         }
     }
@@ -433,7 +422,6 @@ class FinanceController extends Controller
 
             return response()->json($result, 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
         }
     }
@@ -542,7 +530,6 @@ class FinanceController extends Controller
 
             //return response()->json($result, 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
         }
     }
@@ -725,7 +712,6 @@ class FinanceController extends Controller
         
         return $tableFinance = array_merge_recursive($tableRevenueCollection, $tableExpenseCollection);
      } catch (\Throwable $th) {
-       Log::error($th);
        return response()->json(['msg' => 'Error interno del sistema'], 500);
      }
     }
@@ -909,7 +895,6 @@ class FinanceController extends Controller
         return $tableFinance = array_merge_recursive($tableRevenueCollection, $tableExpenseCollection);
 
         } catch (\Throwable $th) {
-           Log::error($th);
            return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -950,7 +935,6 @@ class FinanceController extends Controller
             // Devolvemos el resultado
             return response()->json(['finances' => $financeDates], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
@@ -988,7 +972,6 @@ class FinanceController extends Controller
             // Devolvemos el resultado
             return response()->json(['finances' => $financeDates], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }

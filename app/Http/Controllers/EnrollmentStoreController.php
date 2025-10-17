@@ -43,7 +43,6 @@ class EnrollmentStoreController extends Controller
 
             return response()->json(['msg' => 'Almacén asignado correctamente a la academia'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>'Error al asignar el producto a este almacén'], 500);
     }
     }
@@ -68,7 +67,6 @@ class EnrollmentStoreController extends Controller
             });
             return response()->json(['enrollmentStores' => $enrollmentStores], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el almacén en esta sucursal'], 500);
         }
     }
@@ -86,8 +84,7 @@ class EnrollmentStoreController extends Controller
 
                 return response()->json(['stores' => $storeNotInEnrollment],200); 
             
-            } catch (\Throwable $th) {  
-            Log::error($th);
+            } catch (\Throwable $th) { 
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos"], 500);
         }
     }
@@ -115,7 +112,6 @@ class EnrollmentStoreController extends Controller
             $enrollment->stores()->detach($store->id);
             return response()->json(['msg' => 'Almacén eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al eliminar el almacén en esta academia'], 500);
         }
     }

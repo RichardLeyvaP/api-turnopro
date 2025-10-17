@@ -70,8 +70,6 @@ class CourseController extends Controller
             });
             return response()->json(['courses' => $courses], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
-
             return response()->json(['msg' => "Error al mostrar los cursos"], 500);
         }
     }
@@ -121,7 +119,6 @@ class CourseController extends Controller
 
             return response()->json(['msg' => 'Curso creado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -139,7 +136,6 @@ class CourseController extends Controller
                 $query->where('business_id', $data['business_id']);
             })->with('enrollment')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar los Cursos"], 500);
         }
     }
@@ -191,7 +187,6 @@ class CourseController extends Controller
 
             return response()->json(['msg' => 'Curso creado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al crear al Curso'], 500);
         }
     }
@@ -217,7 +212,6 @@ class CourseController extends Controller
 
             return response()->json(['msg' => 'Curso eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el Curso'], 500);
         }
     }
@@ -248,8 +242,6 @@ class CourseController extends Controller
             });
             return response()->json($cursos, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
-
             return response()->json(['msg' => "Error al mostrar los cursos"], 500);
         }
         // Obtener todos los cursos con sus estudiantes y ventas de productos cargados
@@ -284,9 +276,7 @@ class CourseController extends Controller
                 ];
             });
             return response()->json($cursos, 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
-            Log::error($th);
-
+        } catch (\Throwable $th) { 
             return response()->json(['msg' => "Error al mostrar los cursos"], 500);
         }
         // Obtener todos los cursos con sus estudiantes y ventas de productos cargados

@@ -17,7 +17,6 @@ class ClientSurveyController extends Controller
             
             return response()->json(['surveys' => ClientSurvey::all()], 200);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -39,14 +38,12 @@ class ClientSurveyController extends Controller
                 $clientSurvey->survey_id = $survey;
                 $clientSurvey->branch_id = $request->branch_id;
                 $clientSurvey->data = Carbon::now();
-                $clientSurvey->save();                
-                Log::info($clientSurvey);
+                $clientSurvey->save();      
             }        
         }
         }
         return response()->json(['msg' => 'Insertado Correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -82,7 +79,6 @@ class ClientSurveyController extends Controller
             
             return response()->json($surveyCounts, 200);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error interno del sistema"], 500);
         };
     }

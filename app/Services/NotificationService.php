@@ -47,7 +47,6 @@ class NotificationService
         
             return back()->with(['success' => 'WhatsApp message sent successfully!']);
         } catch (Exception $e) {
-            Log::error('Error sending WhatsApp message: ' . $e->getMessage());
             return back()->with(['error' => $e->getMessage()]);
         }
     }
@@ -89,7 +88,6 @@ class NotificationService
 
             return true; // Indica que el envío fue exitoso
         } catch (Exception $e) {
-            Log::error('Error enviando mensaje de WhatsApp: ' . $e->getMessage());
             return false; // Indica que el envío falló
         }
     }
@@ -133,7 +131,6 @@ class NotificationService
 
             return true;
         } catch (Exception $e) {
-            Log::error('Error sending WhatsApp message: ' . $e->getMessage());
             return false;
         }
     }

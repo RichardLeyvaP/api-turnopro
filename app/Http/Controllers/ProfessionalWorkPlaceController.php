@@ -22,7 +22,6 @@ class ProfessionalWorkPlaceController extends Controller
         try {             
             return response()->json(['workplaces' => Branch::with('professionals')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => "Error al mostrar los productos"], 500);
         }
     }
@@ -32,8 +31,6 @@ class ProfessionalWorkPlaceController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar Puesto de trabajo");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -84,7 +81,6 @@ class ProfessionalWorkPlaceController extends Controller
             }
             return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>$th->getMessage().'Error al seleccionar el puesto de trabajo'], 500);
         }
     }
@@ -102,7 +98,6 @@ class ProfessionalWorkPlaceController extends Controller
             return response()->json(['professionals' => $professional->workplaces],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
@@ -133,7 +128,6 @@ class ProfessionalWorkPlaceController extends Controller
             //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
@@ -154,8 +148,7 @@ class ProfessionalWorkPlaceController extends Controller
             return $workplace->workplace_id;
             //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
             
-            } catch (\Throwable $th) {  
-            Log::error($th);
+            } catch (\Throwable $th) {
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
@@ -182,7 +175,6 @@ class ProfessionalWorkPlaceController extends Controller
             //return response()->json(['professionals' => $professional->workplaces->get()],200, [], JSON_NUMERIC_CHECK); 
             
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
@@ -191,8 +183,6 @@ class ProfessionalWorkPlaceController extends Controller
      */
     public function update(Request $request)
     {
-        Log::info("Actualizar puesto de trabajo de un profesional");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -210,7 +200,6 @@ class ProfessionalWorkPlaceController extends Controller
             Workplace::whereIn('id', $places)->update(['select'=> 1]);
             return response()->json(['msg' => 'Puesto de trabajo seleccionado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>$th->getMessage().'Error al seleccionar el puesto de trabajo'], 500);
         }
     }
@@ -236,7 +225,6 @@ class ProfessionalWorkPlaceController extends Controller
             $professional->workplaces()->wherePivot('data', Carbon::now()->format('Y-m-d'))->detach($workplace->id);
             return response()->json(['msg' => 'Puesto de trabajo liberado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>$th->getMessage().'Error al liberar el puesto de trabajo'], 500);
         }
     }

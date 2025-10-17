@@ -184,7 +184,6 @@ class Kernel extends ConsoleKernel
         })->dailyAt('02:00'); // tarea a las 02:00 AM
         $schedule->call(function () {
             $codigoGlobal = $this->codigoGlobal;
-            // Log::info('Iniciando la quinta tarea programada.correo de cierre de caja mensual');
             // Crear un cliente HTTP
             $client = new Client();
             try {

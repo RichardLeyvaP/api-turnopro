@@ -40,7 +40,6 @@ class VacationController extends Controller
     
             return response()->json(['vacations' => $vacations, 'professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -67,7 +66,6 @@ class VacationController extends Controller
            
             return response()->json(['msg' => 'Vacaciones registrada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -116,7 +114,6 @@ class VacationController extends Controller
                 'professionals' => $professionals
             ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -144,7 +141,6 @@ class VacationController extends Controller
            
             return response()->json(['msg' => 'Vacaciones actualizadas correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -163,7 +159,6 @@ class VacationController extends Controller
 
             return response()->json(['msg' => 'Vacaciones eliminadas correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

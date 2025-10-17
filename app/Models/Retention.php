@@ -33,12 +33,6 @@ class Retention extends Model
                 $startDate = Carbon::now()->subMonth()->startOfMonth()->toDateString();
                 $endDate = Carbon::now()->subMonth()->endOfMonth()->toDateString();
             }
-
-            Log::info("Calculando retenciones desde $startDate hasta $endDate", [
-                'branch_id' => $branch_id,
-                'business_id' => $business_id
-            ]);
-
             // Consulta base
             $query = self::query()
                 ->select(['id', 'retention']) // Solo columnas necesarias
@@ -65,12 +59,7 @@ class Retention extends Model
                 'ids' => $ids
             ];
 
-        } catch (\Exception $e) {
-            Log::error("Error calculando retenciones: ".$e->getMessage(), [
-                'exception' => $e,
-                'params' => func_get_args()
-            ]);
-            
+        } catch (\Exception $e) {            
             return [
                 'total' => 0.0,
                 'ids' => []

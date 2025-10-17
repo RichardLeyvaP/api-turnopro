@@ -45,12 +45,6 @@ class AdvanceController extends Controller
             $validated = $request->validate([
                 'branch_id' => 'required|exists:branches,id'
             ]);
-
-            // Registrar inicio de la operación
-            Log::info("Usuario {$userName} consultó adelantos del día", [
-                'branch_id' => $validated['branch_id']
-            ]);
-
             // Calcular fechas del día actual
             //$endDate = now()->endOfMonth();
             $startDate = now()->toDateString();
@@ -91,20 +85,12 @@ class AdvanceController extends Controller
                 'advances' => $advances
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("Sucursal no encontrada", [
-                'error' => $e->getMessage()
-            ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Sucursal no encontrada'
             ], 404);
         } catch (\Exception $e) {
-            Log::error("Error al obtener adelantos diarios", [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener los adelantos del día: ' . $e->getMessage()
@@ -123,11 +109,6 @@ class AdvanceController extends Controller
                 'endDate' => 'nullable|date|after_or_equal:startDate',
                 'branch_id' => 'required|exists:branches,id',
                 'professional_id' => 'nullable|exists:professionals,id'
-            ]);
-
-            // Registrar inicio de la operación
-            Log::info("Usuario {$userName} consultó adelantos", [
-                'request_params' => $validated
             ]);
 
             // Determinar fechas según lo recibido
@@ -183,10 +164,6 @@ class AdvanceController extends Controller
                 'advances' => $advances
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error("Error de validación", [
-                'errors' => $e->errors(),
-                'request' => $request->all()
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -194,21 +171,11 @@ class AdvanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("Recurso no encontrado", [
-                'error' => $e->getMessage(),
-                'request' => $request->all()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Sucursal o profesional no encontrado'
             ], 404);
         } catch (\Exception $e) {
-            Log::error("Error al obtener adelantos", [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener los adelantos: ' . $e->getMessage()
@@ -225,11 +192,6 @@ class AdvanceController extends Controller
         DB::beginTransaction();
 
         try {
-            // Registrar datos recibidos
-            Log::info('Intento de creación de advance', [
-                'request_data' => $request->all(),
-                'user' => $userName
-            ]);
 
             $validated = $request->validate([
                 //'data' => 'nullable|date',
@@ -257,13 +219,6 @@ class AdvanceController extends Controller
 
             if ($existingAdvance) {
                 DB::rollback(); // No hay cambios, pero cerramos transacción
-                Log::info('Solicitud de adelanto rechazada por duplicado en quincena', [
-                    'professional_id' => $professionalId,
-                    'branch_id' => $validated['branch_id'],
-                    'message' => 'Solo se permite un adelanto por quincena.',
-                    'user_request' => $userName // Quién hizo la petición (el usuario autenticado)
-                ]);
-
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo se permite un adelanto por quincena.',
@@ -305,12 +260,6 @@ class AdvanceController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            // Log de error detallado
-            Log::error('Error al crear advance', [
-                'error' => $e->getMessage()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el advance: ' . $e->getMessage()
@@ -346,18 +295,6 @@ class AdvanceController extends Controller
 
             // Obtener el advance existente
             $advance = Advance::with(['branch', 'professional'])->findOrFail($validated['id']);
-
-            // Registrar inicio de operación
-            Log::info('Usuario intenta cambiar tipo de advance', [
-                'user' => $userName,
-                'advance_id' => $validated['id'],
-                'current_status' => $advance->status,
-                'new_status' => $validated['status'],
-                'amount' => $advance->amount,
-                'branch_id' => $advance->branch_id,
-                'professional_id' => $advance->professional_id
-            ]);
-
             // Verificar si ya está pagado
             if ($advance->status === 'Pagado') {
                 return response()->json([
@@ -410,13 +347,6 @@ class AdvanceController extends Controller
                     $advance->paid = 1;
                     $advance->status = $validated['status'];
                     $advance->user_id = $userId;
-                    // Registrar que se verificó la caja
-                    Log::info('Validación de caja exitosa', [
-                        'box_id' => $box->id,
-                        'existence' => $box->existence,
-                        'amount_required' => $advance->amount
-                    ]);
-
                     $professionalPayment = new ProfessionalPayment();
                     $professionalPayment->branch_id = $advance->branch_id;
                     $professionalPayment->professional_id = $advance->professional_id;
@@ -443,13 +373,6 @@ class AdvanceController extends Controller
                         ? $validated['data'] : now()->toDateString();
                     $finance->file = '';
                     $finance->save();
-
-                    Log::info('Registro de finanzas creado', [
-                        'finance_id' => $finance->id,
-                        'control_number' => $control,
-                        'amount' => $advance->amount
-                    ]);
-
                     $trace = [
                         'branch' => $advance->branch->name,
                         'cashier' => $userName,
@@ -475,21 +398,12 @@ class AdvanceController extends Controller
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Advance no encontrado', [
-                'error' => $e->getMessage()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Advance no encontrado'
             ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al actualizar advance', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar el advance: ' . $e->getMessage()
@@ -513,15 +427,6 @@ class AdvanceController extends Controller
 
             // Obtener el advance existente
             $advance = Advance::findOrFail($validated['id']);
-
-            // Registrar inicio de operación
-            Log::info('Usuario intenta cambiar tipo de advance', [
-                'user' => $userName,
-                'advance_id' => $validated['id'],
-                'amount' => $advance->amount,
-                'branch_id' => $advance->branch_id,
-                'professional_id' => $advance->professional_id
-            ]);
             $advance->amount = $validated['amount'];
             $advance->save();
             
@@ -534,22 +439,13 @@ class AdvanceController extends Controller
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Advance no encontrado', [
-                'error' => $e->getMessage()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Advance no encontrado'
             ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al actualizar advance', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
+             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar el advance: ' . $e->getMessage()
             ], 500);
@@ -574,17 +470,7 @@ class AdvanceController extends Controller
             // Obtener el advance existente
             $advance = Advance::with(['branch', 'professional'])->findOrFail($validated['id']);
 
-            // Registrar inicio de operación
-            Log::info('Usuario intenta cambiar tipo de advance', [
-                'user' => $userName,
-                'advance_id' => $validated['id'],
-                'current_status' => $advance->status,
-                'new_status' => $validated['status'],
-                'amount' => $advance->amount,
-                'branch_id' => $advance->branch_id,
-                'professional_id' => $advance->professional_id
-            ]);
-
+            
             // Verificar si ya está pagado
             if ($advance->status === 'Pagado') {
                 return response()->json([
@@ -627,13 +513,6 @@ class AdvanceController extends Controller
                 $finance->data = now()->toDateString();
                 $finance->file = '';
                 $finance->save();
-
-                Log::info('Registro de finanzas creado', [
-                    'finance_id' => $finance->id,
-                    'control_number' => $control,
-                    'amount' => $advance->amount
-                ]);
-
                 $advance->paid = 1;
                 $advance->save();
             }
@@ -656,9 +535,6 @@ class AdvanceController extends Controller
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Advance no encontrado', [
-                'error' => $e->getMessage()
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -666,10 +542,6 @@ class AdvanceController extends Controller
             ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al actualizar advance', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -692,7 +564,6 @@ class AdvanceController extends Controller
 
             return response()->json(['msg' => 'Solicitud de Adelanto eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la solicitud de adelanto'], 500);
         }
     }
@@ -708,11 +579,6 @@ class AdvanceController extends Controller
                 'endDate' => 'nullable|date|after_or_equal:startDate',
                 'branch_id' => 'required|integer|exists:branches,id',
                 'professional_id' => 'required|integer|exists:professionals,id',
-            ]);
-
-            Log::info("Usuario {$userName} consultó datos financieros combinados", [
-                'request_params' => $validated,
-                'user_id' => $request->user()->id
             ]);
             $now = now();
             // Rango predeterminado: últimos 30 días (desde 30 días atrás hasta hoy)
@@ -881,7 +747,6 @@ class AdvanceController extends Controller
                 'message' => 'Recurso no encontrado'
             ], 404);
         } catch (\Exception $e) {
-            Log::error("Error en getCombinedData: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno del servidor'

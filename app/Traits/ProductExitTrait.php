@@ -70,15 +70,15 @@ trait ProductExitTrait
                 try {
                     $sendEmailService->emailStockDepletion($email, $product, $store, $branches, $productstore->product_exit);
                 } catch (\Swift_TransportException $e) {
-                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                    
                 } catch (\Exception $e) {
-                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    
                 }
             }
         }
         } catch (\Exception $e) {
             // Capturar cualquier error que ocurra durante el proceso
-            Log::error('Error en la función actualizarProductExit: ' . $e->getMessage());
+           
         }
     }
 }

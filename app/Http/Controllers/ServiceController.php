@@ -23,15 +23,12 @@ class ServiceController extends Controller
             }
             return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Guardar Servicio");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'name' => 'required|min:3',
@@ -62,7 +59,6 @@ class ServiceController extends Controller
 
             return response()->json(['msg' => 'Servicio insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error al insertar el servicio'], 500);
         }
     }
@@ -91,7 +87,6 @@ class ServiceController extends Controller
             //$service = Service::find($data['id']);
             return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }
     }
@@ -99,8 +94,6 @@ class ServiceController extends Controller
     public function update(Request $request)
     {
         try{
-        Log::info("Editar servicio");
-            Log::info($request);
             $data = $request->validate([
                 'id' => 'required',
                 'name' => 'required|min:3',
@@ -136,7 +129,6 @@ class ServiceController extends Controller
 
             return response()->json(['msg' => 'Servicio actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
         return response()->json(['msg' => 'Error al actualizar el servicio'], 500);
         }
     }
@@ -158,7 +150,6 @@ class ServiceController extends Controller
 
             return response()->json(['msg' => 'Servicio eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el servicio'], 500);
         }
     }

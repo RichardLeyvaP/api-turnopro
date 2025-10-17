@@ -39,12 +39,10 @@ class OrderController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar las orders");
             $orders = Order::with(['car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])->get();
 
             return response()->json(['orders' => $orders], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
         }
     }
@@ -79,7 +77,6 @@ class OrderController extends Controller
             }
             return response()->json(['orders' => $orderData], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
         }
     }
@@ -126,9 +123,7 @@ class OrderController extends Controller
             DB::commit();
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             DB::rollback();
-            Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
         }
     }
@@ -200,16 +195,13 @@ class OrderController extends Controller
             DB::commit();
              return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             DB::rollback();
-            Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
         }
     }
 
     public function store_web(Request $request)
     {
-        Log::info("Compra de Productos y servicio prestado web");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -220,8 +212,6 @@ class OrderController extends Controller
                 'cant' => 'required'
 
             ]);
-            Log::info('$data');
-            Log::info($data);
             $car = Car::find($data['car_id']);            
             $branch = Branch::where('id', $request->branch_id)->first();
             $clientName = $car->clientProfessional->client->name;
@@ -294,9 +284,7 @@ class OrderController extends Controller
             DB::commit();
              return response()->json(['msg' =>'Pedido Agregado correctamente','order_id' =>$order->id ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             DB::rollback();
-            Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
         }
     }
@@ -314,7 +302,6 @@ class OrderController extends Controller
                 $serviceSales = $this->orderService->sales_periodo_service($data);      
              return response()->json(['ProductSales' =>$productSales, 'ServiceSales' => $serviceSales], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al solicitar un pedido'], 500);
         }
@@ -360,15 +347,12 @@ class OrderController extends Controller
             }
             return response()->json(['orders' => $orders], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las orders"], 500);
         }
     }
 
     public function update(Request $request)
     {
-        Log::info("Actualizar orden");
-        Log::info($request);
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -411,15 +395,12 @@ class OrderController extends Controller
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
 
     public function order_denegar(Request $request)
     {
-        Log::info("Actualizar orden denegar");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -441,15 +422,12 @@ class OrderController extends Controller
             $order->save();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
 
     public function update2(Request $request)
     {
-        Log::info("Actualizar orden update2");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -502,15 +480,12 @@ class OrderController extends Controller
             return response()->json(['carOrderDelete' => $car], 200);
          
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
 
     public function update_web(Request $request)
     {
-        Log::info("Actualizar orden update_web");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -547,15 +522,12 @@ class OrderController extends Controller
             $order->save();
             return response()->json(['msg' => 'Estado de la orden modificado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
     
     public function destroy(Request $request)//2024-10-12
     {
-        Log::info("Eliminar orden");
-        Log::info($request);
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -572,13 +544,6 @@ class OrderController extends Controller
             $reservation = $car->reservation;
             $client = $car->clientProfessional->client;
             if($reservation->confirmation == 2){
-                Log::info('Manda a eliminar una orden con el cliente ya finalizado');
-                Log::info('$car->id');
-                Log::info($car->id);
-                Log::info('$reservation->id');
-                Log::info($reservation->id);
-                Log::info('Cliente');
-                Log::info($client->name);
                 DB::commit();
                 return response()->json(['msg' =>'Solicitud de eliminar la orden no realizada cliente finalizado'], 200);
             }
@@ -641,15 +606,12 @@ class OrderController extends Controller
             return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::info("Eliminar orden:$th");
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
 
     public function destroy_web(Request $request)
     {
-        Log::info("Eliminar orden web");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -738,15 +700,12 @@ class OrderController extends Controller
             
             return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info("Eliminar orden:$th");
             return response()->json(['msg' => $th->getMessage().'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }
 
     public function destroy_solicitud(Request $request)
     {
-        Log::info("Eliminar orden destroy_solicitud");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -823,7 +782,6 @@ class OrderController extends Controller
             
             return response()->json(['msg' =>'Solicitud de eliminar la orden hecha correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info("Eliminar orden:$th");
             return response()->json(['msg' => $th->getMessage().'Error al hacer la solicitud de eliminar la orden'], 500);
         }
     }

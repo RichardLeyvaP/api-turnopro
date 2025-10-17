@@ -24,7 +24,6 @@ class CourseProfessionalController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar professional a un curso");
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
@@ -37,7 +36,6 @@ class CourseProfessionalController extends Controller
 
             return response()->json(['msg' => 'Professional asignado correctamente al curso'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -48,7 +46,6 @@ class CourseProfessionalController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("Entra a buscar los professionals de un curso");
             $data = $request->validate([
                 'course_id' => 'nullable|numeric'
             ]);
@@ -70,7 +67,6 @@ class CourseProfessionalController extends Controller
 
             return response()->json(['courseProfessionals' => $courseprofessional], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
         }
     }
@@ -78,7 +74,6 @@ class CourseProfessionalController extends Controller
     public function show_Notin(Request $request)
     {
         try {             
-            Log::info("Dado un curso devuelve los professionales asociados a el");
             $data = $request->validate([
                 'course_id' => 'required|numeric'
             ]);
@@ -95,7 +90,6 @@ class CourseProfessionalController extends Controller
                 return response()->json(['professionals' => $professionals],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar las branches"], 500);
         }
     }
@@ -124,7 +118,6 @@ class CourseProfessionalController extends Controller
             $course->professionals()->detach($professional->id);
             return response()->json(['msg' => 'Afiliación eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

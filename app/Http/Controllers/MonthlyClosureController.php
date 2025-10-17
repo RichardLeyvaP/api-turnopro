@@ -371,9 +371,9 @@ class MonthlyClosureController extends Controller
                         $monthName
                     );
                 } catch (\Swift_TransportException $e) {
-                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                    
                 } catch (\Exception $e) {
-                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    
                 }
             }
             return response()->json([
@@ -390,8 +390,6 @@ class MonthlyClosureController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -502,8 +500,6 @@ class MonthlyClosureController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -587,8 +583,6 @@ class MonthlyClosureController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al crear cierre mensual: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el cierre de mes',
@@ -665,8 +659,6 @@ class MonthlyClosureController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al procesar cierre mensual: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al procesar el cierre mensual',
@@ -715,11 +707,6 @@ class MonthlyClosureController extends Controller
                 'message' => 'Cálculo de utilidad realizado correctamente'
             ]);
         } catch (\Exception $e) {
-            Log::error('Error al calcular utilidad: ' . $e->getMessage(), [
-                'exception' => $e,
-                'request_data' => $request->all()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Ocurrió un error al calcular la utilidad',

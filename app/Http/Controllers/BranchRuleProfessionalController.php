@@ -20,7 +20,6 @@ class BranchRuleProfessionalController extends Controller
             $professionalrules = BranchRuleProfessional::with('branchRule.rule', 'professional')->get();
             return response()->json(['branchRuleProfesional' => $professionalrules], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las rules por trabajador"], 500);
         }
     }
@@ -87,8 +86,6 @@ class BranchRuleProfessionalController extends Controller
                 'convivencias' => $formattedData,
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            // Manejo de errores
-            Log::error($th);
             return response()->json([
                 'success' => false,
                 'msg' => 'Error al obtener las convivencias: ' . $th->getMessage(),
@@ -98,7 +95,6 @@ class BranchRuleProfessionalController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Asignar cumplimiento de rule a un professional");
         try {
             $data = $request->validate([
                 'branch_rule_id' => 'required|numeric',
@@ -110,7 +106,6 @@ class BranchRuleProfessionalController extends Controller
             $professional->branchRules()->attach($branchrule->id, ['data' => Carbon::now(), 'estado' => $data['estado']]);
             return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el estado de la rule a este professional'], 500);
         }
     }
@@ -148,14 +143,12 @@ class BranchRuleProfessionalController extends Controller
 
             return response()->json($results, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
 
     public function storeByType(Request $request)
     {
-        Log::info("Asignar cumplimiento de rule por type storeByType");
         try {
             $data = $request->validate([
                 'type' => 'required|string',
@@ -190,15 +183,12 @@ class BranchRuleProfessionalController extends Controller
             }
             return response()->json(['msg' => 'Estado de la rule asignado correctamente al professional'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al asignar el estado de la rule a este professional'], 500);
         }
     }
 
     public function storeByTypeId(Request $request)
     {
-        Log::info("Asignar cumplimiento de rule a un professional por id-2 storeByTypeId");
-
         try {
             $data = $request->validate([
                 'type' => 'required|string',
@@ -207,7 +197,6 @@ class BranchRuleProfessionalController extends Controller
                 'estado' => 'required|int',
                 'id' => 'required|int'
             ]);
-            Log::info($data);
             $branchRuleProfessional = BranchRuleProfessional::where('id', $data['id'])->first();
             if ($branchRuleProfessional) {
                 $branchRuleProfessional->estado = $data['estado'];
@@ -228,14 +217,12 @@ class BranchRuleProfessionalController extends Controller
                 return response()->json(['msg' => 'Rule del Professional no encontrado'], 204);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al asignar el estado de la rule a este professional'], 500);
         }
     }
 
     public function storeByType_time(Request $request)
     {
-        Log::info("Asignar cumplimiento de rule a un professional storeByType_time");
         try {
             $data = $request->validate([
                 'type' => 'required|string',
@@ -255,7 +242,6 @@ class BranchRuleProfessionalController extends Controller
             }
             return response()->json(['msg' => 'Estado actualizado'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
@@ -268,7 +254,6 @@ class BranchRuleProfessionalController extends Controller
             ]);
             return response()->json(['professional' => Professional::find($data['professional_id'])->branchRules], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el estado de las rules de un  professional"], 500);
         }
     }
@@ -276,8 +261,6 @@ class BranchRuleProfessionalController extends Controller
     public function rules_professional(Request $request)
     {
         try {
-            Log::info("Entra a buscar el estado de las rules de un  professional");
-            Log::info($request->all());
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'branch_id'  => 'required|numeric'
@@ -315,14 +298,12 @@ class BranchRuleProfessionalController extends Controller
             });
             return response()->json(['rules' => $branchRuleProfessionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th->getMessage());
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar el estado de las rules de un  professional"], 500);
         }
     }
 
     public function update(Request $request)
     {
-        Log::info("actualizar estado del cumplimiento de rule a un professional");
         try {
             $data = $request->validate([
                 'branch_rule_id' => 'required|numeric',
@@ -334,15 +315,12 @@ class BranchRuleProfessionalController extends Controller
             $professional->branchrules()->updateExistingPivot($branchrule->id, ['estado' => $data['estado']]);
             return response()->json(['msg' => 'Estado actualizado correctamente del cumplimiento de una rule del professional'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar estado del cumplimiento de rule del professional'], 500);
         }
     }
 
     public function update_rule_state(Request $request)
     {
-        Log::info("Actualización masiva de estados de convivencias");
-
         try {
             $data = $request->validate([
                 'changes' => 'required|array',
@@ -377,7 +355,6 @@ class BranchRuleProfessionalController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar estados',
@@ -397,7 +374,6 @@ class BranchRuleProfessionalController extends Controller
 
             return response()->json(['msg' => 'Estado del cumplimiento de la rule eliminado correctamente de este trabajador'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el estado del cumplimiento de la rule de este trabajador'], 500);
         }
     }

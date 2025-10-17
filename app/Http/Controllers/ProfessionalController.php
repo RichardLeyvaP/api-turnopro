@@ -59,7 +59,6 @@ class ProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las professionales"], 500);
         }
     }
@@ -123,7 +122,6 @@ class ProfessionalController extends Controller
             }
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las professionales"], 500);
         }
     }
@@ -145,7 +143,6 @@ class ProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -164,7 +161,6 @@ class ProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar el professional"], 500);
         }
     }
@@ -187,7 +183,6 @@ class ProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar el professional"], 500);
         }
     }
@@ -200,7 +195,6 @@ class ProfessionalController extends Controller
             ]);
             return response()->json(['professional' => Professional::with('user', 'charge')->find($professionals_data['id'])], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -238,7 +232,6 @@ class ProfessionalController extends Controller
             } else
                 return -1;
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -432,7 +425,6 @@ class ProfessionalController extends Controller
                 return response()->json(['reservations' => $reservations], 200);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los profesionales"], 500);
         }
     }
@@ -448,7 +440,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['professional_branch' => $professional], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
@@ -463,7 +454,6 @@ class ProfessionalController extends Controller
    
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
@@ -489,7 +479,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
@@ -514,7 +503,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
@@ -530,7 +518,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -546,7 +533,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -562,7 +548,6 @@ class ProfessionalController extends Controller
   
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -578,7 +563,6 @@ class ProfessionalController extends Controller
             $professionals = $this->professionalService->branch_professionals_serviceNew($data['branch_id'], $servs);
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -594,7 +578,6 @@ class ProfessionalController extends Controller
             $professionals = $this->professionalService->get_professionals_service($data);
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => "Professionals"], 500);
         }
     }
@@ -612,7 +595,6 @@ class ProfessionalController extends Controller
             $ganancias = $this->professionalService->professionals_ganancias($data);
             return response()->json(['earningByDay' => $ganancias], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Profssional no obtuvo ganancias en este período"], 500);
         }
     }
@@ -635,7 +617,6 @@ class ProfessionalController extends Controller
                 return response()->json(['earningPeriodo' => $this->professionalService->professionals_ganancias_branch_date($data)], 200, [], JSON_NUMERIC_CHECK);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Profssional no obtuvo ganancias en este período"], 500);
         }
     }
@@ -662,7 +643,6 @@ class ProfessionalController extends Controller
             $professional->user_id = $data['user_id'];
             $professional->state = 0;
             $professional->save();
-            Log::info($professional->id);
             $filename = "professionals/default.jpg";
             if ($request->hasFile('image_url')) {
                 $filename = $request->file('image_url')->storeAs('professionals', $professional->id . '.' . $request->file('image_url')->extension(), 'public');
@@ -672,7 +652,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['msg' => 'Profesional insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' =>  $th->getMessage() . 'Error al insertar el professional'], 500);
         }
     }
@@ -680,13 +659,10 @@ class ProfessionalController extends Controller
     public function update_state(Request $request)
     {
         try {
-
-            Log::info("entra a actualizar update_state");
             $data = $request->validate([
                 'professional_id' => 'nullable|numeric',
                 'state' => 'required|numeric'
             ]);
-            Log::info($request);
             $professional = Professional::find($data['professional_id']);
 
             $professional->state = $data['state'];
@@ -695,7 +671,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['msg' => 'Estado del Profesional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el estado professional'], 500);
         }
     }
@@ -704,7 +679,6 @@ class ProfessionalController extends Controller
     {
         try {
 
-            Log::info("entra a buscar cargo");
             $data = $request->validate([
                 'email' => 'required',
                 'branch_id' => 'required|numeric'
@@ -712,7 +686,6 @@ class ProfessionalController extends Controller
             $professionals = $this->professionalService->verifi_tec_prof($data['email'], $data['branch_id']);
             return response()->json(['professionals' => $professionals], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el estado professional'], 500);
         }
     }
@@ -721,7 +694,6 @@ class ProfessionalController extends Controller
     {
         try {
 
-            Log::info("entra a actualizar el professional");
             $professionals_data = $request->validate([
                 'id' => 'required|numeric',
                 'name' => 'required|max:50',
@@ -735,7 +707,6 @@ class ProfessionalController extends Controller
                 'state' => 'required|numeric',
                 'retention' => 'required|numeric'
             ]);
-            Log::info($request);
             $professional = Professional::find($professionals_data['id']);
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|unique:professionals,email,' . $professional->id,
@@ -781,7 +752,6 @@ class ProfessionalController extends Controller
 
             return response()->json(['msg' => 'Profesional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professional'], 500);
         }
     }
@@ -799,14 +769,12 @@ class ProfessionalController extends Controller
             User::destroy($user_id);
             return response()->json(['msg' => 'Profesional eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la professional'], 500);
         }
     }
 
     public function professionals_state_coordinador(Request $request)
     {
-        Log::info('Obtener profesionales disponibles para reasignar en coordinador');
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -829,7 +797,6 @@ class ProfessionalController extends Controller
             $professionals = $this->professionalService->branch_professionals_service_tottem($data['branch_id'], $servs, $professional_id, $reservation);
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Professionals con orden de disponibilidad"], 500);
         }
     }
@@ -844,7 +811,6 @@ class ProfessionalController extends Controller
             $professional = $this->professionalService->professionals_state($data['branch_id'], $data['reservation_id']);
             return response()->json(['professionals' => $professional], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
         }
     }
@@ -877,7 +843,6 @@ class ProfessionalController extends Controller
             }
             return response()->json(['user' => $user, 'clientName' => $clientName, 'clientImage' => $clientImage, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }

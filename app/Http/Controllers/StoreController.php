@@ -12,8 +12,7 @@ class StoreController extends Controller
         try { 
             
             return response()->json(['stores' => Store::all()], 200, [], JSON_NUMERIC_CHECK);
-        } catch (\Throwable $th) {  
-            Log::error($th);
+        } catch (\Throwable $th) {
             return response()->json(['msg' => "Error al mostrar los almacenes"], 500);
         }
     }
@@ -22,7 +21,6 @@ class StoreController extends Controller
         try {
             return response()->json(['stores' => Store::all()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el almacén"], 500);
         }
     }
@@ -35,7 +33,6 @@ class StoreController extends Controller
             ]);
             return response()->json(['stores' => Store::where('id', '!=',$data['store_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar el almacén"], 500);
         }
     }
@@ -55,7 +52,6 @@ class StoreController extends Controller
             }
             return response()->json(['stores' => $stores], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el almacén"], 500);
         }
     }
@@ -70,16 +66,12 @@ class StoreController extends Controller
                 $query->where('enrollment_id', $data['enrollment_id']);
             })->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el almacén"], 500);
         }
     }
 
     public function store(Request $request)
     {
-
-        Log::info("crear almacen");
-        Log::info($request);
         try {
             $stores_data = $request->validate([
                 'reference' => 'required|max:50',
@@ -97,15 +89,13 @@ class StoreController extends Controller
 
             return response()->json(['msg' => 'Almacén insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al insertar el almacén'], 500);
         }
     }
 
     public function update(Request $request)
     {
-        try {
-            Log::info("entra a actualizar alamacen");  
+        try {  
             $stores_data = $request->validate([
                 'id' => 'required|numeric',
                 'reference' => 'required|max:50',
@@ -113,7 +103,6 @@ class StoreController extends Controller
                 'address' => 'required|max:50'
               
             ]);
-            Log::info($request);
             $store = Store::find($stores_data['id']);
             $store->reference = $stores_data['reference'];
             $store->description = $stores_data['description'];
@@ -122,7 +111,6 @@ class StoreController extends Controller
 
             return response()->json(['msg' => 'Almacén actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al actualizar el almacén'], 500);
         }
     }
@@ -138,7 +126,6 @@ class StoreController extends Controller
 
             return response()->json(['msg' => 'Almacén eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el almacén'], 500);
         }
     }

@@ -101,13 +101,10 @@ class OperationTipController extends Controller
                             $finance->save();
             return response()->json($operationTip, 201);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -163,13 +160,10 @@ class OperationTipController extends Controller
 
             return response()->json($combinedPayments, 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -201,13 +195,10 @@ class OperationTipController extends Controller
            
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -279,13 +270,10 @@ class OperationTipController extends Controller
            
             return response()->json($combinedPayments, 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -394,7 +382,6 @@ class OperationTipController extends Controller
 
             return response()->json(['cars' => $cars, 'sales' => $products, 'payments' => $payments], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -402,7 +389,6 @@ class OperationTipController extends Controller
     public function cashier_car_salary_notpay(Request $request)
     {
         try {
-            Log::info('Iniciando Solicitud de adelantos', ['request' => $request->all()]);
             $data = $request->validate([
                 'branch_id' => 'required|numeric|exists:branches,id',
                 'professional_id' => 'required|numeric|exists:professionals,id',
@@ -441,7 +427,6 @@ class OperationTipController extends Controller
 
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -500,10 +485,8 @@ class OperationTipController extends Controller
             }
             return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -529,11 +512,7 @@ class OperationTipController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::warning('Validación fallida para cálculo de pagos', [
-                'errors' => $validator->errors()->all(),
-                'input' => $request->all()
-            ]);
-            
+          
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación',
@@ -543,12 +522,6 @@ class OperationTipController extends Controller
 
         try {
             $data = $validator->validated();
-            
-            Log::info('Iniciando cálculo de pagos', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id']
-            ]);
-
             $professional = Professional::where('id', $data['professional_id'])->first();
             $branch = Branch::where('id', $data['branch_id'])->first();
 
@@ -604,13 +577,6 @@ class OperationTipController extends Controller
             return response()->json(['payments' => $result, 'total_product_ant' => $totalProductPayments, 'total_product_act' => $resultProducts['commission_neto'], 'total_tip_ant' => $totalTipPayments, 'total_tip_act' => $resultTips['tip_neto'], 'advances' => $advances, 'current_charged' => $currentMonthPayments, 'previous_charged' => $previousMonthPayments]);
 
         } catch (\Exception $e) {
-            Log::error('Error al calcular pagos', [
-                'professional_id' => $request->input('professional_id'),
-                'branch_id' => $request->input('branch_id'),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno al calcular los pagos',
@@ -663,11 +629,7 @@ class OperationTipController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::warning('Validación fallida para cálculo de pagos', [
-                'errors' => $validator->errors()->all(),
-                'input' => $request->all()
-            ]);
-            
+         
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación',
@@ -699,14 +661,7 @@ class OperationTipController extends Controller
             return response()->json(['products' => $result]);
 
         } catch (\Exception $e) {
-            Log::error('Error al mostrar datos de venta de productos', [
-                'professional_id' => $request->input('professional_id'),
-                'branch_id' => $request->input('branch_id'),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
+           return response()->json([
                 'success' => false,
                 'message' => 'Error interno del sistema',
                 'error' => $e->getMessage()
@@ -758,11 +713,7 @@ class OperationTipController extends Controller
 
 
         if ($validator->fails()) {
-            Log::warning('Validación fallida para cálculo de pagos', [
-                'errors' => $validator->errors()->all(),
-                'input' => $request->all()
-            ]);
-            
+          
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación',
@@ -791,13 +742,6 @@ class OperationTipController extends Controller
             return response()->json(['tips' => $result]);
 
         } catch (\Exception $e) {
-            Log::error('Error al mostrar datos de comision de propinas', [
-                'professional_id' => $request->input('professional_id'),
-                'branch_id' => $request->input('branch_id'),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno del sistema',

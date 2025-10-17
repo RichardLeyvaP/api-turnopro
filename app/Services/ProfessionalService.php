@@ -301,7 +301,6 @@ class ProfessionalService
             ['start_time', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales Coordinador:'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -357,7 +356,6 @@ class ProfessionalService
                     ->whereDate('endDate', '>=', $fechaDada)
                     ->first();
                 if (!$vacation) {
-                    //Log::info();
                     $professionals[] = $professional1;
                 }
             }
@@ -503,7 +501,6 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales (branch_professionals_serviceOld):'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -698,7 +695,6 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales (branch_professionals_service):'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -764,7 +760,6 @@ class ProfessionalService
                     ->map(function ($query) use ($current_time, $professional) {
                         $attended_values = [1, 11, 111, 4, 5, 33];
                         $attended = (int) $query->tail->attended;
-                        Log::info('El valor de attended es:'.$attended);
                         if (($attended !== 0 && $attended !==3) || $query->tail->aleatorie != 1) {
                             $professional->attended = 1;
                             $professional->finalHourAttended = $query->final_hour;
@@ -894,7 +889,6 @@ class ProfessionalService
             ['arrival', 'asc']
         ])->values();
 
-        Log::info('Orden de los professionales (branch_professionals_service_tottem1):'.$returnedProfessionals);
         return $returnedProfessionals;
         } catch (Exception $e) {
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
@@ -1128,7 +1122,6 @@ class ProfessionalService
                 return $reservations;
             }
         } catch (Exception $e) {
-            Log::info($e->getMessage());
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el Professionalservice(professional_reservations_time): " . $e->getMessage());
         }
@@ -1359,7 +1352,6 @@ class ProfessionalService
                 return $reservations;
             }
         } catch (Exception $e) {
-            Log::info($e->getMessage());
             // Manejo de la excepción en el servicio, puedes lanzar una excepción personalizada
             throw new \RuntimeException("Error al ejecutar el Professionalservice(professional_reservations_time): " . $e->getMessage());
         }

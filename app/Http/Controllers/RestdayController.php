@@ -74,7 +74,6 @@ class RestdayController extends Controller
             }
             return response()->json(['Schedules' => $completeSchedule], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar Horario"], 500);
         }
     }
@@ -107,7 +106,6 @@ class RestdayController extends Controller
 
             return response()->json(['msg' => 'Diaas de descanso actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }

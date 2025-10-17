@@ -16,7 +16,6 @@ class ExpenseController extends Controller
         try {
             return response()->json(['expenses' => Expense::all()], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -38,7 +37,6 @@ class ExpenseController extends Controller
 
             return response()->json(['msg' => 'Operación de Gasto creado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -54,7 +52,6 @@ class ExpenseController extends Controller
             ]);
             return response()->json(['businessTypes' => Expense::find($data['id'])], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -76,7 +73,6 @@ class ExpenseController extends Controller
 
             return response()->json(['msg' => 'Operación de Gasto actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -91,13 +87,10 @@ class ExpenseController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            Log::info($data['id']);
             Expense::destroy($data['id']);
 
             return response()->json(['msg' => 'Operación de Gasto eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
-
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

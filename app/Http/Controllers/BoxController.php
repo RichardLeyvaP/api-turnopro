@@ -37,8 +37,6 @@ class BoxController extends Controller
     {
         try {
             DB::beginTransaction();
-            Log::info("Editar la caja (store)");
-            Log::info($request->all());
             $request->merge([
                 'cashFound' => $request->cashFound === 'null' ? null : $request->cashFound
             ]);
@@ -129,7 +127,6 @@ class BoxController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al actualizar la caja'], 500);
         }
@@ -147,7 +144,6 @@ class BoxController extends Controller
             $box = Box::whereDate('data', Carbon::now())->where('branch_id', $data['branch_id'])->get();
             return response()->json(['box' => $box], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }
@@ -159,7 +155,6 @@ class BoxController extends Controller
     {
         try {
 
-            Log::info("Editar Caja BoxCoseController");
             $request->merge([
                 'cashFound' => $request->cashFound === 'null' ? null : $request->cashFound
             ]);
@@ -221,7 +216,6 @@ class BoxController extends Controller
             }
             return response()->json(['msg' => 'Caja actualizada correctamente correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error al actualizar la caja'], 500);
         }
     }

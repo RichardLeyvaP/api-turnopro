@@ -131,13 +131,10 @@ class ProfessionalPaymentController extends Controller
             }
             return response()->json($professionalPayment, 201);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -159,19 +156,7 @@ class ProfessionalPaymentController extends Controller
             $data['paymentDate'] = isset($data['paymentDate']) 
             ? Carbon::parse($data['paymentDate']) 
             : Carbon::now();
-
-            Log::info('Datos recibidos para pago a profesional Barbero', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id'],
-                'payments_data' => $data['payments'],
-                'type' => $data['type'],
-                'amountAcadem' => $data['amountAcadem'],
-                'typeAcadem' => $data['typeAcadem'],
-                'paymentDate' => $data['paymentDate'],
-            ]);
-
-           
-
+     
             if($data['amountAcadem']){
                 
                 $ids = $request->input('course_ids');
@@ -236,23 +221,14 @@ class ProfessionalPaymentController extends Controller
 
         } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Error de validación en pago', [
-                'error' => $e->getMessage(),
-                'input' => $request->all()
-            ]);
             return response()->json(['error' => $e->getMessage()], 400);
             
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Recurso no encontrado'], 404);
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al procesar pago', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
@@ -272,14 +248,7 @@ class ProfessionalPaymentController extends Controller
             $data['paymentDate'] = isset($data['paymentDate']) 
             ? Carbon::parse($data['paymentDate']) 
             : Carbon::now();
-           
-            Log::info('Datos recibidos para pago a profesional Cargos', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id'],
-                'payments_data' => $data['payments'],
-                'type' => $data['type'],
-                'paymentDate' => $data['paymentDate'],
-            ]);
+  
             $data = $this->adjustNetPayments($data);
 
             $payment = $this->professionalPaymentService->processPayment($data);
@@ -293,23 +262,14 @@ class ProfessionalPaymentController extends Controller
 
         } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Error de validación en pago', [
-                'error' => $e->getMessage(),
-                'input' => $request->all()
-            ]);
             return response()->json(['error' => $e->getMessage()], 400);
             
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Recurso no encontrado'], 404);
+              return response()->json(['error' => 'Recurso no encontrado'], 404);
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al procesar pago', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
@@ -363,13 +323,10 @@ class ProfessionalPaymentController extends Controller
 
             return response()->json($professionalPayment, 201);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -405,16 +362,6 @@ class ProfessionalPaymentController extends Controller
                 
                 // Actualizar el array de datos
                 $data['payments'] = $payments;
-                
-                // Registrar ajuste realizado
-                Log::info('Ajuste aplicado a valores netos', [
-                    'excess' => $excess,
-                    'commission_neto_original' => $commissionNeto,
-                    'commission_neto_ajustado' => $payments['products']['commission_neto'],
-                    'tip_neto_original' => $tipNeto,
-                    'tip_neto_ajustado' => $payments['tips']['tip_neto'],
-                    'professional_id' => $data['professional_id']
-                ]);
             }
         }
         
@@ -437,15 +384,6 @@ class ProfessionalPaymentController extends Controller
             ? Carbon::parse($data['paymentDate']) 
             : Carbon::now();
 
-             // Registrar log detallado
-            Log::info('Datos recibidos para pago a profesional cajeros', [
-                'professional_id' => $data['professional_id'],
-                'branch_id' => $data['branch_id'],
-                'payments_data' => $data['payments'], // Registra toda la estructura de pagos
-                'type' => $data['type'],
-                'paymentDate' => $data['paymentDate'],
-            ]);
-
             // Aplicar ajuste a valores netos
         $data = $this->adjustNetPayments($data);
             
@@ -459,23 +397,14 @@ class ProfessionalPaymentController extends Controller
 
         } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Error de validación en pago', [
-                'error' => $e->getMessage(),
-                'input' => $request->all()
-            ]);
             return response()->json(['error' => $e->getMessage()], 400);
             
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Recurso no encontrado'], 404);
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al procesar pago', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
@@ -509,8 +438,6 @@ class ProfessionalPaymentController extends Controller
             foreach ($branchProfessionals as $branchProfessional) {
                 $professionalId = $branchProfessional->professional_id;
                 $professionalName = $branchProfessional->professional->name ?? 'Nombre no disponible';
-                
-                Log::info("Procesando profesional: ID {$professionalId} - {$professionalName}");
                 
                 try {
                    // Calcular pagos
@@ -546,7 +473,6 @@ class ProfessionalPaymentController extends Controller
                     }
                     
                     $results[] = $result;
-                    Log::info("Resultado del profesional ID {$professionalId}: " . json_encode($result));
                     
                 } catch (\Exception $e) {
                     DB::rollBack();
@@ -556,7 +482,6 @@ class ProfessionalPaymentController extends Controller
                         'error' => $e->getMessage()
                     ];
                     $results[] = $result;
-                    Log::error("Error procesando profesional ID {$professionalId}: " . $e->getMessage());
                     
                     return response()->json([
                         'success' => false,
@@ -580,7 +505,6 @@ class ProfessionalPaymentController extends Controller
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error general en store_payment_automatically: " . $e->getMessage());
             
             return response()->json([
                 'success' => false,
@@ -624,13 +548,10 @@ class ProfessionalPaymentController extends Controller
 
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -760,13 +681,10 @@ class ProfessionalPaymentController extends Controller
 
             return response()->json(['payments' => $payments, 'pendiente' => number_format(round($pendienteMount, 2), 2), 'pagado' => number_format(round($payments_redondeado, 2), 2), 'clientAtended' => $clientAttended, 'servCant' => $servCant, 'amountGenerate' => number_format(round($amountGenerate, 2), 2), 'propina80' => number_format(round($propina80, 2), 2), 'metaCant' => $metaCant, 'metaAmount' => number_format(round($metaAmount, 2), 2), 'productBonoCant' => $productBonoCant, 'productAmount' => number_format(round($productAmount, 2), 2), 'servBonoCant' => $servBonoCant, 'servAmount' => number_format(round($servAmount, 2), 2), 'retention' => number_format(round($retentionpay, 2), 2), 'winnerRetention' => number_format(round($winnerRetention, 2), 2), 'winnerAmount' => number_format(round($winnerAmount, 2), 2), 'productCant' => number_format(round($productCant, 2), 2)], 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -818,13 +736,10 @@ class ProfessionalPaymentController extends Controller
         }
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -854,13 +769,10 @@ class ProfessionalPaymentController extends Controller
 
             return response()->json($payments, 200);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -893,13 +805,10 @@ class ProfessionalPaymentController extends Controller
                 }
             return response()->json(['bonus' => $bonusPay], 200, [], JSON_NUMERIC_CHECK);
         } catch (ValidationException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 400);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -931,23 +840,14 @@ class ProfessionalPaymentController extends Controller
 
         } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Error de validación en pago', [
-                'error' => $e->getMessage(),
-                'input' => $request->all()
-            ]);
             return response()->json(['error' => $e->getMessage()], 400);
             
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Recurso no encontrado', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Recurso no encontrado'], 404);
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al procesar edicion de pago', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
@@ -973,10 +873,8 @@ class ProfessionalPaymentController extends Controller
 
             return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);
         } catch (QueryException $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Ocurrió un error: ' . $e->getMessage()], 500);
         }
     }
@@ -1035,7 +933,6 @@ class ProfessionalPaymentController extends Controller
 
                     return response()->json(['monthlyEarnings' => $monthlyEarnings, 'totalEarnings' => number_format(round($totalEarnings, 0), 2), 'averageEarnings' => number_format(round($averageEarnings, 0), 2), 'metaCant' => $meta->count(), 'metaAmount' => number_format(round($meta->sum('amount'), 0), 2)], 200);
                 } catch (\Throwable $th) {
-                    Log::error($th);
                     return response()->json(['msg' => $th->getMessage() . 'Error al insertar el producto'], 500);
                 }
     }

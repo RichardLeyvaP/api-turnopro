@@ -15,19 +15,14 @@ class BranchServiceController extends Controller
     public function index()
     {
         try {
-            Log::info("Entra a buscar los servicios por sucursales");
             return response()->json(['branch' => Branch::with('branchservices')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios por sucursales"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Asignar servicio a una sucursal");
-        Log::info($request);
-
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric|exists:branches,id',
@@ -72,7 +67,6 @@ class BranchServiceController extends Controller
                 'action' => 'created'
             ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json([
                 'msg' => 'Error interno del sistema',
                 'error' => $th->getMessage()
@@ -83,7 +77,6 @@ class BranchServiceController extends Controller
     public function show_service_idProfessional(Request $request) //todo modificar aqui
     {
         try {
-            Log::info("Entra a buscar los servicio q brinda una sucursal");
             $data = $request->validate([
                 'branch_id' => 'required'
             ]);
@@ -93,7 +86,6 @@ class BranchServiceController extends Controller
             })->with('branchServices.branchServiceProfessional:id')->get();
             return response()->json(['services' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los servicios"], 500);
         }
     }
@@ -101,7 +93,6 @@ class BranchServiceController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("Buscar servicios de una sucursal");
             $data = $request->validate([
                 'branch_id' => 'sometimes|numeric|exists:branches,id'
             ]);
@@ -136,7 +127,6 @@ class BranchServiceController extends Controller
 
             return response()->json(['services' => $services], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json([
                 'msg' => 'Error al mostrar los servicios',
                 'error' => $th->getMessage()
@@ -147,7 +137,6 @@ class BranchServiceController extends Controller
     public function branch_service_show($data)
     {
         try {
-            Log::info("Entra a buscar id de la relacion entre una sucursal y un servicio determinado servicio");
             $branchservice = BranchService::where('branch_id', $data['branch_id'])->where('service_id', $data['service_id'])->first();
             if (!$branchservice) {
                 $branchservice = new BranchService();
@@ -157,7 +146,6 @@ class BranchServiceController extends Controller
             }
             return $branchservice->id;
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el servicio a la sucursal'], 500);
         }
     }
@@ -176,7 +164,6 @@ class BranchServiceController extends Controller
             $branch->services()->updateExistingPivot($service->id, ['ponderation' => $data['ponderation']]);
             return response()->json(['msg' => 'Servicio actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el servicio en esta sucursal'], 500);
         }
     }
@@ -202,7 +189,6 @@ class BranchServiceController extends Controller
                 'msg' => 'Servicio desvinculado correctamente con eliminación lógica en cascada'
             ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json([
                 'msg' => 'Error al desvincular el servicio',
                 'error' => $th->getMessage()

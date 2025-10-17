@@ -25,7 +25,6 @@ class AssistantController extends Controller
         
     public function professional_branch_notif_queque(Request $request)
     {
-        Log::info('Dada una sucursal y un professional devuelve las notificaciones');
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
@@ -60,11 +59,9 @@ class AssistantController extends Controller
             //cola
             $branch_id = $branch->id;
             $professional_id = $professional->id;
-            if ($professional->state == 1) {        
-                //Log::info('Estado del Professional Llama a la cola de los aleatorios');        
+            if ($professional->state == 1) {             
                 $this->verific_aleatorie($branch_id, $professional);
             }
-            Log::info('Llamando a la cola el profesional: '.$professional->name.' en el metodo(professional_branch_notif_queque)');
             $tails = Tail::whereHas('reservation', function ($query) use ($branch_id, $now) {
                 $query->where('branch_id', $branch_id)->whereIn('confirmation', [1,4])->whereDate('data', $now);
             })
@@ -137,11 +134,6 @@ class AssistantController extends Controller
                     $reservation_id = $firstReservation['reservation_id'];
 
                     $send = $this->notificationService->sendWhatsApp($telefone_client, $client_name);
-                    if ($send == true) {
-                        Log::info("Notificación enviada correctamente a {$client_name}:({$telefone_client})");
-                    } else {
-                        Log::warning("Error al enviar notificación a {$client_name}:({$telefone_client})");
-                    }
             
                 // Actualizar el campo notification en la tabla tails
                 Tail::where('reservation_id', $reservation_id)->update(['notification' => 1]);
@@ -149,7 +141,6 @@ class AssistantController extends Controller
             }
             return response()->json(['notifications' => $notifications, 'tail' => $branchTails], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las notifocaciones"], 500);
         }
     }
@@ -173,11 +164,7 @@ class AssistantController extends Controller
                     })
                     ->get();
 
-               // Log::info('$reservations ocupadas Notificaciones:');
-                //Log::info($reservations->toArray());
-
                 if ($reservations->isEmpty()) {
-                   // Log::info('$reservations vacias Notificaciones:');
                     // Optimizar esta consulta usando eager loading y reducir operaciones redundantes
                     $reservationsTail = $professional->reservations()
                         ->where('branch_id', $branch_id)
@@ -211,7 +198,6 @@ class AssistantController extends Controller
                 }
             } catch (\Throwable $th) {
                
-                 Log::error($th->getMessage());
                 throw new \RuntimeException("Error al ejecutar el TailService(verific_aleatorie): " . $th->getMessage());
             }
         }
@@ -315,7 +301,6 @@ class AssistantController extends Controller
 
     private function verific_services_bh($tails, $branch_id, $professional, $start_time)
     {
-        Log::info('Verificar aleatorios en aistanController');
         foreach ($tails as $tail) {
             $reservation = $tail->reservation;
             $tiempoReserva = $reservation->total_time;
@@ -386,18 +371,12 @@ class AssistantController extends Controller
             return $item->branchService->service->id;
         });
 
-        // Añadir logging para depuración
-        Log::info('Mapa de profesionales de servicio:', $serviceProfessionalMap->toArray());
-
         foreach ($servicesOrders as $service) {
             $serv = $service->branchServiceProfessional->branchService->service;
-            Log::info('Revisando servicio:', ['id' => $serv->id, 'nombre' => $serv->name]);
 
             // Buscar el profesional de servicio correspondiente en el mapa
             $serviceProfessional = $serviceProfessionalMap->get($serv->id);
-            Log::info('Profesional de servicio encontrado:', $serviceProfessional ? $serviceProfessional->toArray() : 'No encontrado');
-
-            if ($serviceProfessional) {
+             if ($serviceProfessional) {
                 $percent = $serviceProfessional->percent ?? 1;
 
                 $order = new Order();
@@ -410,14 +389,10 @@ class AssistantController extends Controller
                 $order->price = $serv->price_service;
                 $order->request_delete = false;
 
-                // Añadir logging para la creación de la orden
-                Log::info('Creando nueva orden:', $order->toArray());
-
                 $order->save();
 
                 // Eliminar el servicio original después de reasignar
                 $service->delete();
-                Log::info('Servicio original eliminado:', ['id' => $service->id]);
             }
         }
     }

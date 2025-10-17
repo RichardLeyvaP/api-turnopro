@@ -21,7 +21,6 @@ class RetentionController extends Controller
             $retentions = Retention::all();
             return response()->json(['retentions' => $retentions], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -62,7 +61,6 @@ class RetentionController extends Controller
 
             return response()->json(['msg' => 'Retención insertada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

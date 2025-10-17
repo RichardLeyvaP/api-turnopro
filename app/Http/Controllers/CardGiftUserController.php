@@ -33,7 +33,6 @@ class CardGiftUserController extends Controller
         try {
             return response()->json(['cardGiftUsers' => CardGiftUser::with(['cardGift', 'user'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
         }
     }
@@ -42,8 +41,6 @@ class CardGiftUserController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar tarjeta de regalo");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'user_id' => 'required|numeric',
@@ -88,20 +85,17 @@ class CardGiftUserController extends Controller
                         try {
                             $this->sendEmailService->emailGitCard($email, $client_name, $code, $value_card,$expiration_date, $image_cardgift);
                         } catch (\Swift_TransportException $e) {
-                            Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                        
                         } catch (\Exception $e) {
-                            Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                            
                         }
                     }
             
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente'], 200);
         } catch (TransportException $e) {
-            Log::error($e);
             return response()->json(['msg' => 'Tarjeta de regalo asignada correctamente.Error al enviar el correo electrónico '], 200);
         }
           catch (\Throwable $th) {
-              Log::error($th);
-            
               DB::rollback();
               return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -112,7 +106,6 @@ class CardGiftUserController extends Controller
     public function show(Request $request)
     {
                try {             
-            Log::info("Dado una cardGift devuelve los clientes que tienen asignado");
             $request->validate([
                 'card_gift_id' => 'required|numeric',
                 'branch_id' => 'required|numeric'
@@ -155,7 +148,6 @@ class CardGiftUserController extends Controller
                 return response()->json(['cardgiftUser' => $cardGifts],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
         }   
     
@@ -164,7 +156,6 @@ class CardGiftUserController extends Controller
     public function client_show(Request $request)
     {
         try {             
-            Log::info("Dado una cliente devuelve las tarjetas que tienen asignado");
             $request->validate([
                 'user_id' => 'required|numeric',
                 'business_id' => 'required|numeric'
@@ -203,7 +194,6 @@ class CardGiftUserController extends Controller
                 return response()->json(['cardgiftUser' => $cardGiftsUser, 'cardGifts' => $cardGifts],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
         }
     }
@@ -217,7 +207,6 @@ class CardGiftUserController extends Controller
             $cardGiftUser = CardGiftUser::where('state', 'Activa')->where('code', $data['code'])->get()->value('exist');
             return response()->json($cardGiftUser ? $cardGiftUser : 0, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
         }
     }
@@ -253,7 +242,6 @@ class CardGiftUserController extends Controller
 
             return response()->json(['msg' => 'Tarjeta desasignada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error del sistema'], 500);
         }
     }

@@ -20,7 +20,6 @@ class WorkplaceController extends Controller
         try {
             return response()->json(['workplaces' => Workplace::with(['branch'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los Locales de Trabajo"], 500);
         }
     }
@@ -35,7 +34,6 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::with(['branch'])->find($workplace_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
         }
     }
@@ -48,7 +46,6 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::where('branch_id', $data['branch_id'])->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -63,7 +60,6 @@ class WorkplaceController extends Controller
             $workplaces = Workplace::where('branch_id', $workplace_data['branch_id'])->where('busy', 0)->get();
             return response()->json(['workplaces' => $workplaces], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
         }
     }
@@ -76,7 +72,6 @@ class WorkplaceController extends Controller
             ]);
             return response()->json(['workplaces' => Workplace::where('branch_id', $workplace_data['branch_id'])->where('select', 0)->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el Local de Trabajo"], 500);
         }
     }
@@ -97,7 +92,6 @@ class WorkplaceController extends Controller
 
             return response()->json(['msg' => 'Local de Trabajo insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al insertar el Local de Trabajo'], 500);
         }
     }
@@ -116,7 +110,6 @@ class WorkplaceController extends Controller
 
             return response()->json(['msg' => 'Local de Trabajo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -139,7 +132,6 @@ class WorkplaceController extends Controller
 
             return response()->json(['msg' => 'Puesto de Trabajo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -163,7 +155,6 @@ class WorkplaceController extends Controller
             $workplace->save();
             return response()->json(['msg' => 'Puesto de Trabajo actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -180,7 +171,6 @@ class WorkplaceController extends Controller
 
             return response()->json(['msg' => 'Local de Trabajo eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el Local de Trabajo'], 500);
         }
     }
@@ -200,7 +190,6 @@ class WorkplaceController extends Controller
 
         return response()->json(['msg' => 'Puestos de Trabajo actualizados correctamente'], 200);
     } catch (\Throwable $th) {
-        Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
     }
     }

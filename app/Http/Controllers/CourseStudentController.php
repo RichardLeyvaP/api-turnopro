@@ -35,8 +35,6 @@ class CourseStudentController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Matricular estudiante al curso");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
@@ -56,7 +54,6 @@ class CourseStudentController extends Controller
 
             return response()->json(['msg' => 'Estudiante matriculado correctamente al curso'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al matricular el estudiante al curso'], 500);
         }
     }
@@ -73,8 +70,6 @@ class CourseStudentController extends Controller
     #[Response(['msg' => 'Error al matricular el estudiante al curso'], 500)]
     public function store_landing(Request $request)
     {
-        Log::info("Matricular estudiante al curso landing");
-        Log::info($request);
         $token_id = $request->input('token_id');
         if ($token_id != $this->token_id) {
             return response()->json(['msg' => 'Token inválido'], 403);
@@ -93,10 +88,6 @@ class CourseStudentController extends Controller
                 'enrollment_confirmed' => 'required|numeric',
             ]);
             
-            if ($request->hasFile('file')) {
-                Log::info("tiene un archivo");
-              }
-
             $course = Course::find($data['course_id']);
             $code = Str::random(8);
             $url = 'https://landingbh.simplifies.cl/student/?code=' . rawurlencode($code);
@@ -161,7 +152,6 @@ class CourseStudentController extends Controller
             return response()->json(['msg' => 'Estudiante matriculado correctamente al curso'], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al matricular el estudiante al curso'], 500);
         }
     }
@@ -172,7 +162,6 @@ class CourseStudentController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("Dado una curso devuelve los estudiantes matriculados");
             $data = $request->validate([
                 'course_id' => 'required|numeric'
             ]);
@@ -208,7 +197,6 @@ class CourseStudentController extends Controller
             return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las estudiantes del curso"], 500);
         }
     }
@@ -216,7 +204,6 @@ class CourseStudentController extends Controller
     public function course_students_product_show(Request $request)
     {
         try {
-            Log::info("Dado una curso devuelve los estudiantes matriculados");
             $data = $request->validate([
                 'course_id' => 'required|numeric'
             ]);
@@ -240,7 +227,6 @@ class CourseStudentController extends Controller
             return response()->json(['students' => $students], 200, [], JSON_NUMERIC_CHECK);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -250,8 +236,6 @@ class CourseStudentController extends Controller
      */
     public function update(Request $request, CourseStudent $courseStudent)
     {
-        Log::info("Editar estudiante mariculado en un curso");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
@@ -313,15 +297,12 @@ class CourseStudentController extends Controller
             }
             return response()->json(['msg' => 'Estudiante actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al matricular el estudiante al curso'], 500);
         }
     }
 
     public function update2(Request $request)
     {
-        Log::info("Editar estado en el curso");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'course_id' => 'required|numeric',
@@ -339,7 +320,6 @@ class CourseStudentController extends Controller
             $student->courses()->updateExistingPivot($data['course_id'], $atributosParaActualizar);
             return response()->json(['msg' => 'Estado del Estudiante actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
@@ -370,7 +350,6 @@ class CourseStudentController extends Controller
 
             return response()->json(['msg' => 'Estudiante desmatriculado correctamente del curso'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al sacar al estudiante de este curso'], 500);
         }
     }

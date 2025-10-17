@@ -60,7 +60,6 @@ class TailController extends Controller
             }])->get();
             return response()->json(['tails' => $tails], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
@@ -107,7 +106,6 @@ class TailController extends Controller
             }
             return response()->json(['Reservation' => $differences], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las tail_up"], 500);
         }
     }
@@ -127,7 +125,6 @@ class TailController extends Controller
             }])->whereDate('data', $data['data'])->get();
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
@@ -145,7 +142,6 @@ class TailController extends Controller
             $tail->save();
             return response()->json(['msg' => 'Cliente atendido'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al pasar el cliente a atendido'], 500);
         }
     }
@@ -153,7 +149,6 @@ class TailController extends Controller
     public function notification_tail_colation(Request $request)
     {
         try {
-            Log::info("Ruta unificada de coordinador y encargado");
             $notifications = [];
             $tails = [];
             $tails1 = [];
@@ -225,7 +220,6 @@ class TailController extends Controller
                         ->values();
                 }
             } catch (\Throwable $th) {
-                Log::error($th);
             }
             try {
                 $professionaltem = [];
@@ -327,7 +321,7 @@ class TailController extends Controller
                 // Ordenar $tails1 por time ascendente
                 $tails1 = collect($tails1)->sortBy('time')->values();
             } catch (\Throwable $th) {
-                Log::error($th);
+               
             }
             try {
                 $professionals = Professional::whereHas('branches', function ($query) use ($data) {
@@ -355,7 +349,7 @@ class TailController extends Controller
                     }
                 }
             } catch (\Throwable $th) {
-                Log::error($th);
+                
             }
             try {
                 $orderDatas = $orderDatas = Order::with(['car.reservation', 'car.clientProfessional.professional', 'car.clientProfessional.client', 'productStore.product', 'branchServiceProfessional.branchService.service'])
@@ -393,11 +387,10 @@ class TailController extends Controller
                         }
                     });
             } catch (\Throwable $th) {
-                Log::error($th);
+                
             }
             return response()->json(['notifications' => $notifications, 'tail' => $tails, 'tail1' => $tails1, 'professionals3' => $professionals3, 'professionals4' => $professionals4, 'carOrderDelete' => $orderDatas], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -413,7 +406,6 @@ class TailController extends Controller
             $data['branch_id'] = intval($data['branch_id']);
             return response()->json(['tail' => $this->tailService->cola_branch_data($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
         }
     }
@@ -427,7 +419,6 @@ class TailController extends Controller
             $data['branch_id'] = intval($data['branch_id']);
             return response()->json(['tail' => $this->tailService->cola_branch_data2($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
         }
     }
@@ -508,7 +499,6 @@ class TailController extends Controller
 
             return response()->json(['tail' => $unattendedReservations, 'attended' => $attendedReservations], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
         }
     }
@@ -524,7 +514,6 @@ class TailController extends Controller
             $data['branch_id'] = intval($data['branch_id']);
             return response()->json(['tail' => $this->tailService->cola_branch_capilar($data['branch_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()], 500);
         }
     }
@@ -539,7 +528,6 @@ class TailController extends Controller
             ]);
             return response()->json(['tail' => $this->tailService->cola_branch_tecnico($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()], 500);
         }
     }
@@ -554,7 +542,6 @@ class TailController extends Controller
             $this->tailService->cola_branch_delete($data['branch_id']);
             return response()->json(['tail' => "Tails eliminada correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al eiliminra las Tail"], 500);
         }
     }
@@ -571,7 +558,6 @@ class TailController extends Controller
 
             return response()->json(['tail' => $this->tailService->cola_branch_professional($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
@@ -586,7 +572,6 @@ class TailController extends Controller
 
             return response()->json(['tail' => $this->tailService->cola_branch_professional($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
@@ -604,7 +589,6 @@ class TailController extends Controller
 
             return response()->json(['tail' => $this->tailService->tail_branch_professional($data['branch_id'], $data['professional_id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
@@ -629,7 +613,6 @@ class TailController extends Controller
 
             return response()->json($this->tailService->type_of_service($data['branch_id'], $data['professional_id']), 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
@@ -653,7 +636,6 @@ class TailController extends Controller
             })->sortBy('clock')->values();
             return response()->json(['tails' => $tails], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "interno del sistema"], 500);
         }
     }
@@ -662,7 +644,6 @@ class TailController extends Controller
     {
         DB::beginTransaction();
         try {
-            Log::info("Modificar estado de la Cola");
             $validator = Validator::make($request->all(), [
                 'reservation_id' => 'required|numeric|exists:reservations,id',
                 'attended' => 'required|numeric'
@@ -674,12 +655,10 @@ class TailController extends Controller
                 'reservation_id' => 'required|numeric',
                 'attended' => 'required|numeric'
             ]);
-            Log::info("Entra a metodo se modificar estado de la cola reservation_id:".$data['reservation_id'].'attended:'.$data['attended']);
-            $this->tailService->tail_attended($data['reservation_id'], $data['attended']);
+           $this->tailService->tail_attended($data['reservation_id'], $data['attended']);
             DB::commit();
             return response()->json(['msg' => "Cola modificado correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th->getMessage());
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
         }
@@ -689,7 +668,6 @@ class TailController extends Controller
     {
         DB::beginTransaction();
         try {
-            Log::info("Modificar estado de la Cola tail-attended-client");
             $validator = Validator::make($request->all(), [
                 'reservation_id' => 'required|numeric|exists:reservations,id',
                 'attended' => 'required|numeric',
@@ -707,12 +685,10 @@ class TailController extends Controller
                 'detached' => 'sometimes|numeric',
                 'clock' => 'sometimes|numeric'
             ]);
-            Log::info("Entra a metodo se modificar estado de la cola reservation_id:".$data['reservation_id'].'attended:'.$data['attended']);
             $this->tailService->tail_attended_client($data['reservation_id'], $data['attended'], $data);
             DB::commit();
             return response()->json(['msg' => "Cola modificado correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th->getMessage());
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
         }
@@ -730,7 +706,6 @@ class TailController extends Controller
             }
             return response()->json($attended, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar el estado de la reservacion'], 500);
         }
     }
@@ -752,7 +727,6 @@ class TailController extends Controller
             PersonalAccessToken::query()->delete();
             return response()->json(['msg' => "Cola eliminada correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al eliminar la Tail"], 500);
         }
     }
@@ -786,7 +760,6 @@ class TailController extends Controller
 
             return response()->json(['msg' => "Tablas vaciadas correctamente"], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al eliminar la Tail"], 500);
         }
     }
@@ -806,7 +779,6 @@ class TailController extends Controller
             $tail->save();
             return response()->json(['msg' => 'Estado del reloj modificado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al modificar el estado del reloj'], 500);
         }
     }
@@ -831,7 +803,6 @@ class TailController extends Controller
             }
             return response()->json(['msg' => 'Estado del tiempo del reloj y estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al modificar el tiempo del reloj y el estado'], 500);
         }
     }
@@ -847,7 +818,6 @@ class TailController extends Controller
             $result = Tail::where('reservation_id', $data['reservation_id'])->pluck('clock')->first();
             return response()->json($result, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al modificar el estado del reloj'], 500);
         }
     }
@@ -861,19 +831,11 @@ class TailController extends Controller
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
-            Log::info("Reasignar Cliente a barbero Coordinador Cliente:".$data['client_id'].'-professional_id:'.$data['professional_id']);
-            Log::info("Reasignar Cliente a barbero en segundo plano - reasigned_clientOld");
-            $this->tailService->reasigned_clientOld($data);
-            /*$reservation = Reservation::where('id', $data['reservation_id'])->first();
-            if ($reservation != null) {
-                $reservation->timeClock = now();
-                $reservation->save();
-            }*/
+          $this->tailService->reasigned_clientOld($data);
             DB::commit();
             return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
         }
     }
@@ -889,8 +851,7 @@ class TailController extends Controller
                 'client_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
-            Log::info("Reasignar Cliente a barbero Cliente:".$data['client_id'].'-professional_id:'.$data['professional_id']);
-            $reservation = Reservation::where('id', $data['reservation_id'])->first();
+           $reservation = Reservation::where('id', $data['reservation_id'])->first();
             $professional = Professional::find($data['professional_id']);
             if ($professional && $professional->state != 1) {
                 if ($reservation != null) {
@@ -901,8 +862,6 @@ class TailController extends Controller
             }
             if ($reservation != null && $reservation->car->select_professional == 0 && $reservation->tail->attended != 3) {
                 $professional = $this->professionalService->professionals_state($reservation->branch_id, $data['reservation_id']);
-                //Log::info('professionales disponibles reasignar primer plano');
-                //Log::info($professional);
                 if (!empty($professional)) {
                     $firstProfessional = $professional[0];
                     $data['professional_id'] = $firstProfessional->id;
@@ -920,7 +879,6 @@ class TailController extends Controller
             return response()->json(['msg' => "Cliente reasignado correctamente"], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Cola"], 500);
         }
     }
@@ -929,15 +887,13 @@ class TailController extends Controller
       
     public function reasigned_secound_plain(Request $request)
     {
-        //Log::info("Reasignar Cliente a barbero en segundo plano");
         try {
             $data = $request->validate([
                 'professional_id' => 'required|numeric',
                 'branch_id' => 'required|numeric',
                 'place' => 'sometimes|numeric'
             ]);
-            Log::info("reasigned_secound_plainReasignar Cliente a barbero en Segundo plano professional_id:".$data['professional_id'].'-branch_id:'.$data['branch_id']);
-            $professionalConv = Professional::find($data['professional_id']);
+           $professionalConv = Professional::find($data['professional_id']);
             if ($professionalConv->state != 1) {
                 return response()->json(0, 200);
             }
@@ -954,7 +910,6 @@ class TailController extends Controller
                 $query->whereNotIn('attended', [0, 2, 3]);
             })->whereDate('data', $today)->orderBy('start_time')->get();
             if ($reservationAttended->isNotEmpty()) {
-                Log::info("Reservaciones de esta atendiendo");
                 return response()->json(0, 200);
             }
             DB::beginTransaction();
@@ -975,7 +930,6 @@ class TailController extends Controller
                             'client_id' => $reservation->car->clientProfessional->client_id
 
                         ];
-                        //Log::info("Reasignar Cliente a barbero en segundo plano - place = 0");
                         $this->tailService->reasigned_client($dataReasigned);
                         $reservation->timeClock = now();
                         $reservation->save();
@@ -985,7 +939,6 @@ class TailController extends Controller
                     }
                 } //if de place
                 if ($reservation->timeClock == NUll) {                    
-                    //Log::info('No se le habia actualizado el tiempo del reloj');
                     $reservation->timeClock = now();
                     $reservation->save();
                     DB::commit();
@@ -1000,8 +953,6 @@ class TailController extends Controller
                     $currentTime->subSeconds(20);
                     // Calcular la diferencia en minutos
                     $diferenciaEnMinutos = $currentTime->diffInMinutes($startTime);                    
-                    Log::info('Diferencia de minutos:');
-                    Log::info($diferenciaEnMinutos);
                     if ($diferenciaEnMinutos >= 3) {
                         $professional = $this->professionalService->professionals_state1($data['branch_id'], $reservation->id);
                         if ($professional->isNotEmpty()) {
@@ -1013,7 +964,6 @@ class TailController extends Controller
                             'client_id' => $reservation->car->clientProfessional->client_id
 
                         ];
-                            //Log::info("Reasignar Cliente a barbero en segundo plano - place = 1");
                             $this->tailService->reasigned_client($dataReasigned);
                             $reservation->timeClock = now();
                             $reservation->save();
@@ -1023,7 +973,6 @@ class TailController extends Controller
                             DB::commit();
                             return response()->json(1, 200);
                         } else { //si no hay barbero disponible
-                            Log::info('Se vuelve actualizar el reloj');
                             $reservation->timeClock = now();
                             $reservation->save();
                             $this->checkConvivencia($data['professional_id'], $data['branch_id'], $today);
@@ -1038,7 +987,6 @@ class TailController extends Controller
 
             }elseif ($reservation != null && ($reservation->car->select_professional == 1 || $reservation->tail->attended == 3)) {
                 if ($reservation->timeClock == NUll) {                    
-                    //Log::info('No se le habia actualizado el tiempo del reloj');
                     $reservation->timeClock = now();
                     $reservation->save();
                 } else{
@@ -1066,7 +1014,6 @@ class TailController extends Controller
             }
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
@@ -1112,13 +1059,10 @@ class TailController extends Controller
     public function reasigned_client_totem(Request $request)
     {
         try {
-           // Log::info("Reasignar Cliente a barbero usuario:");
-           // Log::info('reasigned_client_totem '.auth()->user()->name.'-'."Profesional con la versión vieja");
-            $data = $request->validate([
+          $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'professional_id' => 'required|numeric'
             ]);
-            Log::info("reasigned_client_totem-Reasignar Cliente a barbero en totem professional_id:".$data['professional_id'].'-reservation_id:'.$data['reservation_id']);
             $professional = Professional::find($data['professional_id']);
             if ($professional->state != 1) {
                 return response()->json(0, 200);
@@ -1200,7 +1144,6 @@ class TailController extends Controller
             return response()->json(0, 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . " Error interno del sistema"], 500);
         }
     }
@@ -1215,7 +1158,6 @@ class TailController extends Controller
             ->orderBy('start_time')
             ->get();
 
-       // Log::info('$reservations');
         if ($reservations->isEmpty()) {
             $this->setReservationTimes($reservation, $horaActual, $tiempoReserva);
         } else {
@@ -1317,7 +1259,6 @@ class TailController extends Controller
                 }
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error interno del servidor"], 500);
         }
     }

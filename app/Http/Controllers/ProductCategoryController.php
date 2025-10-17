@@ -16,10 +16,8 @@ class ProductCategoryController extends Controller
     {
         try { 
             
-            Log::info( "entra a buscar categorias de productos");
             return response()->json(['productcategories' => ProductCategory::all()], 200);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las categorias de productos"], 500);
         }
     }
@@ -31,7 +29,6 @@ class ProductCategoryController extends Controller
             ]);
             return response()->json(['productcategory' => ProductCategory::find( $product_category_data['id'])], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }
     }
@@ -51,24 +48,14 @@ class ProductCategoryController extends Controller
            })->whereHas('products.stores', function ($query) {
             $query->where('product_exit', '>', 0)->where('status_product', 'En venta');
            })->get();
-           /*$branch = Branch::find($data['branch_id']);
-           $Categories = collect();
-           foreach($branch->stores as $store){
-            foreach ($store->products as $product) {
-                $Categories[] = $product->productCategory;
-            }
-           }*/
            return response()->json(['category_products' => $Categories], 200);
        } catch (\Throwable $th) {
-        Log::error($th);
            return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
        }
     }
 
     public function category_products_branch(Request $request)
     {
-        Log::info('category_products_branch-Entra a ver los servicios que realiza el professional y los reservados por el cliente y los productos disponibles');
-        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -112,7 +99,6 @@ class ProductCategoryController extends Controller
                     'description' => $category->description,
                     'products' => $productStores->map(function ($productStore) {
                         $product = $productStore->product;
-                        //Log::info('Producto'.$product);
                         if ($product) {
                             return [
                                 'id' => $productStore->id,
@@ -185,7 +171,6 @@ class ProductCategoryController extends Controller
 
             return response()->json(['category_products' => $formattedCategories, 'professional_services' => $serviceModels, 'product_select' => intval($products), 'service_select' => intval($services)], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()." Error interno del sistema"], 500);
         }
     }
@@ -211,7 +196,6 @@ class ProductCategoryController extends Controller
 
             return response()->json(['msg' => 'Regla insertada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al insertar la Categoria de Producto'], 500);
         }
     }
@@ -237,7 +221,6 @@ class ProductCategoryController extends Controller
 
             return response()->json(['msg' => 'Categoria de Producto actualizada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al actualizar la Categoría de Producto'], 500);
         }
     }
@@ -253,7 +236,6 @@ class ProductCategoryController extends Controller
 
             return response()->json(['msg' => 'Regla eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la Regla'], 500);
         }
     }

@@ -43,7 +43,6 @@ class ProductStoreController extends Controller
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los productos"], 500);
         }
     }
@@ -58,7 +57,6 @@ class ProductStoreController extends Controller
                 'products' => $products
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los stores y productos"], 500);
         }
     }
@@ -85,16 +83,12 @@ class ProductStoreController extends Controller
                 'branches' => $branches
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los stores y productos"], 500);
         }
     }
 
     public function store(Request $request)
-    {
-        Log::info("Asignar Productos a un almacen");
-        Log::info($request);
-        
+    {        
         try {
             $data = $request->validate([
                 'product_id' => 'required|numeric',
@@ -137,7 +131,6 @@ class ProductStoreController extends Controller
             }
             return response()->json(['msg' => 'Producto asignado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
@@ -166,7 +159,6 @@ class ProductStoreController extends Controller
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -223,7 +215,6 @@ class ProductStoreController extends Controller
 
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -326,7 +317,6 @@ class ProductStoreController extends Controller
 
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -366,7 +356,6 @@ class ProductStoreController extends Controller
                     $this->actualizarProductExit($productStore, $branch_id);
                 } catch (\Exception $e) {
                     // Capturar cualquier error que ocurra durante el proceso
-                    Log::error('Error al procesar el cambio: ' . $e->getMessage());
                 }
             }
 
@@ -381,10 +370,6 @@ class ProductStoreController extends Controller
         } catch (\Exception $e) {
             // Revertir la transacción en caso de error
             DB::rollBack();
-
-            // Log del error
-            Log::error('Error al restar unidades de product_exit: ' . $e->getMessage());
-
             // Respuesta de error
             return response()->json([
                 'success' => false,
@@ -422,7 +407,6 @@ class ProductStoreController extends Controller
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -447,7 +431,6 @@ class ProductStoreController extends Controller
             });
             return response()->json(['products' => $productStore], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -474,7 +457,6 @@ class ProductStoreController extends Controller
             });
             return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -510,7 +492,6 @@ class ProductStoreController extends Controller
                 'products' => $productStores
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json([
                 'msg' => "Error al mostrar los productos",
                 'error' => $th->getMessage()
@@ -537,7 +518,6 @@ class ProductStoreController extends Controller
             });
             return response()->json(['products' => $productStores], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -586,15 +566,12 @@ class ProductStoreController extends Controller
 
             return response()->json(['category_products' => $productsArray], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
     }
 
     public function update(Request $request)
     {
-        Log::info("Actualizar asignacion de Producto a un almacén");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'product_id' => 'required|numeric',
@@ -616,15 +593,13 @@ class ProductStoreController extends Controller
             }
             return response()->json(['msg' => 'Asignación actualizada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
 
     public function destroy(Request $request)
     {
-        Log::info("Eliminar asignacion de Producto a un almacén");
-        Log::info($request);
+        
         try {
             $data = $request->validate([
                 'product_id' => 'required|numeric',
@@ -636,48 +611,16 @@ class ProductStoreController extends Controller
             $store = Store::find($data['store_id']);
             $productstore = $store->products()->wherePivot('product_id', $product->id)->first();
             if ($productstore) {
-                //return $productstore->pivot;
-                //$productstore->product_exit += $data['product_quantity'];
-                //$productstore->product_quantity = $data['product_quantity'];
-                //$productstore->save();
-                //$existencia = $data['product_quantity'] + $productstore->pivot['product_exit'];
                 $store->products()->updateExistingPivot($product->id, ['product_quantity' => 0, 'product_exit' => 0]);
             }
-            /*if($request->has('branch_id') && $data['branch_id'] != null){
-                $productStore = $store->products()
-                ->wherePivot('product_id', $product->id)
-                ->wherePivot('branch_id', $data['branch_id'])
-                ->first();
-            if ($productStore) {
-                Log::info('tiene valor');
-                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
-                $productstore->product_exit = 0;
-                $productstore->save();
-            }
-            }
-            else{
-                $productStore = $store->products()
-                ->wherePivot('product_id', $product->id)
-                ->wherePivot('enrollment_id', $data['enrollment_id'])
-                ->first();
-            if ($productStore) {
-                Log::info('tiene valor');
-                $productstore = ProductStore::where('id', $productStore->pivot->id)->first();
-                $productstore->product_exit = 0;
-                $productstore->save();
-            }
-            }*/
 
             return response()->json(['msg' => 'Operación realizada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
     public function move_product_store(Request $request)
     {
-        Log::info("Mover productos de un almacén o otro");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric',
@@ -708,9 +651,7 @@ class ProductStoreController extends Controller
                 ->first();
 
             if ($existingRelation) {                
-                if ($existingRelation->trashed()) {
-                    Log::info("El producto ya estaba en el destino, pero estaba eliminado lógicamente.");
-                    
+                if ($existingRelation->trashed()) {                    
                     // Restaurar y actualizar valores
                     $existingRelation->restore();
                     $existingRelation->product_quantity = $data['product_quantity'];
@@ -750,7 +691,6 @@ class ProductStoreController extends Controller
             //todo pendiente para revisar importante
             return response()->json(['msg' => 'Producto movido correctamente al almacén'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mover el producto a este almacén'], 500);
         }
     }
@@ -868,7 +808,6 @@ class ProductStoreController extends Controller
             }
             return response()->json(['movimientos' => $movement], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al mover el producto a este almacén'], 500);
         }
     }

@@ -37,7 +37,6 @@ class UserController extends Controller
         try {
             return response()->json(['users' => User::all()], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los usuarios"], 500);
         }
     }
@@ -79,7 +78,6 @@ class UserController extends Controller
                 'user' => $user
             ], 201);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al registrarse'], 500);
         }
     }
@@ -155,7 +153,6 @@ class UserController extends Controller
                 'user' => $user
             ], 201);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al registrarse'], 500);
         }
     }
@@ -180,7 +177,6 @@ class UserController extends Controller
             return response()->json(['msg' => "Password modificada correctamente!!!"], 201);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al modificar la password'], 500);
         }
     }
@@ -218,8 +214,6 @@ class UserController extends Controller
             return response()->json(['msg' => 'Password modificada correctamente.Error al enviar el correo electrónico '], 200);
         }
           catch (\Throwable $th) {
-              Log::error($th);
-            
               DB::rollback();
               return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -259,7 +253,6 @@ class UserController extends Controller
             
             return response()->json(['branches' => $branches], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -272,7 +265,6 @@ class UserController extends Controller
                 'password' => 'required'
             ]);
             if ($validator->fails()) {
-                Log::info('Login por APK versión desactualizada error en validacion de los datos');
                 return response()->json([
                     'msg' => $validator->errors()->all()
                 ], 400);
@@ -292,14 +284,10 @@ class UserController extends Controller
             elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
                 $user = Auth::user();
             }
-            //$user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
-            //Log::info($user);
             if ($user) {
                     $professional = $user->professional;
-                    Log::info('Login por APK versión desactualizada Profesional: '.$professional->name.' id: '.$professional->id);
                     $business = Business::where('id', $professional->business_id)->get();
                     if ($professional->branches->isNotEmpty()) { // Check if branches exist
-                        Log::info("Es professional");
                         $branch = $professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
                             return [
                                 'branch_id' => $branch->id,
@@ -336,7 +324,6 @@ class UserController extends Controller
                 ], 404);
             }
         } catch (\Throwable $th) {
-            Log::info($th->getMessage());
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
     }
@@ -369,16 +356,9 @@ class UserController extends Controller
             elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
                 $user = Auth::user();
             }
-            //$user = User::where('email', $request->email)->orWhere('name', $request->email)->first();
-            //Log::info($user);
             if ($user) {
                 $professional = $user->professional;
-                if ($request->has('version')) {                    
-                Log::info('Login por APK versión:'.$request->version.' Profesional: '.$professional->name.' id: '.$professional->id);
-                }else {
-                    Log::info('Login por APK versión: No envío la versión Profesional: '.$professional->name.' id: '.$professional->id);
-                }
-                    $business = Business::where('id', $professional->business_id)->get();
+                   $business = Business::where('id', $professional->business_id)->get();
                     if ($professional->branches->isNotEmpty()) { // Check if branches exist
                              $branch = $professional->branches->where('id', $request->branch_id)->map(function ($branch) use ($request){
                             return [
@@ -417,7 +397,6 @@ class UserController extends Controller
                 ], 404);
             }
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
     }
@@ -450,11 +429,9 @@ class UserController extends Controller
             elseif (Auth::attempt(['name' => $request->email, 'password' => $request->password])) {
                 $user = Auth::user();
             }
-            Log::info($user);
             if ($user) {
                     $business = Business::where('professional_id', $user->professional->id)->first();
                     if ($business == null && $user->professional->charge->name == 'Administrador') {
-                        Log::info("No es dueño del negocio");
                         $business = Business::where('id', $user->professional->business_id)->first();
                     }
 
@@ -508,7 +485,6 @@ class UserController extends Controller
                 ], 401);
             }
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al loguearse'], 500);
         }
     }
@@ -521,7 +497,6 @@ class UserController extends Controller
                 "data" => auth()->user()
             ]);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al ver los datos del usuario'], 500);
         }
     }
@@ -562,7 +537,6 @@ class UserController extends Controller
                 return response()->json(['msg' => 'Correo incorrecto o no es trabajador de esta sucursal'], 400);
             }
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al ver los datos del usuario'], 500);
         }
     }
@@ -615,7 +589,6 @@ class UserController extends Controller
                 "msg" => "Session cerrada correctamente"
             ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }
     }
@@ -632,7 +605,6 @@ class UserController extends Controller
                 "msg" => "Session cerrada correctamente"
             ], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al cerrar la session'], 500);
         }     
     }

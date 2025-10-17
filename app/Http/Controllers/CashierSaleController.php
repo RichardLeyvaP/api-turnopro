@@ -32,7 +32,6 @@ class CashierSaleController extends Controller
             $cashierSales = CashierSale::all();
             return response()->json($cashierSales, 200);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error al obtener las ventas de caja.'], 500);
         }
     }
@@ -72,11 +71,6 @@ class CashierSaleController extends Controller
             $commissionRate = $product->commission_rate ? $product->commission_rate : 0;
             if ($category && $category->gives_commission) {
                 $commissionAmount = $percent_wint * $validatedData['cant'];
-                Log::info('Cálculo de comisión:', [
-                    'commission_rate' => $commissionRate,
-                    'commission_amount' => $commissionAmount,
-                    'quantity' => $validatedData['cant']
-                ]);
             }
                     
             $cashierSale = new CashierSale();
@@ -110,7 +104,6 @@ class CashierSaleController extends Controller
             DB::commit();
             return response()->json($cashierSale, 201);
         } catch (\Exception $e) {
-            Log::error($e);
             DB::rollback();
             return response()->json(['error' => 'Error al crear la venta de caja.'], 500);
         }
@@ -122,7 +115,6 @@ class CashierSaleController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info('Entra a buscar la venta de productos en la caja');
             $validatedData = $request->validate([
                 'branch_id' => 'required|integer',
                 'professional_id' => 'required|integer'
@@ -160,15 +152,12 @@ class CashierSaleController extends Controller
     
             return response()->json(['sales' => $sales], 201);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => $e->getMessage().   'Error al crear la venta de caja.'], 500);
         }
     }
 
     public function cashiersale_denegar(Request $request)
     {
-        Log::info("Actualizar Venta de productos en la caja cashiersale_denegar");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -188,14 +177,12 @@ class CashierSaleController extends Controller
             $cashierSale->save();
             return response()->json(['msg' => 'Estado de la venta modificado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al hacer la solicitud de eliminar la venta'], 500);
         }
     }
 
     public function destroy_solicitud(Request $request)
     {
-        Log::info("Eliminar Solicitud destroy_solicitud");
         try {
             $data = $request->validate([
                 'id' => 'required|numeric',
@@ -229,7 +216,6 @@ class CashierSaleController extends Controller
             //$car->delete();
             return response()->json(['msg' => 'Carro eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error al eliminar el carro'], 500);
         }
     }
@@ -266,7 +252,6 @@ class CashierSaleController extends Controller
     
             return response()->json($cashierSale, 200);
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error al actualizar la venta de caja.'], 500);
         }
     }
@@ -302,7 +287,6 @@ class CashierSaleController extends Controller
             $cashierSale->delete();
                     
         } catch (\Exception $e) {
-            Log::error($e);
             return response()->json(['error' => 'Error al eliminar la venta de caja.'], 500);
         }
     }

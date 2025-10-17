@@ -23,8 +23,6 @@ class ChargePermissionController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar permiso a cargo");
-        Log::info($request);
         try {
             $request->validate([
                 'charge_id' => 'required|numeric',
@@ -37,7 +35,6 @@ class ChargePermissionController extends Controller
 
             return response()->json(['msg' => 'Permiso Asignado Coorectamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del servidor'], 500);
         }
     }
@@ -48,7 +45,6 @@ class ChargePermissionController extends Controller
     public function show(Request $request)
     {
         try {             
-            Log::info("Dado una cargo devuelve los permisos");
             $request->validate([
                 'charge_id' => 'required|numeric'
             ]);
@@ -66,7 +62,6 @@ class ChargePermissionController extends Controller
                 return response()->json(['permissions' => $permissions],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
         }
     }
@@ -74,7 +69,6 @@ class ChargePermissionController extends Controller
     public function show_charge_NoIN(Request $request)
     {
         try {             
-            Log::info("Dado una cargo devuelva solo los permisos que no posee");
             $request->validate([
                 'charge_id' => 'required|numeric'
             ]);
@@ -83,7 +77,6 @@ class ChargePermissionController extends Controller
                 return response()->json(['permissions' => $permissions],200, [], JSON_NUMERIC_CHECK); 
           
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error interno del servidor"], 500);
         }
     }
@@ -111,7 +104,6 @@ class ChargePermissionController extends Controller
             $charge->permissions()->detach($permission->id);
             return response()->json(['msg' => 'Estudiante desmatriculado correctamente del curso'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al sacar al estudiante de este curso'], 500);
         }
     }

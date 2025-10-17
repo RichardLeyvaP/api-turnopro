@@ -16,11 +16,6 @@
         CANCELAR RESERVA
     </button>
 </a>
-<!--<a href="https://api2.simplifies.cl/api/update-confirmation?id={{$id_reservation}}&confirmation=1" style="text-decoration: none;">
-    <button style="background-color: #4470F3; color: #FFFFFF; border: none; border-radius: 6px; padding: 12px 24px; font-size: 16px;">
-        CONFIRMACIÓN
-    </button>
-</a>-->
 @endif
 <p style="color: #333;">
     &#x1F64F; Estamos encantados de confirmar tu reserva para el siguiente servicio:

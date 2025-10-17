@@ -23,10 +23,8 @@ class BranchProfessionalController extends Controller
     public function index()
     {
         try {
-            Log::info("Entra a buscar los Professionales por sucursales");
             return response()->json(['branch' => Branch::with('professionals')->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los professionals por sucursales"], 500);
         }
     }
@@ -90,7 +88,6 @@ class BranchProfessionalController extends Controller
             return response()->json(['msg' => 'Professional asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
             DB::rollback();
-            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el professional: ' . $th->getMessage()], 500);
         }
     }
@@ -104,7 +101,6 @@ class BranchProfessionalController extends Controller
             $professional = Professional::find($data['professional_id']);
             return response()->json(['branches' => $professional->branches], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar las branches"], 500);
         }
     }
@@ -112,7 +108,6 @@ class BranchProfessionalController extends Controller
     public function branch_professionals(Request $request)
     {
         try {
-            Log::info("Dado una branch devuelve los professionales que trabajan en ella");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -142,7 +137,6 @@ class BranchProfessionalController extends Controller
             }
             return response()->json(['professionals' => $data], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -150,7 +144,6 @@ class BranchProfessionalController extends Controller
     public function branch_professionals_barber_totem(Request $request)
     {
         try {
-            Log::info("Dado una branch devuelve los professionales que trabajan en ella Tottem");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -163,7 +156,6 @@ class BranchProfessionalController extends Controller
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -171,7 +163,6 @@ class BranchProfessionalController extends Controller
     public function branch_professionals_barber(Request $request)
     {
         try {
-            Log::info("Dado una branch devuelve los professionales que trabajan en ella barber");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -260,7 +251,6 @@ class BranchProfessionalController extends Controller
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -325,7 +315,6 @@ class BranchProfessionalController extends Controller
     public function branch_professionals_barber_tecnico(Request $request)
     {
         try {
-            Log::info("Dado una branch devuelve los professionales y tecnicos que trabajan en ella tecnico");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -338,7 +327,6 @@ class BranchProfessionalController extends Controller
             })->get();
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -399,7 +387,6 @@ class BranchProfessionalController extends Controller
 
             return response()->json(['msg' => 'Professional actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el professional: ' . $th->getMessage()], 500);
         }
     }
@@ -413,8 +400,6 @@ class BranchProfessionalController extends Controller
                 'type' => 'required|string',
                 'state' => 'required|numeric'
             ]);
-            Log::info('Solicitud de salida o colación');
-            Log::info($data);
             $tittle = '';
             $description = '';            
             $ProfessionalWorkPlace = [];
@@ -496,9 +481,7 @@ class BranchProfessionalController extends Controller
                     }
                 }//end if de tecnico
 
-                if ($data['state'] == 2) {                         
-                    Log::info('Professional aceptada solicitud de salida a colación:');                              
-                    Log::info($professional->name);                              
+                if ($data['state'] == 2) {                                       
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
@@ -509,8 +492,6 @@ class BranchProfessionalController extends Controller
                     $notification->type = $data['type'];                     
                     $notification->save();
                 }else {
-                    Log::info('Professional aceptada solicitud de Salida:');                              
-                    Log::info($professional->name);
                     $professional->start_time = Carbon::now();
                     $notification = new Notification();
                     $notification->professional_id = $data['professional_id'];
@@ -542,17 +523,11 @@ class BranchProfessionalController extends Controller
                             $tail = $reservation->tail;
                             $tail->aleatorie = 1;
                             $tail->save();
-                            //$reservation->tail()->update(['aleatorie' => 1]);                            
-                            Log::info('Pasando aleatorios a state 1 reservation_id:'.$reservation->id);
                         }
                     }
             }
             elseif ($data['state'] == 4 || $data['state'] == 3){
                 $branch = Branch::find($data['branch_id']);
-                //if ($data['type'] == 'Ambos') {
-                /*$professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
-                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Barbero y Encargado');
-                })->get();*/
                 $professionals = BranchProfessional::with(['professional' => function($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
                 }, 'professional.charge' => function($query) {
@@ -620,7 +595,6 @@ class BranchProfessionalController extends Controller
             return response()->json(['msg' => 'Estado modificado correctamente'], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al actualizar el professionals de esa branch'], 500);
         }
     }
@@ -629,7 +603,6 @@ class BranchProfessionalController extends Controller
     {
 
         try {
-            Log::info("branch_colacion");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -647,7 +620,6 @@ class BranchProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -656,7 +628,6 @@ class BranchProfessionalController extends Controller
     {
 
         try {
-            Log::info("branch_colacion3");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -674,7 +645,6 @@ class BranchProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -683,7 +653,6 @@ class BranchProfessionalController extends Controller
     {
 
         try {
-            Log::info("branch_colacion4");
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
             ]);
@@ -701,7 +670,6 @@ class BranchProfessionalController extends Controller
             });
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las branches"], 500);
         }
     }
@@ -718,7 +686,6 @@ class BranchProfessionalController extends Controller
             $branch->professionals()->detach($professional->id);
             return response()->json(['msg' => 'Professional eliminada correctamente de la branch'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . 'Error al eliminar la professional de esta branch'], 500);
         }
     }

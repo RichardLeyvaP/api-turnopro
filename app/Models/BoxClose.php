@@ -52,15 +52,7 @@ public static function calculatePreviousMonthTotalAmount($branchId = null, $busi
         $startDate = Carbon::now()->subMonth()->startOfMonth()->toDateString();
         $endDate = Carbon::now()->subMonth()->endOfMonth()->toDateString();
     }
-    
-    Log::info('Calculando ingresos para rango de fechas:', [
-        'start' => $startDate,
-        'end' => $endDate,
-        'branch_id' => $branchId,
-        'business_id' => $businessId
-    ]);
-
-    // Obtener IDs de los cierres diarios más recientes por día
+        // Obtener IDs de los cierres diarios más recientes por día
     $latestClosureIds = self::select(DB::raw('MAX(box_closes.id) as id'))
         ->join('boxes', 'boxes.id', '=', 'box_closes.box_id')
         ->join('branches', 'branches.id', '=', 'boxes.branch_id')

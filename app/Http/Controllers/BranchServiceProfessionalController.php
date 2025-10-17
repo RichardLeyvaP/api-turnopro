@@ -277,7 +277,6 @@ class BranchServiceProfessionalController extends Controller
             ], 201);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json([
                 'msg' => 'Error al asignar el servicio al profesional',
                 'error' => $th->getMessage()
@@ -288,7 +287,6 @@ class BranchServiceProfessionalController extends Controller
     public function show(Request $request)
     {
         try {
-            Log::info("Entra a buscar los srvicios que realiza una branch");
             $data = $request->validate([
                 'branch_id' => 'nullable|numeric|exists:branches,id'
             ]);
@@ -317,7 +315,6 @@ class BranchServiceProfessionalController extends Controller
 
             return response()->json(['branchServices' => $services], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
@@ -325,7 +322,6 @@ class BranchServiceProfessionalController extends Controller
     public function branch_service_professionals(Request $request)
     {
         try {
-            Log::info("Entra a buscar los professionals que realizan servicio de una branch");
             $data = $request->validate([
                 'branch_service_id' => 'nullable|numeric'
             ]);
@@ -350,7 +346,6 @@ class BranchServiceProfessionalController extends Controller
 
             return response()->json(['professionals' => $branchServices], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
@@ -378,7 +373,6 @@ class BranchServiceProfessionalController extends Controller
             //$service = Service::find($data['id']);
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el servicio"], 500);
         }
     }
@@ -395,7 +389,6 @@ class BranchServiceProfessionalController extends Controller
             }
             return $branchServiceProfessional->id;
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al asignar el servicio a al professional'], 500);
         }
     }
@@ -414,7 +407,6 @@ class BranchServiceProfessionalController extends Controller
 
             return response()->json(['msg' => 'Servicio actualizado correctamente a este trabajador'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el servicio a este empleado'], 500);
         }
     }
@@ -435,7 +427,6 @@ class BranchServiceProfessionalController extends Controller
 
             return response()->json(['msg' => 'Servicio actualizado correctamente a este trabajador'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el servicio a este empleado'], 500);
         }
     }
@@ -477,7 +468,6 @@ class BranchServiceProfessionalController extends Controller
             ], 200);
 
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json([
                 'msg' => 'Error al desvincular el servicio del profesional',
                 'error' => $th->getMessage()

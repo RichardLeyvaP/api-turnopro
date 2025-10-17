@@ -18,18 +18,15 @@ class CommentController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar los carros");
             $comments = Comment::with('clientProfessional.client', 'clientProfessional.professional')->get();
             return response()->json(['comments' => $comments], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {  
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar los carros"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Asignar cumplimiento de rule a un professional");
         try {
             $data = $request->validate([
                 'client_id' => 'required|numeric',
@@ -57,14 +54,12 @@ class CommentController extends Controller
             $comment->save();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>$th->getMessage().'Error al guardar el comentario'], 500);
         }
     }
 
     public function storeByReservationId(Request $request)
     {
-        Log::info("storeByReservationId CommentController reservation_id:".$request->reservation_id);
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -100,7 +95,6 @@ class CommentController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             DB::rollback();
         return response()->json(['msg' =>$th->getMessage().'Error al el comentario'], 500);
         }
@@ -108,7 +102,6 @@ class CommentController extends Controller
 
     public function storeByCarId(Request $request)
     {
-        Log::info("storeByCarId CommentController car_id:".$request->car_id);
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -135,7 +128,6 @@ class CommentController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Comment guardado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             DB::rollback();
         return response()->json(['msg' =>$th->getMessage().'Error al el comentario'], 500);
         }
@@ -149,14 +141,12 @@ class CommentController extends Controller
             ]);
             return response()->json(['branch' => Comment::with('clientProfessional.client', 'clientProfessional.professional')->find($data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el comment"], 500);
         }
     }
 
     public function update(Request $request)
     {
-        Log::info("Editar Comment");
         try {
             $data = $request->validate([
                 'id' => 'required',
@@ -181,14 +171,12 @@ class CommentController extends Controller
             $comment->save();
             return response()->json(['msg' => 'Comment actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>$th->getMessage().'Error al actualizar el comments'], 500);
         }
     }
 
     public function destroy(Request $request)
     {
-        Log::info("Eliminar Comment");
         try {
             $data = $request->validate([
                 'id' => 'required'
@@ -206,7 +194,6 @@ class CommentController extends Controller
                 Comment::destroy($data['id']);
             return response()->json(['msg' => 'Comment eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>$th->getMessage().'Error al eliminar el comment'], 500);
         }
     }

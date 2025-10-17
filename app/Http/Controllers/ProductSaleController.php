@@ -24,7 +24,6 @@ class ProductSaleController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Compra de Productos");
         try {
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric',
@@ -34,7 +33,6 @@ class ProductSaleController extends Controller
                 'course_id' => 'required|numeric'
 
             ]);
-            Log::info($data);
             $productstore = ProductStore::find($data['id']);
             $productstore->product_quantity = $data['cant'];
             $productstore->product_exit = $productstore->product_exit - $data['cant'];
@@ -82,7 +80,6 @@ class ProductSaleController extends Controller
             
              return response()->json(['msg' =>'Producto asigando correctamente',], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -114,7 +111,6 @@ class ProductSaleController extends Controller
             })->sortByDesc('data')->values();
             return response()->json(['productsales' => $productStudent], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar los productos"], 500);
         }
     }
@@ -144,7 +140,6 @@ class ProductSaleController extends Controller
             $productstore->save();
             $finance = Finance::where('enrollment_id', $productSale->enrollment_id)->whereDate('data', $productSale->data)->orderByDesc('control')->first();
             if($finance){
-                Log::info('existe');
                 $temp = $finance->amount - $productSale->price;
                 if($temp <= 0){
                     $finance->delete();
@@ -158,7 +153,6 @@ class ProductSaleController extends Controller
             
              return response()->json(['msg' =>'Producto desasigando correctamente',], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }

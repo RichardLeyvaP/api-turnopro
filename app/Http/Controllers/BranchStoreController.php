@@ -12,18 +12,14 @@ class BranchStoreController extends Controller
     public function index()
     {
         try {             
-            Log::info( "Entra a buscar los almacenes por sucursales");
             return response()->json(['branch' => Branch::with('branchstores')->get()], 200);
         } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => "Error al mostrar los almacenes por sucursales"], 500);
         }
     }
 
     public function store(Request $request)
     {
-        Log::info("Asignar almacén a una sucursal");
-        Log::info($request);
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
@@ -36,7 +32,6 @@ class BranchStoreController extends Controller
 
             return response()->json(['msg' => 'Almacén asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' =>'Error al asignar el producto a este almacén'], 500);
         }
     }
@@ -44,7 +39,6 @@ class BranchStoreController extends Controller
     public function show(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar los almacenes de una sucursal o la sucursal de un almacén");
             $data = $request->validate([
                 'branch_id' => 'numeric'
             ]);
@@ -53,7 +47,6 @@ class BranchStoreController extends Controller
                 return response()->json(['stores' => $branch->stores],200); 
             
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos"], 500);
         }
     }
@@ -61,7 +54,6 @@ class BranchStoreController extends Controller
     public function show_notIn(Request $request)
     {
         try {             
-            Log::info( "Entra a buscar los almacenes de una sucursal");
             $data = $request->validate([
                 'branch_id' => 'numeric'
             ]);
@@ -73,7 +65,6 @@ class BranchStoreController extends Controller
                 return response()->json(['stores' => $storeNotInBranch],200); 
             
             } catch (\Throwable $th) {  
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los productos"], 500);
         }
     }
@@ -90,7 +81,6 @@ class BranchStoreController extends Controller
             $branch->branchstores()->sync($store->id);
             return response()->json(['msg' => 'Almacén actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al actualizar el almacén en esta sucursal'], 500);
         }
         
@@ -108,7 +98,6 @@ class BranchStoreController extends Controller
             $branch->branchstores()->detach($store->id);
             return response()->json(['msg' => 'Almacén eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar el almacén en esta sucursal'], 500);
         }
     }

@@ -168,7 +168,6 @@ class BoxCloseController extends Controller
 
             return response()->json(['boxcloses' => $boxes], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }
@@ -181,7 +180,6 @@ class BoxCloseController extends Controller
 
         DB::beginTransaction();
         try {
-            Log::info("Cierre de caja Del Sistema");
             $request->validate([
                 'editedCloseBox' => 'required|array',
                 'cashierData' => 'required|array',
@@ -200,17 +198,6 @@ class BoxCloseController extends Controller
             $workerpurchase_ids = $request->input('workerpurchase_ids');
             $branchId = $request->input('branch_id');
             $nameProfessional = $request->input('nameProfessional');
-
-            // Log para depuración
-            Log::info('Datos recibidos para cerrar caja:', [
-                'editedCloseBox' => $editedCloseBox,
-                'cashierData' => $cashierData,
-                'car_ids' => $car_ids,
-                'cashiersale_ids' => $cashiersale_ids,
-                'workerpurchase_ids' => $workerpurchase_ids,
-                'branch_id' => $branchId,
-                'nameProfessional' => $nameProfessional,
-            ]);
 
             $userId = $request->user()->id;
             $idService = null;
@@ -316,9 +303,7 @@ class BoxCloseController extends Controller
                 try {
                     $this->sendEmailService->emailBoxClosure($email, $reporte, $branch->business['name'], $branch['name'], $box, $editedCloseBox, $totalBonus, $cashierData, $nameProfessional);
                 } catch (\Swift_TransportException $e) {
-                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
                 } catch (\Exception $e) {
-                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
                 }
             }
             return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'boxClosePartial' => $boxCloseCashier], 200);
@@ -326,8 +311,6 @@ class BoxCloseController extends Controller
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store');
-            Log::error($th);
 
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
@@ -338,7 +321,6 @@ class BoxCloseController extends Controller
     {
         DB::beginTransaction();
         try {
-            Log::info("Cierre de caja parcial");
             $request->validate([
                 'editedCloseBox' => 'required|array',
                 'cashierData' => 'required|array',
@@ -357,17 +339,6 @@ class BoxCloseController extends Controller
             $workerpurchase_ids = $request->input('workerpurchase_ids');
             $branchId = $request->input('branch_id');
             $nameProfessional = $request->input('nameProfessional');
-
-            // Log para depuración
-            Log::info('Datos recibidos para cerrar caja:', [
-                'editedCloseBox' => $editedCloseBox,
-                'cashierData' => $cashierData,
-                'car_ids' => $car_ids,
-                'cashiersale_ids' => $cashiersale_ids,
-                'workerpurchase_ids' => $workerpurchase_ids,
-                'branch_id' => $branchId,
-                'nameProfessional' => $nameProfessional,
-            ]);
 
             $userId = $request->user()->id;
             $idService = null;
@@ -450,9 +421,9 @@ class BoxCloseController extends Controller
                 try {
                     $this->sendEmailService->emailBoxClosureParcial($email, $reporte, $branch->business['name'], $branch['name'], $box, $editedCloseBox, $totalBonus, $cashierData, $nameProfessional);
                 } catch (\Swift_TransportException $e) {
-                    Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                   
                 } catch (\Exception $e) {
-                    Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                    
                 }
             }
             return response()->json(['msg' => 'Cierre de caja realizado correctamente', 'boxClosePartial' => $boxCloseCashier], 200);
@@ -460,9 +431,6 @@ class BoxCloseController extends Controller
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store_cashier');
-            Log::error($th);
-
             //DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -472,7 +440,6 @@ class BoxCloseController extends Controller
     {
 
         try {
-            Log::info("Cierre de caja parcial confirmación");
 
             $request->validate([
                 'id' => 'nullable|numeric',  // Cambiado a nullable
@@ -521,9 +488,6 @@ class BoxCloseController extends Controller
 
             return response()->json(['msg' => 'Cierre de caja confirmado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store_cashier_confirm');
-            Log::error($th);
-
             //DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -534,14 +498,12 @@ class BoxCloseController extends Controller
 
         DB::beginTransaction();
         try {
-            Log::info("Cierre de caja Forzado");
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'data' => 'required|date'
             ]);
             $idService = null;
             $totalBonus = 0;
-            Log::info($data);
             $box = Box::whereDate('data', $data['data'])->where('branch_id', $data['branch_id'])->first();
             if (!$box) {
                 $box = new Box();
@@ -617,9 +579,6 @@ class BoxCloseController extends Controller
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store');
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -630,7 +589,6 @@ class BoxCloseController extends Controller
 
         DB::beginTransaction();
         try {
-            Log::info("Editar store1 BoxCloseController");
             $data = $request->validate([
                 //'box_id' => 'required|numeric',
                 'data' => 'required|date',
@@ -639,7 +597,6 @@ class BoxCloseController extends Controller
             ]);
             $idService = null;
             $totalBonus = 0;
-            Log::info($data);
             $box = Box::whereDate('data', $data['data'])->where('branch_id', $data['branch_id'])->first();
             if (!$box) {
                 $box = new Box();
@@ -678,9 +635,6 @@ class BoxCloseController extends Controller
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->store1');
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -696,7 +650,6 @@ class BoxCloseController extends Controller
 
     public function bonus(Request $request)
     {
-        Log::info("Mostrar los bonos");
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric'
@@ -723,7 +676,6 @@ class BoxCloseController extends Controller
 
     public function bonu_payment(Request $request)
     {
-        Log::info("Pagar un bono");
         DB::beginTransaction();
         try {
             $data = $request->validate([
@@ -736,9 +688,6 @@ class BoxCloseController extends Controller
                 'cant' => 'required',
                 'retention' => 'required',
             ]);
-
-            Log::info('Datos del Bono');
-            Log::info($data);
             $totalAmount = 0;
 
             //$finance = Finance::where('branch_id', $branch->id)->where('expense_id', 5)->whereDate('data', Carbon::now())orderBy('control', 'desc')->first();
@@ -868,9 +817,6 @@ class BoxCloseController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Pago realizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info('BoxCloseController->bonu_payment');
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -1041,20 +987,18 @@ class BoxCloseController extends Controller
                                 $professionalsData
                             );
                         } catch (\Swift_TransportException $e) {
-                            Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                            
                         } catch (\Exception $e) {
-                            Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                            
                         }
                     }
                 }
             }
             return response()->json(['msg' => 'Cierre de caja mensual efectuado correctamente'], 200);
         } catch (TransportException $e) {
-            Log::info($e);
+           
             return response()->json(['msg' => 'Cierre de caja realizado correctamente.Error al enviar el correo electrónico '], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             DB::rollback();
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
@@ -1114,7 +1058,6 @@ class BoxCloseController extends Controller
 
                         if ($existingBoxClose) {
                             DB::commit(); // Confirmamos la transacción vacía
-                            Log::info("Sucursal {$branch->name} ya tiene BoxClose diario para {$yesterday}");
                             continue; // Saltamos al siguiente ciclo
                         }
                     }
@@ -1236,20 +1179,18 @@ class BoxCloseController extends Controller
                                 $totalBonus
                             );
                         } catch (\Swift_TransportException $e) {
-                            Log::error("Error al enviar correo a $email: " . $e->getMessage());
+                            
                         } catch (\Exception $e) {
-                            Log::error("Error general al enviar correo a $email: " . $e->getMessage());
+                            
                         }
                     }
                 } catch (\Throwable $th) {
                     DB::rollBack();
-                    Log::error("Error al procesar la sucursal {$branch->name}: " . $th->getMessage());
                 }
             }
 
             return response()->json(['msg' => 'Cierre de caja realizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error("Error general en el cierre de caja: " . $th->getMessage());
             return response()->json(['msg' => 'Error interno del servidor'], 500);
         }
     }

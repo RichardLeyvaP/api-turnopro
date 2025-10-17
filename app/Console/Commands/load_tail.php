@@ -29,13 +29,11 @@ class load_tail extends Command
      */
     public function handle()
     {
-        Log::info("Funcion ejecutandose cada 10");
         //$hr_ini = $this->argument(key:'hr_ini'); //asi se leen las variables
         dd('Aqui poner la logica de crear la cola ');
         //dd($hr_ini );
      /*   $response = app()->call('GET', route('cola_truncate'));
         $this->info($response);*/
-        Log::info("Funcion ejecutandose cada 10 FINNN");
     }
 }
 

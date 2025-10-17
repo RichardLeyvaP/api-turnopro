@@ -66,7 +66,6 @@ class PaymentController extends Controller
                 return response()->json(['msg' => 'El pago ya ha sido registrado para este carro.'], 200); 
             }
             DB::beginTransaction();
-            Log::info("Pagar Carro update");
             $data = $request->validate([
                 'car_id' => 'required|numeric',
                 'cash' => 'nullable|numeric',
@@ -79,7 +78,6 @@ class PaymentController extends Controller
                 'code' => 'nullable',
                 'tipByCash' => 'nullable'
             ]);         
-            Log::info($data);
             $control = 0;
             $method = null;
             $car = Car::find($data['car_id']);            
@@ -125,7 +123,6 @@ class PaymentController extends Controller
                 $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
                 $cardGiftUser->save();
             }
-            //Log::info($cardGiftUser);
             $payment->car_id = $car->id;
             $payment->cash = $data['cash'];
             $payment->creditCard = $data['creditCard'];
@@ -260,7 +257,6 @@ class PaymentController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th->getMessage());
             DB::rollback();
         return response()->json(['msg' => $th->getMessage().'Error al realizar el pago'], 500);
         }
@@ -283,7 +279,6 @@ class PaymentController extends Controller
             $ids = $request->input('ids');
            $branch = Branch::where('id', $request->branch_id)->first();
            $userId = $request->user()->id;
-            Log::info($data['cardGift']);
             if ($data['cardGift'] != 0) {
                 $cardGiftUser = CardGiftUser::where('code',$data['code'])->first();
                 if($cardGiftUser->exist - $data['cardGift'] <= 0){
@@ -292,7 +287,6 @@ class PaymentController extends Controller
                 $cardGiftUser->exist = $cardGiftUser->exist - $data['cardGift'];
                 $cardGiftUser->save();
             }
-            //Log::info($cardGiftUser);
             $firstSaleId = $ids[0];
             $payment = new Payment();
             $payment->cash = $data['cash'];
@@ -371,7 +365,6 @@ class PaymentController extends Controller
                             $finance->save();
             return response()->json(['msg' => 'Pago realizado correctamente correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error al realizar el pago'], 500);
         }
     }

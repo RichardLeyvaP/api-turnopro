@@ -34,7 +34,6 @@ class CardGiftController extends Controller
                 ->select('businesses.id', 'businesses.name', 'businesses.address', 'professionals.name as professional_name')
                 ->get()], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
         }
     }
@@ -46,7 +45,6 @@ class CardGiftController extends Controller
     {
         try {
 
-            Log::info("Crear");
             $data = $request->validate([
                 'business_id' => 'required|numeric',
                 'value' => 'nullable|numeric',
@@ -66,7 +64,6 @@ class CardGiftController extends Controller
             $cardGift->save();
             return response()->json(['msg' => 'Tarjeta de regalo asignadda correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
         return response()->json(['msg' => $th->getMessage().'Error al asignartar la ttarjeta de regalo'], 500);
         }
     }
@@ -93,7 +90,6 @@ class CardGiftController extends Controller
             });
             return response()->json(['cardGifts' => $cardGifts], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage()."Error al mostrar las tarjeta de regalo"], 500);
         }
     }
@@ -125,7 +121,6 @@ class CardGiftController extends Controller
         $cardGift->save();
         return response()->json(['msg' => 'Tarjeta de regalo creada correctamente'], 200);
     } catch (\Throwable $th) {
-        Log::info($th);
     return response()->json(['msg' => $th->getMessage().'Error al asignartar la ttarjeta de regalo'], 500);
     }
     }
@@ -151,7 +146,6 @@ class CardGiftController extends Controller
 
             return response()->json(['msg' => 'Tarjeta de Regalo eliminada correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error al eliminar la Tarjeta de Regalo'], 500);
         }
     }

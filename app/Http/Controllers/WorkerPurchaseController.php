@@ -80,10 +80,6 @@ class WorkerPurchaseController extends Controller
             DB::commit();
             return response()->json($workerPurchase, 201);
         } catch (\Exception $e) {
-            Log::error('Error en WorkerPurchaseController@store: ' . $e->getMessage(), [
-                'exception' => $e,
-                'request' => $request->all()
-            ]);
             DB::rollback();
             return response()->json(['error' => 'Error al registrar la compra para trabajador: ' . $e->getMessage()], 500);
         }
@@ -172,7 +168,6 @@ class WorkerPurchaseController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al actualizar estado: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()
@@ -308,11 +303,6 @@ class WorkerPurchaseController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error en storeBulk: ' . $e->getMessage(), [
-                'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()
@@ -357,7 +347,6 @@ class WorkerPurchaseController extends Controller
                 'totalAmount' => $purchases->sum('total')
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting worker purchases: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener las compras de trabajadores'

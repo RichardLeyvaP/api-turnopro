@@ -16,7 +16,6 @@ class RevenueController extends Controller
         try {
             return response()->json(['revenues' => Revenue::all()], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -38,7 +37,6 @@ class RevenueController extends Controller
 
             return response()->json(['msg' => 'Operación de Ingreso creado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -54,7 +52,6 @@ class RevenueController extends Controller
             ]);
             return response()->json(['revenues' => Revenue::find($data['id'])], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
@@ -76,7 +73,6 @@ class RevenueController extends Controller
 
             return response()->json(['msg' => 'Operación de Ingreso actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -91,13 +87,10 @@ class RevenueController extends Controller
             $data = $request->validate([
                 'id' => 'required|numeric'
             ]);
-            Log::info($data['id']);
             Revenue::destroy($data['id']);
 
             return response()->json(['msg' => 'Operación de Ingreso eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
-
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

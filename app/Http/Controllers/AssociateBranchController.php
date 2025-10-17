@@ -23,13 +23,11 @@ class AssociateBranchController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info("Asignar asociado a una sucursal");
         try {
             $data = $request->validate([
                 'branch_id' => 'required|numeric',
                 'associated_id' => 'required|numeric'
             ]);
-        Log::info($data);
             $branch = Branch::find($data['branch_id']);
             $associate = Associated::find($data['associated_id']);
 
@@ -37,7 +35,6 @@ class AssociateBranchController extends Controller
 
             return response()->json(['msg' => 'Asociado asignado correctamente a la sucursal'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
         return response()->json(['msg' => $th->getMessage().'Error interno del sistema'], 500);
         }
     }
@@ -65,7 +62,6 @@ class AssociateBranchController extends Controller
 
             return response()->json(['associates' => $associatebranch], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error interno del servidor"], 500);
         }
     }
@@ -93,7 +89,6 @@ class AssociateBranchController extends Controller
             $branch->associates()->detach($associate->id);
             return response()->json(['msg' => 'Afiliación eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }

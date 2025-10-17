@@ -259,8 +259,7 @@ class TailService
             $this->verific_aleatorie($branch_id, $professional);
         }
 
-        Log::info('Llamando a la cola el profesional: ' . $professional->name . ' en el servicio TailService(tail_branch_professional)');
-        $today = Carbon::now()->format('Y-m-d');
+       $today = Carbon::now()->format('Y-m-d');
 
         // NUEVO: Clave para seguimiento de clientes activos ===
         $activeClientsKey = "tail_active_{$branch_id}_{$professional_id}_" . $today;
@@ -893,7 +892,6 @@ class TailService
             
                                 // Si hay un servicio simultáneo, devolvemos true
                                 if ($service->simultaneou == 1) {
-                                    Log::info('type_of_service - > Servicio simultáneo detectado');
                                     return true;
                                 }
                             }
@@ -985,16 +983,10 @@ class TailService
             try {
                 DB::beginTransaction();
 
-                Log::info("Reasignar Cliente Coordinador");
-
                 $client = Client::findOrFail($data['client_id']);
-                Log::info($client);
-
                 $professional = Professional::findOrFail($data['professional_id']);
-                Log::info($professional);
 
                 $reservation = Reservation::findOrFail($data['reservation_id']);
-                Log::info($reservation);
 
                 $horaActual = Carbon::now();
                 $tiempoReserva = $reservation->total_time;
@@ -1077,7 +1069,6 @@ class TailService
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error($e->getMessage());
                 return response()->json(['error' => 'Error interno del sistema'], 500);
             }
         }
@@ -1088,16 +1079,11 @@ class TailService
         try {
             DB::beginTransaction();
 
-            Log::info("Reasignar Cliente tailService.reasigned_client");
-
             $client = Client::findOrFail($data['client_id']);
-            Log::info($client);
 
             $professional = Professional::findOrFail($data['professional_id']);
-            Log::info($professional);
 
             $reservation = Reservation::findOrFail($data['reservation_id']);
-            Log::info($reservation);
 
             $horaActual = Carbon::now();
             $tiempoReserva = $reservation->total_time;
@@ -1174,7 +1160,6 @@ class TailService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error($e->getMessage());
             return response()->json(['error' => 'Error interno del sistema'], 500);
         }
     }
@@ -1411,11 +1396,9 @@ class TailService
 
                 $client_professional = $professional->clients()->where('client_id', $client->id)->withPivot('id')->first();
                 if (!$client_professional) {
-                    Log::info("No existe relación cliente-profesional");
                     $professional->clients()->attach($client->id);
                     $client_professional_id = $professional->clients()->wherePivot('client_id', $client->id)->withPivot('id')->get()->map->pivot->value('id');
-                    Log::info($client_professional_id);
-                } else {
+                  } else {
                     $client_professional_id = $client_professional->pivot->id;
                 }
 

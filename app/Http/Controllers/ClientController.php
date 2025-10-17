@@ -24,8 +24,6 @@ class ClientController extends Controller
     public function index()
     {
         try {
-
-            Log::info("entra a cliente");
             $now = Carbon::now();
             $clients = Client::with('user')
             ->addSelect('*', DB::raw("CONCAT(name, ' ', surname, ' ', second_surname) AS fullName"))
@@ -42,8 +40,6 @@ class ClientController extends Controller
             });
             return response()->json(['clients' => $dates], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
@@ -76,8 +72,6 @@ class ClientController extends Controller
 
             return response()->json(['clients' => $dates], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
@@ -95,8 +89,6 @@ class ClientController extends Controller
             });
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             return response()->json(['msg' => "Error al mostrar los clientes"], 500);
         }
     }
@@ -152,8 +144,6 @@ class ClientController extends Controller
             }
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
-
             return response()->json(['msg' => $th->getmessage()."Error al mostrar los clientes"], 500);
         }
     }
@@ -246,7 +236,6 @@ class ClientController extends Controller
             });
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la professionala"], 500);
         }
     }
@@ -259,7 +248,6 @@ class ClientController extends Controller
             ]);
             return response()->json(['client' => Client::with('user')->find($clients_data['id'])], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => "Error al mostrar la professionala"], 500);
         }
     }
@@ -282,7 +270,6 @@ class ClientController extends Controller
             }])->orderByDesc('cars_count')->limit(10)->get();
             return response()->json(['clients' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la professionala"], 500);
         }
     }
@@ -316,7 +303,6 @@ class ClientController extends Controller
                 'companyAttended' => $total_company
             ], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "La branch no obtuvo ganancias en este dia"], 500);
         }
     }
@@ -371,7 +357,6 @@ class ClientController extends Controller
             DB::commit();
             return response()->json(['msg' => 'Cliente insertado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al insertar al Cliente'], 500);
         }
     }
@@ -401,7 +386,6 @@ class ClientController extends Controller
 
             return response()->json(['msg' => 'Cliente actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => $th->getMessage().'Error al actualizar el cliente'], 500);
         }
     }
@@ -435,7 +419,6 @@ class ClientController extends Controller
             }
             return response()->json(['msg' => 'cliente eliminado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage().'Error al eliminar el cliente'], 500);
         }
     }
@@ -474,7 +457,6 @@ class ClientController extends Controller
 
             return response()->json($cantidadClientes, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }
     }
@@ -486,7 +468,6 @@ class ClientController extends Controller
                 'business_id' => 'required|numeric',
                 'branch_id' => 'nullable'
             ]);
-            Log::info($data);
             if ($data['branch_id'] !=0) {
                 $clientesConMasDeTresReservas = Client::withCount(['reservations' => function ($query) use ($data) {
                         $query->where('branch_id', $data['branch_id']);
@@ -533,7 +514,6 @@ class ClientController extends Controller
             }
             return response()->json($clientesConMasDeTresReservas, 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Error del servidor"], 500);
         }
     }
@@ -593,8 +573,6 @@ class ClientController extends Controller
 
             return response()->json($result->values(), 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            // Registrar errores
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . " Error del servidor"], 500);
         }
     }
@@ -617,7 +595,6 @@ class ClientController extends Controller
             $clients = Client::where('email', $request->email)->orwhere('phone', '+'.$data['email'])->get();
             return response()->json(['client' => $clients], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage()."Error interno del sitema"], 500);
         }
     }
@@ -652,7 +629,6 @@ class ClientController extends Controller
             }
             return response()->json(['user' => $user, 'clientName' => $clientName, 'clientImage' => $clientImage, 'type' => $type], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
-            Log::error($th);
             return response()->json(['msg' => $th->getMessage() . "Professionals no pertenece a esta Sucursal"], 500);
         }
     }

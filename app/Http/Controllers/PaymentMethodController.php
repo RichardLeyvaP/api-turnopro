@@ -71,7 +71,6 @@ class PaymentMethodController extends Controller
 
             return response()->json(['msg' => 'Metodo de ingreso actualizado correctamente'], 200);
         } catch (\Throwable $th) {
-            Log::info($th);
             return response()->json(['msg' => 'Error interno del sistema'], 500);
         }
     }
@@ -104,7 +103,6 @@ class PaymentMethodController extends Controller
 
            return response()->json(['msg' => 'Metodo de ingreso eliminado correctamente'], 200);
        } catch (\Throwable $th) {
-           Log::error($th);
            return response()->json(['msg' => 'Error inerno del sistema'], 500);
        }
     }
