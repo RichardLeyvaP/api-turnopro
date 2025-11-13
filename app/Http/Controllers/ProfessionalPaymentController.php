@@ -820,16 +820,47 @@ class ProfessionalPaymentController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validate([
-                'id' => 'required|numeric|exists:professionals_payments,id',
-                'amount' => 'required|numeric'
+                'id' => 'required|numeric',
+                'amount' => 'required|numeric',
+                'car' => 'required|numeric'
             ]);
+<<<<<<< HEAD
             $payment = ProfessionalPayment::findOrFail($data['id']);
                 $payment->amount = $data['amount'];
                 $payment->save();
+=======
 
-                // 2. Actualizar el monto correspondiente en finances
-                Finance::where('professional_payment_id', $data['id'])
-                    ->update(['amount' => $data['amount']]);
+             // Registrar log detallado
+           Log::info('Datos recibidos al editar el pago', [
+            'id'  => $data['id'],
+            'car' => $data['car']
+        ]);
+>>>>>>> dev-jimmbo-cambios-6-7
+
+        $payment = null;
+        $type = null;
+
+        if ($data['car'] == 1) {
+            // Es OperationTip
+            $payment = OperationTip::findOrFail($data['id']);
+            $type = 'operation_tip';
+        } else {
+            // Es ProfessionalPayment
+            $payment = ProfessionalPayment::findOrFail($data['id']);
+            $type = 'professional_payment';
+        }
+
+        $payment->amount = $data['amount'];
+        $payment->save();
+
+        // Actualizar finances según el tipo
+        if ($type === 'professional_payment') {
+            Finance::where('professional_payment_id', $data['id'])
+                ->update(['amount' => $data['amount']]);
+        } else {
+            Finance::where('operation_tip_id', $data['id'])
+                ->update(['amount' => $data['amount']]);
+        }
 
         DB::commit();
 
@@ -859,18 +890,24 @@ class ProfessionalPaymentController extends Controller
     {
         try {
             $data = $request->validate([
-                'id' => 'required|numeric'
+                'id' => 'required|numeric',
+                'car' => 'required|numeric'
             ]);
-            // Buscar el pago de profesional a eliminar
-            $professionalPayment = ProfessionalPayment::findOrFail($data['id']);
-
-            Finance::where('professional_payment_id', $data['id'])->delete();
-            // Buscar y actualizar los carros asociados para establecer el campo professional_payment_id en null
-            //Car::where('professional_payment_id', $data['id'])->update(['professional_payment_id' => null]);
-
-            // Eliminar el pago de profesional
-            $professionalPayment->delete();
-
+            $id = $data['id'];
+            $car = $data['car'];
+            if ($car == 1) {
+            // Es OperationTip
+            $record = OperationTip::findOrFail($id);
+            Finance::where('operation_tip_id', $id)->delete();
+            $record->delete();
+            $message = 'Propina de operación eliminada correctamente';
+        } else {
+            // Es ProfessionalPayment
+            $record = ProfessionalPayment::findOrFail($id);
+            Finance::where('professional_payment_id', $id)->delete();
+            $record->delete();
+            $message = 'Pago de profesional eliminado correctamente';
+        }
             return response()->json(['message' => 'Pago de profesional eliminado correctamente'], 200);
         } catch (QueryException $e) {
             return response()->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);

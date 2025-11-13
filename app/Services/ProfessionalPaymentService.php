@@ -1251,7 +1251,23 @@ class ProfessionalPaymentService
     {
          $payments = $data['payments'];
         $productsData = $payments['products'];
+            $exists = ProfessionalPayment::where([
+            'professional_id' => $data['professional_id'],
+            'branch_id' => $data['branch_id'],
+            'type' => 'Bono productos',
+            'amount' => $productsData['commission_neto'],
+        ])
+        ->whereDate('date', $data['paymentDate'])
+        ->exists();
 
+        if ($exists) {
+            Log::info("Bono de productos duplicado omitido", [
+                'professional_id' => $data['professional_id'],
+                'amount' => $productsData['commission_neto'],
+                'date' => $data['paymentDate']
+            ]);
+            return;
+        }
         // Registrar retención (si existe)
         if ($productsData['retention_amount'] > 0) {
             $retention = new Retention();
@@ -1314,6 +1330,19 @@ class ProfessionalPaymentService
 
     protected function processTips($data, $professional)
     {
+        $exists = OperationTip::where([
+            'professional_id' => $data['professional_id'],
+            'branch_id' => $data['branch_id'],
+            'type' => 'Pago Comision de Propinas',
+            'amount' => $data['payments']['tips']['tip_neto'],
+        ])
+        ->whereDate('date', $data['paymentDate'])
+        ->exists();
+
+        if ($exists) {
+            Log::info("Propina duplicada omitida");
+            return;
+        }
         $operationTip = new OperationTip();
         $operationTip->branch_id = $data['branch_id'];
         $operationTip->professional_id = $data['professional_id'];
@@ -1357,6 +1386,19 @@ class ProfessionalPaymentService
     }
     protected function processSalaryPayment($data, $professional)
     {
+        $exists = ProfessionalPayment::where([
+            'professional_id' => $data['professional_id'],
+            'branch_id' => $data['branch_id'],
+            'type' => 'Mes',
+            'amount' => $data['payments']['totalNetoPay'],
+        ])
+        ->whereDate('date', $data['paymentDate'])
+        ->exists();
+
+        if ($exists) {
+            Log::info("Pago mensual duplicado omitido");
+            return;
+        }
         $professionalPaymentSalary = new ProfessionalPayment();
         $professionalPaymentSalary->branch_id = $data['branch_id'];
         $professionalPaymentSalary->professional_id = $data['professional_id'];
@@ -1394,6 +1436,19 @@ class ProfessionalPaymentService
 
     protected function processCarPayments($data, $professional)
     {
+        $exists = ProfessionalPayment::where([
+            'professional_id' => $data['professional_id'],
+            'branch_id' => $data['branch_id'],
+            'type' => 'Mes',
+            'amount' => $data['payments']['totalNetoPay'],
+        ])
+        ->whereDate('date', $data['paymentDate'])
+        ->exists();
+
+        if ($exists) {
+            Log::info("Pago mensual duplicado omitido");
+            return;
+        }
         $professionalPaymentBarbero = new ProfessionalPayment();
         $professionalPaymentBarbero->branch_id = $data['branch_id'];
         $professionalPaymentBarbero->professional_id = $data['professional_id'];
