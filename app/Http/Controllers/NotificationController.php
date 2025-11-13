@@ -1012,13 +1012,13 @@ class NotificationController extends Controller
             ->whereDate('data', $today); // Solo del día actual
 
         // Filtrar por branch_id solo si es diferente de 0
-        if (isset($validated['branch_id']) && $validated['branch_id'] != 0) {
-            $query->where('branch_id', $validated['branch_id']);
+        if (isset($data['branch_id']) && $data['branch_id'] != 0) {
+            $query->where('branch_id', $data['branch_id']);
         }
 
         // Filtrar por professional_id si se proporciona
-        if (isset($validated['professional_id'])) {
-            $query->where('professional_id', $validated['professional_id']);
+        if (isset($data['professional_id'])) {
+            $query->where('professional_id', $data['professional_id']);
         }
 
         // Obtener resultados

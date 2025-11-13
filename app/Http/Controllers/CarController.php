@@ -3192,7 +3192,7 @@ class CarController extends Controller
                 $query->where('branch_id', $data['branch_id'])->whereDate('data', $data['data']);
             })->whereHas('clientProfessional', function ($query) use ($data) {
                 $query->where('professional_id', $data['professional_id']);
-            })->where('pay', 1)->get()->map(function ($car) use ($retention, $meta) {
+            })->where('pay', 1)->with('reservation')->get()->sortBy('reservation.finished_at')->values()->map(function ($car) use ($retention, $meta) {
                 $serviceNames = $car->orders->where('is_product', 0)->pluck('branchServiceProfessional.branchService.service.name')->values();
                 //$ServicesSpecial = $car->orders->where('is_product', 0)->where('branchServiceProfessional.type_servie', 'Especial');
                 $ServiceEspecial = Order::where('car_id', $car->id)->whereHas('branchServiceProfessional', function ($query) {

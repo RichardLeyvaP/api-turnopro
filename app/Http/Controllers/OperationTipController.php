@@ -167,7 +167,7 @@ class OperationTipController extends Controller
                         'id' => $query->id,
                         'branch_id ' => $query->branch_id,
                         'professional_id' => $query->professional_id,
-                        'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i:s'),
+                        'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                         'type' => $query->type,
                         'coffe_percent' => round($query->coffe_percent, 2),
                         'amount' => round($query->amount, 2),
@@ -229,7 +229,8 @@ class OperationTipController extends Controller
                         'date' => $query->date,
                         'type' => $query->type,
                         'coffe_percent' => $query->coffe_percent,
-                        'amount' => round($query->amount, 2)
+                        'amount' => round($query->amount, 2),
+                        
                     ];
                 });
            
@@ -266,10 +267,11 @@ class OperationTipController extends Controller
                         'id' => $query->id,
                         'branch_id ' => $branchId,
                         'professional_id' => $query->professional_id,
-                        'date' => $query->date,
+                        'date' => $query->date.' '.Carbon::parse($query->created_at)->format('H:i'),
                         'type' => $query->type,
                         'coffe_percent' => round($query->coffe_percent, 2),
-                        'amount' => round($query->amount, 2)
+                        'amount' => round($query->amount, 2),
+                        'car' => 1
                     ];
                 });
 
