@@ -10,8 +10,35 @@ use Illuminate\Support\Facades\Log;
 class VacationController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+ * Lista todas las vacaciones registradas y todos los profesionales del sistema.
+ *
+ * Incluye datos completos del profesional (incluso si está eliminado lógicamente).
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "vacations": [
+ *     {
+ *       "id": 1,
+ *       "professional_id": 10,
+ *       "name": "Carlos Pérez García",
+ *       "image_url": "professionals/10.jpg",
+ *       "description": "Vacaciones de verano",
+ *       "startDate": "2025-12-01",
+ *       "endDate": "2025-12-15"
+ *     }
+ *   ],
+ *   "professionals": [
+ *     {
+ *       "id": 10,
+ *       "name": "Carlos Pérez García",
+ *       "image_url": "professionals/10.jpg",
+ *       "charge": "Barbero"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function index()
     {
         try {
@@ -45,8 +72,17 @@ class VacationController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Registra un nuevo período de vacaciones para un profesional.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam startDate date required Fecha de inicio (Y-m-d). Example: "2025-12-01"
+ * @bodyParam endDate date required Fecha de fin (Y-m-d). Example: "2025-12-15"
+ * @bodyParam description string optional Descripción del período. Example: "Vacaciones de verano"
+ *
+ * @response 200 {"msg": "Vacaciones registrada correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -71,9 +107,17 @@ class VacationController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-
+ * Obtiene vacaciones y profesionales asociados a una sucursal específica.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "vacations": [...],
+ *   "professionals": [...]
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -119,8 +163,18 @@ class VacationController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza un período de vacaciones existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del registro de vacaciones. Example: 1
+ * @bodyParam professional_id integer required Nuevo ID del profesional. Example: 11
+ * @bodyParam startDate date required Nueva fecha de inicio. Example: "2025-12-05"
+ * @bodyParam endDate date required Nueva fecha de fin. Example: "2025-12-20"
+ * @bodyParam description string optional Nueva descripción. Example: "Vacaciones extensión"
+ *
+ * @response 200 {"msg": "Vacaciones actualizadas correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request, Vacation $vacation)
     {
         try {
@@ -145,9 +199,17 @@ class VacationController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+   /**
+ * Elimina un período de vacaciones.
+ *
+ * ⚠️ **Advertencia**: Esta acción es irreversible.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del registro a eliminar. Example: 1
+ *
+ * @response 200 {"msg": "Vacaciones eliminadas correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -34,7 +34,31 @@ class ProfessionalController extends Controller
         $this->professionalService = $professionalService;
     }
 
-
+    /**
+ * Lista todos los profesionales del sistema.
+ *
+ * Incluye datos del usuario asociado, cargo y una marca de tiempo en la URL de la imagen para evitar caché.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 10,
+ *       "name": "Carlos",
+ *       "surname": "Pérez",
+ *       "fullName": "Carlos Pérez García",
+ *       "email": "carlos@example.com",
+ *       "phone": "+56912345678",
+ *       "state": 1,
+ *       "image_url": "professionals/10.jpg?$2025-11-21 17:00:00",
+ *       "charge": "Barbero",
+ *       "retention": 10
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las professionales"}
+ */
     public function index()
     {
         try {
@@ -62,6 +86,19 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las professionales"], 500);
         }
     }
+
+    /**
+ * Lista profesionales asignados a una sucursal específica.
+ *
+ * Si el usuario autenticado es **Administrador**, también incluye profesionales sin sucursal asignada y otros administradores.
+ * De lo contrario, excluye a los administradores y muestra solo los asignados a la sucursal o sin asignar.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar las professionales"}
+ */
     public function professionalsBranch(Request $request)
     {
         try {
@@ -125,6 +162,22 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las professionales"], 500);
         }
     }
+
+    /**
+ * Obtiene profesionales **no asignados** a una sucursal (para autocompletado).
+ *
+ * Útil en interfaces de asignación de personal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     { "id": 15, "name": "María López", "image_url": "professionals/15.jpg", "charge": "Encargado" }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las branches"}
+ */
     public function show_autocomplete_Notin(Request $request)
     {
         try {
@@ -147,6 +200,14 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene todos los profesionales (para autocompletado global).
+ *
+ * @authenticated
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar el professional"}
+ */
     public function show_autocomplete(Request $request)
     {
         try {
@@ -165,6 +226,19 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene profesionales asignados a una sucursal (solo nombre completo e imagen).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     { "id": 10, "name": "Carlos Pérez García", "image_url": "professionals/10.jpg" }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar el professional"}
+ */
     public function show_autocomplete_branch(Request $request)
     {
         try {
@@ -187,6 +261,23 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Muestra los detalles de un profesional específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del profesional. Example: 10
+ *
+ * @response 200 {
+ *   "professional": {
+ *     "id": 10,
+ *     "name": "Carlos",
+ *     "email": "carlos@example.com",
+ *     "user": { "name": "carlos_user" },
+ *     "charge": { "name": "Barbero" }
+ *   }
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -199,6 +290,21 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene el estado de un profesional para la app móvil.
+ *
+ * Devuelve:
+ * - `3` si tiene una reserva pendiente con cola activa
+ * - El `state` actual del profesional en otro caso
+ * - `-1` si no se encuentra
+ *
+ * @queryParam id integer required ID del profesional. Example: 10
+ *
+ * @response 200 1
+ * @response 200 3
+ * @response 200 -1
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function show_apk(Request $request)
     {
         try {
@@ -236,6 +342,22 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los horarios disponibles de un profesional en una fecha y sucursal.
+ *
+ * Devuelve una lista de intervalos de 10 minutos libres, considerando reservas confirmadas y horarios de la sucursal.
+ * Si es hoy, ajusta el inicio al momento actual + 1 hora.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam data date required Fecha de consulta (Y-m-d). Example: "2025-12-01"
+ *
+ * @response 200 {
+ *   "reservations": ["09:00", "09:10", "10:30", ...]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los profesionales"}
+ */
     public function professional_reservations_time(Request $request)
     {
         try {
@@ -444,6 +566,15 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene profesionales asignados a una sucursal con relaciones completas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "Professionals no pertenece a esta Sucursal"}
+ */
     public function branch_professionals(Request $request)
     {
         try {
@@ -458,6 +589,21 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene profesionales de una sucursal (formato web).
+ *
+ * Incluye marca de tiempo en la imagen para evitar caché.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     { "id": 10, "name": "Carlos", "charge": "Barbero", "image_url": "professionals/10.jpg?$2025-11-21 17:00:00" }
+ *   ]
+ * }
+ * @response 500 {"msg": "Professionals no pertenece a esta Sucursal"}
+ */
     public function branch_professionals_web(Request $request)
     {
         try {
@@ -483,6 +629,19 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene solo los cajeros asignados a una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     { "id": 20, "name": "Ana Martínez Silva", "charge": "Cajero (a)" }
+ *   ]
+ * }
+ * @response 500 {"msg": "Professionals no pertenece a esta Sucursal"}
+ */
     public function branch_professionals_cashier(Request $request)
     {
         try {
@@ -507,6 +666,18 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene profesionales disponibles para un conjunto de servicios en una sucursal.
+ *
+ * Usa lógica de disponibilidad del `ProfessionalService`.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam services array required Lista de IDs de servicios. Example: [1, 5, 8]
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function branch_professionals_service(Request $request)
     {
         try {
@@ -537,6 +708,16 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Versión alternativa de disponibilidad de profesionales por servicio (totem).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam services array required Lista de IDs de servicios. Example: [1, 5, 8]
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function branch_professionals_service_tottem(Request $request)
     {
         try {
@@ -551,8 +732,17 @@ class ProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
-    //todo ESTA DE AQUI ES OTRO METODO NUEVO DE HORARIOS DISPONIBLE
-
+    
+    /**
+ * Nueva lógica de disponibilidad de profesionales por servicio.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam services array required Lista de IDs de servicios. Example: [1, 5, 8]
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function branch_professionals_serviceNew(Request $request)
     {
         try {
@@ -567,6 +757,16 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene profesionales que ofrecen un servicio específico en una sucursal.
+ *
+ * @authenticated
+ * @queryParam service_id integer required ID del servicio. Example: 5
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "Professionals"}
+ */
     public function get_professionals_service(Request $request)
     {
         try {
@@ -582,6 +782,19 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Calcula las ganancias diarias de un profesional en un período.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam day string required Día de la semana (nombre en español). Example: "Lunes"
+ * @queryParam startDate date required Fecha de inicio. Example: "2025-11-01"
+ * @queryParam endDate date required Fecha de fin. Example: "2025-11-30"
+ *
+ * @response 200 { "earningByDay": [...] }
+ * @response 500 {"msg": "[error]Profssional no obtuvo ganancias en este período"}
+ */
     public function professionals_ganancias(Request $request)
     {
         try {
@@ -599,6 +812,26 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene ganancias de un profesional en una sucursal.
+ *
+ * Soporta tres modos:
+ * - Sin parámetros: ganancias del día actual
+ * - Con `mes` y `year`: ganancias mensuales
+ * - Con `startDate` y `endDate`: ganancias en rango
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam charge string optional Cargo del profesional. Example: "Barbero"
+ * @queryParam mes integer optional Mes (1–12). Example: 11
+ * @queryParam year integer optional Año. Example: 2025
+ * @queryParam startDate date optional Fecha de inicio. Example: "2025-11-01"
+ * @queryParam endDate date optional Fecha de fin. Example: "2025-11-30"
+ *
+ * @response 200 { "earningPeriodo": [...] }
+ * @response 500 {"msg": "[error]Profssional no obtuvo ganancias en este período"}
+ */
     public function professionals_ganancias_branch(Request $request)
     {
         try {
@@ -621,6 +854,24 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Crea un nuevo profesional y su usuario asociado.
+ *
+ * La imagen es opcional; si no se adjunta, se usa `professionals/default.jpg`.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre. Max: 250. Example: "Carlos"
+ * @bodyParam surname string required Primer apellido. Max: 50. Example: "Pérez"
+ * @bodyParam second_surname string required Segundo apellido. Max: 50. Example: "García"
+ * @bodyParam email string required Correo único. Example: "carlos@example.com"
+ * @bodyParam phone string required Teléfono. Max: 15. Example: "+56912345678"
+ * @bodyParam charge_id integer required ID del cargo. Example: 2
+ * @bodyParam user_id integer required ID del usuario. Example: 25
+ * @bodyParam image_url file optional Foto del profesional.
+ *
+ * @response 200 {"msg": "Profesional insertado correctamente"}
+ * @response 500 {"msg": "[error]Error al insertar el professional"}
+ */
     public function store(Request $request)
     {
         try {
@@ -656,6 +907,16 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza solo el estado de un profesional.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam state integer required Nuevo estado (0 = inactivo, 1 = activo, etc.). Example: 1
+ *
+ * @response 200 {"msg": "Estado del Profesional actualizado correctamente"}
+ * @response 500 {"msg": "[error]Error al actualizar el estado professional"}
+ */
     public function update_state(Request $request)
     {
         try {
@@ -675,6 +936,16 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Verifica si un email corresponde a un técnico en una sucursal.
+ *
+ * @authenticated
+ * @queryParam email string required Correo del profesional. Example: "carlos@example.com"
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Error al actualizar el estado professional"}
+ */
     public function verifi_tec_profe(Request $request)
     {
         try {
@@ -690,6 +961,28 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza un profesional existente (y su usuario).
+ *
+ * Valida unicidad de email y nombre de usuario. Permite actualizar imagen.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del profesional. Example: 10
+ * @bodyParam name string required Nombre. Max: 50. Example: "Carlos"
+ * @bodyParam email string required Correo. Example: "carlos@example.com"
+ * @bodyParam phone string required Teléfono. Max: 15. Example: "+56912345678"
+ * @bodyParam charge_id integer required ID del cargo. Example: 2
+ * @bodyParam user_id integer required ID del usuario. Example: 25
+ * @bodyParam user string required Nombre de usuario (debe ser único). Example: "carlos_barbero"
+ * @bodyParam state integer required Estado. Example: 1
+ * @bodyParam retention number required Porcentaje de retención. Example: 10
+ * @bodyParam image_url file optional Nueva foto.
+ *
+ * @response 200 {"msg": "Profesional actualizado correctamente"}
+ * @response 400 {"msg": "Usuario ya existe"}
+ * @response 401 {"msg": ["El correo ya ha sido tomado."]}
+ * @response 500 {"msg": "[error]Error al actualizar el professional"}
+ */
     public function update(Request $request)
     {
         try {
@@ -756,6 +1049,17 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Elimina un profesional y su usuario asociado.
+ *
+ * ⚠️ Acción irreversible.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del profesional. Example: 10
+ *
+ * @response 200 {"msg": "Profesional eliminado correctamente"}
+ * @response 500 {"msg": "[error]Error al eliminar la professional"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -773,6 +1077,18 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene profesionales disponibles para reasignar una reserva (vista de coordinador).
+ *
+ * Considera los servicios de la reserva y excluye al profesional actual si aplica.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam reservation_id integer required ID de la reserva. Example: 101
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Professionals con orden de disponibilidad"}
+ */
     public function professionals_state_coordinador(Request $request)
     {
         try {
@@ -801,6 +1117,16 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene el estado de disponibilidad de profesionales para una reserva.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam reservation_id integer required ID de la reserva. Example: 101
+ *
+ * @response 200 { "professionals": [...] }
+ * @response 500 {"msg": "[error]Professionals no pertenece a esta Sucursal"}
+ */
     public function professionals_state(Request $request)
     {
         try {
@@ -815,6 +1141,29 @@ class ProfessionalController extends Controller
         }
     }
 
+    /**
+ * Verifica si un email ya existe en profesionales o clientes.
+ *
+ * Devuelve información del cliente si existe, o "No" si está libre.
+ *
+ * @bodyParam email string required Correo a verificar. Example: "carlos@example.com"
+ *
+ * @response 200 {
+ *   "user": 15,
+ *   "clientName": "Carlos Pérez",
+ *   "clientImage": "clients/15.jpg",
+ *   "type": "Client"
+ * }
+ * @response 200 {
+ *   "user": "",
+ *   "type": "No"
+ * }
+ * @response 200 {
+ *   "user": "",
+ *   "type": "Professional"
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function professional_email(Request $request)
     {
         try {

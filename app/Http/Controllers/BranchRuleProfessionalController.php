@@ -14,6 +14,22 @@ use Illuminate\Support\Facades\Log;
 
 class BranchRuleProfessionalController extends Controller
 {
+    /**
+ * Obtiene todas las asignaciones de reglas a profesionales con sus detalles.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branchRuleProfesional": [
+ *     {
+ *       "id": 123,
+ *       "branchRule": { "rule": { "name": "Puntualidad", ... } },
+ *       "professional": { "name": "Yasmany", ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las rules por trabajador"}
+ */
     public function index()
     {
         try {
@@ -24,6 +40,33 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene las convivencias (reglas) de una sucursal en una fecha específica con estadísticas por profesional.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam date string required Fecha en formato Y-m-d (se usa la fecha de Chile). Example: 2025-11-21
+ *
+ * @response 200 {
+ *   "convivencias": [
+ *     {
+ *       "id": 123,
+ *       "estado": 1,
+ *       "professionalName": "Yasmany",
+ *       "professionalImage": "professionals/123.jpg",
+ *       "ruleName": "Puntualidad",
+ *       "last_edited_at": "2025-11-21 10:30:00",
+ *       "professionalStats": {
+ *         "fulfilled": 5,
+ *         "not_fulfilled": 1,
+ *         "not_updated": 2,
+ *         "total": 8
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"success": false, "msg": "Error al obtener las convivencias: ..."}
+ */
     public function index_branch_data(Request $request)
     {
         try {
@@ -93,6 +136,17 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Asigna una regla de sucursal a un profesional con un estado inicial.
+ *
+ * @authenticated
+ * @bodyParam branch_rule_id integer required ID de la regla de sucursal. Example: 101
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam estado boolean required Estado inicial (true = cumplida, false = no cumplida). Example: true
+ *
+ * @response 200 {"msg": "Estado de la rule asignado correctamente al professional"}
+ * @response 500 {"msg": "Error al asignar el estado de la rule a este professional"}
+ */
     public function store(Request $request)
     {
         try {
@@ -110,7 +164,25 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
-    //obtener la cantidad de estado por convivencias
+    /**
+ * Obtiene el resumen de cumplimiento de reglas por tipo para un profesional en un rango de fechas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam startDate string required Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string required Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 [
+ *   {
+ *     "rule_name": "Puntualidad",
+ *     "estado_0": 2,
+ *     "estado_1": 10,
+ *     "estado_3": 1
+ *   }
+ * ]
+ * @response 500 {"msg": "Error al mostrar las llegadas tardes"}
+ */
     public function branch_rule_professional_periodo(Request $request)
     {
 
@@ -147,6 +219,21 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza o crea el estado de una regla de tipo específico (ej. "Tiempo") para un profesional.
+ *
+ * Si el tipo es "Tiempo" y estado = 0, marca al profesional como "living = 1" en BranchProfessional.
+ *
+ * @authenticated
+ * @bodyParam type string required Tipo de regla (ej. "Tiempo", "Uniforme"). Example: Tiempo
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam estado integer required Estado (0: no cumplida, 1: cumplida, 3: no actualizada). Example: 0
+ * @bodyParam id integer optional ID de la asignación (si existe). Example: 456
+ *
+ * @response 200 {"msg": "Estado actualizado correctamente de una rule del professional"}
+ * @response 500 {"msg": "Error al asignar el estado de la rule a este professional"}
+ */
     public function storeByType(Request $request)
     {
         try {
@@ -187,6 +274,22 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de una regla específica por su ID.
+ *
+ * Incluye lógica para "Tiempo" → actualiza `living = 1`.
+ *
+ * @authenticated
+ * @bodyParam type string required Tipo de regla. Example: Tiempo
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam estado integer required Nuevo estado. Example: 0
+ * @bodyParam id integer required ID de la asignación en BranchRuleProfessional. Example: 456
+ *
+ * @response 200 {"msg": "Estado actualizado correctamente de una rule del professional"}
+ * @response 204 {"msg": "Rule del Professional no encontrado"}
+ * @response 500 {"msg": "Error al asignar el estado de la rule a este professional"}
+ */
     public function storeByTypeId(Request $request)
     {
         try {
@@ -221,6 +324,18 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza solo el estado de la regla de tipo "Tiempo" y marca al profesional como living.
+ *
+ * @authenticated
+ * @bodyParam type string required Debe ser "Tiempo". Example: Tiempo
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam estado integer required Estado (0 para activar living). Example: 0
+ *
+ * @response 200 {"msg": "Estado actualizado"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function storeByType_time(Request $request)
     {
         try {
@@ -246,6 +361,23 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene todas las reglas asignadas a un profesional (sin filtrar por sucursal ni fecha).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {
+ *   "professional": [
+ *     {
+ *       "id": 123,
+ *       "branchRule": { ... },
+ *       "pivot": { "estado": 1, "data": "2025-11-21" }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el estado de las rules de un professional"}
+ */
     public function show(Request $request)
     {
         try {
@@ -258,6 +390,29 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene las reglas de una sucursal para un profesional en una fecha (por defecto: hoy).
+ *
+ * Si el profesional está activo (state 1 o 2) y no tiene una regla asignada para la fecha, se crea con estado = 3 (no actualizada).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam data string optional Fecha en formato Y-m-d. Example: 2025-11-21
+ *
+ * @response 200 {
+ *   "rules": [
+ *     {
+ *       "id": 456,
+ *       "name": "Puntualidad",
+ *       "description": "...",
+ *       "type": "attendance",
+ *       "state": 3
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el estado de las rules de un professional"}
+ */
     public function rules_professional(Request $request)
     {
         try {
@@ -302,6 +457,17 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de una regla de sucursal asignada a un profesional.
+ *
+ * @authenticated
+ * @bodyParam branch_rule_id integer required ID de la regla de sucursal. Example: 101
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam estado boolean required Nuevo estado. Example: true
+ *
+ * @response 200 {"msg": "Estado actualizado correctamente del cumplimiento de una rule del professional"}
+ * @response 500 {"msg": "Error al actualizar estado del cumplimiento de rule del professional"}
+ */
     public function update(Request $request)
     {
         try {
@@ -319,6 +485,28 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza masivamente el estado de varias reglas de convivencia.
+ *
+ * Útil para el frontend al guardar múltiples cambios a la vez.
+ *
+ * @authenticated
+ * @bodyParam changes array required Lista de cambios.
+ * @bodyParam changes.*.id integer required ID de la asignación. Example: 456
+ * @bodyParam changes.*.estado integer required Nuevo estado. Example: 1
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "message": "Estados actualizados correctamente.",
+ *   "updated_count": 5,
+ *   "updated_ids": [456, 457]
+ * }
+ * @response 500 {
+ *   "success": false,
+ *   "message": "Error al actualizar estados",
+ *   "error": "..."
+ * }
+ */
     public function update_rule_state(Request $request)
     {
         try {
@@ -363,6 +551,15 @@ class BranchRuleProfessionalController extends Controller
         }
     }
 
+    /**
+ * Elimina una asignación de regla a profesional.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la asignación en BranchRuleProfessional. Example: 456
+ *
+ * @response 200 {"msg": "Estado del cumplimiento de la rule eliminado correctamente de este trabajador"}
+ * @response 500 {"msg": "Error al eliminar el estado del cumplimiento de la rule de este trabajador"}
+ */
     public function destroy(Request $request)
     {
         try {

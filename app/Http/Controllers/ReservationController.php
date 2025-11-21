@@ -44,6 +44,31 @@ class ReservationController extends Controller
         $this->professionalService = $professionalService;
     }
 
+    /**
+ * Lista todas las reservaciones del sistema.
+ *
+ * Incluye relación con carro, cliente y profesional.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "reservaciones": [
+ *     {
+ *       "id": 101,
+ *       "car_id": 50,
+ *       "data": "2025-11-21",
+ *       "start_time": "10:00:00",
+ *       "car": {
+ *         "clientProfessional": {
+ *           "client": { "name": "Yasmany Sánchez" },
+ *           "professional": { "name": "Carlos Pérez" }
+ *         }
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function index()
     {
         try {
@@ -54,6 +79,20 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Crea una reservación técnica (sin cliente ni notificaciones).
+ *
+ * Calcula `final_hour` y `total_time` automaticamente en base a los servicios del carro.
+ *
+ * @authenticated
+ * @bodyParam start_time string required Hora de inicio (HH:mm). Example: "10:00"
+ * @bodyParam data date required Fecha de la reserva (Y-m-d). Example: "2025-12-01"
+ * @bodyParam from_home integer required Origen: 0 = presencial, 1 = web. Example: 1
+ * @bodyParam car_id integer required ID del carro asociado. Example: 50
+ *
+ * @response 200 {"msg": "Reservacion realizada correctamente"}
+ * @response 500 {"msg": "[error]Error al hacer la reservacion"}
+ */
     public function store(Request $request)
     {
         try {
@@ -85,6 +124,27 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Lista reservaciones de una sucursal para el día actual.
+ *
+ * Incluye nombre del cliente y profesional, imágenes y horarios.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "reservations": [
+ *     {
+ *       "id": 101,
+ *       "clientName": "Yasmany Sánchez Martínez",
+ *       "professionalName": "Carlos Pérez García",
+ *       "start_time": "10:00:00",
+ *       "end_time": "11:30:00"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los carros"}
+ */
     public function branch_reservations(Request $request)
     {
         try {
@@ -117,6 +177,29 @@ class ReservationController extends Controller
         }
     }
     
+    /**
+ * Crea una reservación completa desde el frontend (con cliente, notificación y email).
+ *
+ * Soporta clientes nuevos o existentes. Envía correo de confirmación si es desde web (`from_home = 1`).
+ *
+ * @authenticated
+ * @bodyParam start_time string required Hora de inicio (HH:mm). Example: "10:00"
+ * @bodyParam data date required Fecha (Y-m-d). Example: "2025-12-01"
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam name_client string required Nombre del cliente. Example: "Yasmany Sánchez"
+ * @bodyParam email_client string nullable Correo del cliente. Example: "yasmany891230@gmail.com"
+ * @bodyParam phone_client string nullable Teléfono del cliente. Example: "+5359380373"
+ * @bodyParam client_id integer nullable ID si el cliente ya existe. Example: 12
+ * @bodyParam from_home integer optional Origen: 0 = presencial, 1 = web. Default: 1
+ * @bodyParam services array optional IDs de servicios a reservar. Example: [1, 5]
+ * @bodyParam select_professional integer optional 1 = profesional seleccionado, 0 = asignación automática. Default: 1
+ *
+ * @response 200 {"msg": "Reservación realizada correctamente"}
+ * @response 201 {"msg": "El rango seleccionado ha sido reservado"}
+ * @response 422 {"msg": "La reservación no se pudo hacer correctamente.Error al enviar el correo electrónico"}
+ * @response 500 {"msg": "[error]Error al hacer la reservacion"}
+ */
     public function reservation_store(Request $request)
     {
         DB::beginTransaction();
@@ -281,6 +364,29 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Crea una reservación desde totem (con lógica adicional para incógnitos y asignación automática).
+ *
+ * Similar a `reservation_store`, pero con soporte para `incognito` y `editedPhather`.
+ *
+ * @authenticated
+ * @bodyParam start_time string required Hora de inicio (HH:mm). Example: "10:00"
+ * @bodyParam data date required Fecha (Y-m-d). Example: "2025-12-01"
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam name_client string required Nombre del cliente. Example: "Cliente Incógnito"
+ * @bodyParam email_client string nullable Correo del cliente.
+ * @bodyParam phone_client string nullable Teléfono del cliente.
+ * @bodyParam client_id integer nullable ID del cliente si existe.
+ * @bodyParam incognito integer optional 1 = cliente incógnito. Example: 1
+ * @bodyParam editedPhather array optional Datos del tutor (para menores). Example: {"parent_name": "María López"}
+ * @bodyParam services array required IDs de servicios. Example: [1, 5]
+ * @bodyParam select_professional integer optional Si es 0, asigna profesional automáticamente.
+ *
+ * @response 200 {"msg": "Reservación realizada correctamente"}
+ * @response 201 {"msg": "El rango seleccionado ha sido reservado"}
+ * @response 500 {"msg": "[error]Error al hacer la reservacion"}
+ */
     public function reservation_store_tottem(Request $request)
     {
         DB::beginTransaction();
@@ -477,6 +583,19 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Obtiene el tiempo transcurrido desde que un cliente llegó (para reloj de atención).
+ *
+ * Devuelve segundos desde que se asignó la cola, o `-222` si no hay cliente asignado.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 120
+ * @response 200 -222
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function time_clock_reservation(Request $request){
         try {
             $data = $request->validate([
@@ -526,6 +645,17 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Lista reservaciones de un profesional en un rango de 7 días a partir de una fecha.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam data date required Fecha de inicio (Y-m-d). Example: "2025-11-21"
+ *
+ * @response 200 { "reservaciones": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar las reservaciones"}
+ */
     public function professional_reservations(Request $request)
     {
         try {
@@ -543,6 +673,29 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Obtiene reservaciones de un profesional en un período personalizado (calendario visual).
+ *
+ * Retorna formato específico para librerías de calendario (con colores por tipo de reserva).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam startDate date required Fecha de inicio. Example: "2025-11-01"
+ * @queryParam endDate date required Fecha de fin. Example: "2025-11-30"
+ *
+ * @response 200 {
+ *   "reservaciones": [
+ *     {
+ *       "startDate": "2025-11-21T10:00:00",
+ *       "endDate": "2025-11-21T11:30:00",
+ *       "clientName": "10:00 AM: Yasmany-Reserv:+5359380373",
+ *       "color": "yellow"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las reservaciones"}
+ */
     public function professional_reservations_periodo(Request $request)
     {
         try {
@@ -585,6 +738,24 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Obtiene reservaciones y profesionales de una sucursal en un rango de fechas.
+ *
+ * Útil para calendarios de sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam startDate date required Fecha de inicio. Example: "2025-11-01"
+ * @queryParam endDate date required Fecha de fin. Example: "2025-11-30"
+ *
+ * @response 200 {
+ *   "reservaciones": [...],
+ *   "professionals": [
+ *     { "id": 10, "name": "Carlos Pérez", "charge": "Barbero" }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las reservaciones"}
+ */
     public function branch_reservations_periodo(Request $request)
     {
         try {
@@ -625,6 +796,16 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Cuenta las reservaciones web (from_home = 1) del día actual.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ *
+ * @response 200 5
+ * @response 500 {"msg": "[error]Error al mostrar las reservaciones"}
+ */
     public function reservations_count(Request $request)
     {
         try {
@@ -643,6 +824,21 @@ class ReservationController extends Controller
         }
     }
    
+    /**
+ * Obtiene conteo diario de reservaciones web para la semana actual.
+ *
+ * Incluye lista detallada de reservas y profesionales de la sucursal.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ *
+ * @response 200 {
+ *   "cantReservations": [2, 3, 0, 1, 4, 2, 1],
+ *   "reservations": [...]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las reservaciones"}
+ */
     public function reservations_count_week(Request $request)
     {
         try {
@@ -727,6 +923,15 @@ class ReservationController extends Controller
         }
     }
     
+    /**
+ * Muestra los detalles de una reservación específica.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la reservación. Example: 101
+ *
+ * @response 200 { "reservaciones": [...] }
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function show(Request $request)
     {
         try {
@@ -740,6 +945,21 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Actualiza una reservación existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la reservación. Example: 101
+ * @bodyParam start_time string required Hora de inicio. Example: "10:00:00"
+ * @bodyParam final_hour string required Hora de fin. Example: "11:30:00"
+ * @bodyParam total_time string required Duración (HH:mm:ss). Example: "01:30:00"
+ * @bodyParam data date required Fecha. Example: "2025-12-01"
+ * @bodyParam from_home integer required Origen. Example: 1
+ * @bodyParam car_id integer required ID del carro. Example: 50
+ *
+ * @response 200 {"msg": "Reservacion actualizada correctamente"}
+ * @response 500 {"msg": "Error al actualizar la reservacion"}
+ */
     public function update(Request $request)
     {
         try {
@@ -768,6 +988,14 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Envía recordatorios de reservación para el día siguiente.
+ *
+ * Se ejecuta vía tarea programada (solo requiere código de seguridad si se expone).
+ *
+ * @response 200 {"reservaciones": "Correos enviados"}
+ * @response 500 {"msg": "[error]Error al hacer la reservacion"}
+ */
     public function reservation_send_mail()
     {
         try {
@@ -810,6 +1038,17 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de confirmación de una reservación (vía enlace de email).
+ *
+ * Redirige a URLs de éxito o error según el estado.
+ *
+ * @queryParam confirmation integer required Nuevo estado (1 = confirmada, 3 = cancelada). Example: 1
+ * @queryParam id integer required ID de la reservación. Example: 101
+ *
+ * @response 302 Redirect to confirmation/cancelation/denied page
+ * @response 500 {"msg": "[error]Error al actualizar la reservacion"}
+ */
     public function update_confirmation(Request $request)
     {
         try {
@@ -847,6 +1086,18 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Confirma una reservación usando un código QR (para escaneo en sucursal).
+ *
+ * @authenticated
+ * @queryParam code string required Código de la reservación. Example: "Ab3x9Kz1"
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 4  // Confirmada y activada
+ * @response 200 3  // Ya cancelada
+ * @response 200 5  // No encontrada
+ * @response 500 {"msg": "[error]Error al actualizar la reservacion"}
+ */
     public function update_confirmation_code(Request $request)
     {
         try {
@@ -876,6 +1127,16 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Confirma una reservación manualmente por el cliente (con ventana de 20 minutos).
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reservación. Example: 101
+ *
+ * @response 200 4  // Confirmada
+ * @response 200 5  // Fuera de ventana de tiempo
+ * @response 500 {"msg": "[error]Error al actualizar la reservacion"}
+ */
     public function update_confirmation_client(Request $request)
     {
         try {
@@ -917,7 +1178,14 @@ class ReservationController extends Controller
         }
     }
 
-
+    /**
+ * Crea colas (`Tail`) para reservaciones del día actual.
+ *
+ * Se ejecuta automáticamente al crear reservas del día o vía tarea programada.
+ *
+ * @response 200 {"msg": "Cola creada correctamente"}
+ * @response 500 {"msg": "[error]Error al crear la cola"}
+ */
     public function reservation_tail()
     {
         try {
@@ -1010,6 +1278,17 @@ class ReservationController extends Controller
         }
     }
    
+    /**
+ * Reinicia el sistema y crea colas (para ejecución manual con código de seguridad).
+ *
+ * Limpia notificaciones, tokens, estados de profesionales y puestos de trabajo.
+ *
+ * @queryParam codigo string required Código de autorización. Example: "P{\nkNgP9hjm/L*~Sks25h^C30_|17"
+ *
+ * @response 200 {"msg": "Cola creada correctamente"}
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "[error]Error al crear la cola"}
+ */
     public function reservation_tail_task(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
@@ -1114,7 +1393,7 @@ class ReservationController extends Controller
         }
     }
 
-
+    
     private function verific_services($tails, $branch_id, $professional)
     {
 
@@ -1149,6 +1428,17 @@ class ReservationController extends Controller
         return false;
     }
     
+    /**
+ * Obtiene reservaciones de un profesional en una fecha específica.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam data date required Fecha (Y-m-d). Example: "2025-11-21"
+ *
+ * @response 200 { "reservaciones": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar las reservaciones en esa fecha"}
+ */
     public function professional_reservationDate(Request $request)
     {
         log::info('Reservaciones de un professional en una branch y una fecha determinada');
@@ -1167,6 +1457,16 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Elimina una reservación (con motivo) y notifica al profesional.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la reservación. Example: 101
+ * @bodyParam cause string required Motivo de la cancelación. Max: 255. Example: "Cliente no llegó"
+ *
+ * @response 200 {"msg": "Reservacion eliminada correctamente"}
+ * @response 500 {"msg": "[error]Error al eliminar la reservacion"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -1201,6 +1501,12 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Elimina automáticamente reservaciones no confirmadas del día actual.
+ *
+ * @response 200 {"msg": "Reservacion eliminada correctamente"}
+ * @response 500 {"msg": "[error]Error al eliminar la reservacion"}
+ */
     public function reserve_noconfirm(Request $request)
     {
         try {
@@ -1223,6 +1529,15 @@ class ReservationController extends Controller
         }
     }
 
+    /**
+ * Obtiene el historial de reservaciones de un cliente.
+ *
+ * @authenticated
+ * @queryParam client_id integer required ID del cliente. Example: 12
+ *
+ * @response 200 { "clientHistory": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar la history"}
+ */
     public function client_history(Request $request)
     {
         try {

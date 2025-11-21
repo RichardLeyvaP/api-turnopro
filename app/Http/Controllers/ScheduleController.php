@@ -11,9 +11,26 @@ use Illuminate\Support\Facades\Validator;
 
 class ScheduleController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene todos los horarios de todas las sucursales, ordenados por día de la semana.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "Schedules": [
+ *     {
+ *       "branch_id": 5,
+ *       "id": 1,
+ *       "day": "Lunes",
+ *       "start_time": "09:00:00 AM",
+ *       "closing_time": "07:00:00 PM",
+ *       "branch": { "name": "Centro", ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los Locales de Trabajo"}
+ */
     public function index()
     {
         try {
@@ -23,8 +40,37 @@ class ScheduleController extends Controller
         }
     }
 
-
-
+    /**
+ * Obtiene el horario y los servicios de una sucursal específica.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "Schedules": [
+ *     {
+ *       "id": 0,
+ *       "day": "Lunes",
+ *       "start_time": "09:00:00",
+ *       "closing_time": "19:00:00"
+ *     }
+ *   ],
+ *   "services": [
+ *     {
+ *       "id": 12,
+ *       "name": "Corte de cabello",
+ *       "price_service": 10000.00,
+ *       "type_service": "barber",
+ *       "profit_percentaje": 70,
+ *       "duration_service": 30,
+ *       "image_service": "services/corte.jpg?$2025-11-21T10:30:00Z",
+ *       "service_comment": "Corte clásico",
+ *       "ponderation": 80
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar Horario"}
+ */
     public function show(Request $request)
     {
         try {
@@ -82,6 +128,30 @@ class ScheduleController extends Controller
         }
     }
 
+    /**
+ * Obtiene el horario completo de una sucursal (7 días), incluyendo los días sin horario definido.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "Schedules": [
+ *     {
+ *       "id": 1,
+ *       "day": "Lunes",
+ *       "start_time": "09:00:00",
+ *       "closing_time": "19:00:00"
+ *     },
+ *     {
+ *       "id": null,
+ *       "day": "Domingo",
+ *       "start_time": null,
+ *       "closing_time": null
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar Horario"}
+ */
     public function show_schedule_branch(Request $request) //buscar por id branch
     {
         try {
@@ -134,7 +204,19 @@ class ScheduleController extends Controller
         }
     }
 
-
+    /**
+ * Crea un nuevo horario para un día específico en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam day string required Día de la semana (Lunes a Domingo). Example: Lunes
+ * @bodyParam start_time string optional Hora de apertura (H:i:s). Example: 09:00:00
+ * @bodyParam closing_time string optional Hora de cierre (H:i:s). Example: 19:00:00
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"msg": "Horario insertado correctamente"}
+ * @response 400 {"msg": ["El día ya tiene horario en esta sucursal."]}
+ * @response 500 {"msg": "Error al insertar Horario"}
+ */
     public function store(Request $request)
     {
         try {
@@ -163,6 +245,19 @@ class ScheduleController extends Controller
         }
     }
 
+    /**
+ * Actualiza o crea horarios para todos los días de la semana en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam schedule array required Lista de horarios por día.
+ * @bodyParam schedule.*.day string required Nombre del día (Lunes a Domingo). Example: Lunes
+ * @bodyParam schedule.*.start_time string optional Hora de apertura. Example: 09:00:00
+ * @bodyParam schedule.*.closing_time string optional Hora de cierre. Example: 19:00:00
+ *
+ * @response 200 {"msg": "Horario actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -192,6 +287,15 @@ class ScheduleController extends Controller
         }
     }
 
+    /**
+ * Elimina un horario específico de una sucursal.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del horario. Example: 1
+ *
+ * @response 200 {"msg": "Horario eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar Horario"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -15,6 +15,32 @@ use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
+
+    /**
+ * Lista todos los comentarios con sus relaciones.
+ *
+ * Incluye información del cliente y del profesional asociados a través de la relación `clientProfessional`.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "comments": [
+ *     {
+ *       "id": 1,
+ *       "client_professional_id": 3,
+ *       "look": "Profesional muy atento",
+ *       "client_look": "comments/1.jpg",
+ *       "data": "2025-11-21 14:30:00",
+ *       "clientProfessional": {
+ *         "id": 3,
+ *         "client": { "id": 5, "name": "Yasmany Sánchez" },
+ *         "professional": { "id": 2, "name": "Dr. López" }
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function index()
     {
         try {             
@@ -25,6 +51,20 @@ class CommentController extends Controller
         }
     }
 
+    /**
+ * Crea un nuevo comentario asociado a un cliente y un profesional.
+ *
+ * Requiere los IDs directos del cliente y profesional. Adjunta opcionalmente una imagen del cliente.
+ *
+ * @authenticated
+ * @bodyParam client_id integer required ID del cliente. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 2
+ * @bodyParam look string required Texto del comentario. Example: "Excelente atención"
+ * @bodyParam client_look file optional Imagen del cliente
+ *
+ * @response 200 {"msg": "Comment guardado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error al guardar el comentario"}
+ */
     public function store(Request $request)
     {
         try {
@@ -58,6 +98,19 @@ class CommentController extends Controller
         }
     }
 
+    /**
+ * Crea un comentario a partir de un ID de reserva.
+ *
+ * Finaliza automáticamente la reserva y su cola asociada (`tail`). Actualiza la imagen del cliente si se proporciona.
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva existente. Example: 10
+ * @bodyParam look string required Texto del comentario.
+ * @bodyParam client_look file optional Imagen del cliente.
+ *
+ * @response 200 {"msg": "Comment guardado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error al el comentario"}
+ */
     public function storeByReservationId(Request $request)
     {
         DB::beginTransaction();
@@ -100,6 +153,18 @@ class CommentController extends Controller
         }
     }
 
+    /**
+ * Crea un comentario automático a partir del ID de un carro (car).
+ *
+ * Finaliza la reserva y su cola asociada sin requerir texto de comentario (usa mensaje predeterminado).
+ * No permite subir imagen personalizada; usa imagen por defecto.
+ *
+ * @authenticated
+ * @bodyParam car_id integer required ID del carro asociado a una reserva. Example: 7
+ *
+ * @response 200 {"msg": "Comment guardado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error al el comentario"}
+ */
     public function storeByCarId(Request $request)
     {
         DB::beginTransaction();
@@ -133,6 +198,26 @@ class CommentController extends Controller
         }
     }
 
+    /**
+ * Muestra un comentario específico por su ID.
+ *
+ * Incluye las relaciones completas de cliente y profesional.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del comentario. Example: 1
+ *
+ * @response 200 {
+ *   "branch": {
+ *     "id": 1,
+ *     "look": "Muy satisfecho",
+ *     "clientProfessional": {
+ *       "client": { "name": "Yasmany Sánchez" },
+ *       "professional": { "name": "Dr. López" }
+ *     }
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar el comment"}
+ */
     public function show(Request $request)
     {
         try {
@@ -145,6 +230,19 @@ class CommentController extends Controller
         }
     }
 
+    /**
+ * Actualiza un comentario existente.
+ *
+ * Permite modificar el texto y reemplazar la imagen del cliente. Elimina la imagen anterior si no es la predeterminada.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del comentario. Example: 1
+ * @bodyParam look string required Nuevo texto del comentario. Example: "Actualizado: muy buen servicio"
+ * @bodyParam client_look file optional Nueva imagen del cliente.
+ *
+ * @response 200 {"msg": "Comment actualizado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error al actualizar el comments"}
+ */
     public function update(Request $request)
     {
         try {
@@ -175,6 +273,17 @@ class CommentController extends Controller
         }
     }
 
+    /**
+ * Elimina un comentario y su imagen asociada (si existe).
+ *
+ * Restaura la imagen del cliente a la predeterminada tras la eliminación.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del comentario a eliminar. Example: 1
+ *
+ * @response 200 {"msg": "Comment eliminado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error al eliminar el comment"}
+ */
     public function destroy(Request $request)
     {
         try {

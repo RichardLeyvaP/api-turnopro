@@ -26,8 +26,35 @@ class RestdayController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene los días de descanso de un profesional.
+ *
+ * Devuelve los 7 días de la semana, indicando si tiene descanso (`state = 1`) o no (`state = 0`).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {
+ *   "Schedules": [
+ *     {
+ *       "id": 1,
+ *       "day": "Lunes",
+ *       "state": 0
+ *     },
+ *     {
+ *       "id": 2,
+ *       "day": "Martes",
+ *       "state": 1
+ *     },
+ *     {
+ *       "id": null,
+ *       "day": "Miércoles",
+ *       "state": 0
+ *     },
+ *     // ... resto de días
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar Horario"}
+ */
     public function show(Request $request)
     {
         try {
@@ -79,8 +106,19 @@ class RestdayController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza los días de descanso de un profesional.
+ *
+ * Recibe un arreglo de días con su estado y sincroniza los registros en la base de datos.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam schedule array required Lista de días con estado.
+ * @bodyParam schedule.*.day string required Nombre del día (Lunes a Domingo). Example: Lunes
+ * @bodyParam schedule.*.state integer required 1 = día de descanso, 0 = día laborable. Example: 1
+ *
+ * @response 200 {"msg": "Diaas de descanso actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request, Restday $restday)
     {
         try {

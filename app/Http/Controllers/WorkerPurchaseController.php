@@ -28,6 +28,29 @@ class WorkerPurchaseController extends Controller
         $this->traceService = $traceService;
     }
 
+    /**
+ * Registra una solicitud de compra de producto por parte de un trabajador.
+ *
+ * Valida disponibilidad de stock, aplica descuento para trabajadores y crea una notificación para la cajera.
+ * El estado inicial es `0` (pendiente).
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam professional_id integer required ID del trabajador. Example: 10
+ * @bodyParam id integer required ID del registro en `product_store` (stock específico). Example: 125
+ * @bodyParam cant integer required Cantidad solicitada. Min: 1. Example: 2
+ *
+ * @response 201 {
+ *   "id": 15,
+ *   "branch_id": 3,
+ *   "professional_id": 10,
+ *   "product_id": 1,
+ *   "cant": 2,
+ *   "total": 9000,
+ *   "status": 0
+ * }
+ * @response 500 {"error": "Error al registrar la compra para trabajador: No hay suficiente stock disponible"}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -85,6 +108,26 @@ class WorkerPurchaseController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de una solicitud de compra de trabajador.
+ *
+ * Estados permitidos:  
+ * - `0` = Pendiente (no usado en actualización)  
+ * - `1` = Confirmado → descuenta stock y registra ingreso financiero  
+ * - `2` = Cancelado → notifica al trabajador
+ *
+ * Solo se puede actualizar si el estado actual no es `2` (cancelado).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la compra de trabajador. Example: 15
+ * @bodyParam status integer required Nuevo estado (1 = confirmar, 2 = cancelar). Example: 1
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "message": "Estado actualizado correctamente"
+ * }
+ * @response 500 {"success": false, "error": "No se puede modificar una compra cancelada"}
+ */
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -234,6 +277,26 @@ class WorkerPurchaseController extends Controller
         }
     }
 
+    /**
+ * Registra múltiples solicitudes de compra en una sola operación.
+ *
+ * Permite omitir `cant` (usa `1` por defecto). Valida stock de todos los productos antes de crear cualquier registro.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam professional_id integer required ID del trabajador. Example: 10
+ * @bodyParam products array required Lista de productos a solicitar.
+ * @bodyParam products.*.id integer required ID de `product_store`. Example: 125
+ * @bodyParam products.*.cant integer optional Cantidad (por defecto: 1). Example: 2
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "message": "Compra múltiple registrada correctamente",
+ *   "data": [...],
+ *   "total": 18000
+ * }
+ * @response 500 {"success": false, "error": "No hay suficiente stock para el producto ID: 1"}
+ */
     public function storeBulk(Request $request)
     {
         DB::beginTransaction();
@@ -310,6 +373,34 @@ class WorkerPurchaseController extends Controller
         }
     }
 
+    /**
+ * Obtiene el listado de compras de trabajadores en una sucursal y fecha específica.
+ *
+ * Incluye datos del trabajador y del producto. Si no se envía `data`, usa la fecha actual.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam data date optional Fecha (Y-m-d). Si no se envía, se usa hoy. Example: "2025-11-21"
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "data": [
+ *     {
+ *       "id": 15,
+ *       "productName": "Shampoo Profesional",
+ *       "productImage": "products/1.jpg",
+ *       "professionalName": "Carlos Pérez",
+ *       "professionalImage": "professionals/10.jpg",
+ *       "cant": 2,
+ *       "total": 9000,
+ *       "status": 1
+ *     }
+ *   ],
+ *   "count": 1,
+ *   "totalAmount": 9000
+ * }
+ * @response 500 {"success": false, "error": "Error al obtener las compras de trabajadores"}
+ */
     public function getByDateAndBranch(Request $request)
     {
         try {

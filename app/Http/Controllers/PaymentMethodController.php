@@ -8,9 +8,29 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentMethodController extends Controller
 {
+    
     /**
-     * Display a listing of the resource in the specified format.
-     */
+ * Lista todos los métodos de pago disponibles.
+ *
+ * Retorna una colección de métodos de pago con `id`, `name` y `type`.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "paymentOptions": [
+ *     {
+ *       "id": 1,
+ *       "name": "Tarjeta de Crédito",
+ *       "type": "digital"
+ *     },
+ *     {
+ *       "id": 2,
+ *       "name": "Efectivo",
+ *       "type": "physical"
+ *     }
+ *   ]
+ * }
+ */
     public function index()
     {
         $paymentMethods = PaymentMethod::all()->map(function ($method) {
@@ -27,8 +47,24 @@ class PaymentMethodController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage (without mass assignment).
-     */
+ * Crea un nuevo método de pago.
+ *
+ * No permite asignación masiva; los campos se asignan explícitamente.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del método de pago. Max: 255 caracteres. Example: "Transferencia Bancaria"
+ * @bodyParam type string required Tipo del método (ej. "digital", "physical", "online"). Max: 255. Example: "bank"
+ * @bodyParam description string optional Descripción adicional. Example: "Transferencia desde cualquier banco"
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "paymentOption": {
+ *     "id": 3,
+ *     "name": "Transferencia Bancaria",
+ *     "type": "bank"
+ *   }
+ * }
+ */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -54,6 +90,20 @@ class PaymentMethodController extends Controller
         ], 201);
     }
 
+    /**
+ * Actualiza un método de pago existente.
+ *
+ * Requiere el `id` del método a modificar.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del método de pago. Example: 3
+ * @bodyParam name string required Nuevo nombre. Max: 50 caracteres. Example: "Transferencia SPEI"
+ * @bodyParam type string required Nuevo tipo. Max: 255. Example: "bank"
+ * @bodyParam description string optional Nueva descripción. Example: "Sistema de pagos electrónicos interbancarios"
+ *
+ * @response 200 {"msg": "Metodo de ingreso actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -75,9 +125,21 @@ class PaymentMethodController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
+  /**
+ * Muestra los detalles de un método de pago específico.
+ *
+ * Se accede por ruta con parámetro `{paymentMethod}` (inyección de modelo).
+ *
+ * @urlParam id integer required ID del método de pago. Example: 1
+ *
+ * @response 200 {
+ *   "paymentOption": {
+ *     "id": 1,
+ *     "name": "Tarjeta de Crédito",
+ *     "type": "digital"
+ *   }
+ * }
+ */
     public function show(PaymentMethod $paymentMethod)
     {
         return response()->json([
@@ -89,9 +151,15 @@ class PaymentMethodController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+  /**
+ * Elimina un método de pago.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del método a eliminar. Example: 3
+ *
+ * @response 200 {"msg": "Metodo de ingreso eliminado correctamente"}
+ * @response 500 {"msg": "Error inerno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

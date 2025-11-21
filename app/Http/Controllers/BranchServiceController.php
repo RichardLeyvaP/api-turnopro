@@ -12,6 +12,22 @@ use Illuminate\Support\Facades\Log;
 
 class BranchServiceController extends Controller
 {
+    /**
+ * Obtiene todas las sucursales con sus servicios asignados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branch": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "branchservices": [ ... ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios por sucursales"}
+ */
     public function index()
     {
         try {
@@ -21,6 +37,22 @@ class BranchServiceController extends Controller
         }
     }
 
+    /**
+ * Asigna un servicio a una sucursal (con ponderación opcional).
+ *
+ * Si el servicio ya está asignado y fue eliminado lógicamente, se restaura.
+ * Si ya está activo, devuelve conflicto (409).
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam service_id integer required ID del servicio. Example: 12
+ * @bodyParam ponderation number optional Ponderación para asignación (0-100). Example: 80
+ *
+ * @response 200 {"msg": "Servicio asignado correctamente a la sucursal", "action": "created"}
+ * @response 200 {"msg": "Relación restaurada y ponderación actualizada", "action": "restored"}
+ * @response 409 {"msg": "El servicio ya está asignado a esta sucursal", "action": "already_exists"}
+ * @response 500 {"msg": "Error interno del sistema", "error": "..."}
+ */
     public function store(Request $request)
     {
         try {
@@ -73,7 +105,30 @@ class BranchServiceController extends Controller
             ], 500);
         }
     }
-
+/**
+ * Obtiene los servicios de una sucursal con los profesionales asignados a cada uno.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "services": [
+ *     {
+ *       "id": 12,
+ *       "name": "Corte de cabello",
+ *       "price_service": 25.50,
+ *       "branchServices": [
+ *         {
+ *           "branchServiceProfessional": [
+ *             {"id": 456}
+ *           ]
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios"}
+ */
     public function show_service_idProfessional(Request $request) //todo modificar aqui
     {
         try {
@@ -90,6 +145,31 @@ class BranchServiceController extends Controller
         }
     }
 
+    /**
+ * Obtiene los servicios asignados a una sucursal con detalles completos y ordenados.
+ *
+ * Los servicios se ordenan primero por ponderación (ascendente), luego por nombre.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "services": [
+ *     {
+ *       "id": 12,
+ *       "name": "Corte de cabello",
+ *       "price_service": 25.50,
+ *       "type_service": "barber",
+ *       "profit_percentaje": 70,
+ *       "duration_service": 30,
+ *       "image_service": "services/corte.jpg",
+ *       "service_comment": "Corte clásico",
+ *       "ponderation": 80
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios", "error": "..."}
+ */
     public function show(Request $request)
     {
         try {
@@ -134,6 +214,7 @@ class BranchServiceController extends Controller
         }
     }
 
+    
     public function branch_service_show($data)
     {
         try {
@@ -150,7 +231,17 @@ class BranchServiceController extends Controller
         }
     }
 
-
+    /**
+ * Actualiza la ponderación de un servicio en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam service_id integer required ID del servicio. Example: 12
+ * @bodyParam ponderation number optional Nueva ponderación. Example: 90
+ *
+ * @response 200 {"msg": "Servicio actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el servicio en esta sucursal"}
+ */
     public function update(Request $request)
     {
         try {
@@ -168,6 +259,17 @@ class BranchServiceController extends Controller
         }
     }
 
+    /**
+ * Desvincula un servicio de una sucursal (eliminación lógica en cascada).
+ *
+ * También elimina lógicamente las asignaciones de profesionales a ese servicio (`branch_service_professional`).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la relación en `branch_service`. Example: 789
+ *
+ * @response 200 {"msg": "Servicio desvinculado correctamente con eliminación lógica en cascada"}
+ * @response 500 {"msg": "Error al desvincular el servicio", "error": "..."}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -19,8 +19,17 @@ class ChargePermissionController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Asigna un permiso a un cargo.
+ *
+ * Crea una relación entre un cargo y un permiso mediante una relación muchos a muchos.
+ *
+ * @authenticated
+ * @bodyParam charge_id integer required ID del cargo al que se le asignará el permiso. Example: 5
+ * @bodyParam permission_id integer required ID del permiso a asignar. Example: 12
+ *
+ * @response 200 {"msg": "Permiso Asignado Coorectamente"}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function store(Request $request)
     {
         try {
@@ -40,8 +49,27 @@ class ChargePermissionController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene todos los permisos asignados a un cargo específico.
+ *
+ * Devuelve una lista de permisos vinculados al cargo, incluyendo metadatos de la relación pivote.
+ *
+ * @authenticated
+ * @queryParam charge_id integer required ID del cargo. Example: 5
+ *
+ * @response 200 {
+ *   "permissions": [
+ *     {
+ *       "id": 12,
+ *       "charge_id": 5,
+ *       "permission_id": 12,
+ *       "name": "Crear usuarios",
+ *       "module": "Usuarios",
+ *       "description": "Permite crear nuevos usuarios en el sistema"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function show(Request $request)
     {
         try {             
@@ -66,6 +94,26 @@ class ChargePermissionController extends Controller
         }
     }
 
+    /**
+ * Obtiene los permisos que **NO están asignados** a un cargo específico.
+ *
+ * Útil para interfaces de asignación donde se muestra la lista de permisos disponibles.
+ *
+ * @authenticated
+ * @queryParam charge_id integer required ID del cargo. Example: 5
+ *
+ * @response 200 {
+ *   "permissions": [
+ *     {
+ *       "id": 8,
+ *       "name": "Eliminar reservas",
+ *       "module": "Reservas",
+ *       "description": "Permite eliminar reservas de clientes"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function show_charge_NoIN(Request $request)
     {
         try {             
@@ -90,8 +138,17 @@ class ChargePermissionController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina la asignación de un permiso a un cargo.
+ *
+ * Rompe la relación entre el cargo y el permiso especificados.
+ *
+ * @authenticated
+ * @bodyParam charge_id integer required ID del cargo. Example: 5
+ * @bodyParam permission_id integer required ID del permiso a eliminar. Example: 12
+ *
+ * @response 200 {"msg": "Estudiante desmatriculado correctamente del curso"}
+ * @response 500 {"msg": "Error al sacar al estudiante de este curso"}
+ */
     public function destroy(Request $request)
     {
         try {

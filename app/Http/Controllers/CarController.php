@@ -49,6 +49,22 @@ class CarController extends Controller
         $this->professionalPaymentService = $professionalPaymentService;
     }
 
+    /**
+ * Obtiene todos los carros (ventas) con sus clientes y profesionales asociados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "cars": [
+ *     {
+ *       "id": 123,
+ *       "client_professional_id": 456,
+ *       "clientProfessional": { ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function index()
     {
         try {
@@ -59,6 +75,16 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene las ganancias totales del día para una sucursal o negocio.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 1250.00
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function cars_sum_amount(Request $request)
     {
         try {
@@ -84,6 +110,21 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los productos y servicios más vendidos del día y del mismo día del mes anterior.
+ *
+ * Usa caché para el mes anterior.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 {
+ *   "product": [ ... ],
+ *   "service": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function car_products_services(Request $request)
     {
         try {
@@ -427,6 +468,16 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene las ganancias diarias de la semana actual (lunes a domingo).
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 [1200.00, 1300.00, 0, 1100.00, 1400.00, 1500.00, 1600.00]
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function cars_sum_amount_week(Request $request)
     {
         try {
@@ -532,6 +583,23 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene las ganancias y utilidad del mes actual y del mes anterior (con caché).
+ *
+ * Incluye desglose de servicios, productos, academia, asistencia técnica y propinas.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 {
+ *   "cars": 12500.00,
+ *   "carsDetail": [ ... ],
+ *   "carsDetailAnt": [ ... ],
+ *   "carsAnt": 11000.00
+ * }
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function cars_sum_amount_mounth(Request $request)
     {
         try {
@@ -1147,6 +1215,16 @@ class CarController extends Controller
         });
     }
 
+    /**
+ * Versión simplificada de `branch_cars` para móviles (solo carros confirmados).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam data string optional Fecha (Y-m-d). Example: 2025-11-21
+ *
+ * @response 200 {"cars": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function branch_cars_date(Request $request)
     {
         try {
@@ -1217,6 +1295,25 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los carros de una sucursal en una fecha (por defecto: hoy), con estado de cola.
+ *
+ * Incluye caja, pagos, ventas y bonos.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam data string optional Fecha (Y-m-d). Example: 2025-11-21
+ *
+ * @response 200 {
+ *   "cars": [ ... ],
+ *   "box": { ... },
+ *   "payments": [ ... ],
+ *   "cashierSales": [ ... ],
+ *   "bonusPay": 200.00,
+ *   "cashierclosebox": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function branch_cars(Request $request)
     {
         try {
@@ -1398,6 +1495,19 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los carros y órdenes con solicitudes de eliminación pendientes.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 {
+ *   "cars": [ ... ],
+ *   "orders": [ ... ],
+ *   "cashier": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function branch_cars_delete(Request $request)
     {
         try {
@@ -1565,6 +1675,19 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Crea un nuevo carro (registro de venta).
+ *
+ * @authenticated
+ * @bodyParam client_professional_id integer required ID de la relación cliente-profesional. Example: 456
+ * @bodyParam amount number nullable Monto total del carro. Example: 1250.00
+ * @bodyParam pay boolean required Estado de pago. Example: false
+ * @bodyParam active boolean required Estado activo. Example: true
+ * @bodyParam tip number nullable Propina. Example: 100.00
+ *
+ * @response 200 {"msg": "Carro creado correctamente"}
+ * @response 500 {"msg": "Error al insertar el carro"}
+ */
     public function store(Request $request)
     {
         try {
@@ -1583,6 +1706,18 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los productos y servicios asociados a un carro.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del carro. Example: 123
+ *
+ * @response 200 {
+ *   "productscar": [ ... ],
+ *   "servicescar": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar ls ordenes"}
+ */
     public function car_orders(Request $request)
     {
         try {
@@ -1639,6 +1774,18 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene el resumen diario de ganancias de un profesional en una sucursal.
+ *
+ * Incluye retención, bonos y propinas.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"car": [ ... ]}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function professional_car(Request $request)
     {
         try {
@@ -1724,6 +1871,16 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene el resumen diario de ganancias de un técnico capilar en una sucursal.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del técnico. Example: 124
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"car": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar ls ordenes"}
+ */
     public function tecnico_car(Request $request)
     {
         try {
@@ -1768,6 +1925,21 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los detalles pendientes de pago de un profesional (servicios, productos, cursos).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "cars": [ ... ],
+ *   "courses": [ ... ],
+ *   "products": [ ... ],
+ *   "payments": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar ls ordenes"}
+ */
     public function professional_car_notpay(Request $request)
     {
         try {
@@ -1806,6 +1978,17 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene las reservaciones pagadas de un profesional en una fecha específica.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam data string required Fecha (Y-m-d). Example: 2025-11-21
+ *
+ * @response 200 {"car": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar ls ordenes"}
+ */
     public function professional_car_date(Request $request)
     {
         try {
@@ -1922,6 +2105,17 @@ class CarController extends Controller
         return $result;
     }
 
+    /**
+ * Obtiene las reservaciones pagadas de un técnico en una fecha específica.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del técnico. Example: 124
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam data string required Fecha (Y-m-d). Example: 2025-11-21
+ *
+ * @response 200 {"car": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar ls ordenes"}
+ */
     public function tecnico_car_date(Request $request)
     {
         try {
@@ -1955,6 +2149,15 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene todas las órdenes pendientes de eliminación en una sucursal (hoy).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"carOrderDelete": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar las ordenes"}
+ */
     public function car_order_delete_branch(Request $request)
     {
         try {
@@ -2017,6 +2220,16 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene las órdenes pendientes de eliminación de un profesional en una sucursal (hoy).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {"carOrderDelete": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar las ordenes"}
+ */
     public function car_order_delete_professional(Request $request)
     {
         try {
@@ -2064,6 +2277,15 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los detalles de un carro específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del carro. Example: 123
+ *
+ * @response 200 {"car": { ... }}
+ * @response 500 {"msg": "Error al mostrar el carrito"}
+ */
     public function show(Request $request)
     {
         try {
@@ -2136,6 +2358,16 @@ class CarController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las reservaciones"], 500);
         }
     }
+
+    /**
+ * Obtiene los servicios asociados a un carro específico.
+ *
+ * @authenticated
+ * @queryParam car_id integer required ID del carro. Example: 123
+ *
+ * @response 200 {"services": [ ... ]}
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function car_services(Request $request)
     {
         try {
@@ -2164,6 +2396,18 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Obtiene los servicios y el historial del cliente de un carro.
+ *
+ * @authenticated
+ * @queryParam car_id integer required ID del carro. Example: 123
+ *
+ * @response 200 {
+ *   "services": [ ... ],
+ *   "clientHistory": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las reservaciones"}
+ */
     public function car_services2(Request $request)
     {
         try {
@@ -2250,7 +2494,15 @@ class CarController extends Controller
         }
     }
 
-
+    /**
+ * Marca un carro como pagado.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del carro. Example: 123
+ *
+ * @response 200 {"msg": "Carro actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el carro"}
+ */
     public function update(Request $request)
     {
         try {
@@ -2266,6 +2518,17 @@ class CarController extends Controller
             return response()->json(['msg' => 'Error al actualizar el carro'], 500);
         }
     }
+
+    /**
+ * Asigna una propina a un carro (y por ende, al profesional).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del carro. Example: 123
+ * @bodyParam tip number required Monto de la propina. Example: 100.00
+ *
+ * @response 200 {"msg": "Se le ha dado propina para el profesional correctamente"}
+ * @response 500 {"msg": "Error al dar propina para el profesional"}
+ */
     public function give_tips(Request $request)
     {
         try {
@@ -2283,6 +2546,19 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Elimina o aprueba la edición de un carro (según su estado `active`).
+ *
+ * - Si `active = 3`: elimina el carro y su reserva.
+ * - Si `active = 2`: aprueba la edición (restaura el carro editable).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del carro. Example: 123
+ * @bodyParam professional_id integer optional ID del profesional que realiza la acción. Example: 789
+ *
+ * @response 200 {"msg": "Carro eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el carro"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -2374,6 +2650,16 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Deniega una solicitud de eliminación o edición de un carro.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del carro. Example: 123
+ * @bodyParam professional_id integer optional ID del profesional que realiza la acción. Example: 789
+ *
+ * @response 200 {"msg": "Solicitud denegada correctamente"}
+ * @response 500 {"msg": "Error al eliminar el carro"}
+ */
     public function destroy_denegada(Request $request)
     {
         try {
@@ -2422,6 +2708,20 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Solicita la edición de un carro (requiere aprobación).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del carro. Example: 123
+ * @bodyParam professional_id integer optional ID del cajero. Example: 789
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero. Example: Yasmany
+ * @bodyParam description string optional Motivo de la edición. Example: Cambio de servicio
+ * @bodyParam active integer required Nuevo estado (2 = solicitud de edición). Example: 2
+ *
+ * @response 200 {"msg": "Carro eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el carro"}
+ */
     public function update_solicitud(Request $request)
     {
         try {
@@ -2468,6 +2768,19 @@ class CarController extends Controller
         }
     }
 
+    /**
+ * Solicita la eliminación de un carro (requiere aprobación de administrador).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del carro. Example: 123
+ * @bodyParam professional_id integer optional ID del cajero. Example: 789
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero. Example: Yasmany
+ * @bodyParam description string optional Motivo de la eliminación. Example: Error de caja
+ *
+ * @response 200 {"msg": "Carro eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el carro"}
+ */
     public function destroy_solicitud(Request $request)
     {
         try {

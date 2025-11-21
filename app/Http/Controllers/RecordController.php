@@ -17,9 +17,27 @@ use Illuminate\Support\Facades\Log;
 
 class RecordController extends Controller
 {
+   
     /**
-     * Display a listing of the resource.
-     */
+ * Lista todos los registros de entrada/salida de profesionales por sucursal.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "records": [
+ *     {
+ *       "id": 1,
+ *       "professional_id": 123,
+ *       "branch_id": 5,
+ *       "start_time": "2025-11-21 08:30:00",
+ *       "end_time": "2025-11-21 18:00:00",
+ *       "professional": { "name": "Yasmany" },
+ *       "branch": { "name": "Centro" }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el historial de records"}
+ */
     public function index()
     {
         try {
@@ -29,10 +47,19 @@ class RecordController extends Controller
         }
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
+/**
+ * Registra la entrada de un profesional en una sucursal (marca hora de inicio).
+ *
+ * Asigna número de llegada y activa estado para coordinadores/encargados.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"msg": "Record creado correctamente"}
+ * @response 200 {"msg": "Ya registró entrada en el día de hoy"}
+ * @response 500 {"msg": "Error al crear un record: ..."}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -144,9 +171,22 @@ class RecordController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
+   /**
+ * Obtiene los registros de un profesional en una sucursal (sin filtrar por fecha).
+ *
+ * ⚠️ Este método actualmente **no devuelve resultados** porque le falta `->get()`.
+ * Corrige la línea:
+ * ```php
+ * return response()->json(['records' => Record::with('professional', 'branch')->where('branch_id', $branch_data['branch_id'])->get()], 200);
+ * ```
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"records": [...]}
+ * @response 500 {"msg": "Error al mostrar la sucursal"}
+ */
     public function show(Request $request)
     {
         try {
@@ -183,8 +223,15 @@ class RecordController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Registra la salida de un profesional en una sucursal (marca hora de fin).
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"msg": "Record creado correctamente"}
+ * @response 500 {"msg": "Error al crear un record"}
+ */
     public function update(Request $request)
     {
         DB::beginTransaction();
@@ -213,8 +260,14 @@ class RecordController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina un registro de entrada/salida.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del registro. Example: 1
+ *
+ * @response 200 {"msg": "Record eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el record"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -231,6 +284,17 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales que llegaron tarde en un **rango de fechas** en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string required Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string required Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 [ ... ]
+ * @response 500 {"msg": "Error al eliminar el record"}
+ */
     public function arriving_late_branch_periodo(Request $request)
     {
 
@@ -288,6 +352,25 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales que llegaron tarde **hoy** en una sucursal.
+ *
+ * Se compara con el horario de apertura del día.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 [
+ *   {
+ *     "professional_id": 123,
+ *     "name": "Yasmany Sánchez Martínez",
+ *     "image_url": "professionals/123.jpg",
+ *     "charge": "Barbero",
+ *     "cant": 1
+ *   }
+ * ]
+ * @response 500 {"msg": "Error al mostrar las llegadas tardes"}
+ */
     public function arriving_late_branch_date(Request $request)
     {
 
@@ -346,6 +429,17 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales que llegaron tarde en un **mes y año** en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam mes integer required Mes (1–12). Example: 11
+ * @queryParam year integer required Año. Example: 2025
+ *
+ * @response 200 [ ... ]
+ * @response 500 {"msg": "Error al eliminar el record"}
+ */
     public function arriving_late_branch_month(Request $request)
     {
 
@@ -403,6 +497,27 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene los registros de llegada tarde de un profesional **hoy** en una sucursal.
+ *
+ * Devuelve lista de registros + total.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 [
+ *   {
+ *     "start_time": "2025-11-21 09:30:00",
+ *     "end_time": "2025-11-21 18:00:00"
+ *   },
+ *   {
+ *     "start_time": "Total",
+ *     "end_time": 1
+ *   }
+ * ]
+ * @response 500 {"msg": "Error al mostrar las llegadas tardes"}
+ */
     public function arriving_late_professional_date(Request $request)
     {
 
@@ -475,6 +590,18 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene los registros de llegada tarde de un profesional en un **rango de fechas**.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string required Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string required Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 [ ... ]
+ * @response 500 {"msg": "Error al mostrar las llegadas tardes"}
+ */
     public function arriving_late_professional_periodo(Request $request)
     {
 
@@ -538,6 +665,19 @@ class RecordController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error al mostrar las llegadas tardes'], 500);
         }
     }
+
+    /**
+ * Obtiene los registros de llegada tarde de un profesional en un **mes y año**.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam mes integer required Mes (1–12). Example: 11
+ * @queryParam year integer required Año. Example: 2025
+ *
+ * @response 200 [ ... ]
+ * @response 500 {"msg": "Error al mostrar las llegadas tardes"}
+ */
     public function arriving_late_professional_month(Request $request)
     {
 
@@ -602,6 +742,20 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene **llegadas puntuales y tardías** de todos los profesionales en un **rango de fechas** en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string required Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string required Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "tardes": [ ... ],
+ *   "tiempo": [ ... ]
+ * }
+ * @response 500 {"msg": "Error"}
+ */
     public function arriving_branch_periodo(Request $request)
     {
 
@@ -703,6 +857,18 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene **llegadas puntuales y tardías** de todos los profesionales **hoy** en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "tardes": [ ... ],
+ *   "tiempo": [ ... ]
+ * }
+ * @response 500 {"msg": "Error"}
+ */
     public function arriving_branch_date(Request $request)
     {
 
@@ -804,6 +970,19 @@ class RecordController extends Controller
         }
     }
 
+    /**
+ * Obtiene **llegadas puntuales** de todos los profesionales en un **mes y año** en una sucursal.
+ *
+ * ⚠️ Solo devuelve puntuales (no tardías).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam mes integer required Mes (1–12). Example: 11
+ * @queryParam year integer required Año. Example: 2025
+ *
+ * @response 200 [ ... ]
+ * @response 500 {"msg": "Error"}
+ */
     public function arriving_branch_month(Request $request)
     {
 

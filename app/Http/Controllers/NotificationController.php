@@ -29,6 +29,24 @@ class NotificationController extends Controller
         $this->notificationService = $notificationService;
     }
 
+    /**
+ * Lista todas las notificaciones con relaciones.
+ *
+ * Incluye datos del profesional y la sucursal asociados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "notifications": [
+ *     {
+ *       "id": 1,
+ *       "professional": { "id": 5, "name": "Yasmany Sánchez" },
+ *       "branch": { "id": 3, "name": "Sucursal Centro" }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las notifocaciones"}
+ */
     public function index()
     {
         try {
@@ -38,6 +56,23 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Crea una notificación dirigida a un profesional o grupo específico.
+ *
+ * Si `type = "Ambos"`, envía a Encargados, Coordinadores y "Barbero y Encargado".  
+ * Si `type = "Barbero"`, solo notifica si el profesional tiene registro activo ese día.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional (usado si type ≠ "Ambos"). Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam tittle string required Título de la notificación. Example: "Recordatorio de cierre"
+ * @bodyParam description string required Descripción. Example: "Por favor cierra caja antes de salir"
+ * @bodyParam type string required Tipo: "Barbero", "Encargado", "Coordinador", "Ambos", etc. Example: "Ambos"
+ * @bodyParam stateApk string optional Estado adicional para app móvil (solo si type = "Ambos"). Example: "pending"
+ *
+ * @response 200 {"msg": "Notifications creada correctamente"}
+ * @response 500 {"msg": "[error]Notificacion creada correctamente"}
+ */
     public function store(Request $request)
     {
         try {
@@ -139,6 +174,21 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Crea una notificación simple desde un coordinador o responsable.
+ *
+ * Establece el estado en `3` por defecto.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del destinatario. Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam tittle string required Título. Example: "Revisión pendiente"
+ * @bodyParam description string required Descripción. Example: "Favor revisar el reporte diario"
+ * @bodyParam type string required Tipo de notificación. Example: "Administrador"
+ *
+ * @response 200 {"msg": "Notifications creada correctamente desde Coordinador o Responsable "}
+ * @response 500 {"msg": "[error]Notificacion no fue creada dio error "}
+ */
     public function store2(Request $request)
     {
         try {
@@ -166,6 +216,29 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Obtiene todas las notificaciones de una sucursal.
+ *
+ * Incluye nombre completo del profesional y formato de fecha legible.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "notifications": [
+ *     {
+ *       "id": 1,
+ *       "professionalName": "Yasmany Sánchez Martínez",
+ *       "tittle": "Recordatorio",
+ *       "description": "...",
+ *       "state": 0,
+ *       "type": "Barbero",
+ *       "created_at": "2025-11-21 03:45 PM"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las notifocaciones"}
+ */
     public function show(Request $request)
     {
         try {
@@ -195,6 +268,17 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Envía una notificación vía WhatsApp usando plantilla de Meta.
+ *
+ * Solo envía si se proporciona `telefone_client`. Usa plantilla fija `hello_world`.
+ *
+ * @authenticated
+ * @bodyParam telefone_client string optional Número de teléfono del cliente. Example: "+56912345678"
+ *
+ * @response 200 "Este es el número de celular +56912345678"
+ * @response 500 {"msg": "[error]Error al mostrar las notificaciones"}
+ */
     public function whatsapp_notification(Request $request)
     {
         try {
@@ -229,6 +313,17 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Elimina todas las notificaciones del sistema.
+ *
+ * Requiere un código de seguridad en la URL para evitar ejecución accidental.
+ *
+ * @bodyParam codigo string required Código de autenticación. Example: "P{\nkNgP9hjm/L*~Sks25h^C30_|17"
+ *
+ * @response 200 {"msg": "Notificaciones eliminadas correctamente"}
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function notification_truncate(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
@@ -247,6 +342,27 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Obtiene notificaciones relevantes para un profesional en su jornada actual.
+ *
+ * Filtra por estado, cargo (incluye lógica especial para "Tecnico") y horario de entrada.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 5
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "notifications": [
+ *     {
+ *       "id": 12,
+ *       "tittle": "Aceptada su solicitud de Salida",
+ *       "state": 3,
+ *       "created_at": "2025-11-21 02:30 PM"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las notifocaciones"}
+ */
     public function professional_show(Request $request)
     {
         try {
@@ -448,6 +564,21 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Obtiene notificaciones para web (Cajero, Administrador, etc.) y cuenta solicitudes pendientes.
+ *
+ * Incluye conteo de compras de trabajadores pendientes (`solicitudes`).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del usuario. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal (0 = global). Example: 3
+ *
+ * @response 200 {
+ *   "notifications": [...],
+ *   "solicitudes": 2
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las notifocaciones"}
+ */
     public function professional_show_web(Request $request)
     {
         try {
@@ -567,6 +698,17 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Marca notificaciones como leídas (state = 1) por tipo y profesional.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam type string required Tipo de notificación a marcar. Example: "Barbero"
+ *
+ * @response 200 {"msg": "Notificacion modificada correctamente"}
+ * @response 500 {"msg": "[error]Estado de la nitificacion modificado correctamente"}
+ */
     public function update(Request $request)
     {
         try {
@@ -588,6 +730,18 @@ class NotificationController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Estado de la nitificacion modificado correctamente"], 500);
         }
     }
+
+    /**
+ * Restaura una notificación específica a estado no leído (state = 0).
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam id integer required ID de la notificación. Example: 12
+ *
+ * @response 200 {"msg": "Notificacion modificada correctamente"}
+ * @response 500 {"msg": "[error]Estado de la notificacion modificado correctamente"}
+ */
     public function update2(Request $request)
     {
         try {
@@ -610,6 +764,18 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Marca como leídas las notificaciones de salida o colación aceptadas.
+ *
+ * Busca por título y actualiza si el estado es `3`.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {"msg": "Notificacion modificada correctamente"}
+ * @response 500 {"msg": "[error]Estado de la notificacion modificado correctamente"}
+ */
     public function update_state3(Request $request)
     {
         try {
@@ -636,6 +802,18 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Marca una notificación como "resuelta" para roles administrativos.
+ *
+ * Actualiza `stateCajero`, `stateAdm` o `stateAdmSucur` a `2` según el cargo.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la notificación. Example: 12
+ * @bodyParam charge string required Cargo: "Cajero (a)", "Administrador", etc. Example: "Cajero (a)"
+ *
+ * @response 200 {"msg": "Notificacion modificada correctamente"}
+ * @response 500 {"msg": "[error]Estado de la notificacion modificado correctamente"}
+ */
     public function update3(Request $request)
     {
         try {
@@ -662,6 +840,18 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Marca múltiples notificaciones como vistas para un cargo específico.
+ *
+ * Actualiza `stateCajero`, `stateAdm` o `stateAdmSucur` a `1`.
+ *
+ * @authenticated
+ * @bodyParam ids array required Lista de IDs de notificaciones. Example: [12, 15, 20]
+ * @bodyParam charge string required Cargo del usuario. Example: "Administrador"
+ *
+ * @response 200 {"msg": "Notificacion modificada correctamente"}
+ * @response 500 {"msg": "[error]Estado de la notificacion modificado correctamente"}
+ */
     public function update_charge(Request $request)
     {
         try {
@@ -689,7 +879,15 @@ class NotificationController extends Controller
         }
     }
 
-
+    /**
+ * Elimina una notificación específica.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la notificación. Example: 12
+ *
+ * @response 200 {"msg": "Notificacion eliminada correctamente"}
+ * @response 500 {"msg": "[error]Error al eliminar la notificacion"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -705,6 +903,23 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+ * Envía recordatorios por WhatsApp a clientes inactivos.
+ *
+ * Notifica a clientes que asistieron hace 20 días y no han regresado.
+ * Requiere código de seguridad en la URL.
+ *
+ * @queryParam codigo string required Código de autenticación. Example: "P{\nkNgP9hjm/L*~Sks25h^C30_|17"
+ *
+ * @response 200 {
+ *   "msg": "Proceso de notificación completado",
+ *   "clientes": [
+ *     { "name": "Yasmany Sánchez", "phone": "+5359380373", "branch": "Sucursal Centro" }
+ *   ]
+ * }
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function whatsapp_notification_remember(Request $request)
     {
         // Captura el parámetro "codigo" de la URL

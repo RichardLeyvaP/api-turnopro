@@ -19,9 +19,18 @@ class CourseProfessionalController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+   /**
+ * Asigna un profesional a un curso.
+ *
+ * Crea una relación muchos a muchos entre un curso y un profesional.
+ *
+ * @authenticated
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 3
+ *
+ * @response 200 {"msg": "Professional asignado correctamente al curso"}
+ * @response 500 {"msg": "[mensaje de error]Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -41,8 +50,28 @@ class CourseProfessionalController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene los profesionales asignados a un curso específico.
+ *
+ * Retorna una lista enriquecida con nombre completo, email, imagen (con timestamp anti-caché) y cargo del profesional.
+ *
+ * @authenticated
+ * @queryParam course_id integer required ID del curso. Example: 5
+ *
+ * @response 200 {
+ *   "courseProfessionals": [
+ *     {
+ *       "id": 12,
+ *       "course_id": 5,
+ *       "professional_id": 3,
+ *       "name": "Carlos Pérez",
+ *       "email": "carlos@example.com",
+ *       "image_url": "professionals/3.jpg?$2025-11-21 15:30:00",
+ *       "charge": "Instructor Senior"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[mensaje de error]Error interno del servidor"}
+ */
     public function show(Request $request)
     {
         try {
@@ -71,6 +100,26 @@ class CourseProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales **no asignados** a un curso.
+ *
+ * Útil para interfaces de gestión donde se muestra la lista de profesionales disponibles para asignar.
+ *
+ * @authenticated
+ * @queryParam course_id integer required ID del curso. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 7,
+ *       "name": "María López",
+ *       "image_url": "professionals/7.jpg",
+ *       "charge": "Asistente"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[mensaje de error]Error al mostrar las branches"}
+ */
     public function show_Notin(Request $request)
     {
         try {             
@@ -103,8 +152,17 @@ class CourseProfessionalController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina la asignación de un profesional a un curso.
+ *
+ * Rompe la relación entre el curso y el profesional en la tabla pivote `course_professional`.
+ *
+ * @authenticated
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 3
+ *
+ * @response 200 {"msg": "Afiliación eliminado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

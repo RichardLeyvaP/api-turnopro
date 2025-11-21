@@ -22,7 +22,74 @@ class AssistantController extends Controller
     {
         $this->notificationService = $notificationService;
     }
-        
+    
+    /**
+ * Obtiene las notificaciones pendientes y la cola de reservas asignadas a un profesional en una sucursal (para el asistente).
+ *
+ * Este endpoint combina:
+ * - Notificaciones no vistas del día para el profesional en la sucursal.
+ * - La cola de clientes asignados o pendientes de atención (incluyendo detalles del cliente, servicios y estado del reloj).
+ *
+ * Además, si el profesional está activo (`state = 1`), se ejecuta lógica para asignar automáticamente reservas aleatorias.
+ *
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "notifications": [
+ *     {
+ *       "id": 456,
+ *       "professional_id": 123,
+ *       "branch_id": 5,
+ *       "tittle": "Nueva reserva",
+ *       "description": "Cliente Juan Pérez ha reservado.",
+ *       "state": 0,
+ *       "type": "reservation",
+ *       "created_at": "2025-11-21 10:30 AM",
+ *       "updated_at": "2025-11-21 10:30 AM"
+ *     }
+ *   ],
+ *   "tail": [
+ *     {
+ *       "reservation_id": 789,
+ *       "car_id": 101,
+ *       "start_time": "11:00",
+ *       "final_hour": "11:45",
+ *       "total_time": "00:45:00",
+ *       "confirmation": 1,
+ *       "client_name": "Juan Pérez",
+ *       "telefone_client": "+5359380373",
+ *       "client_image": "clients/juan.jpg",
+ *       "professional_name": "Yasmany",
+ *       "client_id": 202,
+ *       "professional_id": 123,
+ *       "attended": 0,
+ *       "notification": 1,
+ *       "updated_at": "2025-11-21 10:30",
+ *       "clock": 0,
+ *       "timeClock": 0,
+ *       "detached": 0,
+ *       "total_services": 2,
+ *       "from_home": 0,
+ *       "select_professional": 1,
+ *       "services": [
+ *         {
+ *           "name": "Corte de cabello",
+ *           "simultaneou": 0,
+ *           "price_service": 25.50,
+ *           "type_service": "barber",
+ *           "profit_percentaje": 70,
+ *           "duration_service": 30,
+ *           "image_service": "services/corte.jpg",
+ *           "description": "Corte clásico"
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
+ *
+ * @response 500 {"msg": "Error al mostrar las notifocaciones"}
+ */
     public function professional_branch_notif_queque(Request $request)
     {
         try {

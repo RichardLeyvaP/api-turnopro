@@ -25,9 +25,23 @@ class CardGiftUserController extends Controller
        
         $this->sendEmailService = $sendEmailService;
     }
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene todas las asignaciones de tarjetas de regalo a usuarios.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "cardGiftUsers": [
+ *     {
+ *       "id": 1,
+ *       "cardGift": { ... },
+ *       "user": { ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las tarjeta de regalo"}
+ */
     public function index()
     {
         try {
@@ -36,9 +50,22 @@ class CardGiftUserController extends Controller
             return response()->json(['msg' => "Error al mostrar las tarjeta de regalo"], 500);
         }
     }
+   
     /**
-     * Store a newly created resource in storage.
-     */
+ * Asigna una tarjeta de regalo a un usuario (cliente o profesional).
+ *
+ * Genera un código único, asigna valor y envía correo al usuario y al administrador de sucursal.
+ *
+ * @authenticated
+ * @bodyParam user_id integer required ID del usuario (cliente o profesional). Example: 123
+ * @bodyParam card_gift_id integer required ID de la tarjeta de regalo. Example: 1
+ * @bodyParam expiration_date string required Fecha de vencimiento (Y-m-d). Example: 2026-11-21
+ * @bodyParam branch_id integer required ID de la sucursal (para determinar destinatario del correo). Example: 5
+ *
+ * @response 200 {"msg": "Tarjeta de regalo asignada correctamente"}
+ * @response 200 {"msg": "Tarjeta de regalo asignada correctamente.Error al enviar el correo electrónico "}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function store(Request $request)
     {
         try {
@@ -100,9 +127,35 @@ class CardGiftUserController extends Controller
               return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
     }
+    
     /**
-     * Display the specified resource.
-     */
+ * Obtiene las tarjetas de regalo asignadas a usuarios **vinculados a una sucursal específica**.
+ *
+ * Solo muestra usuarios (clientes o profesionales) que pertenecen a la sucursal indicada.
+ *
+ * @authenticated
+ * @queryParam card_gift_id integer required ID de la tarjeta de regalo. Example: 1
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "cardgiftUser": [
+ *     {
+ *       "id": 1,
+ *       "code": "aB3xK9mP",
+ *       "issue_date": "2025-11-21",
+ *       "exist": 10000.00,
+ *       "expiration_date": "2026-11-21",
+ *       "value": 10000.00,
+ *       "name": "Regalo Premium",
+ *       "state": "Activa",
+ *       "image_cardgift": "cardgifts/1.jpg?$2025-11-21T10:30:00Z",
+ *       "userName": "Yasmany",
+ *       "image_url": "clients/123.jpg?$2025-11-21T10:30:00Z"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function show(Request $request)
     {
                try {             
@@ -153,6 +206,30 @@ class CardGiftUserController extends Controller
     
     }
 
+    /**
+ * Obtiene las tarjetas de regalo asignadas a un usuario **y todas las tarjetas disponibles de su negocio**.
+ *
+ * Útil para el frontend al mostrar opciones de canje.
+ *
+ * @authenticated
+ * @queryParam user_id integer required ID del usuario. Example: 123
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ *
+ * @response 200 {
+ *   "cardgiftUser": [ ... ],
+ *   "cardGifts": [
+ *     {
+ *       "id": 1,
+ *       "name": "Regalo Premium",
+ *       "value": 10000.00,
+ *       "businesName": "Barbería Central",
+ *       "business_id": 1,
+ *       "image_cardgift": "cardgifts/1.jpg?$2025-11-21T10:30:00Z"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function client_show(Request $request)
     {
         try {             
@@ -198,6 +275,17 @@ class CardGiftUserController extends Controller
         }
     }
 
+    /**
+ * Obtiene el saldo disponible de una tarjeta de regalo por su código.
+ *
+ * Solo devuelve el valor si la tarjeta está activa y no vencida.
+ *
+ * @queryParam code string required Código de la tarjeta. Example: aB3xK9mP
+ *
+ * @response 200 10000.00
+ * @response 200 0
+ * @response 500 {"msg": "Error al mostrar las tarjeta de regalo"}
+ */
     public function show_value(Request $request)
     {
         try {
@@ -228,8 +316,14 @@ class CardGiftUserController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una asignación de tarjeta de regalo (desasigna del usuario).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la asignación (card_gift_user). Example: 1
+ *
+ * @response 200 {"msg": "Tarjeta desasignada correctamente"}
+ * @response 500 {"msg": "Error del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -13,6 +13,22 @@ use Illuminate\Support\Facades\Log;
 
 class BranchServiceProfessionalController extends Controller
 {
+    /**
+ * Obtiene todas las asignaciones de servicios a profesionales con detalles completos.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branchServiceProfesional": [
+ *     {
+ *       "id": 123,
+ *       "branchService": { "service": { "name": "Corte", ... } },
+ *       "professional": { "name": "Yasmany", ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios por trabajador"}
+ */
     public function index()
     {
         try {
@@ -22,6 +38,18 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => "Error al mostrar los servicios por trabajador"], 500);
         }
     }
+    /**
+ * Reemplaza todas las asignaciones de servicios de un profesional por una nueva lista.
+ *
+ * Primero elimina todas las asignaciones existentes, luego inserta las nuevas.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam branch_service_ids array required IDs de las relaciones branch_service. Example: [789, 790]
+ *
+ * @response 200 {"message": "Asociaciones actualizadas con éxito"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store_professional_service(Request $request)
     {
         try {
@@ -54,6 +82,25 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error interno del sistema"], 500);
         }
     }
+    /**
+ * Obtiene los servicios asignados y no asignados a un profesional en una sucursal.
+ *
+ * Devuelve tres listas:
+ * - `assignedServices`: servicios asignados con porcentaje y meta.
+ * - `unassignedServices`: servicios disponibles para asignar.
+ * - `metaData`: servicios con meta definida.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "assignedServices": [ ... ],
+ *   "unassignedServices": [ ... ],
+ *   "metaData": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la categoría de producto"}
+ */
     public function services_professional_branch(Request $request)
     {
         try {
@@ -133,6 +180,29 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los servicios asignados a un profesional en una sucursal (versión web).
+ *
+ * Incluye precio del servicio.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "branchServicesPro": [
+ *     {
+ *       "id": 456,
+ *       "name": "Corte de cabello",
+ *       "type_service": "Regular",
+ *       "image_service": "services/corte.jpg",
+ *       "profit_percentaje": 70.0,
+ *       "price_service": 25.50
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la categoría de producto"}
+ */
     public function services_professional_branch_web(Request $request)
     {
         try {
@@ -175,6 +245,30 @@ class BranchServiceProfessionalController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar la categoría de producto"], 500);
         }
     }
+    /**
+ * Obtiene los servicios que un profesional ofrece en una sucursal específica.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professional_services": [
+ *     {
+ *       "id": 456,
+ *       "name": "Corte de cabello",
+ *       "simultaneou": 0,
+ *       "price_service": 25.50,
+ *       "type_service": "barber",
+ *       "profit_percentaje": 70,
+ *       "duration_service": 30,
+ *       "image_service": "services/corte.jpg",
+ *       "service_comment": "Corte clásico"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la categoría de producto"}
+ */
     public function professional_services(Request $request)
     {
         try {
@@ -205,6 +299,23 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Asigna un servicio de sucursal a un profesional.
+ *
+ * Si la relación ya existe y fue eliminada lógicamente, se restaura.
+ * Soporta tipo "Regular" (usa porcentaje del servicio) o personalizado.
+ *
+ * @authenticated
+ * @bodyParam branch_service_id integer required ID de la relación branch_service. Example: 789
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam type_service string optional Tipo de asignación ("Regular" o personalizado). Example: Regular
+ * @bodyParam percent number optional Porcentaje de ganancia (si no es "Regular"). Example: 70.0
+ *
+ * @response 201 {"msg": "Servicio asignado correctamente al profesional", "action": "created"}
+ * @response 200 {"msg": "Relación profesional-servicio restaurada y actualizada", "action": "restored"}
+ * @response 409 {"msg": "Este profesional ya tiene asignado este servicio", "action": "already_exists"}
+ * @response 500 {"msg": "Error al asignar el servicio al profesional", "error": "..."}
+ */
     public function store(Request $request)
     {
         try {
@@ -284,6 +395,30 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los servicios asignados a una sucursal con detalles.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "branchServices": [
+ *     {
+ *       "id": 789,
+ *       "service_id": 12,
+ *       "name": "Corte de cabello",
+ *       "price_service": 25.50,
+ *       "type_service": "barber",
+ *       "profit_percentaje": 70,
+ *       "duration_service": 30,
+ *       "image_service": "services/corte.jpg",
+ *       "service_comment": "Corte clásico",
+ *       "ponderation": 80
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios por trabajador"}
+ */
     public function show(Request $request)
     {
         try {
@@ -319,6 +454,27 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+/**
+ * Obtiene los profesionales (barberos) asignados a un servicio específico en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_service_id integer required ID de la relación branch_service. Example: 789
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 456,
+ *       "name": "Yasmany Sánchez Martínez",
+ *       "image_url": "professionals/123.jpg",
+ *       "email": "yasmany891230@gmail.com",
+ *       "phone": "+5359380373",
+ *       "branch_service_id": 789,
+ *       "professional_id": 123
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios por trabajador"}
+ */
     public function branch_service_professionals(Request $request)
     {
         try {
@@ -350,6 +506,22 @@ class BranchServiceProfessionalController extends Controller
         }
     }
     
+/**
+ * Obtiene los profesionales (barberos) de una sucursal que **NO están asignados** a un servicio específico.
+ *
+ * @authenticated
+ * @queryParam branch_service_id integer required ID de la relación branch_service. Example: 789
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 457,
+ *       "name": "Juan Pérez González"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el servicio"}
+ */
     public function professionals_branch_service(Request $request)
     {
         try {
@@ -377,6 +549,27 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales (barberos) asignados a un servicio específico en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_service_id integer required ID de la relación branch_service. Example: 789
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 456,
+ *       "name": "Yasmany Sánchez Martínez",
+ *       "image_url": "professionals/123.jpg",
+ *       "email": "yasmany891230@gmail.com",
+ *       "phone": "+5359380373",
+ *       "branch_service_id": 789,
+ *       "professional_id": 123
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios por trabajador"}
+ */
     public function branch_service_professional($data)
     {
         try {
@@ -393,6 +586,17 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza la meta de ventas de un servicio para un profesional.
+ *
+ * @authenticated
+ * @bodyParam branch_service_id integer required ID de la relación branch_service. Example: 789
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam meta number required Nueva meta de ventas. Example: 50
+ *
+ * @response 200 {"msg": "Servicio actualizado correctamente a este trabajador"}
+ * @response 500 {"msg": "Error al actualizar el servicio a este empleado"}
+ */
     public function update_meta(Request $request)
     {
         try {
@@ -411,6 +615,17 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza una asignación existente de servicio a profesional.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la asignación (branch_service_professional). Example: 456
+ * @bodyParam branch_service_id integer required Nuevo ID de branch_service. Example: 790
+ * @bodyParam professional_id integer required Nuevo ID de profesional. Example: 124
+ *
+ * @response 200 {"msg": "Servicio actualizado correctamente a este trabajador"}
+ * @response 500 {"msg": "Error al actualizar el servicio a este empleado"}
+ */
     public function update(Request $request)
     {
         try {
@@ -431,6 +646,18 @@ class BranchServiceProfessionalController extends Controller
         }
     }
 
+    /**
+ * Desvincula un servicio de un profesional (eliminación lógica).
+ *
+ * @authenticated
+ * @bodyParam branch_service_id integer required ID de la relación branch_service. Example: 789
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {"msg": "Relación desvinculada correctamente (eliminación lógica)", "deleted_at": "2025-11-21 10:30:00"}
+ * @response 404 {"msg": "La relación no existe"}
+ * @response 410 {"msg": "La relación ya fue eliminada anteriormente"}
+ * @response 500 {"msg": "Error al desvincular el servicio del profesional", "error": "..."}
+ */
     public function destroy(Request $request)
     {
         try {

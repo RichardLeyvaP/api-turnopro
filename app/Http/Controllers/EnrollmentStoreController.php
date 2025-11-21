@@ -27,8 +27,17 @@ class EnrollmentStoreController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Asigna un almacén a una academia.
+ *
+ * Crea una relación muchos a muchos entre una academia (`Enrollment`) y un almacén (`Store`).
+ *
+ * @authenticated
+ * @bodyParam enrollment_id integer required ID de la academia. Example: 4
+ * @bodyParam store_id integer required ID del almacén. Example: 7
+ *
+ * @response 200 {"msg": "Almacén asignado correctamente a la academia"}
+ * @response 500 {"msg": "Error al asignar el producto a este almacén"}
+ */
     public function store(Request $request)
     {
         try {
@@ -48,8 +57,26 @@ class EnrollmentStoreController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Lista los almacenes asignados a una academia.
+ *
+ * Retorna información relevante de cada almacén: dirección, descripción, referencia e ID.
+ *
+ * @authenticated
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ *
+ * @response 200 {
+ *   "enrollmentStores": [
+ *     {
+ *       "id": 12,
+ *       "store_id": 7,
+ *       "address": "Av. Siempre Viva 123",
+ *       "description": "Almacén principal",
+ *       "reference": "Frente al parque"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al actualizar el almacén en esta sucursal"}
+ */
     public function show(Request $request)
     {
         try {
@@ -71,6 +98,27 @@ class EnrollmentStoreController extends Controller
         }
     }
 
+    /**
+ * Obtiene los almacenes **no asignados** a una academia.
+ *
+ * Útil para interfaces de gestión donde se muestran opciones disponibles para asignar.
+ *
+ * @authenticated
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ *
+ * @response 200 {
+ *   "stores": [
+ *     {
+ *       "id": 8,
+ *       "name": "Almacén Secundario",
+ *       "address": "Calle Falsa 456",
+ *       "description": "Almacén de respaldo",
+ *       "reference": "Junto a la farmacia"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[mensaje de error]Error al mostrar los productos"}
+ */
     public function show_notIn(Request $request)
     {
         try {             
@@ -98,8 +146,17 @@ class EnrollmentStoreController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina la asignación de un almacén a una academia.
+ *
+ * Rompe la relación en la tabla pivote `enrollment_store`.
+ *
+ * @authenticated
+ * @bodyParam enrollment_id integer required ID de la academia. Example: 4
+ * @bodyParam store_id integer required ID del almacén. Example: 7
+ *
+ * @response 200 {"msg": "Almacén eliminado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error al eliminar el almacén en esta academia"}
+ */
     public function destroy(Request $request)
     {
         try {

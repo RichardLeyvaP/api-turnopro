@@ -19,8 +19,16 @@ class AssociateBranchController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Asocia un afiliado a una sucursal.
+ *
+ * Crea una relación entre un afiliado (`associated_id`) y una sucursal (`branch_id`).
+ *
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam associated_id integer required ID del afiliado. Example: 12
+ *
+ * @response 200 {"msg": "Asociado asignado correctamente a la sucursal"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -40,8 +48,24 @@ class AssociateBranchController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene los afiliados asociados a una sucursal.
+ *
+ * Devuelve la lista de afiliados vinculados a una sucursal específica.
+ *
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "associates": [
+ *     {
+ *       "id": 34,
+ *       "associated_id": 12,
+ *       "name": "Empresa ABC",
+ *       "email": "contacto@empresaabc.com"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function show(Request $request)
     {
         try {
@@ -75,8 +99,16 @@ class AssociateBranchController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina la asociación entre un afiliado y una sucursal.
+ *
+ * Rompe la relación existente entre un afiliado y una sucursal.
+ *
+ * @bodyParam associated_id integer required ID del afiliado. Example: 12
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"msg": "Afiliación eliminado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

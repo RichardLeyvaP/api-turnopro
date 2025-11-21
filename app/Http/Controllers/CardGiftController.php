@@ -14,8 +14,32 @@ use Illuminate\Support\Str;
 class CardGiftController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene todas las tarjetas de regalo con sus negocios asociados, y la lista de negocios con administradores.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "cardGifts": [
+ *     {
+ *       "id": 1,
+ *       "name": "Regalo Premium",
+ *       "value": 10000.00,
+ *       "business_id": 1,
+ *       "image_cardgift": "cardgifts/1.jpg?$2025-11-21T10:30:00Z",
+ *       "business": { ... }
+ *     }
+ *   ],
+ *   "business": [
+ *     {
+ *       "id": 1,
+ *       "name": "Barbería Central",
+ *       "address": "Calle Principal 123",
+ *       "professional_name": "Yasmany"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las tarjeta de regalo"}
+ */
     public function index()
     {
         try {
@@ -39,8 +63,17 @@ class CardGiftController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea una nueva tarjeta de regalo para un negocio.
+ *
+ * @authenticated
+ * @bodyParam business_id integer required ID del negocio. Example: 1
+ * @bodyParam name string required Nombre de la tarjeta. Example: Regalo Premium
+ * @bodyParam value number optional Valor monetario. Example: 10000.00
+ * @bodyParam image_cardgift file optional Imagen de la tarjeta de regalo.
+ *
+ * @response 200 {"msg": "Tarjeta de regalo asignadda correctamente"}
+ * @response 500 {"msg": "Error al asignartar la ttarjeta de regalo"}
+ */
     public function store(Request $request)
     {
         try {
@@ -69,8 +102,25 @@ class CardGiftController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene las tarjetas de regalo asociadas a un negocio específico.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ *
+ * @response 200 {
+ *   "cardGifts": [
+ *     {
+ *       "id": 1,
+ *       "name": "Regalo Premium",
+ *       "value": 10000.00,
+ *       "businesName": "Barbería Central",
+ *       "business_id": 1,
+ *       "image_cardgift": "cardgifts/1.jpg?$2025-11-21T10:30:00Z"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las tarjeta de regalo"}
+ */
     public function show(Request $request)
     {
         try {
@@ -95,8 +145,17 @@ class CardGiftController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza los datos de una tarjeta de regalo existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la tarjeta. Example: 1
+ * @bodyParam name string optional Nuevo nombre. Example: Regalo VIP
+ * @bodyParam value number optional Nuevo valor. Example: 15000.00
+ * @bodyParam image_cardgift file optional Nueva imagen.
+ *
+ * @response 200 {"msg": "Tarjeta de regalo creada correctamente"}
+ * @response 500 {"msg": "Error al asignartar la ttarjeta de regalo"}
+ */
     public function update(Request $request)
     {
         try {
@@ -126,8 +185,14 @@ class CardGiftController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una tarjeta de regalo del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la tarjeta. Example: 1
+ *
+ * @response 200 {"msg": "Tarjeta de Regalo eliminada correctamente"}
+ * @response 500 {"msg": "Error al eliminar la Tarjeta de Regalo"}
+ */
     public function destroy(Request $request)
     {
         try {

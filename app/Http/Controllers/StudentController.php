@@ -18,9 +18,26 @@ use Knuckles\Scribe\Attributes\Endpoint;
 
 class StudentController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Lista todos los estudiantes del sistema.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "clients": [
+ *     {
+ *       "id": 12,
+ *       "name": "Pepe Rosales",
+ *       "email": "pepe@example.com",
+ *       "phone": "+56912345678",
+ *       "code": "Ab3x9Kz1",
+ *       "qr_url": "students/qr_codes/Ab3x9Kz1.svg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los estuduantes"}
+ */
     public function index()
     {
         try { 
@@ -30,9 +47,22 @@ class StudentController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+   /**
+ * Crea un nuevo estudiante.
+ *
+ * Genera automáticamente un **código único** y un **código QR SVG** vinculado a una URL de landing.
+ * La imagen es opcional; si no se adjunta, se usa `students/default.jpg`.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre completo del estudiante. Max: 50 caracteres. Example: "Pepe Rosales"
+ * @bodyParam email string required Correo electrónico único. Max: 50. Example: "pepe@example.com"
+ * @bodyParam phone string required Teléfono. Max: 15. Example: "+56912345678"
+ * @bodyParam student_image file optional Foto del estudiante
+ *
+ * @response 200 {"msg": "Estudiante insertado correctamente"}
+ * @response 400 {"msg": ["El correo ya ha sido tomado."]}
+ * @response 500 {"msg": "[error]Error al insertar el Estudiante"}
+ */
     public function store(Request $request)
     {
         try {
@@ -88,9 +118,25 @@ class StudentController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
+   /**
+ * Obtiene estudiantes **no matriculados** en un curso específico.
+ *
+ * Útil para interfaces de matrícula donde se muestra la lista de estudiantes disponibles.
+ *
+ * @authenticated
+ * @queryParam course_id integer required ID del curso. Example: 5
+ *
+ * @response 200 {
+ *   "students": [
+ *     {
+ *       "id": 12,
+ *       "name": "Pepe Rosales Mora",
+ *       "client_image": "students/12.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar el estudiante"}
+ */
     public function show(Request $request)
     {
         try {
@@ -113,8 +159,24 @@ class StudentController extends Controller
         }
     }
 
-    #[Endpoint('student_code', 'Muestra los datos de un estudiante dado un codigo')]
-    #[BodyParam('code', required: true)]
+   /**
+ * Muestra los datos de un estudiante y su historial académico usando un código QR.
+ *
+ * Retorna información del estudiante, cursos matriculados, pagos, productos comprados y estado general.
+ *
+ * @bodyParam code string required Código único del estudiante (del QR). Example: "Ab3x9Kz1"
+ *
+ * @response 200 {
+ *   "student": { "id": 12, "name": "Pepe", "email": "pepe@example.com", ... },
+ *   "courses": [ { "id": 5, "name": "Curso Básico", "price": 12000, ... } ],
+ *   "pagos": [ { "reservation_payment": 2000, "total_payment": 12000, "enabled": 1, ... } ],
+ *   "products": [ { "name": "Kit de inicio", "price": 5000, "cant": 1, ... } ],
+ *   "habilitado": "Habilitado",
+ *   "status": "Ok",
+ *   "payMount": 12000
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function student_code(Request $request)
     {
         try {
@@ -208,10 +270,23 @@ class StudentController extends Controller
         }
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
+/**
+ * Actualiza un estudiante existente.
+ *
+ * Si el estudiante no tiene `code`, se le genera uno nuevo con QR.
+ * Permite actualizar la imagen y valida unicidad del correo.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del estudiante. Example: 12
+ * @bodyParam name string required Nombre. Max: 50. Example: "Pepe Rosales Mora"
+ * @bodyParam email string required Correo único. Example: "pepe.nuevo@example.com"
+ * @bodyParam phone string required Teléfono. Max: 15. Example: "+56987654321"
+ * @bodyParam student_image file optional Nueva foto.
+ *
+ * @response 200 {"msg": "Estudiante actualizado correctamente"}
+ * @response 400 {"msg": ["El correo ya ha sido tomado."]}
+ * @response 500 {"msg": "Error al actualizar el Estudiante"}
+ */
     public function update(Request $request)
     {
         try {
@@ -276,8 +351,16 @@ class StudentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina un estudiante del sistema.
+ *
+ * También elimina su imagen personalizada del almacenamiento (si no es la predeterminada).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del estudiante a eliminar. Example: 12
+ *
+ * @response 200 {"msg": "Estudiante eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el estudiante"}
+ */
     public function destroy(Request $request)
     {
         try {

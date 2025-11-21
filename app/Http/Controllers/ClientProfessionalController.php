@@ -10,6 +10,30 @@ use Illuminate\Support\Facades\Log;
 
 class ClientProfessionalController extends Controller
 {
+    /**
+ * Lista todos los profesionales con sus clientes asociados.
+ *
+ * Retorna una colección de profesionales, incluyendo los clientes asignados a cada uno mediante la relación muchos a muchos.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "professional": [
+ *     {
+ *       "id": 1,
+ *       "name": "Dr. Martínez",
+ *       "clients": [
+ *         {
+ *           "id": 5,
+ *           "name": "Yasmany Sánchez",
+ *           "email": "yasmany891230@gmail.com"
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes atendidos por empleado"}
+ */
     public function index()
     {
         try {             
@@ -19,6 +43,18 @@ class ClientProfessionalController extends Controller
         }
     }
 
+    /**
+ * Asigna un profesional a un cliente.
+ *
+ * Crea una relación entre un cliente y un profesional si aún no existe. Evita duplicados.
+ *
+ * @authenticated
+ * @bodyParam client_id integer required ID del cliente. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 1
+ *
+ * @response 200 {"msg": "Empleado asignado correctamente al cliente"}
+ * @response 500 {"msg": "Error al asignar el empleado a este cliente"}
+ */
     public function store(Request $request)
     {
         try {
@@ -39,6 +75,43 @@ class ClientProfessionalController extends Controller
         return response()->json(['msg' => 'Error al asignar el empleado a este cliente'], 500);
         }
     }
+
+    /**
+ * Muestra la relación entre un cliente y un profesional.
+ *
+ * Dependiendo del parámetro enviado, devuelve los profesionales de un cliente o los clientes de un profesional.
+ * Si se envían ambos, prioriza el `client_id`.
+ *
+ * @authenticated
+ * @queryParam client_id integer Opcional. ID del cliente para obtener sus profesionales. Example: 5
+ * @queryParam professional_id integer Opcional. ID del profesional para obtener sus clientes. Example: 1
+ *
+ * @response 200 {
+ *   "cliente": {
+ *     "id": 5,
+ *     "name": "Yasmany Sánchez",
+ *     "professionals": [
+ *       {
+ *         "id": 1,
+ *         "name": "Dr. Martínez"
+ *       }
+ *     ]
+ *   }
+ * }
+ * @response 200 {
+ *   "professional": {
+ *     "id": 1,
+ *     "name": "Dr. Martínez",
+ *     "clients": [
+ *       {
+ *         "id": 5,
+ *         "name": "Yasmany Sánchez"
+ *       }
+ *     ]
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function show(Request $request)
     {
         try {             
@@ -58,6 +131,18 @@ class ClientProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza la relación existente entre un cliente y un profesional.
+ *
+ * Actualiza la fila pivote en la tabla `client_professional` (útil si se añaden campos adicionales como fecha, estado, etc.).
+ *
+ * @authenticated
+ * @bodyParam client_id integer required ID del cliente. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 1
+ *
+ * @response 200 {"msg": "Cliente reasignado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el cliente a es empleado"}
+ */
     public function update(Request $request)
     {
         try {
@@ -74,6 +159,18 @@ class ClientProfessionalController extends Controller
         }
     }
 
+    /**
+ * Elimina la asignación de un cliente a un profesional.
+ *
+ * Rompe la relación entre el cliente y el profesional en la tabla pivote.
+ *
+ * @authenticated
+ * @bodyParam client_id integer required ID del cliente. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 1
+ *
+ * @response 200 {"msg": "Cliente eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el cliente a es empleado"}
+ */
    public function destroy(Request $request)
     {
         try {

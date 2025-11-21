@@ -14,38 +14,46 @@ use Knuckles\Scribe\Attributes\Response;
 class CourseController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    #[Group('Landing', 'Endpoints de la landing')]
-    #[Endpoint('index', 'Mostrar los cursos')]
-    #[Response(['course' => [
-        "id(ID del curso)" => 6,
-        "enrollment_id(ID de la academia)" => 4,
-        "name(nombre del curso)" => "Nuevo Prueba",
-        "description(descripción del curso)" => "kslfksf",
-        "price(precio del curso)" => 12000,
-        "startDate(fecha de inicio del curso)" => "2024-05-21",
-        "endDate(fecha de terminar del curso)" => "2024-05-31",
-        "course_image(imagen del curso)" => "courses/6.jpg?$2024-07-22 13:23:01",
-        "total_enrollment(total de capacidades del curso)" => 10,
-        "available_slots(capacidades disponibles del curso)" => 8,
-        "reservation_price(precio de reservación del curso)" => 12000,
-        "duration(duración del curso)" => 10,
-        "practical_percentage" => 10,
-        "theoretical_percentage" => 90,
-        "enrollment(datos de la academia del curso)" => [
-            "id(ID de la academia)" => 4,
-            "business_id(ID del negocio)" => 1,
-            "name(nombre de la academia)" => "Academia Hernandez",
-            "description(descripción de la academia)" => "Cursos de barberia Básicos y avanzados",
-            "created_at" => "2024-03-25T09:30:12.000000Z",
-            "updated_at" => "2024-05-17T00:03:52.000000Z",
-            "location(localización de google map de la academia)" => "dwqdqwdwqqwqd",
-            "image_data(imagen de la academia)" => "enrollments/4.jpg",
-            "address(dirección de la academia)" => "qwwqwqdqwd",
-            "phone(teléfono de la academia)" => 56949879923 // teléfono de la academia
-        ]]], 200)]
-    #[Response(['msg' => 'Error al mostrar los cursos'], 500)]
+ * Muestra la lista de todos los cursos con sus academias asociadas.
+ *
+ * Incluye metadatos del curso y datos completos de la academia (`enrollment`).
+ * La imagen del curso incluye un timestamp para evitar caché del navegador.
+ *
+ * @group Landing
+ * @subgroup Endpoints de la landing
+ *
+ * @response 200 {
+ *   "courses": [
+ *     {
+ *       "id": 6,
+ *       "enrollment_id": 4,
+ *       "name": "Nuevo Prueba",
+ *       "description": "kslfksf",
+ *       "price": 12000,
+ *       "startDate": "2024-05-21",
+ *       "endDate": "2024-05-31",
+ *       "course_image": "courses/6.jpg?$2025-11-21 15:00:00",
+ *       "total_enrollment": 10,
+ *       "available_slots": 8,
+ *       "reservation_price": 12000,
+ *       "duration": 10,
+ *       "practical_percentage": 10,
+ *       "theoretical_percentage": 90,
+ *       "enrollment": {
+ *         "id": 4,
+ *         "business_id": 1,
+ *         "name": "Academia Hernandez",
+ *         "description": "Cursos de barberia Básicos y avanzados",
+ *         "location": "dwqdqwdwqqwqd",
+ *         "image_data": "enrollments/4.jpg",
+ *         "address": "qwwqwqdqwd",
+ *         "phone": 56949879923
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los cursos"}
+ */
     public function index()
     {
         try { 
@@ -75,8 +83,28 @@ class CourseController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea un nuevo curso.
+ *
+ * Permite adjuntar una imagen opcional. Si no se adjunta, se usa una imagen por defecto.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del curso. Max: 100 caracteres. Example: "Barbería Avanzada"
+ * @bodyParam description string required Descripción del curso. Example: "Técnicas profesionales de corte y diseño."
+ * @bodyParam price number required Precio total del curso. Example: 12000
+ * @bodyParam startDate date required Fecha de inicio (formato Y-m-d). Example: "2025-12-01"
+ * @bodyParam endDate date required Fecha de finalización (formato Y-m-d). Example: "2026-02-01"
+ * @bodyParam enrollment_id integer optional ID de la academia asociada. Example: 4
+ * @bodyParam total_enrollment integer optional Capacidad total del curso. Example: 20
+ * @bodyParam available_slots integer optional Cupos disponibles. Example: 15
+ * @bodyParam reservation_price number optional Precio de reservación. Example: 2000
+ * @bodyParam duration integer optional Duración en días o semanas. Example: 60
+ * @bodyParam practical_percentage number optional Porcentaje práctico. Example: 70
+ * @bodyParam theoretical_percentage number optional Porcentaje teórico. Example: 30
+ * @bodyParam course_image file optional Imagen del curso
+ *
+ * @response 200 {"msg": "Curso creado correctamente"}
+ * @response 500 {"msg": "[mensaje de error]Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -124,8 +152,24 @@ class CourseController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Lista los cursos asociados a un negocio específico.
+ *
+ * Filtra los cursos cuya academia (`enrollment`) pertenece al `business_id` proporcionado.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ *
+ * @response 200 {
+ *   "courses": [
+ *     {
+ *       "id": 6,
+ *       "name": "Nuevo Prueba",
+ *       "enrollment": { "name": "Academia Hernandez", ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[mensaje de error]Error al mostrar los Cursos"}
+ */
     public function show(Request $request)
     {
         try {
@@ -140,9 +184,30 @@ class CourseController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+   /**
+ * Actualiza un curso existente.
+ *
+ * Permite reemplazar la imagen del curso. Si se sube una nueva, la anterior (si no es la predeterminada) se elimina del almacenamiento.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del curso a actualizar. Example: 6
+ * @bodyParam name string required Nombre del curso. Max: 100 caracteres. Example: "Barbería Profesional"
+ * @bodyParam description string required Descripción del curso. Example: "Formación integral para barberos."
+ * @bodyParam price number required Precio total del curso. Example: 15000
+ * @bodyParam startDate date required Fecha de inicio. Example: "2025-12-10"
+ * @bodyParam endDate date required Fecha de finalización. Example: "2026-03-10"
+ * @bodyParam enrollment_id integer optional ID de la academia. Example: 4
+ * @bodyParam total_enrollment integer optional Capacidad total. Example: 25
+ * @bodyParam available_slots integer optional Cupos disponibles. Example: 10
+ * @bodyParam reservation_price number optional Precio de reservación. Example: 3000
+ * @bodyParam duration integer optional Duración. Example: 90
+ * @bodyParam practical_percentage number optional Porcentaje práctico. Example: 80
+ * @bodyParam theoretical_percentage number optional Porcentaje teórico. Example: 20
+ * @bodyParam course_image file optional Nueva imagen del curso.
+ *
+ * @response 200 {"msg": "Curso creado correctamente"}
+ * @response 500 {"msg": "Error al crear al Curso"}
+ */
     public function update(Request $request)
     {
         try {
@@ -192,8 +257,16 @@ class CourseController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina un curso.
+ *
+ * Si el curso tiene una imagen personalizada (distinta de la predeterminada), se elimina del almacenamiento.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del curso a eliminar. Example: 6
+ *
+ * @response 200 {"msg": "Curso eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el Curso"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -216,8 +289,27 @@ class CourseController extends Controller
         }
     }
 
-    public function calculateCourseEarnings(Request $request)  {
-
+    /**
+ * Calcula las ganancias totales de todos los cursos.
+ *
+ * Incluye:
+ * - Suma de `total_payment` de la relación pivote `course_student`
+ * - Suma de precios de ventas de productos (`productSales`) realizadas por estudiantes del curso
+ *
+ * @authenticated
+ *
+ * @response 200 [
+ *   {
+ *     "curso": "Barbería Avanzada",
+ *     "total_payment": 30000,
+ *     "price": 5000,
+ *     "total": 35000
+ *   }
+ * ]
+ * @response 500 {"msg": "Error al mostrar los cursos"}
+ */
+    public function calculateCourseEarnings(Request $request)  
+    {
         try { 
             $cursos = Course::with('students.productSales')->get()->map(function ($curso){
                 $sumaProduct = 0;
@@ -248,8 +340,26 @@ class CourseController extends Controller
         
     }
 
-    public function calculateCourseEarningsEnrollment(Request $request)  {
-
+    /**
+ * Calcula las ganancias de los cursos pertenecientes a una academia específica.
+ *
+ * Filtra por `enrollment_id` y aplica la misma lógica de ganancias que `calculateCourseEarnings`.
+ *
+ * @authenticated
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ *
+ * @response 200 [
+ *   {
+ *     "curso": "Corte Básico",
+ *     "total_payment": 12000,
+ *     "price": 2000,
+ *     "total": 14000
+ *   }
+ * ]
+ * @response 500 {"msg": "Error al mostrar los cursos"}
+ */
+    public function calculateCourseEarningsEnrollment(Request $request)  
+    {
         try {             
             $data = $request->validate([
                 'enrollment_id' => 'required|numeric'

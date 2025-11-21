@@ -12,6 +12,29 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
+
+    /**
+ * Obtiene la lista completa de servicios disponibles.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "services": [
+ *     {
+ *       "id": 1,
+ *       "name": "Corte de cabello",
+ *       "simultaneou": false,
+ *       "price_service": 10000.00,
+ *       "type_service": "barber",
+ *       "profit_percentaje": 70.0,
+ *       "duration_service": 30,
+ *       "image_service": "services/1.jpg?$2025-11-21T10:30:00Z",
+ *       "service_comment": "Corte clásico"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los servicios"}
+ */
     public function index()
     {
         try {             
@@ -27,6 +50,22 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+ * Crea un nuevo servicio.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del servicio (mínimo 3 caracteres). Example: Corte de cabello
+ * @bodyParam simultaneou boolean required ¿El servicio puede realizarse simultáneamente por varios profesionales? Example: false
+ * @bodyParam price_service number required Precio del servicio. Example: 10000.00
+ * @bodyParam type_service string required Tipo de servicio (ej. "barber", "tecnico"). Example: barber
+ * @bodyParam profit_percentaje number optional Porcentaje de ganancia para el profesional. Example: 70.0
+ * @bodyParam duration_service number required Duración en minutos. Example: 30
+ * @bodyParam image_service file optional Imagen del servicio.
+ * @bodyParam service_comment string optional Descripción del servicio (mínimo 3 caracteres). Example: Corte clásico
+ *
+ * @response 200 {"msg": "Servicio insertado correctamente"}
+ * @response 500 {"msg": "Error al insertar el servicio"}
+ */
     public function store(Request $request)
     {
         try {
@@ -63,6 +102,27 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+ * Obtiene los detalles de un servicio específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del servicio. Example: 1
+ *
+ * @response 200 {
+ *   "service": {
+ *     "id": 1,
+ *     "name": "Corte de cabello",
+ *     "simultaneou": false,
+ *     "price_service": 10000.00,
+ *     "type_service": "barber",
+ *     "profit_percentaje": 70.0,
+ *     "duration_service": 30,
+ *     "image_service": "services/1.jpg",
+ *     "service_comment": "Corte clásico"
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar el servicio"}
+ */
     public function show(Request $request)
     {
         try {
@@ -76,6 +136,25 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+ * Obtiene los servicios **no asignados** a una sucursal (para poder asignarlos).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "services": [
+ *     {
+ *       "id": 2,
+ *       "name": "Afeitado",
+ *       "price_service": 5000.00,
+ *       "type_service": "barber",
+ *       ...
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el servicio"}
+ */
     public function branch_service_show(Request $request)
     {
         try {
@@ -91,6 +170,23 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+ * Actualiza un servicio existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del servicio. Example: 1
+ * @bodyParam name string required Nuevo nombre (mínimo 3 caracteres). Example: Corte premium
+ * @bodyParam simultaneou boolean required ¿Es simultáneo? Example: false
+ * @bodyParam price_service number required Nuevo precio. Example: 12000.00
+ * @bodyParam type_service string required Nuevo tipo. Example: barber
+ * @bodyParam profit_percentaje number optional Nuevo porcentaje de ganancia. Example: 75.0
+ * @bodyParam duration_service number required Nueva duración en minutos. Example: 35
+ * @bodyParam image_service file optional Nueva imagen.
+ * @bodyParam service_comment string optional Nueva descripción (mínimo 3 caracteres). Example: Corte premium con detalles
+ *
+ * @response 200 {"msg": "Servicio actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el servicio"}
+ */
     public function update(Request $request)
     {
         try{
@@ -133,6 +229,17 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+ * Elimina un servicio del sistema.
+ *
+ * ⚠️ No se puede eliminar si está en uso por alguna sucursal (depende de tu base de datos).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del servicio. Example: 1
+ *
+ * @response 200 {"msg": "Servicio eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el servicio"}
+ */
     public function destroy(Request $request)
     {
         try {

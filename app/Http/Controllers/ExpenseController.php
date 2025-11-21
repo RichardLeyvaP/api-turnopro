@@ -9,8 +9,24 @@ use Illuminate\Support\Facades\Log;
 class ExpenseController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene la lista de todas las operaciones de gasto disponibles.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "expenses": [
+ *     {
+ *       "id": 1,
+ *       "name": "Pago de bonos"
+ *     },
+ *     {
+ *       "id": 2,
+ *       "name": "Compra de productos"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function index()
     {
         try {
@@ -21,8 +37,14 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea una nueva operación de gasto.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre de la operación de gasto. Example: Compra de insumos
+ *
+ * @response 200 {"msg": "Operación de Gasto creado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -42,8 +64,19 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene los detalles de una operación de gasto específica.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la operación de gasto. Example: 1
+ *
+ * @response 200 {
+ *   "businessTypes": {
+ *     "id": 1,
+ *     "name": "Pago de bonos"
+ *   }
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -57,8 +90,15 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza una operación de gasto existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la operación de gasto. Example: 1
+ * @bodyParam name string required Nuevo nombre. Example: Bonos mensuales
+ *
+ * @response 200 {"msg": "Operación de Gasto actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -78,8 +118,14 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una operación de gasto del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la operación de gasto. Example: 1
+ *
+ * @response 200 {"msg": "Operación de Gasto eliminado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

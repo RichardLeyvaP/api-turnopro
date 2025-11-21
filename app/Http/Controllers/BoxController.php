@@ -30,9 +30,22 @@ class BoxController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    
+ * Registra o actualiza la caja diaria de una sucursal.
+ *
+ * Crea un nuevo registro de caja si no existe para el día actual, o actualiza el existente.
+ * Soporta actualización de efectivo encontrado y extracciones.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam cashFound number optional Monto de efectivo encontrado en la caja. Example: 500.00
+ * @bodyParam extraction number optional Monto extraído de la caja (se suma al total). Example: 100.00
+ * @bodyParam nameProfessional string required Nombre del cajero que realiza la operación. Example: Yasmany Sánchez
+ * @bodyParam comment string optional Comentario para la extracción (obligatorio si hay extracción). Example: Pago de proveedores
+ * @bodyParam file file optional Comprobante de la extracción (PDF o imagen).
+ *
+ * @response 200 {"msg": "Caja actualizada correctamente correctamente"}
+ * @response 500 {"msg": "Error al actualizar la caja"}
+ */
      public function store(Request $request)
     {
         try {
@@ -133,8 +146,25 @@ class BoxController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene el estado actual de la caja de una sucursal en el día.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "box": [
+ *     {
+ *       "id": 123,
+ *       "branch_id": 5,
+ *       "data": "2025-11-21",
+ *       "cashFound": 500.00,
+ *       "existence": 400.00,
+ *       "extraction": 100.00
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el carrito"}
+ */
     public function show(Request $request)
     {
         try {
@@ -149,8 +179,19 @@ class BoxController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza la caja diaria de una sucursal (mismo comportamiento que `store`).
+ *
+ * Crea un nuevo registro si no existe, o modifica el existente.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam cashFound number optional Monto de efectivo encontrado. Example: 500.00
+ * @bodyParam extraction number optional Monto extraído. Example: 100.00
+ * @bodyParam nameProfessional string required Nombre del cajero. Example: Yasmany Sánchez
+ *
+ * @response 200 {"msg": "Caja actualizada correctamente correctamente"}
+ * @response 500 {"msg": "Error al actualizar la caja"}
+ */
     public function update(Request $request)
     {
         try {

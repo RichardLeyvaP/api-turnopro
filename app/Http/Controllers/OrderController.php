@@ -36,6 +36,31 @@ class OrderController extends Controller
         $this->traceService = $traceService;
     }
 
+    /**
+ * Obtiene todas las órdenes (productos y servicios) con relaciones completas.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "orders": [
+ *     {
+ *       "id": 1,
+ *       "car_id": 123,
+ *       "is_product": true,
+ *       "price": 15000.00,
+ *       "productStore": { "product": { ... } },
+ *       "branchServiceProfessional": { "branchService": { "service": { ... } } },
+ *       "car": {
+ *         "clientProfessional": {
+ *           "client": { ... },
+ *           "professional": { ... }
+ *         }
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function index()
     {
         try {             
@@ -47,6 +72,26 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Obtiene las órdenes con solicitud de eliminación en una sucursal (hoy).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "orders": [
+ *     {
+ *       "id": 1,
+ *       "nameProfessional": "Yasmany",
+ *       "nameClient": "Juan Pérez",
+ *       "nameProduct": "Gel fijador",
+ *       "image": "products/gel.jpg",
+ *       "category": "Cuidado capilar"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los carros"}
+ */
     public function order_delete_show(Request $request)
     {
         try {             
@@ -81,6 +126,20 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Agrega una orden (producto o servicio) a un carro.
+ *
+ * Método interno (no usado directamente desde frontend).
+ *
+ * @authenticated
+ * @bodyParam car_id integer required ID del carro. Example: 123
+ * @bodyParam product_id integer required ID del producto (0 si es servicio). Example: 456
+ * @bodyParam service_id integer required ID del servicio (0 si es producto). Example: 12
+ * @bodyParam type string required Tipo ("product" o "service"). Example: product
+ *
+ * @response 200 {"msg": "Pedido Agregado correctamente", "order_id": 789}
+ * @response 500 {"msg": "Error al solicitar un pedido"}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -128,6 +187,27 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Agrega un producto a un carro y devuelve la lista actualizada de productos de la categoría.
+ *
+ * @authenticated
+ * @bodyParam car_id integer required ID del carro. Example: 123
+ * @bodyParam product_id integer required ID del producto en almacén. Example: 456
+ * @bodyParam category_id integer required ID de la categoría. Example: 3
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "category_products": [
+ *     {
+ *       "id": 457,
+ *       "name": "Gel fijador",
+ *       "sale_price": 8000.00,
+ *       "image_product": "products/gel.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al solicitar un pedido"}
+ */
     public function store_products(Request $request)
     {
         DB::beginTransaction();
@@ -200,6 +280,23 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Agrega una orden (producto o servicio) a un carro desde el frontend web.
+ *
+ * Registra trazabilidad y cambios en el carro.
+ *
+ * @authenticated
+ * @bodyParam car_id integer required ID del carro. Example: 123
+ * @bodyParam product_id integer required ID del producto (0 si es servicio). Example: 456
+ * @bodyParam service_id integer required ID del servicio (0 si es producto). Example: 12
+ * @bodyParam type string required Tipo ("product" o "service"). Example: product
+ * @bodyParam cant integer required Cantidad. Example: 2
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero(a). Example: Yasmany
+ *
+ * @response 200 {"msg": "Pedido Agregado correctamente", "order_id": 789}
+ * @response 500 {"msg": "Error al solicitar un pedido"}
+ */
     public function store_web(Request $request)
     {
         DB::beginTransaction();
@@ -307,6 +404,30 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Obtiene las órdenes asociadas a un carro específico.
+ *
+ * Incluye técnica capilar si aplica.
+ *
+ * @authenticated
+ * @queryParam car_id integer required ID del carro. Example: 123
+ *
+ * @response 200 {
+ *   "orders": [
+ *     {
+ *       "id": 1,
+ *       "car_id": 123,
+ *       "request_delete": false,
+ *       "name": "Corte de cabello",
+ *       "is_product": false,
+ *       "image": "services/corte.jpg",
+ *       "price": 10000.00,
+ *       "category": "barber"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las orders"}
+ */
     public function show(Request $request)
     {
         try {             
@@ -351,6 +472,19 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Aprueba o rechaza una solicitud de eliminación de orden.
+ *
+ * - Si `request_delete = 0`: rechaza y notifica al barbero.
+ * - Si `request_delete = 1`: aprueba (pero no elimina aún).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ * @bodyParam request_delete boolean required Nuevo estado (true = solicitud, false = rechazado). Example: false
+ *
+ * @response 200 {"msg": "Estado de la orden modificado correctamente"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function update(Request $request)
     {
         DB::beginTransaction();
@@ -399,6 +533,16 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Deniega una solicitud de eliminación de orden (desde el cajero).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ * @bodyParam professional_id integer required ID del administrador que deniega. Example: 100
+ *
+ * @response 200 {"msg": "Estado de la orden modificado correctamente"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function order_denegar(Request $request)
     {
         try {
@@ -426,6 +570,29 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de eliminación de una orden y devuelve la lista actualizada.
+ *
+ * Útil para refrescar la vista tras la aprobación.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ * @bodyParam request_delete boolean required Nuevo estado. Example: true
+ * @bodyParam id_branch integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "carOrderDelete": [
+ *     {
+ *       "id": 1,
+ *       "nameProfesional": "Yasmany",
+ *       "nameClient": "Juan Pérez",
+ *       "nameProduct": "Gel fijador",
+ *       "is_product": true
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function update2(Request $request)
     {
         try {
@@ -484,6 +651,20 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Deniega una solicitud de eliminación de orden desde el frontend web.
+ *
+ * Registra trazabilidad.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ * @bodyParam request_delete boolean required Siempre `false` en este endpoint. Example: false
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero(a). Example: Yasmany
+ *
+ * @response 200 {"msg": "Estado de la orden modificado correctamente"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function update_web(Request $request)
     {
         try {
@@ -526,6 +707,19 @@ class OrderController extends Controller
         }
     }
     
+    /**
+ * Elimina físicamente una orden y actualiza inventario, tiempo de reloj y monto del carro.
+ *
+ * Solo para uso interno (no frontend).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ *
+ * @response 200 {"msg": "Solicitud de eliminar la orden hecha correctamente"}
+ * @response 200 {"msg": "Solicitud de eliminar la orden no realizada cliente finalizado"}
+ * @response 404 {"msg": "Orden no encontrada"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function destroy(Request $request)//2024-10-12
     {
         DB::beginTransaction();
@@ -610,6 +804,19 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Elimina una orden desde el frontend web (tras aprobación).
+ *
+ * Actualiza inventario, tiempo de reloj, y notifica.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ * @bodyParam professional_id integer optional ID del cajero(a) que realiza la acción. Example: 789
+ *
+ * @response 200 {"msg": "Solicitud de eliminar la orden hecha correctamente"}
+ * @response 404 {"msg": "Orden no encontrada"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function destroy_web(Request $request)
     {
         try {
@@ -704,6 +911,19 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * Solicita la eliminación de una orden (requiere aprobación de administrador).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la orden. Example: 1
+ * @bodyParam professional_id integer optional ID del cajero(a). Example: 789
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero(a). Example: Yasmany
+ *
+ * @response 200 {"msg": "Solicitud de eliminar la orden hecha correctamente"}
+ * @response 404 {"msg": "Orden no encontrada"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la orden"}
+ */
     public function destroy_solicitud(Request $request)
     {
         try {

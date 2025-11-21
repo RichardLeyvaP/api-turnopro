@@ -10,8 +10,28 @@ use Illuminate\Http\Request;
 class PermissionController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+ * Lista todos los permisos del sistema.
+ *
+ * Retorna una colección completa de permisos con sus atributos (`id`, `name`, `module`, `description`).
+ *
+ * @authenticated
+ *
+ * @response 200 [
+ *   {
+ *     "id": 1,
+ *     "name": "Crear usuarios",
+ *     "module": "Usuarios",
+ *     "description": "Permite registrar nuevos usuarios en el sistema"
+ *   },
+ *   {
+ *     "id": 2,
+ *     "name": "Eliminar reservas",
+ *     "module": "Reservas",
+ *     "description": "Permite cancelar reservas de clientes"
+ *   }
+ * ]
+ * @response 500 "Error Interno del servidor"
+ */
     public function index()
     {
         try {
@@ -24,8 +44,19 @@ class PermissionController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea un nuevo permiso.
+ *
+ * El nombre del permiso debe ser único en la base de datos.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre único del permiso. Example: "Editar cursos"
+ * @bodyParam module string required Módulo al que pertenece el permiso. Example: "Academia"
+ * @bodyParam description string optional Descripción del permiso. Example: "Permite modificar la información de los cursos"
+ *
+ * @response 200 "Se guardó correctamente el permiso"
+ * @response 422 { "name": ["The name has already been taken."] }
+ * @response 500 "Error Interno del servidor"
+ */
     public function store(Request $request)
     {
         try {
@@ -50,8 +81,19 @@ class PermissionController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Muestra los detalles de un permiso específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del permiso. Example: 1
+ *
+ * @response 200 {
+ *   "id": 1,
+ *   "name": "Crear usuarios",
+ *   "module": "Usuarios",
+ *   "description": "Permite registrar nuevos usuarios en el sistema"
+ * }
+ * @response 500 "Error Interno del servidor"
+ */
     public function show(Request $request)
     {
         try {
@@ -67,8 +109,19 @@ class PermissionController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza un permiso existente.
+ *
+ * Requiere el `id` del permiso a modificar. El nombre **no** se valida como único en esta operación (puede causar duplicados si no se gestiona externamente).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del permiso. Example: 1
+ * @bodyParam name string required Nuevo nombre del permiso. Example: "Registrar usuarios"
+ * @bodyParam module string required Nuevo módulo. Example: "Gestión de Usuarios"
+ * @bodyParam description string optional Nueva descripción. Example: "Permite crear nuevos perfiles de usuario"
+ *
+ * @response 200 "Se actualizó correctamente el permiso"
+ * @response 500 "Error Interno del servidor"
+ */
     public function update(Request $request)
     {
         try {
@@ -92,8 +145,16 @@ class PermissionController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina un permiso del sistema.
+ *
+ * ⚠️ **Advertencia**: Esta acción es irreversible y puede afectar roles que dependan de este permiso.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del permiso a eliminar. Example: 1
+ *
+ * @response 200 "Se eliminó correctamente el permiso"
+ * @response 500 "Error Interno del servidor"
+ */
     public function destroy(Request $request)
     {
         try {

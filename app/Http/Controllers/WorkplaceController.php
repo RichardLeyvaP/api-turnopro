@@ -12,9 +12,26 @@ use function Laravel\Prompts\select;
 
 class WorkplaceController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene todos los puestos de trabajo con su sucursal asociada.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "workplaces": [
+ *     {
+ *       "id": 1,
+ *       "name": "Puesto 1",
+ *       "branch_id": 5,
+ *       "busy": 0,
+ *       "select": 0,
+ *       "branch": { "name": "Centro", ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los Locales de Trabajo"}
+ */
     public function index()
     {
         try {
@@ -24,8 +41,24 @@ class WorkplaceController extends Controller
         }
     }
 
-
-
+    /**
+ * Obtiene los detalles de un puesto de trabajo específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del puesto. Example: 1
+ *
+ * @response 200 {
+ *   "workplaces": {
+ *     "id": 1,
+ *     "name": "Puesto 1",
+ *     "branch_id": 5,
+ *     "busy": 0,
+ *     "select": 0,
+ *     "branch": { "name": "Centro" }
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar el Local de Trabajo"}
+ */
     public function show(Request $request)
     {
         try {
@@ -38,6 +71,25 @@ class WorkplaceController extends Controller
         }
     }
 
+    /**
+ * Obtiene todos los puestos de trabajo de una sucursal específica.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "workplaces": [
+ *     {
+ *       "id": 1,
+ *       "name": "Puesto 1",
+ *       "branch_id": 5,
+ *       "busy": 0,
+ *       "select": 0
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function branch_show(Request $request)
     {
         try {
@@ -50,6 +102,25 @@ class WorkplaceController extends Controller
         }
     }
     
+    /**
+ * Obtiene los puestos de trabajo **disponibles** (no ocupados) en una sucursal.
+ *
+ * `busy = 0` significa disponible para barberos.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "workplaces": [
+ *     {
+ *       "id": 1,
+ *       "name": "Puesto 1",
+ *       "busy": 0
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el Local de Trabajo"}
+ */
     public function branch_workplaces_busy(Request $request)
     {
         try {
@@ -64,6 +135,25 @@ class WorkplaceController extends Controller
         }
     }
 
+    /**
+ * Obtiene los puestos de trabajo **disponibles para técnicos capilares** en una sucursal.
+ *
+ * `select = 0` significa disponible.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "workplaces": [
+ *     {
+ *       "id": 2,
+ *       "name": "Puesto Técnico 1",
+ *       "select": 0
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el Local de Trabajo"}
+ */
     public function branch_workplaces_select(Request $request)
     {
         try {
@@ -76,7 +166,16 @@ class WorkplaceController extends Controller
         }
     }
 
-
+    /**
+ * Crea un nuevo puesto de trabajo en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del puesto (máx. 100 caracteres). Example: Puesto 3
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"msg": "Local de Trabajo insertado correctamente"}
+ * @response 500 {"msg": "Error al insertar el Local de Trabajo"}
+ */
     public function store(Request $request)
     {
         try {
@@ -96,6 +195,16 @@ class WorkplaceController extends Controller
         }
     }
 
+    /**
+ * Actualiza el nombre de un puesto de trabajo.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del puesto. Example: 1
+ * @bodyParam name string required Nuevo nombre. Example: Puesto Principal
+ *
+ * @response 200 {"msg": "Local de Trabajo actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -114,6 +223,20 @@ class WorkplaceController extends Controller
         }
     }
 
+    /**
+ * Libera un puesto de trabajo ocupado por un barbero (marca como disponible).
+ *
+ * - Pone `busy = 0` en el puesto.
+ * - Actualiza el estado del registro en `ProfessionalWorkPlace`.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del puesto. Example: 1
+ * @queryParam busy integer required Siempre `0`. Example: 0
+ * @queryParam professional_id integer required ID del barbero. Example: 123
+ *
+ * @response 200 {"msg": "Puesto de Trabajo actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update_state_prof(Request $request)
     {
         try {
@@ -136,6 +259,19 @@ class WorkplaceController extends Controller
         }
     }
 
+    /**
+ * Libera uno o varios puestos de trabajo ocupados por un técnico capilar.
+ *
+ * Usa el registro en `ProfessionalWorkPlace` para identificar los puestos asignados.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del puesto (no se usa directamente, pero está en la ruta). Example: 1
+ * @queryParam select integer required Siempre `0` (liberar). Example: 0
+ * @queryParam professional_id integer required ID del técnico. Example: 124
+ *
+ * @response 200 {"msg": "Puesto de Trabajo actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update_state_tec(Request $request)
     {
         try {
@@ -159,8 +295,15 @@ class WorkplaceController extends Controller
         }
     }
 
-
-
+    /**
+ * Elimina un puesto de trabajo del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del puesto. Example: 1
+ *
+ * @response 200 {"msg": "Local de Trabajo eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el Local de Trabajo"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -175,7 +318,17 @@ class WorkplaceController extends Controller
         }
     }
 
-    
+    /**
+ * Reinicia todos los puestos de trabajo (marca como disponibles).
+ *
+ * Endpoint protegido por código de acceso en la URL.
+ *
+ * @queryParam codigo string required Código de seguridad. Example: P{\nkNgP9hjm/L*~Sks25h^C30_|17
+ *
+ * @response 200 {"msg": "Puestos de Trabajo actualizados correctamente"}
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function resetWorkplaces(Request $request)
     {
         $codigo = $request->query('codigo'); 

@@ -8,9 +8,26 @@ use Illuminate\Support\Facades\Log;
 
 class RevenueController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene la lista de todas las operaciones de ingreso disponibles.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "revenues": [
+ *     {
+ *       "id": 1,
+ *       "name": "Venta de servicios"
+ *     },
+ *     {
+ *       "id": 2,
+ *       "name": "Venta de productos"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function index()
     {
         try {
@@ -21,8 +38,14 @@ class RevenueController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea una nueva operación de ingreso.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre de la operación de ingreso. Example: Venta de cursos
+ *
+ * @response 200 {"msg": "Operación de Ingreso creado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -42,8 +65,19 @@ class RevenueController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene los detalles de una operación de ingreso específica.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la operación de ingreso. Example: 1
+ *
+ * @response 200 {
+ *   "revenues": {
+ *     "id": 1,
+ *     "name": "Venta de servicios"
+ *   }
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -57,8 +91,15 @@ class RevenueController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza una operación de ingreso existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la operación de ingreso. Example: 1
+ * @bodyParam name string required Nuevo nombre. Example: Servicios premium
+ *
+ * @response 200 {"msg": "Operación de Ingreso actualizado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -78,8 +119,14 @@ class RevenueController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una operación de ingreso del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la operación de ingreso. Example: 1
+ *
+ * @response 200 {"msg": "Operación de Ingreso eliminado correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -12,6 +12,18 @@ use Illuminate\Support\Facades\Http;
 
 class SendMailController extends Controller
 {
+
+    /**
+ * Envía un correo electrónico de prueba utilizando una plantilla fija.
+ *
+ * Usa la clase `Send_mail` con parámetros hardcodeados. Principalmente para pruebas.
+ *
+ * @authenticated
+ * @bodyParam email string required Dirección de correo del destinatario. Example: "usuario@example.com"
+ *
+ * @response 200 {"Response": "Email enviado correctamente"}
+ * @response 500 {"msg": "Error al enviar el Email"}
+ */
     public function send_email(Request $request)
     {
         try {    
@@ -27,7 +39,16 @@ class SendMailController extends Controller
     }
 
     
-
+/**
+ * Envía un mensaje de texto vía WhatsApp Business API (Meta).
+ *
+ * Usa credenciales fijas (token y número de teléfono) para fines de prueba.
+ * El mensaje está hardcodeado y no depende del cuerpo de la solicitud.
+ *
+ * @authenticated
+ * @response 200 { ... } // Respuesta completa de la API de WhatsApp
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
 public function sendMessage(Request $request)
 {
     try{

@@ -8,6 +8,33 @@ use Illuminate\Support\Facades\Log;
 
 class ChargeController extends Controller
 {
+
+    /**
+ * Obtiene los cargos y las sucursales de un negocio específico.
+ *
+ * Útil para formularios de asignación en el frontend web.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "image_data": "branches/5.jpg"
+ *     }
+ *   ],
+ *   "charges": [
+ *     {
+ *       "id": 1,
+ *       "name": "Barbero",
+ *       "description": "Profesional de corte de cabello"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los cargos"}
+ */
     public function index_web(Request $request)
     {
         try { $branch_data = $request->validate([
@@ -21,6 +48,27 @@ class ChargeController extends Controller
         }
     }
 
+    /**
+ * Obtiene la lista de todos los cargos disponibles en el sistema.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "charges": [
+ *     {
+ *       "id": 1,
+ *       "name": "Barbero",
+ *       "description": "Profesional de corte de cabello"
+ *     },
+ *     {
+ *       "id": 2,
+ *       "name": "Administrador",
+ *       "description": "Gestor del negocio"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los cargos"}
+ */
     public function index()
     {
         try { 
@@ -30,6 +78,21 @@ class ChargeController extends Controller
         }
     }
 
+    /**
+ * Obtiene los detalles de un cargo específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del cargo. Example: 1
+ *
+ * @response 200 {
+ *   "client": {
+ *     "id": 1,
+ *     "name": "Barbero",
+ *     "description": "Profesional de corte de cabello"
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar el cargo"}
+ */
     public function show(Request $request)
     {
         try {
@@ -41,6 +104,17 @@ class ChargeController extends Controller
             return response()->json(['msg' => "Error al mostrar el cargo"], 500);
         }
     }
+
+    /**
+ * Crea un nuevo cargo en el sistema.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del cargo. Example: Cajero
+ * @bodyParam description string required Descripción del cargo. Example: Encargado de caja
+ *
+ * @response 200 {"msg": "Cargo insertado correctamente"}
+ * @response 500 {"msg": "Error al insertar el Cargo"}
+ */
     public function store(Request $request)
     {
         try {
@@ -64,6 +138,17 @@ class ChargeController extends Controller
         }
     }
 
+    /**
+ * Actualiza un cargo existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del cargo. Example: 3
+ * @bodyParam name string required Nuevo nombre. Example: Cajera
+ * @bodyParam description string required Nueva descripción. Example: Encargada de caja
+ *
+ * @response 200 {"msg": "Cargo actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el Cargo"}
+ */
     public function update(Request $request)
     {
         try {
@@ -84,6 +169,17 @@ class ChargeController extends Controller
         }
     }
 
+    /**
+ * Elimina un cargo del sistema.
+ *
+ * ⚠️ No se puede eliminar si hay profesionales asignados (depende de tu base de datos).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del cargo. Example: 3
+ *
+ * @response 200 {"msg": "Cargo eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el Cargo"}
+ */
     public function destroy(Request $request)
     {
         try {

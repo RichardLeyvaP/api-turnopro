@@ -10,6 +10,22 @@ use Illuminate\Support\Facades\Log;
 
 class BranchRuleController extends Controller
 {
+    /**
+ * Obtiene todas las sucursales con sus reglas asociadas.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branch": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "rules": [ ... ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las rules por branch"}
+ */
     public function index()
     {
         try {             
@@ -19,6 +35,16 @@ class BranchRuleController extends Controller
         }
     }
 
+    /**
+ * Asigna una regla a una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam rule_id integer required ID de la regla. Example: 3
+ *
+ * @response 200 {"msg": "Rule asignada correctamente a la branch"}
+ * @response 500 {"msg": "Error al asignar la rule a la branch"}
+ */
     public function store(Request $request)
     {
         try {
@@ -38,6 +64,23 @@ class BranchRuleController extends Controller
         }
     }
 
+    /**
+ * Obtiene la primera regla asociada a una sucursal (uso limitado).
+ *
+ * ⚠️ Solo devuelve **una regla**, incluso si hay varias.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "rules": {
+ *     "id": 3,
+ *     "name": "Puntualidad",
+ *     "description": "..."
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function show(Request $request)
     {
         try {             
@@ -52,6 +95,25 @@ class BranchRuleController extends Controller
         }
     }
 
+    /**
+ * Obtiene todas las reglas asociadas a una sucursal con detalles completos.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "rules": [
+ *     {
+ *       "id": 101,
+ *       "name": "Puntualidad",
+ *       "description": "Debe llegar a tiempo.",
+ *       "type": "attendance",
+ *       "rule_id": 3
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function branch_rules(Request $request)
     {
         try {             
@@ -74,6 +136,24 @@ class BranchRuleController extends Controller
         }
     }
 
+    /**
+ * Obtiene las reglas que **NO están asignadas** a una sucursal (para asignar nuevas).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "rules": [
+ *     {
+ *       "id": 4,
+ *       "name": "Uniforme",
+ *       "description": "Debe usar uniforme completo.",
+ *       "type": "appearance"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function branch_rules_noIn(Request $request)
     {
         try {             
@@ -89,6 +169,16 @@ class BranchRuleController extends Controller
         }
     }
 
+    /**
+ * Actualiza la asociación entre una regla y una sucursal (actualmente no modifica datos adicionales).
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam rule_id integer required ID de la regla. Example: 3
+ *
+ * @response 200 {"msg": "rule reasignada correctamente"}
+ * @response 500 {"msg": "Error al actualizar la rule de esa branch"}
+ */
     public function update(Request $request)
     {
         try {
@@ -105,6 +195,16 @@ class BranchRuleController extends Controller
         }
     }
 
+    /**
+ * Elimina la asociación de una regla en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam rule_id integer required ID de la regla. Example: 3
+ *
+ * @response 200 {"msg": "Rule eliminada correctamente de la branch"}
+ * @response 500 {"msg": "Error al eliminar la rule de esta branch"}
+ */
     public function destroy(Request $request)
     {
         try {

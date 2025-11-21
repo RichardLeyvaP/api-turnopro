@@ -824,18 +824,11 @@ class ProfessionalPaymentController extends Controller
                 'amount' => 'required|numeric',
                 'car' => 'required|numeric'
             ]);
-<<<<<<< HEAD
-            $payment = ProfessionalPayment::findOrFail($data['id']);
-                $payment->amount = $data['amount'];
-                $payment->save();
-=======
-
-             // Registrar log detallado
+            // Registrar log detallado
            Log::info('Datos recibidos al editar el pago', [
             'id'  => $data['id'],
             'car' => $data['car']
         ]);
->>>>>>> dev-jimmbo-cambios-6-7
 
         $payment = null;
         $type = null;

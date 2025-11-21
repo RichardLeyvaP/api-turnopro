@@ -9,6 +9,25 @@ use Illuminate\Support\Facades\Log;
 
 class BusinessTypesController extends Controller
 {
+    /**
+ * Obtiene la lista de todos los tipos de negocio disponibles.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "businessTypes": [
+ *     {
+ *       "id": 1,
+ *       "name": "Barbería"
+ *     },
+ *     {
+ *       "id": 2,
+ *       "name": "Academia"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los tipos de negocios"}
+ */
     public function index()
     {
         try {
@@ -17,6 +36,21 @@ class BusinessTypesController extends Controller
             return response()->json(['msg' => "Error al mostrar los tipos de negocios"], 500);
         }
     }
+
+    /**
+ * Obtiene los detalles de un tipo de negocio específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del tipo de negocio. Example: 1
+ *
+ * @response 200 {
+ *   "businessTypes": {
+ *     "id": 1,
+ *     "name": "Barbería"
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar el negocio"}
+ */
     public function show(Request $request)
     {
         try {
@@ -28,6 +62,16 @@ class BusinessTypesController extends Controller
             return response()->json(['msg' => "Error al mostrar el negocio"], 500);
         }
     }
+
+    /**
+ * Crea un nuevo tipo de negocio.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre único del tipo de negocio. Example: Peluquería
+ *
+ * @response 200 {"msg": "Tipo de negocio insertado correctamente"}
+ * @response 500 {"msg": "Error al insertar el tipo de negocio"}
+ */
     public function store(Request $request)
     {
         try {
@@ -46,6 +90,16 @@ class BusinessTypesController extends Controller
         }
     }
 
+    /**
+ * Actualiza un tipo de negocio existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del tipo de negocio. Example: 1
+ * @bodyParam name string required Nuevo nombre (debe ser único). Example: Estética
+ *
+ * @response 200 {"msg": "Tipo de negocio actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el tipo de negocio"}
+ */
     public function update(Request $request)
     {
         try {
@@ -64,6 +118,15 @@ class BusinessTypesController extends Controller
         }
     }
 
+    /**
+ * Elimina un tipo de negocio del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del tipo de negocio. Example: 1
+ *
+ * @response 200 {"msg": "Tipo de negocio eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el tipo negocio"}
+ */
     public function destroy(Request $request)
     {
         try {

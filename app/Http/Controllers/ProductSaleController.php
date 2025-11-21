@@ -19,9 +19,22 @@ class ProductSaleController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+   /**
+ * Registra la venta de un producto a un estudiante en un curso académico.
+ *
+ * Reduce el stock en `ProductStore` y crea o actualiza una entrada en `ProductSale`.
+ * También genera un registro en `Finance` como ingreso para la academia.
+ *
+ * @authenticated
+ * @bodyParam enrollment_id integer required ID de la academia. Example: 4
+ * @bodyParam id integer required ID del registro en `product_store` (stock específico). Example: 25
+ * @bodyParam student_id integer required ID del estudiante. Example: 12
+ * @bodyParam course_id integer required ID del curso. Example: 6
+ * @bodyParam cant number required Cantidad del producto vendida. Example: 2
+ *
+ * @response 200 {"msg": "Producto asigando correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -85,8 +98,32 @@ class ProductSaleController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Lista las ventas de productos realizadas a un estudiante en un curso específico.
+ *
+ * Incluye nombre del producto, precio, cantidad, imagen y fecha de venta.
+ *
+ * @authenticated
+ * @queryParam course_id integer required ID del curso. Example: 6
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ * @queryParam student_id integer required ID del estudiante. Example: 12
+ *
+ * @response 200 {
+ *   "productsales": [
+ *     {
+ *       "id": 8,
+ *       "product_id": 30,
+ *       "store_id": 5,
+ *       "nameProduct": "Shampoo Profesional",
+ *       "price": 10000,
+ *       "cant": 2,
+ *       "image_product": "products/30.jpg",
+ *       "student_id": 12,
+ *       "data": "2025-11-21"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function show(Request $request)
     {
         try {
@@ -124,8 +161,16 @@ class ProductSaleController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una venta de producto a un estudiante.
+ *
+ * Restaura la cantidad vendida al stock (`product_exit`) y ajusta o elimina el registro financiero asociado.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la venta (`product_sale`). Example: 8
+ *
+ * @response 200 {"msg": "Producto desasigando correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

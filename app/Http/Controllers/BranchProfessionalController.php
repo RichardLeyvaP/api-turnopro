@@ -20,6 +20,22 @@ use Illuminate\Support\Facades\Log;
 
 class BranchProfessionalController extends Controller
 {
+    /**
+ * Obtiene todas las sucursales con sus profesionales asignados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branch": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "professionals": [ ... ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los professionals por sucursales"}
+ */
     public function index()
     {
         try {
@@ -29,6 +45,27 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Asigna un profesional a una sucursal con configuración de comisiones escalonadas.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam ponderation integer nullable Ponderación para asignación automática (0-100). Example: 80
+ * @bodyParam limit integer nullable Límite de clientes. Example: 10
+ * @bodyParam mountpay number nullable Monto fijo por servicio. Example: 5.00
+ * @bodyParam salary number nullable Salario base. Example: 300.00
+ * @bodyParam tier1_min_sales integer required Piso de ventas Nivel 1 (0 si no aplica). Example: 0
+ * @bodyParam tier1_commission_rate number required Porcentaje comisión Nivel 1. Example: 70.0
+ * @bodyParam tier2_min_sales integer required Piso de ventas Nivel 2. Example: 1000
+ * @bodyParam tier2_commission_rate number required Porcentaje comisión Nivel 2. Example: 75.0
+ * @bodyParam tier3_min_sales integer required Piso de ventas Nivel 3. Example: 2000
+ * @bodyParam tier3_commission_rate number required Porcentaje comisión Nivel 3. Example: 80.0
+ *
+ * @response 200 {"msg": "Professional asignado correctamente a la sucursal"}
+ * @response 422 {"msg": "El piso del Nivel 1 debe ser menor al Nivel 2"}
+ * @response 500 {"msg": "Error al asignar el professional: ..."}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -92,6 +129,23 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene las sucursales a las que pertenece un profesional.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "pivot": { ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function show(Request $request)
     {
         try {
@@ -105,6 +159,30 @@ class BranchProfessionalController extends Controller
         }
     }
     
+    /**
+ * Obtiene todos los profesionales asignados a una sucursal con su configuración.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 123,
+ *       "professional_id": 123,
+ *       "name": "Yasmany",
+ *       "image_url": "professionals/123.jpg",
+ *       "charge": "Barbero",
+ *       "ponderation": 80,
+ *       "salary": 300.00,
+ *       "tier1_min_sales": 0,
+ *       "tier1_commission_rate": 70.0,
+ *       ...
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_professionals(Request $request)
     {
         try {
@@ -141,6 +219,24 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los barberos (y barberos-encargados) de una sucursal para el tótem.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 123,
+ *       "name": "Yasmany",
+ *       "surname": "Sánchez",
+ *       "image_url": "professionals/123.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_professionals_barber_totem(Request $request)
     {
         try {
@@ -160,6 +256,31 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene barberos disponibles en una sucursal que ofrecen ciertos servicios.
+ *
+ * Incluye vacaciones, días libres y ponderación.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam services array required IDs de los servicios requeridos. Example: [1,2,3]
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 123,
+ *       "name": "Yasmany",
+ *       "ponderation": 80,
+ *       "vacations": [
+ *         {"startDate": "2025-12-01", "endDate": "2025-12-05"},
+ *         {"startDate": "2025-11-25", "endDate": "2025-11-25"}
+ *       ],
+ *       ...
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_professionals_barber(Request $request)
     {
         try {
@@ -312,6 +433,24 @@ class BranchProfessionalController extends Controller
         return $fechaActual->copy();
     }
 
+    /**
+ * Obtiene profesionales de tipo barbero, técnico o barbero-encargado en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 123,
+ *       "name": "Yasmany",
+ *       "charge": { "name": "Barbero" },
+ *       ...
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_professionals_barber_tecnico(Request $request)
     {
         try {
@@ -331,6 +470,27 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Actualiza la configuración de un profesional en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam ponderation integer nullable Ponderación. Example: 80
+ * @bodyParam limit integer nullable Límite de clientes. Example: 10
+ * @bodyParam mountpay number nullable Monto fijo. Example: 5.00
+ * @bodyParam salary number nullable Salario base. Example: 300.00
+ * @bodyParam tier1_min_sales integer required Piso ventas N1. Example: 0
+ * @bodyParam tier1_commission_rate number required % comisión N1. Example: 70.0
+ * @bodyParam tier2_min_sales integer required Piso ventas N2. Example: 1000
+ * @bodyParam tier2_commission_rate number required % comisión N2. Example: 75.0
+ * @bodyParam tier3_min_sales integer required Piso ventas N3. Example: 2000
+ * @bodyParam tier3_commission_rate number required % comisión N3. Example: 80.0
+ *
+ * @response 200 {"msg": "Professional actualizado correctamente"}
+ * @response 400 {"msg": "El piso del Nivel 1 debe ser menor al Nivel 2"}
+ * @response 500 {"msg": "Error al actualizar el professional: ..."}
+ */
     public function update(Request $request)
     {
         try {
@@ -390,7 +550,21 @@ class BranchProfessionalController extends Controller
             return response()->json(['msg' => 'Error al actualizar el professional: ' . $th->getMessage()], 500);
         }
     }
-        
+    
+    /**
+ * Actualiza el estado de un profesional en una sucursal (trabajando, en colación, salida, etc.).
+ *
+ * Gestiona notificaciones, puestos de trabajo y registros.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam type string required Tipo de profesional. Example: Barbero
+ * @bodyParam state integer required Nuevo estado (0: disponible, 1: rechazado, 2: colación, 3: solicita colación, 4: solicita salida). Example: 2
+ *
+ * @response 200 {"msg": "Estado modificado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el professionals de esa branch"}
+ */
     public function update_state(Request $request)
     {
         try {
@@ -599,6 +773,25 @@ class BranchProfessionalController extends Controller
         }
     }
     
+    /**
+ * Obtiene los profesionales que están en colación (state = 2) en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "professional_name": "Yasmany Sánchez",
+ *       "client_image": "professionals/123.jpg",
+ *       "professional_id": 123,
+ *       "start_time": "13:30",
+ *       "charge": "Barbero"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_colacion(Request $request)
     {
 
@@ -624,6 +817,17 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales que han solicitado colación (state = 3) en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_colacion3(Request $request)
     {
 
@@ -649,6 +853,17 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Obtiene los profesionales que han solicitado salida (state = 4) en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "professionals": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branches"}
+ */
     public function branch_colacion4(Request $request)
     {
 
@@ -674,6 +889,16 @@ class BranchProfessionalController extends Controller
         }
     }
 
+    /**
+ * Elimina la asignación de un profesional en una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {"msg": "Professional eliminada correctamente de la branch"}
+ * @response 500 {"msg": "Error al eliminar la professional de esta branch"}
+ */
     public function destroy(Request $request)
     {
         try {

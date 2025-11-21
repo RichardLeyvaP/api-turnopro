@@ -37,6 +37,32 @@ class MonthlyClosureController extends Controller
         //
     }
 
+    /**
+ * Obtiene los cierres mensuales registrados con filtros opcionales.
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal. Example: 5
+ * @queryParam business_id integer optional ID del negocio. Example: 1
+ * @queryParam year integer optional Año (por defecto: actual). Example: 2025
+ * @queryParam month integer optional Mes (1-12). Example: 11
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "closures": [
+ *     {
+ *       "id": 1,
+ *       "month": "2025-11",
+ *       "utility": 12500.00,
+ *       "net_utility": 11000.00,
+ *       "businessName": "Barbería Central",
+ *       "branchName": "Centro",
+ *       "type": "Sucursal"
+ *     }
+ *   ]
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error al obtener los cierres de mes"}
+ */
     public function getMonthlyClosures(Request $request)
     {
         try {
@@ -150,8 +176,38 @@ class MonthlyClosureController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea o actualiza un cierre mensual completo (ingresos, gastos, utilidad, etc.).
+ *
+ * Genera y envía un PDF por correo a administradores y asociados.
+ *
+ * @authenticated
+ * @bodyParam editedItem object required Datos del cierre mensual.
+ * @bodyParam editedItem.id integer optional ID si es actualización. Example: 1
+ * @bodyParam editedItem.branch_id integer optional ID de la sucursal (dejar nulo para negocio). Example: 5
+ * @bodyParam editedItem.business_id integer optional ID del negocio. Example: 1
+ * @bodyParam editedItem.available_money number required Dinero disponible. Example: 15000.00
+ * @bodyParam editedItem.utility number required Utilidad bruta. Example: 12500.00
+ * @bodyParam editedItem.net_utility number required Utilidad neta. Example: 11000.00
+ * @bodyParam editedItem.retention number required Retenciones. Example: 1500.00
+ * @bodyParam editedItem.discounts number required Descuentos. Example: 300.00
+ * @bodyParam editedItem.differences number required Diferencias. Example: 0.00
+ * @bodyParam editedItem.system_incomes number required Ingresos del sistema. Example: 12500.00
+ * @bodyParam editedItem.spent number required Gastos. Example: 1500.00
+ * @bodyParam editedItem.client_utility number required Utilidad por productos. Example: 2000.00
+ * @bodyParam editedItem.client_retention number required Retención por productos. Example: 200.00
+ * @bodyParam editedItem.description string optional Notas adicionales. Example: Cierre mensual noviembre 2025
+ * @bodyParam editedItem.incomes array optional Listado detallado de ingresos. Example: [{"concept": "Servicios", "amount": 10000}]
+ * @bodyParam editedItem.expenses array optional Listado detallado de gastos. Example: [{"concept": "Bonos", "amount": 1500}]
+ * @bodyParam month string optional Mes en formato Y-m. Example: 2025-11
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "message": "Cierre de mes realizado exitosamente",
+ *   "data": { ... }
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error al crear el cierre de mes"}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -398,6 +454,21 @@ class MonthlyClosureController extends Controller
         }
     }
 
+    /**
+ * Guarda solo la sección de **ingresos** de un cierre mensual.
+ *
+ * @authenticated
+ * @bodyParam editedItem object required Ver parámetros de `store`.
+ * @bodyParam month string optional Mes en formato Y-m. Example: 2025-11
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "message": "Ingresos Agregados correctamente",
+ *   "data": { ... }
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error al crear el cierre de mes"}
+ */
     public function store_incomes(Request $request)
     {
         DB::beginTransaction();
@@ -508,6 +579,27 @@ class MonthlyClosureController extends Controller
         }
     }
 
+    /**
+ * Guarda solo la sección de **gastos** de un cierre mensual.
+ *
+ * @authenticated
+ * @bodyParam editedItem object required
+ * @bodyParam editedItem.discounts number optional Descuentos. Example: 300.00
+ * @bodyParam editedItem.client_retention number optional Retención por productos. Example: 200.00
+ * @bodyParam editedItem.expenses array optional Listado de gastos. Example: [{"concept": "Bonos", "amount": 1500}]
+ * @bodyParam editedItem.id integer optional ID si es actualización. Example: 1
+ * @bodyParam editedItem.branch_id integer optional ID de la sucursal. Example: 5
+ * @bodyParam editedItem.business_id integer optional ID del negocio. Example: 1
+ * @bodyParam month string optional Mes en formato Y-m. Example: 2025-11
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "message": "Gastos Agregados correctamente",
+ *   "data": { ... }
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error al crear el cierre de mes"}
+ */
     public function store_expenses(Request $request)
     {
         DB::beginTransaction();
@@ -591,6 +683,23 @@ class MonthlyClosureController extends Controller
         }
     }
 
+    /**
+ * Crea o actualiza un cierre mensual **sin validación completa** (usado como respaldo).
+ *
+ * ⚠️ Este endpoint no valida todos los campos → úsalo con precaución.
+ *
+ * @authenticated
+ * @bodyParam editedItem object required Datos del cierre (mismo formato que `store`).
+ * @bodyParam id integer optional ID si es actualización. Example: 1
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "message": "Cierre creado correctamente",
+ *   "data": { ... }
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error al procesar el cierre mensual"}
+ */
     public function destroy(Request $request)
     {
         DB::beginTransaction();
@@ -667,6 +776,30 @@ class MonthlyClosureController extends Controller
         }
     }
 
+    /**
+ * Calcula automáticamente la utilidad, ingresos y gastos del mes anterior.
+ *
+ * Basado en transacciones reales en `Finance` y `BoxClose`.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer optional ID de la sucursal. Example: 5
+ * @bodyParam business_id integer optional ID del negocio. Example: 1
+ * @bodyParam month string optional Mes en formato Y-m (por defecto: mes anterior). Example: 2025-10
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "utility": 12500.00,
+ *   "system_incomes": 15000.00,
+ *   "spent": 2500.00,
+ *   "totalMount": 14800.00,
+ *   "retentions_total": 1500.00,
+ *   "finance_ids": [1, 2, 3],
+ *   "retention_ids": [4, 5],
+ *   "message": "Cálculo de utilidad realizado correctamente"
+ * }
+ * @response 400 {"success": false, "message": "Solo se puede filtrar por branch_id O business_id, no ambos"}
+ * @response 500 {"success": false, "message": "Ocurrió un error al calcular la utilidad"}
+ */
     public function calculateUtility(Request $request)
     {
         try {

@@ -41,6 +41,18 @@ class UserController extends Controller
         }
     }
 
+    /**
+ * Registra un nuevo cliente en el sistema.
+ *
+ * @bodyParam name string required Nombre del cliente. Example: Yasmany Sánchez
+ * @bodyParam user string required Nombre de usuario único. Example: yasmany89
+ * @bodyParam password string required Contraseña del usuario. Example: secreto123
+ * @bodyParam email string required Email válido y único. Example: yasmany891230@gmail.com
+ * @bodyParam phone string required Número de teléfono. Example: +5359380373
+ *
+ * @response 201 {"msg": "Client registrado correctamente!!!", "user": {"id": 123, "name": "yasmany89", "email": "yasmany891230@gmail.com"}}
+ * @response 400 {"msg": ["El campo email es obligatorio."]}
+ */
     public function register_client(Request $request)
     {
         try {
@@ -82,6 +94,23 @@ class UserController extends Controller
         }
     }
 
+    /**
+ * Registra un nuevo profesional (trabajador).
+ *
+ * @bodyParam name string required Nombre completo del profesional. Example: Juan Pérez
+ * @bodyParam user string required Nombre de usuario único. Example: juan_barbero
+ * @bodyParam password string required Contraseña. Example: pass123
+ * @bodyParam email string required Email único. Example: juan@barberia.com
+ * @bodyParam phone string required Teléfono. Example: +5351234567
+ * @bodyParam charge_id integer required ID del cargo (ej. barbero, técnico). Example: 2
+ * @bodyParam retention number nullable Porcentaje de retención. Example: 10.5
+ * @bodyParam image_url file nullable Imagen del profesional.
+ * @bodyParam user_id integer nullable ID de usuario existente (si se está editando).
+ *
+ * @response 201 {"msg": "Professional registrado correctamente!!!", "user": {"id": 456, "name": "juan_barbero"}}
+ * @response 400 {"msg": ["El email ya está en uso."]}
+ * @response 401 {"msg": ["El email ya está asociado a otro profesional."]}
+ */
     public function register_professional(Request $request)
     {
         DB::beginTransaction();
@@ -157,6 +186,15 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Reestablece la contraseña de un usuario y la envía por correo.
+     *
+     * @bodyParam email string required Email del usuario. Example: yasmany891230@gmail.com
+     *
+     * @response 201 {"msg": "Password modificada correctamente!!!"}
+     * @response 400 {"msg": ["El campo email es obligatorio."]}
+     * @response 404 {"msg": "Correo incorrecto!!!"}
+     */
     public function change_password(Request $request)
     {
         try {
@@ -181,6 +219,15 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Reestablece la contraseña de un usuario y la envía por correo.
+     *
+     * @bodyParam email string required Email del usuario. Example: yasmany891230@gmail.com
+     *
+     * @response 201 {"msg": "Password modificada correctamente!!!"}
+     * @response 400 {"msg": ["El campo email es obligatorio."]}
+     * @response 404 {"msg": "Correo incorrecto!!!"}
+     */
     public function reactive_password(Request $request)
     {
         try {
@@ -219,6 +266,15 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Obtiene las sucursales asociadas a un profesional usando credenciales.
+     *
+     * @bodyParam email string required Email o nombre de usuario. Example: yasmany891230@gmail.com
+     * @bodyParam password string required Contraseña. Example: mypass123
+     *
+     * @response 200 {"branches": [{"branch_id": 5, "nameBranch": "Centro"}]}
+     * @response 400 {"msg": ["El campo password es obligatorio."]}
+     */
     public function login_phone_get_branch(Request $request){
         try {
 
@@ -257,6 +313,21 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Autentica a un usuario desde la aplicación móvil (sin branch_id).
+     *
+     * @bodyParam email string required Email o nombre de usuario. Example: yasmany891230@gmail.com
+     * @bodyParam password string required Contraseña. Example: mypass123
+     *
+     * @response 200 {
+     *   "id": 123,
+     *   "userName": "yasmany89",
+     *   "token": "1|abcdefghijklmnopqrstuvwxyz",
+     *   "branch_id": 5,
+     *   "nameBranch": "Centro"
+     * }
+     * @response 404 {"msg": "Usuario no logueado"}
+     */
     public function login_phone(Request $request)
     {
         try {
@@ -328,6 +399,22 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Autentica a un usuario desde la app móvil con soporte para versión.
+     *
+     * @bodyParam email string required Email o nombre de usuario. Example: yasmany891230@gmail.com
+     * @bodyParam password string required Contraseña. Example: mypass123
+     * @bodyParam version string optional Versión de la app. Example: 2.1.0
+     *
+     * @response 200 {
+     *   "id": 123,
+     *   "userName": "yasmany89",
+     *   "token": "1|abcdefghijklmnopqrstuvwxyz",
+     *   "branch_id": 5,
+     *   "nameBranch": "Centro"
+     * }
+     * @response 404 {"msg": "Usuario no registrado"}
+     */
     public function login_phone_version(Request $request)
     {
         try {
@@ -401,6 +488,23 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Autentica a un usuario desde la web.
+     *
+     * @bodyParam email string required Email o nombre de usuario. Example: yasmany891230@gmail.com
+     * @bodyParam password string required Contraseña. Example: mypass123
+     * @bodyParam branch_id integer required ID de la sucursal seleccionada. Example: 5
+     *
+     * @response 200 {
+     *   "id": 123,
+     *   "userName": "yasmany89",
+     *   "token": "1|abcdefghijklmnopqrstuvwxyz",
+     *   "branch_id": 5,
+     *   "nameBranch": "Centro",
+     *   "permissions": ["manage_reservations, reservations"]
+     * }
+     * @response 401 {"msg": "Usuario no registrado"}
+     */
     public function login(Request $request)
     {
         try {
@@ -489,6 +593,13 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Obtiene el perfil del usuario autenticado.
+     *
+     * @authenticated
+     *
+     * @response 200 {"msg": "Acerca del perfil de usuario", "data": {"id": 123, "name": "yasmany89", "email": "yasmany891230@gmail.com"}}
+     */
     public function userProfile()
     {
         try {
@@ -501,6 +612,16 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Genera un código QR con datos del profesional en una sucursal.
+     *
+     * @queryParam branch_id integer required ID de la sucursal. Example: 5
+     * @queryParam email string required Nombre de usuario del profesional. Example: juan_barbero
+     * @queryParam professional object optional Datos adicionales del profesional.
+     *
+     * @response 200 "<svg>...</svg>" (codificado en base64)
+     * @response 400 {"msg": "Correo incorrecto o no es trabajador de esta sucursal"}
+     */
     public function qrCode(Request $request)
     {
         try {
@@ -540,6 +661,17 @@ class UserController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error al ver los datos del usuario'], 500);
         }
     }
+
+    /**
+     * Genera un código QR para otros casos (sin datos de puesto).
+     *
+     * @queryParam branch_id integer required ID de la sucursal. Example: 5
+     * @queryParam email string required Nombre de usuario del profesional. Example: juan_barbero
+     * @queryParam professional integer optional ID del profesional. Example: 456
+     *
+     * @response 200 "<svg>...</svg>" (codificado en base64)
+     * @response 400 {"msg": "Correo incorrecto o no es trabajador de esta sucursal"}
+     */
     public function qrCodeOtros(Request $request)
     {
         try {
@@ -577,6 +709,13 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Cierra la sesión del usuario autenticado (web).
+     *
+     * @authenticated
+     *
+     * @response 200 {"msg": "Session cerrada correctamente"}
+     */
     public function logout(Request $request)
     {
         try {
@@ -593,6 +732,15 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Cierra la sesión desde la app móvil y marca notificaciones como vistas.
+     *
+     * @queryParam branch_id integer required ID de la sucursal. Example: 5
+     * @queryParam professional_id integer required ID del profesional. Example: 456
+     *
+     * @response 200 {"msg": "Session cerrada correctamente"}
+     * @response 500 {"msg": "Error al cerrar la session"}
+     */
     public function logout_phone(Request $request){   
         try {
             $data = $request->validate([

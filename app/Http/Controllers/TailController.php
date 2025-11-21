@@ -51,6 +51,25 @@ class TailController extends Controller
         $this->professionalService = $professionalService;
     }
 
+    /**
+ * Lista todas las colas (tails) con sus reservas ordenadas por hora de inicio.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "tails": [
+ *     {
+ *       "id": 1,
+ *       "reservation": {
+ *         "id": 101,
+ *         "start_time": "10:00:00",
+ *         "clientProfessional": { ... }
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las Tail"}
+ */
     public function index()
     {
         try {
@@ -64,6 +83,24 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Obtiene los bloques de tiempo disponibles de un profesional en una fecha.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam data date required Fecha (Y-m-d). Example: "2025-11-21"
+ *
+ * @response 200 {
+ *   "Reservation": [
+ *     {
+ *       "time_available_start": "10:00:00",
+ *       "time_available_final": "11:30:00",
+ *       "service_time_available": 90
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las tail_up"}
+ */
     public function tail_up(Request $request)
     {
 
@@ -129,6 +166,15 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Marca una cola como atendida (`attended = true`).
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la cola. Example: 1
+ *
+ * @response 200 {"msg": "Cliente atendido"}
+ * @response 500 {"msg": "Error al pasar el cliente a atendido"}
+ */
     public function update(Request $request)
     {
         try {
@@ -146,6 +192,25 @@ class TailController extends Controller
         }
     }
     
+    /**
+ * Obtiene notificaciones, colas, profesionales en colación/salida y solicitudes de eliminación para una sucursal.
+ *
+ * Datos esenciales para el dashboard de atención.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 {
+ *   "notifications": [...],
+ *   "tail": [...],
+ *   "tail1": [...],
+ *   "professionals3": [...],
+ *   "professionals4": [...],
+ *   "carOrderDelete": [...]
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function notification_tail_colation(Request $request)
     {
         try {
@@ -395,7 +460,15 @@ class TailController extends Controller
         }
     }
     
-
+    /**
+ * Obtiene la cola principal de una sucursal (clientes en espera).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar las Tail"}
+ */
     public function cola_branch_data(Request $request)
     {
         try {
@@ -409,6 +482,16 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
         }
     }
+
+    /**
+ * Obtiene la cola de atención (clientes ya asignados y en proceso).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar las Tail"}
+ */
     public function cola_branch_data2(Request $request)
     {
         try {
@@ -422,7 +505,19 @@ class TailController extends Controller
             return response()->json(['msg' => $th->getMessage() . "Error al mostrar las Tail"], 500);
         }
     }
-        
+    
+    /**
+ * Obtiene colas atendidas y no atendidas de una sucursal, clasificadas y ordenadas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "tail": [...],        // No atendidos
+ *   "attended": [...]     // Atendidos
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las Tail"}
+ */
     public function tail_branch_attended(Request $request)
     {
         try {
@@ -503,7 +598,15 @@ class TailController extends Controller
         }
     }
     
-     
+     /**
+ * Obtiene la cola específica de servicios capilares en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "[error]"}
+ */
     public function cola_branch_capilar(Request $request)
     {
         try {
@@ -518,6 +621,16 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Obtiene la cola de un técnico en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del técnico. Example: 15
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "[error]"}
+ */
     public function cola_branch_tecnico(Request $request)
     {
         try {
@@ -532,6 +645,15 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Elimina todas las colas de una sucursal (solo para reinicio controlado).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {"tail": "Tails eliminada correctamente"}
+ * @response 500 {"msg": "Error al eiliminra las Tail"}
+ */
     public function cola_branch_delete(Request $request)
     {
         try {
@@ -546,6 +668,16 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Obtiene la cola asignada a un profesional específico en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "Error al mostrar las Tail"}
+ */
     public function cola_branch_professional(Request $request)
     {
         try {
@@ -561,6 +693,17 @@ class TailController extends Controller
             return response()->json(['msg' => "Error al mostrar las Tail"], 500);
         }
     }
+
+    /**
+ * Versión alternativa de cola por profesional (mismo comportamiento que `cola_branch_professional`).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "Error al mostrar las Tail"}
+ */
     public function cola_branch_professional_new(Request $request)
     {
         try {
@@ -576,6 +719,16 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Obtiene la cola de un profesional y elimina reservas expiradas antes de mostrar.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 { "tail": [...] }
+ * @response 500 {"msg": "Error al mostrar las Tail"}
+ */
     public function tail_branch_professional(Request $request)
     {
         try {
@@ -593,7 +746,17 @@ class TailController extends Controller
         }
     }
 
-
+    /**
+ * Obtiene los tipos de servicio que ofrece un profesional en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 [...] // Lista de servicios
+ * @response 400 {"msg": ["El branch_id debe existir en la tabla branches."]}
+ * @response 500 {"msg": "Error al mostrar las Tail"}
+ */
     public function type_of_service(Request $request)
     {
         try {
@@ -617,6 +780,19 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Obtiene los estados de reloj de un cliente en cola (para seguimiento de tiempo).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 {
+ *   "tails": [
+ *     { "clock": 1, "timeClock": 0, "attended": 0, "detached": 1 }
+ *   ]
+ * }
+ * @response 500 {"msg": "interno del sistema"}
+ */
     public function show_clocks(Request $request)
     {
         try {
@@ -640,6 +816,17 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de atención de una reserva (1 = atendido, 0 = en cola, etc.).
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam attended integer required Nuevo estado de atención. Example: 1
+ *
+ * @response 200 {"msg": "Cola modificado correctamente"}
+ * @response 400 {"msg": ["El reservation_id debe existir en la tabla reservations."]}
+ * @response 500 {"msg": "[error]Error al mostrar las Cola"}
+ */
     public function tail_attended(Request $request)
     {
         DB::beginTransaction();
@@ -664,6 +851,22 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de atención de un cliente con datos de tiempo de reloj.
+ *
+ * Usado en interfaces móviles o totems.
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam attended integer required Estado de atención. Example: 1
+ * @bodyParam timeClock integer required Tiempo en segundos del reloj. Example: 180
+ * @bodyParam detached integer required Estado de desprendimiento. Example: 1
+ * @bodyParam clock integer required Estado del reloj. Example: 1
+ *
+ * @response 200 {"msg": "Cola modificado correctamente"}
+ * @response 400 {"msg": ["El reservation_id debe existir en la tabla reservations."]}
+ * @response 500 {"msg": "[error]Error al mostrar las Cola"}
+ */
     public function tail_attended_client(Request $request)
     {
         DB::beginTransaction();
@@ -694,6 +897,16 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Devuelve el estado actual de atención (`attended`) de una reserva.
+ *
+ * @authenticated
+ * @queryParam reservation_id integer required ID de la reserva. Example: 101
+ *
+ * @response 200 1
+ * @response 200 0
+ * @response 500 {"msg": "[error]Error al mostrar el estado de la reservacion"}
+ */
     public function return_client_status(Request $request)
     {
         try {
@@ -710,6 +923,17 @@ class TailController extends Controller
         }
     }
     
+    /**
+ * Elimina todas las colas y reinicia estados de profesionales (requiere código de seguridad).
+ *
+ * ⚠️ Acción peligrosa: solo para mantenimiento.
+ *
+ * @queryParam codigo string required Código de autorización. Example: "P{\nkNgP9hjm/L*~Sks25h^C30_|17"
+ *
+ * @response 200 {"msg": "Cola eliminada correctamente"}
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "Error al eliminar la Tail"}
+ */
     public function cola_truncate(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
@@ -764,6 +988,16 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Establece el estado del reloj (`clock`) para una reserva.
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam clock integer required Nuevo valor del reloj. Example: 1
+ *
+ * @response 200 {"msg": "Estado del reloj modificado correctamente"}
+ * @response 500 {"msg": "Error al modificar el estado del reloj"}
+ */
     public function set_clock(Request $request)
     {
         try {
@@ -783,6 +1017,18 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Establece el tiempo de reloj, estado de desprendimiento y estado del reloj.
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam timeClock integer required Tiempo en segundos. Example: 180
+ * @bodyParam detached integer required Estado de desprendimiento. Example: 1
+ * @bodyParam clock integer required Estado del reloj. Example: 1
+ *
+ * @response 200 {"msg": "Estado del tiempo del reloj y estado modificado correctamente"}
+ * @response 500 {"msg": "[error]Error al modificar el tiempo del reloj y el estado"}
+ */
     public function set_timeClock(Request $request)
     {
         try {
@@ -807,6 +1053,15 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Obtiene el valor actual del reloj (`clock`) de una reserva.
+ *
+ * @authenticated
+ * @queryParam reservation_id integer required ID de la reserva. Example: 101
+ *
+ * @response 200 1
+ * @response 500 {"msg": "Error al modificar el estado del reloj"}
+ */
     public function get_clock(Request $request)
     {
         try {
@@ -822,6 +1077,17 @@ class TailController extends Controller
         }
     }
 
+    /**
+ * Reasigna un cliente a un nuevo profesional (modo coordinador).
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam client_id integer required ID del cliente. Example: 12
+ * @bodyParam professional_id integer required ID del nuevo profesional. Example: 11
+ *
+ * @response 200 {"msg": "Cliente reasignado correctamente"}
+ * @response 500 {"msg": "[error]Error al mostrar las Cola"}
+ */
     public function reasigned_client_coordinador(Request $request)
     {
         try {
@@ -840,7 +1106,17 @@ class TailController extends Controller
         }
     }
 
-    
+    /**
+ * Reasigna un cliente con lógica automática si el profesional no está activo.
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam client_id integer required ID del cliente. Example: 12
+ * @bodyParam professional_id integer required ID del nuevo profesional. Example: 11
+ *
+ * @response 200 {"msg": "Cliente reasignado correctamente"}
+ * @response 500 {"msg": "[error]Error al mostrar las Cola"}
+ */
     public function reasigned_client(Request $request)
     {
         try {
@@ -883,8 +1159,20 @@ class TailController extends Controller
         }
     }
 
-    
-      
+    /**
+ * Verifica y reasigna automáticamente un cliente si el profesional supera los 3 minutos sin atender.
+ *
+ * Usado en lógica de convivencia y asignación automática.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam place integer optional Lugar de asignación (0 = automático). Example: 0
+ *
+ * @response 200 1 // Reasignado
+ * @response 200 0 // No reasignado
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function reasigned_secound_plain(Request $request)
     {
         try {
@@ -1056,6 +1344,17 @@ class TailController extends Controller
         }
     }
     
+    /**
+ * Reasigna un cliente de la cola aleatoria a un profesional disponible (modo totem).
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 1 // Cliente asignado
+ * @response 200 0 // No hay cliente compatible
+ * @response 500 {"msg": "[error] Error interno del sistema"}
+ */
     public function reasigned_client_totem(Request $request)
     {
         try {
@@ -1237,6 +1536,18 @@ class TailController extends Controller
         return ($horas * 60) + $minutos;
     }
 
+    /**
+ * Actualiza el estado `aleatorie` de una cola (1 = aleatorio, 2 = asignado).
+ *
+ * @authenticated
+ * @bodyParam reservation_id integer required ID de la reserva. Example: 101
+ * @bodyParam aleatorie integer required Nuevo valor (1 o 2). Example: 2
+ *
+ * @response 200 {"msg": "Cola modificada correctamente"}
+ * @response 200 {"msg": "Cliente no aleatorio"}
+ * @response 200 {"msg": "Cola no encontrada"}
+ * @response 500 {"msg": "[error]Error interno del servidor"}
+ */
     public function updated_aleatorie(Request $request)
     {
         try {

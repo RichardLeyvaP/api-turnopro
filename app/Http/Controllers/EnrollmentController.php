@@ -10,10 +10,29 @@ use Knuckles\Scribe\Attributes\Endpoint;
 
 class EnrollmentController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
-    #[Endpoint('index', 'Obtiene todas las Academias')]
+ * Obtiene todas las academias registradas con sus negocios asociados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "enrollments": [
+ *     {
+ *       "id": 1,
+ *       "name": "Academia Central",
+ *       "description": "Formación profesional en barbería",
+ *       "business_id": 1,
+ *       "image_data": "enrollments/1.jpg",
+ *       "business": {
+ *         "id": 1,
+ *         "name": "Barbería Central"
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las academias"}
+ */
     public function index()
     {
         try {
@@ -24,8 +43,20 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Registra una nueva academia.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre de la academia. Example: Academia Sur
+ * @bodyParam description string required Descripción. Example: Centro de formación en técnicas capilares
+ * @bodyParam business_id integer required ID del negocio al que pertenece. Example: 1
+ * @bodyParam location string optional Coordenadas GPS (lat,lng). Example: -33.456789,-70.645678
+ * @bodyParam address string optional Dirección. Example: Avenida Siempre Viva 742
+ * @bodyParam phone string optional Teléfono. Example: +5359380373
+ * @bodyParam image_data file optional Logo o imagen de la academia.
+ *
+ * @response 200 {"msg": "Academia insertada correctamente"}
+ * @response 500 {"msg": "Error al insertar la academia"}
+ */
     public function store(Request $request)
     {
         try {
@@ -59,8 +90,25 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene las academias asociadas a un negocio específico.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ *
+ * @response 200 {
+ *   "enrollments": [
+ *     {
+ *       "id": 1,
+ *       "name": "Academia Central",
+ *       "description": "...",
+ *       "business_id": 1,
+ *       "image_data": "enrollments/1.jpg",
+ *       "business": { ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las academias"}
+ */
     public function show(Request $request)
     {
         try {
@@ -75,8 +123,21 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza los datos de una academia existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la academia. Example: 1
+ * @bodyParam name string required Nuevo nombre. Example: Academia Premium
+ * @bodyParam description string required Nueva descripción. Example: Formación avanzada en barbería
+ * @bodyParam business_id integer required ID del negocio. Example: 1
+ * @bodyParam location string optional Nuevas coordenadas GPS. Example: -33.456789,-70.645678
+ * @bodyParam address string optional Nueva dirección. Example: Calle Nueva 123
+ * @bodyParam phone string optional Nuevo teléfono. Example: +5351234567
+ * @bodyParam image_data file optional Nueva imagen.
+ *
+ * @response 200 {"msg": "Academia actualizada correctamente"}
+ * @response 500 {"msg": "Error al actualizar la academia"}
+ */
     public function update(Request $request)
     {
         try {
@@ -114,8 +175,14 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una academia del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la academia. Example: 1
+ *
+ * @response 200 {"msg": "academia eliminada correctamente"}
+ * @response 500 {"msg": "Error al eliminar la academia"}
+ */
     public function destroy(Request $request)
     {
         try {

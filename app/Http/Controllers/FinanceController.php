@@ -15,9 +15,35 @@ use Illuminate\Support\Facades\Log;
 
 class FinanceController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Lista todos los registros financieros.
+ *
+ * Devuelve el listado completo de operaciones financieras (ingresos y gastos) del sistema.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "finances": [
+ *     {
+ *       "id": 1,
+ *       "control": 1001,
+ *       "operation": "Ingreso",
+ *       "amount": 12000,
+ *       "comment": "Pago de curso",
+ *       "branch_id": null,
+ *       "business_id": 1,
+ *       "enrollment_id": 4,
+ *       "type": "Academia",
+ *       "expense_id": null,
+ *       "revenue_id": 3,
+ *       "data": "2025-11-20",
+ *       "file": "finances/Ingreso-2025-11-20.1001.pdf"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function index()
     {
         try {
@@ -27,11 +53,28 @@ class FinanceController extends Controller
         }
     }
 
-
-    /**
-     * Display the specified resource.
-     */
-    
+/**
+ * Crea un nuevo registro financiero.
+ *
+ * Genera automáticamente el número de control secuencial. Permite adjuntar un archivo comprobante.
+ *
+ * @authenticated
+ * @bodyParam control integer required Número de control inicial (se usará para nombrar el archivo). Example: 1001
+ * @bodyParam operation string required Tipo de operación: "Ingreso" o "Gasto". Example: "Ingreso"
+ * @bodyParam amount number required Monto de la operación. Example: 12000
+ * @bodyParam comment string optional Comentario adicional. Example: "Pago de matrícula"
+ * @bodyParam branch_id integer optional ID de la sucursal (si aplica). Example: 5
+ * @bodyParam business_id integer optional ID del negocio (si aplica). Example: 1
+ * @bodyParam enrollment_id integer optional ID de la academia (si aplica). Example: 4
+ * @bodyParam type string required Tipo de entidad: "Negocio", "Sucursal", "Academia", etc. Example: "Academia"
+ * @bodyParam expense_id integer optional ID del tipo de gasto (si es gasto). Example: 2
+ * @bodyParam revenue_id integer optional ID del tipo de ingreso (si es ingreso). Example: 3
+ * @bodyParam data date required Fecha de la operación (formato Y-m-d). Example: "2025-11-20"
+ * @bodyParam file file optional Archivo comprobante
+ *
+ * @response 200 {"msg": "Operacion insertado correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -84,6 +127,25 @@ class FinanceController extends Controller
         }
     }
 
+    /**
+ * Actualiza un registro financiero existente.
+ *
+ * Si se sube un nuevo archivo, reemplaza el anterior y elimina el antiguo del almacenamiento.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del registro financiero. Example: 1
+ * @bodyParam control integer required Nuevo número de control. Example: 1002
+ * @bodyParam operation string required "Ingreso" o "Gasto". Example: "Gasto"
+ * @bodyParam amount number required Nuevo monto. Example: 8500
+ * @bodyParam comment string optional Nuevo comentario. Example: "Compra de insumos"
+ * @bodyParam expense_id integer optional Nuevo ID de gasto. Example: 1
+ * @bodyParam revenue_id integer optional Nuevo ID de ingreso. Example: null
+ * @bodyParam data date required Nueva fecha. Example: "2025-11-21"
+ * @bodyParam file file optional Nuevo comprobante.
+ *
+ * @response 200 {"msg": "Operación editada correctamente"}
+ * @response 500 {"msg": "[error]Error al insertar el producto"}
+ */
     public function update(Request $request)
     {
         try {
@@ -125,6 +187,39 @@ class FinanceController extends Controller
         }
     }
 
+    /**
+ * Filtra registros financieros por tipo, entidad y período.
+ *
+ * Soporta filtrado por año completo o por mes específico. Incluye relaciones con `expense` y `revenue`.
+ *
+ * @authenticated
+ * @queryParam type string required Tipo de entidad: "Negocio", "Sucursal", "Academia", o "Todas". Example: "Sucursal"
+ * @queryParam business_id integer optional Requerido si type = "Negocio". Example: 1
+ * @queryParam branch_id integer optional Requerido si type = "Sucursal". Example: 5
+ * @queryParam enrollment_id integer optional Requerido si type = "Academia". Example: 4
+ * @queryParam year integer required Año de consulta. Example: 2025
+ * @queryParam mounth integer optional Mes (1–12) para filtrado mensual. Example: 11
+ *
+ * @response 200 {
+ *   "finances": [
+ *     {
+ *       "id": 1,
+ *       "operation": "Ingreso",
+ *       "amount": 12000,
+ *       "expense": 0,
+ *       "revenue": 12000,
+ *       "nameDetalle": "Ingreso por matrícula",
+ *       "typeDetail": "",
+ *       "comment": "HH Pago de curso",
+ *       "data": "2025-11-20",
+ *       "file": "finances/...",
+ *       "branch_id": 5,
+ *       "type": "Sucursal"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -313,6 +408,23 @@ class FinanceController extends Controller
                                  });
      }
 
+     /**
+ * Obtiene datos maestros para el formulario de finanzas.
+ *
+ * Retorna negocios, gastos, ingresos, sucursales y academias asociadas a un negocio.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio para filtrar sucursales y academias. Example: 1
+ *
+ * @response 200 {
+ *   "businesses": [...],
+ *   "expenses": [...],
+ *   "revenues": [...],
+ *   "branches": [...],
+ *   "enrollments": [...]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function combinedData(Request $request)
     {
         try {
@@ -340,9 +452,18 @@ class FinanceController extends Controller
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
+    
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina un registro financiero.
+ *
+ * También elimina el archivo comprobante asociado del almacenamiento público.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del registro a eliminar. Example: 1
+ *
+ * @response 200 {"msg": "producto eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el producto"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -363,6 +484,24 @@ class FinanceController extends Controller
         }
     }
 
+    /**
+ * Análisis mensual de ingresos vs gastos por sucursal.
+ *
+ * Devuelve un desglose por mes del año, con totales y comparación respecto al año anterior.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam year integer required Año a analizar. Example: 2025
+ *
+ * @response 200 {
+ *   "finances": [
+ *     { "month": "Enero", "total_expenses": 5000, "total_revenues": 15000, "difference": 10000 },
+ *     { "month": "Total", "total_expenses": 60000, "total_revenues": 180000, "difference": 120000 }
+ *   ],
+ *   "last_year_difference": 95000
+ * }
+ * @response 500 {"msg": "[error]Error al insertar el producto"}
+ */
     public function revenue_expense_analysis(Request $request)
     {
         try {
@@ -426,6 +565,28 @@ class FinanceController extends Controller
         }
     }
 
+    /**
+ * Detalle cronológico de ingresos y gastos por sucursal.
+ *
+ * Lista cada operación individual con su tipo y monto, separado por ingresos y gastos, con totales.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam year integer required Año. Example: 2025
+ * @queryParam mounth integer optional Mes (1–12) para filtrado mensual. Example: 11
+ *
+ * @response 200 {
+ *   "finances": [
+ *     { "data": "2025-11-20", "operation": "Ingreso", "ingreso": 12000, "gasto": "", "detailOperation": "Matrícula" },
+ *     { "data": "", "operation": "Total", "ingreso": 12000, "gasto": "", "detailOperation": "" },
+ *     { "data": "2025-11-19", "operation": "Gasto", "ingreso": "", "gasto": 3000, "detailOperation": "Insumos" },
+ *     { "data": "", "operation": "Total", "ingreso": "", "gasto": 3000, "detailOperation": "" }
+ *   ],
+ *   "totalIngresos": 12000,
+ *   "totalGastos": 3000
+ * }
+ * @response 500 {"msg": "[error]Error al insertar el producto"}
+ */
     public function revenue_expense_details(Request $request)
     {
         try {
@@ -534,6 +695,21 @@ class FinanceController extends Controller
         }
     }
 
+    /**
+ * Desglose tabular de ingresos y gastos por tipo y mes (vista anual).
+ *
+ * Formato optimizado para tablas con columnas por mes y filas por tipo de operación.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam year integer required Año. Example: 2025
+ *
+ * @response 200 [
+ *   { "tipo": "Ingresos", "operacion": "Matrículas", "Enero": 10000, "Febrero": 12000, ..., "Total": 144000 },
+ *   { "tipo": "Gastos", "operacion": "Insumos", "Enero": 2000, "Febrero": 2500, ..., "Total": 30000 }
+ * ]
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function details_operations(Request $request)
     {
         try {
@@ -715,6 +891,23 @@ class FinanceController extends Controller
        return response()->json(['msg' => 'Error interno del sistema'], 500);
      }
     }
+
+    /**
+ * Desglose tabular de ingresos y gastos por tipo (vista mensual).
+ *
+ * Similar a `details_operations`, pero filtrado para un mes específico.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam year integer required Año. Example: 2025
+ * @queryParam month integer required Mes (1–12). Example: 11
+ *
+ * @response 200 [
+ *   { "tipo": "Ingresos", "operacion": "Matrículas", "Enero": 0, ..., "Noviembre": 12000, ..., "Total": 12000 },
+ *   { "tipo": "Gastos", "operacion": "Insumos", "Noviembre": 3000, "Total": 3000 }
+ * ]
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function details_operations_month(Request $request)
     {
         try{
@@ -899,7 +1092,30 @@ class FinanceController extends Controller
         }
     }
 
-    
+    /**
+ * Lista detallada de operaciones financieras en un mes específico.
+ *
+ * Incluye fecha, monto, comentario, archivo y tipo de operación (con nombre legible).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam year integer required Año. Example: 2025
+ * @queryParam month integer required Mes (1–12). Example: 11
+ *
+ * @response 200 {
+ *   "finances": [
+ *     {
+ *       "data": "2025-11-20",
+ *       "operation": "Ingreso",
+ *       "amount": 12000,
+ *       "file": "finances/...",
+ *       "comment": "Pago de curso",
+ *       "typeOperation": "Ingreso por matrícula"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
      public function finances_detail_operation_month(Request $request){
         try {
             $data = $request->validate([
@@ -939,6 +1155,23 @@ class FinanceController extends Controller
         }
     }
           
+    /**
+ * Lista detallada de operaciones financieras en un año completo.
+ *
+ * Similar a la versión mensual, pero sin filtro de mes.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam year integer required Año. Example: 2025
+ *
+ * @response 200 {
+ *   "finances": [
+ *     { "data": "2025-11-20", "operation": "Ingreso", "amount": 12000, "file": "...", "comment": "...", "typeOperation": "Matrícula" },
+ *     { "data": "2025-11-15", "operation": "Gasto", "amount": 3000, "file": "...", "comment": "...", "typeOperation": "Insumos" }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function finances_detail_operation(Request $request){
         try {
             $data = $request->validate([

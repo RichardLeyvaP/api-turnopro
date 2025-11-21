@@ -11,8 +11,21 @@ use Illuminate\Support\Facades\Validator;
 class AssociatedController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+ * Obtiene la lista completa de afiliados registrados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "associates": [
+ *     {
+ *       "id": 1,
+ *       "name": "Empresa ABC",
+ *       "email": "contacto@empresaabc.com"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function index()
     {
         try {
@@ -31,8 +44,16 @@ class AssociatedController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Registra un nuevo afiliado.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del afiliado. Example: Empresa XYZ
+ * @bodyParam email string required Email único del afiliado. Example: contacto@empresa.xyz
+ *
+ * @response 200 {"msg": "Asociado insertado correctamente"}
+ * @response 400 {"msg": ["El campo email es obligatorio."]}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -58,8 +79,24 @@ class AssociatedController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene los afiliados que **NO están asociados** a una sucursal específica.
+ *
+ * Útil para mostrar qué afiliados se pueden asignar a una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "associates": [
+ *     {
+ *       "id": 2,
+ *       "name": "Distribuidora 123",
+ *       "email": "ventas@distribuidora123.com"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -77,16 +114,17 @@ class AssociatedController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Associated $associated)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza los datos de un afiliado existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del afiliado a actualizar. Example: 1
+ * @bodyParam name string required Nuevo nombre del afiliado. Example: Empresa Actualizada
+ * @bodyParam email string required Nuevo email (debe ser único). Example: nuevo@empresaactualizada.com
+ *
+ * @response 200 {"msg": "Asociado actualizado correctamente"}
+ * @response 400 {"msg": ["El email ya está en uso."]}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request, Associated $associated)
     {
         try {
@@ -114,8 +152,14 @@ class AssociatedController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina un afiliado del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del afiliado a eliminar. Example: 1
+ *
+ * @response 200 {"msg": "Asociado eliminado correctamente"}
+ * @response 500 {"msg": "Error intern del sistema"}
+ */
     public function destroy(request $request)
     {
         try {

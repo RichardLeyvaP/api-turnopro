@@ -59,6 +59,30 @@ class BoxCloseController extends Controller
         //
     }
 
+    /**
+ * Obtiene los cierres de caja diarios de una sucursal en un rango de fechas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam data string optional Fecha de inicio (formato Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string optional Fecha de fin (formato Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "boxcloses": [
+ *     {
+ *       "box_id": 123,
+ *       "branch_id": 5,
+ *       "data": "2025-11-21",
+ *       "totalMount": 1250.00,
+ *       "totalService": 800.00,
+ *       "totalProduct": 300.00,
+ *       "totalTip": 150.00,
+ *       "professional_name": "Yasmany"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el carrito"}
+ */
     public function boxClosesDiary(Request $request)
     {
         try {
@@ -171,10 +195,38 @@ class BoxCloseController extends Controller
             return response()->json(['msg' => "Error al mostrar el carrito"], 500);
         }
     }
+    
     /**
-     * Store a newly created resource in storage.
-     */
-
+ * Realiza un cierre de caja **completo** (diario) para una sucursal.
+ *
+ * Incluye pagos de bonos automáticos, actualización de caja y envío de reporte por correo.
+ *
+ * @authenticated
+ * @bodyParam editedCloseBox object required Datos del cierre editado desde frontend.
+ * @bodyParam editedCloseBox.totalMount number required Monto total. Example: 1250.00
+ * @bodyParam editedCloseBox.totalService number required Total por servicios. Example: 800.00
+ * @bodyParam editedCloseBox.totalProduct number required Total por productos. Example: 300.00
+ * @bodyParam editedCloseBox.totalTip number required Total de propinas. Example: 150.00
+ * @bodyParam editedCloseBox.totalCash number required Efectivo. Example: 700.00
+ * @bodyParam editedCloseBox.totalCreditCard number required Tarjeta de crédito. Example: 300.00
+ * @bodyParam editedCloseBox.totalDebit number required Tarjeta de débito. Example: 200.00
+ * @bodyParam editedCloseBox.totalTransfer number required Transferencias. Example: 50.00
+ * @bodyParam editedCloseBox.totalOther number required Otros métodos. Example: 0
+ * @bodyParam editedCloseBox.totalCardGif number required Tarjetas de regalo. Example: 0
+ * @bodyParam editedCloseBox.totalBonus number required Bonos calculados. Example: 200.00
+ * @bodyParam editedCloseBox.advancement number required Adelantos. Example: 100.00
+ * @bodyParam cashierData object required Datos del cajero.
+ * @bodyParam cashierData.existence number required Existencia en caja. Example: 500.00
+ * @bodyParam cashierData.extraction number required Extracciones. Example: 200.00
+ * @bodyParam car_ids array optional IDs de carros a vincular. Example: [1,2,3]
+ * @bodyParam cashiersale_ids array optional IDs de ventas de cajera. Example: [4,5]
+ * @bodyParam workerpurchase_ids array optional IDs de compras de trabajadores. Example: [6]
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero. Example: Yasmany Sánchez
+ *
+ * @response 200 {"msg": "Cierre de caja realizado correctamente", "boxClosePartial": {...}}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function store(Request $request)
     {
 
@@ -317,6 +369,23 @@ class BoxCloseController extends Controller
         }
     }
 
+    /**
+ * Realiza un cierre de caja **parcial** (por cajero).
+ *
+ * Similar a `store`, pero sin cálculo de bonos automáticos.
+ *
+ * @authenticated
+ * @bodyParam editedCloseBox object required Ver parámetros de `/closebox`.
+ * @bodyParam cashierData object required Ver parámetros de `/closebox`.
+ * @bodyParam car_ids array optional IDs de carros.
+ * @bodyParam cashiersale_ids array optional IDs de ventas de cajera.
+ * @bodyParam workerpurchase_ids array optional IDs de compras de trabajadores.
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero. Example: Yasmany Sánchez
+ *
+ * @response 200 {"msg": "Cierre de caja realizado correctamente", "boxClosePartial": {...}}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function store_cashier(Request $request)
     {
         DB::beginTransaction();
@@ -436,6 +505,17 @@ class BoxCloseController extends Controller
         }
     }
 
+    /**
+ * Confirma un cierre de caja parcial añadiendo una descripción.
+ *
+ * @authenticated
+ * @bodyParam id integer optional ID del cierre (si no se envía, se usa el último del día). Example: 456
+ * @bodyParam description string required Descripción de la confirmación. Example: Cierre validado por el encargado.
+ *
+ * @response 200 {"msg": "Cierre de caja confirmado correctamente"}
+ * @response 404 {"success": false, "message": "No se encontró ningún cierre de caja para actualizar"}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function store_cashier_confirm(Request $request)
     {
 
@@ -493,6 +573,18 @@ class BoxCloseController extends Controller
         }
     }
 
+    /**
+ * Ejecuta un cierre de caja automático para una fecha dada (sin frontend).
+ *
+ * Útil para tareas programadas o correcciones.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam data string required Fecha del cierre (Y-m-d). Example: 2025-11-20
+ *
+ * @response 200 {"msg": "Cierre de caja realizado correctamente", "bonus": [...]}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function box_close_new(Request $request)
     {
 
@@ -584,6 +676,17 @@ class BoxCloseController extends Controller
         }
     }
 
+    /**
+ * Paga bonos a un profesional específico en una fecha y sucursal.
+ *
+ * @authenticated
+ * @bodyParam data string required Fecha del bono (Y-m-d). Example: 2025-11-20
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {"msg": "Pago de bonos realizado correctamente", "bonus": [...]}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function store1(Request $request)
     {
 
@@ -648,6 +751,25 @@ class BoxCloseController extends Controller
         //
     }
 
+    /**
+ * Obtiene la lista de bonos pendientes de pago para una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "bonus": [
+ *     {
+ *       "professional_id": 123,
+ *       "name": "Yasmany",
+ *       "amount": 200.00,
+ *       "bonus": "Bono servicios",
+ *       "pay": 0
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function bonus(Request $request)
     {
         try {
@@ -674,6 +796,22 @@ class BoxCloseController extends Controller
         }
     }
 
+    /**
+ * Registra manualmente el pago de un bono a un profesional.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del profesional. Example: 123
+ * @bodyParam name string required Nombre del bono. Example: Bono convivencias
+ * @bodyParam amount number required Monto del bono. Example: 200.00
+ * @bodyParam type string required Tipo de bono. Example: Bono convivencias
+ * @bodyParam cant integer required Cantidad (ej. servicios o días). Example: 10
+ * @bodyParam retention number required Porcentaje de retención. Example: 10.5
+ * @bodyParam order_id array optional IDs de órdenes a marcar como pagadas. Example: [1,2,3]
+ *
+ * @response 200 {"msg": "Pago realizado correctamente"}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function bonu_payment(Request $request)
     {
         DB::beginTransaction();
@@ -822,6 +960,17 @@ class BoxCloseController extends Controller
         }
     }
 
+    /**
+ * Ejecuta el cierre de caja mensual (para todos los profesionales y sucursales).
+ *
+ * Endpoint protegido por código de acceso en query string (`?codigo=...`).
+ *
+ * @queryParam codigo string required Código de seguridad. Example: P{\nkNgP9hjm/L*~Sks25h^C30_|17
+ *
+ * @response 200 {"msg": "Cierre de caja mensual efectuado correctamente"}
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function box_close_month(Request $request)
     {
         $codigo = $request->query('codigo');  // Captura el parámetro "codigo" de la URL
@@ -1003,14 +1152,7 @@ class BoxCloseController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error interno del servidor'], 500);
         }
     }
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(BoxClose $closeBox)
-    {
-        //
-    }
-
+  
     /**
      * Update the specified resource in storage.
      */
@@ -1027,6 +1169,17 @@ class BoxCloseController extends Controller
         //
     }
 
+    /**
+ * Ejecuta cierre de caja automático para el día anterior (tarea programada).
+ *
+ * Similar a `box_close_month`, requiere código en query string.
+ *
+ * @queryParam codigo string required Código de seguridad. Example: P{\nkNgP9hjm/L*~Sks25h^C30_|17
+ *
+ * @response 200 {"msg": "Cierre de caja realizado correctamente"}
+ * @response 403 {"msg": "Código inválido"}
+ * @response 500 {"msg": "Error interno del servidor"}
+ */
     public function box_close_automatic(Request $request)
     {
         $codigo = $request->query('codigo'); // Captura el parámetro "codigo" de la URL

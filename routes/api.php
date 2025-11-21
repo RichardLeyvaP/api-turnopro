@@ -354,7 +354,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::post('/box-close-new', [BoxCloseController::class, 'box_close_new']); //para pagar ejecutar cierre de caja para agregar retenciones
     Route::get('/closebox', [BoxCloseController::class, 'index']);
     Route::get('/closebox-show', [BoxCloseController::class, 'show']);
-    Route::get('/bono-service', [BoxCloseController::class, 'BonoService']);
+    //Route::get('/bono-service', [BoxCloseController::class, 'BonoService']);
     Route::get('/bonus-show', [BoxCloseController::class, 'bonus']);
     Route::post('/bonu-payment', [BoxCloseController::class, 'bonu_payment']);
     Route::post('/closebox-destroy', [BoxCloseController::class, 'destroy']);
@@ -439,7 +439,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::put('/branchservice', [BranchServiceController::class, 'update']);
 
     //Client
-    Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplete']);
+    //Route::get('/client-autocomplete', [ClientController::class, 'client_autocomplete']);
     Route::get('/client-autocomplete1', [ClientController::class, 'client_autocomplete1']);
     Route::post('/client', [ClientController::class, 'store']);
     Route::get('/client-email', [ClientController::class, 'client_email']); // dado una email devolver si ya existe como professional
@@ -525,7 +525,7 @@ Route::group(['middleware' => ["auth:sanctum"]], function () {
     Route::get('/branch_professionals_web', [ProfessionalController::class, 'branch_professionals_web']); //devolver los professionales de una branch
     Route::get('/branch_professionals_cashier', [ProfessionalController::class, 'branch_professionals_cashier']); //devolver los cajeros (a) de una branch
     Route::get('/professionals_ganancias_branch', [ProfessionalController::class, 'professionals_ganancias_branch']); //Obtener Monto total de un professionals en una branch y un periodo dado
-    Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
+    //Route::get('/services_professional', [ProfessionalController::class, 'services_professional']);
     Route::get('/get-professionals-service', [ProfessionalController::class, 'get_professionals_service']);
     Route::get('/professional-state', [ProfessionalController::class, 'professionals_state']); // dado una branch devuelve los professional disponibles
     Route::get('/professional-state-coordinador', [ProfessionalController::class, 'professionals_state_coordinador']); // dado una branch devuelve los professional disponibles (endpoint para coordinador)
@@ -787,7 +787,7 @@ Route::get('/time', function () {
     return $request->user();
 });*/
 
-Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate']); //vaciar la cola
+//Route::get('/table-test-truncate', [TailController::class, 'table_test_truncate']); //vaciar la cola
 
 Route::get('/closebox-month', [BoxCloseController::class, 'box_close_month']); //para tarea progradad enviar el cierre de caja
 

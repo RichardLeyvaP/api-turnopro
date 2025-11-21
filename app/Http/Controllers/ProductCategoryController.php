@@ -12,6 +12,24 @@ use Illuminate\Support\Facades\Log;
 
 class ProductCategoryController extends Controller
 {
+
+    /**
+ * Lista todas las categorías de productos del sistema.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "productcategories": [
+ *     {
+ *       "id": 1,
+ *       "name": "Cuidado Capilar",
+ *       "description": "Productos para el cabello",
+ *       "gives_commission": 1
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las categorias de productos"}
+ */
     public function index()
     {
         try { 
@@ -21,6 +39,23 @@ class ProductCategoryController extends Controller
             return response()->json(['msg' => "Error al mostrar las categorias de productos"], 500);
         }
     }
+
+    /**
+ * Muestra los detalles de una categoría de producto específica.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la categoría. Example: 1
+ *
+ * @response 200 {
+ *   "productcategory": {
+ *     "id": 1,
+ *     "name": "Cuidado Capilar",
+ *     "description": "Productos para el cabello",
+ *     "gives_commission": 1
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar la categoría de producto"}
+ */
     public function show(Request $request)
     {
         try {
@@ -32,6 +67,26 @@ class ProductCategoryController extends Controller
             return response()->json(['msg' => "Error al mostrar la categoría de producto"], 500);
         }
     }
+
+    /**
+ * Obtiene categorías de productos disponibles en una sucursal.
+ *
+ * Solo incluye categorías que tienen productos con existencia > 0 y estado "En venta".
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "category_products": [
+ *     {
+ *       "id": 1,
+ *       "name": "Cuidado Capilar",
+ *       "description": "Productos para el cabello"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la categoría de producto"}
+ */
     public function category_branch(Request $request)
     {
         try {
@@ -54,6 +109,47 @@ class ProductCategoryController extends Controller
        }
     }
 
+    /**
+ * Obtiene categorías y productos disponibles en una sucursal para un carro y profesional específicos.
+ *
+ * Además, devuelve los servicios asignados al profesional en esa sucursal y el conteo de productos/servicios ya seleccionados en el carro.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam car_id integer required ID del carro (car). Example: 101
+ *
+ * @response 200 {
+ *   "category_products": [
+ *     {
+ *       "id": 1,
+ *       "name": "Cuidado Capilar",
+ *       "description": "...",
+ *       "products": [
+ *         {
+ *           "id": 501,
+ *           "product_exit": 15,
+ *           "product_id": 25,
+ *           "name": "Shampoo Reparador",
+ *           "sale_price": 8500,
+ *           "image_product": "products/25.jpg"
+ *         }
+ *       ]
+ *     }
+ *   ],
+ *   "professional_services": [
+ *     {
+ *       "id": 45,
+ *       "name": "Corte de Cabello",
+ *       "price_service": 12000,
+ *       "cliente": true
+ *     }
+ *   ],
+ *   "product_select": 2,
+ *   "service_select": 1
+ * }
+ * @response 500 {"msg": "[error] Error interno del sistema"}
+ */
     public function category_products_branch(Request $request)
     {
         try {
@@ -175,6 +271,17 @@ class ProductCategoryController extends Controller
         }
     }
 
+    /**
+ * Crea una nueva categoría de producto.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre de la categoría. Max: 50 caracteres. Example: "Bebidas"
+ * @bodyParam description string required Descripción. Max: 220 caracteres. Example: "Bebidas para clientes"
+ * @bodyParam gives_commission integer required 1 = da comisión, 0 = no da comisión. Example: 0
+ *
+ * @response 200 {"msg": "Regla insertada correctamente"}
+ * @response 500 {"msg": "Error al insertar la Categoria de Producto"}
+ */
     public function store(Request $request)
     {
         try {
@@ -200,6 +307,18 @@ class ProductCategoryController extends Controller
         }
     }
 
+    /**
+ * Actualiza una categoría de producto existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la categoría. Example: 5
+ * @bodyParam name string required Nuevo nombre. Max: 50. Example: "Bebidas Frescas"
+ * @bodyParam description string required Nueva descripción. Max: 220. Example: "Agua, jugos y refrescos"
+ * @bodyParam gives_commission integer required 1/0. Example: 0
+ *
+ * @response 200 {"msg": "Categoria de Producto actualizada correctamente"}
+ * @response 500 {"msg": "Error al actualizar la Categoría de Producto"}
+ */
     public function update(Request $request)
     {
         try {
@@ -225,6 +344,17 @@ class ProductCategoryController extends Controller
         }
     }
 
+    /**
+ * Elimina una categoría de producto.
+ *
+ * ⚠️ **Advertencia**: Esta acción es irreversible y puede afectar productos asociados.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la categoría a eliminar. Example: 5
+ *
+ * @response 200 {"msg": "Regla eliminada correctamente"}
+ * @response 500 {"msg": "Error al eliminar la Regla"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -14,9 +14,27 @@ use Illuminate\Support\Facades\Log;
 
 class ProfessionalWorkPlaceController extends Controller
 {
+    
     /**
-     * Display a listing of the resource.
-     */
+ * Lista todas las sucursales con sus profesionales asignados.
+ *
+ * Útil para visualizar la estructura general de asignación de personal.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "workplaces": [
+ *     {
+ *       "id": 3,
+ *       "name": "Sucursal Centro",
+ *       "professionals": [
+ *         { "id": 10, "name": "Carlos Pérez", "state": 1 }
+ *       ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los productos"}
+ */
     public function index()
     {
         try {             
@@ -26,9 +44,22 @@ class ProfessionalWorkPlaceController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+   /**
+ * Asigna un profesional a un puesto de trabajo (workplace).
+ *
+ * Cambia el estado del profesional a `1` (activo) y marca el puesto como ocupado.
+ * Si el profesional estaba en estado `2` (colación) o `0` (salida), actualiza su `end_time`.
+ * Soporta asignación múltiple de puestos mediante el campo `places`.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam workplace_id integer required ID del puesto de trabajo principal. Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam places array optional Lista de IDs adicionales de puestos (para técnicos). Example: [6, 7]
+ *
+ * @response 200 {"msg": "Puesto de trabajo seleccionado correctamente"}
+ * @response 500 {"msg": "[error]Error al seleccionar el puesto de trabajo"}
+ */
     public function store(Request $request)
     {
         try {
@@ -85,9 +116,23 @@ class ProfessionalWorkPlaceController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
+   /**
+ * Obtiene los puestos de trabajo asignados a un profesional (histórico del día).
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "id": 5,
+ *       "name": "Estación Técnico 1",
+ *       "pivot": { "data": "2025-11-21", "places": "[6,7]", "state": 1 }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los clientes"}
+ */
     public function show(Request $request)
     {
         try {             
@@ -102,6 +147,21 @@ class ProfessionalWorkPlaceController extends Controller
         }
     }
 
+    /**
+ * Obtiene el ID del puesto de trabajo actual de un profesional.
+ *
+ * Diferencia el comportamiento según el cargo:  
+ * - **Técnico**: busca puestos con `select = 1`  
+ * - **Otros**: busca puestos con `busy = 1`
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam charge string required Cargo del profesional. Example: "Tecnico"
+ *
+ * @response 200 5
+ * @response 200 0
+ * @response 500 {"msg": "[error]Error al mostrar los clientes"}
+ */
     public function workplace_show_professional(Request $request)
     {
         try {             
@@ -131,6 +191,20 @@ class ProfessionalWorkPlaceController extends Controller
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
+
+    /**
+ * Obtiene el ID del puesto de trabajo actual de un profesional en una sucursal específica.
+ *
+ * Solo considera puestos con `busy = 1`.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 5
+ * @response 200 0
+ * @response 500 {"msg": "[error]Error al mostrar los clientes"}
+ */
     public function workplace_show_professional2(Request $request)
     {
         try {             
@@ -153,6 +227,22 @@ class ProfessionalWorkPlaceController extends Controller
         }
     }
 
+    /**
+ * Obtiene detalles del puesto y hora de entrada de un profesional en su jornada actual.
+ *
+ * Retorna el ID, nombre del puesto y la hora de inicio de su turno.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "workplace_id": 5,
+ *   "workplace_name": "Estación Barbero 3",
+ *   "time": "09:15"
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los clientes"}
+ */
     public function workplace_professional_day(Request $request)
     {
         try {             
@@ -178,9 +268,20 @@ class ProfessionalWorkPlaceController extends Controller
         return response()->json(['msg' => $th->getMessage()."Error al mostrar los clientes"], 500);
         }
     }
+    
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza la asignación de puestos de trabajo para un profesional.
+ *
+ * Libera los puestos previamente asignados (`select = 0`) y asigna los nuevos (`select = 1`).
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam workplace_id integer required ID del nuevo puesto principal. Example: 6
+ * @bodyParam places array optional Nuevos puestos adicionales. Example: [7, 8]
+ *
+ * @response 200 {"msg": "Puesto de trabajo seleccionado correctamente"}
+ * @response 500 {"msg": "[error]Error al seleccionar el puesto de trabajo"}
+ */
     public function update(Request $request)
     {
         try {
@@ -205,8 +306,17 @@ class ProfessionalWorkPlaceController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Libera el puesto de trabajo de un profesional.
+ *
+ * Cambia su estado a `0` (inactivo) y libera los puestos asignados (`select = 0`).
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del profesional. Example: 10
+ * @bodyParam workplace_id integer required ID del puesto a liberar. Example: 5
+ *
+ * @response 200 {"msg": "Puesto de trabajo liberado correctamente"}
+ * @response 500 {"msg": "[error]Error al liberar el puesto de trabajo"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -21,6 +21,26 @@ use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
 {
+
+    /**
+ * Obtiene la lista completa de clientes registrados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "clients": [
+ *     {
+ *       "id": 1,
+ *       "name": "Yasmany",
+ *       "email": "yasmany891230@gmail.com",
+ *       "phone": "+5359380373",
+ *       "client_image": "clients/1.jpg?$2025-11-21T10:30:00Z",
+ *       "user_id": 123
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function index()
     {
         try {
@@ -44,6 +64,19 @@ class ClientController extends Controller
         }
     }
    
+    /**
+ * Obtiene todos los clientes (los que han reservado en la sucursal o nunca han reservado).
+ *
+ * Útil para asignar nuevos clientes a profesionales.
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "clients": [ ... ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function client_branch(Request $request)
     {
         try {
@@ -76,6 +109,22 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Obtiene clientes para autocompletar (básico, sin sucursal).
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "clients": [
+ *     {
+ *       "id": 1,
+ *       "name": "Yasmany",
+ *       "client_image": "clients/1.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function index_autocomplete()
     {
         try {
@@ -93,6 +142,30 @@ class ClientController extends Controller
         }
     }
     
+    /**
+ * Obtiene los clientes con reservas confirmadas en una sucursal para hoy.
+ *
+ * Incluye servicios y profesional asignado.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "clients": [
+ *     {
+ *       "id": 123,
+ *       "name": "Yasmany",
+ *       "email": "yasmany891230@gmail.com",
+ *       "client_image": "clients/1.jpg",
+ *       "professionalName": "Juan Pérez",
+ *       "start_time": "10:00:00",
+ *       "final_hour": "10:45:00",
+ *       "services": "Corte de cabello, Afeitado"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los clientes"}
+ */
     public function client_reservation(Request $request)
     {
 
@@ -148,6 +221,33 @@ class ClientController extends Controller
         }
     }
     
+    /**
+ * Obtiene clientes para autocompletar (incluye historial de frecuencia).
+ *
+ * Incluye clientes que han reservado en la sucursal o nunca han reservado.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "clients": [
+ *     {
+ *       "id": 1,
+ *       "name": "Yasmany",
+ *       "client_image": "clients/1.jpg",
+ *       "user_id": 123,
+ *       "details": {
+ *         "professionalName": "Juan Pérez",
+ *         "imageLook": "comments/look1.jpg",
+ *         "cantVisit": 5,
+ *         "frecuencia": "Frecuente",
+ *         "lastVisit": "2025-11-20"
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la professionala"}
+ */
     public function client_autocomplete1(Request $request)
     {
         try {
@@ -240,6 +340,24 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Obtiene los detalles de un cliente específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del cliente. Example: 1
+ *
+ * @response 200 {
+ *   "client": {
+ *     "id": 1,
+ *     "name": "Yasmany",
+ *     "email": "yasmany891230@gmail.com",
+ *     "phone": "+5359380373",
+ *     "client_image": "clients/1.jpg",
+ *     "user": { ... }
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar la professionala"}
+ */
     public function show(Request $request)
     {
         try {
@@ -252,6 +370,25 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Obtiene los 10 clientes con más asistencias en una sucursal en un período.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string required Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string required Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "clients": [
+ *     {
+ *       "id": 1,
+ *       "name": "Yasmany",
+ *       "cars_count": 12
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la professionala"}
+ */
     public function client_most_assistance(Request $request)
     {
         try {
@@ -274,6 +411,23 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Obtiene la cantidad de clientes atendidos por sucursal en una fecha específica.
+ *
+ * @authenticated
+ * @queryParam Date string required Fecha (Y-m-d). Example: 2025-11-21
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "nameBranch": "Centro",
+ *       "attended": 25
+ *     }
+ *   ],
+ *   "companyAttended": 45
+ * }
+ * @response 500 {"msg": "La branch no obtuvo ganancias en este dia"}
+ */
     public function client_attended_date(Request $request)
     {
         try {
@@ -307,6 +461,23 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Registra un nuevo cliente en el sistema.
+ *
+ * Si no se proporciona `user_id`, crea un usuario vinculado con contraseña por defecto.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del cliente. Example: Yasmany Sánchez
+ * @bodyParam email string required Email único. Example: yasmany891230@gmail.com
+ * @bodyParam phone string required Teléfono. Example: +5359380373
+ * @bodyParam user_id integer optional ID de usuario existente. Example: 123
+ * @bodyParam client_image file optional Foto del cliente.
+ *
+ * @response 200 {"msg": "Cliente insertado correctamente"}
+ * @response 401 {"msg": ["El email ya está en uso."]}
+ * @response 400 {"msg": ["El campo name es obligatorio."]}
+ * @response 500 {"msg": "Error al insertar al Cliente"}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -361,6 +532,19 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Actualiza los datos de un cliente existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del cliente. Example: 1
+ * @bodyParam name string required Nuevo nombre. Example: Yasmany Martínez
+ * @bodyParam email string required Nuevo email. Example: yasmany.new@gmail.com
+ * @bodyParam phone string required Nuevo teléfono. Example: +5351234567
+ * @bodyParam client_image file optional Nueva foto.
+ *
+ * @response 200 {"msg": "Cliente actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el cliente"}
+ */
     public function update(Request $request)
     {
         try {
@@ -390,6 +574,18 @@ class ClientController extends Controller
         }
     }
     
+    /**
+ * Elimina un cliente del sistema (solo accesible para administradores).
+ *
+ * También elimina su usuario asociado y su imagen.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del cliente. Example: 1
+ *
+ * @response 200 {"msg": "cliente eliminado correctamente"}
+ * @response 200 {"msg": "cliente no eliminado no es administrador"}
+ * @response 500 {"msg": "Error al eliminar el cliente"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -423,7 +619,16 @@ class ClientController extends Controller
         }
     }
 
-
+    /**
+ * Cuenta cuántos clientes tienen más de 3 reservas en una fecha (hoy).
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 12
+ * @response 500 {"msg": "Error del servidor"}
+ */
     public function client_frecuente(Request $request)
     {
         try {
@@ -461,6 +666,25 @@ class ClientController extends Controller
         }
     }
 
+    /**
+ * Obtiene el estado de frecuencia de todos los clientes (Fiel, Frecuente, No Frecuente).
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 5
+ *
+ * @response 200 [
+ *   {
+ *     "name": "Yasmany Sánchez Martínez",
+ *     "email": "yasmany891230@gmail.com",
+ *     "phone": "+5359380373",
+ *     "client_image": "clients/1.jpg",
+ *     "frecuence": "Frecuente",
+ *     "cant_visist": 5
+ *   }
+ * ]
+ * @response 500 {"msg": "Error del servidor"}
+ */
     public function clients_frecuence_state(Request $request)
     {
         try {
@@ -518,6 +742,24 @@ class ClientController extends Controller
         }
     }
     
+    /**
+ * Obtiene el estado de frecuencia de clientes en un rango de fechas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string required Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string required Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 [
+ *   {
+ *     "name": "Yasmany Sánchez Martínez",
+ *     "frecuence": "Frecuente",
+ *     "cant_visist": 5,
+ *     "data": "2025-11-20"
+ *   }
+ * ]
+ * @response 500 {"msg": "Error del servidor"}
+ */
     public function clients_frecuence_periodo(Request $request)
     {
         try {
@@ -576,6 +818,26 @@ class ClientController extends Controller
             return response()->json(['msg' => $th->getMessage() . " Error del servidor"], 500);
         }
     }
+
+    /**
+ * Busca un cliente por email o número de teléfono.
+ *
+ * Soporta números con o sin código de país (+56).
+ *
+ * @queryParam email string required Email o teléfono. Example: +5359380373
+ *
+ * @response 200 {
+ *   "client": [
+ *     {
+ *       "id": 1,
+ *       "name": "Yasmany",
+ *       "email": "yasmany891230@gmail.com",
+ *       "phone": "+5359380373"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sitema"}
+ */
     public function client_email_phone(Request $request)
     {
         try {
@@ -599,7 +861,15 @@ class ClientController extends Controller
         }
     }
 
-
+    /**
+ * Verifica si un email ya existe como cliente o profesional.
+ *
+ * @queryParam email string required Email a verificar. Example: yasmany891230@gmail.com
+ *
+ * @response 200 {"user": "123", "clientName": "Yasmany", "clientImage": "professionals/123.jpg", "type": "Professional"}
+ * @response 200 {"user": "", "type": "No"}
+ * @response 500 {"msg": "Professionals no pertenece a esta Sucursal"}
+ */
     public function client_email(Request $request)
     {
         try {

@@ -26,6 +26,28 @@ class CashierSaleController extends Controller
         $this->traceService = $traceService;
     }
 
+    /**
+ * Obtiene todas las ventas de productos realizadas por cajeros(as).
+ *
+ * @authenticated
+ *
+ * @response 200 [
+ *   {
+ *     "id": 123,
+ *     "branch_id": 5,
+ *     "professional_id": 789,
+ *     "product_store_id": 456,
+ *     "data": "2025-11-21 10:30:00",
+ *     "price": 15000.00,
+ *     "cant": 3,
+ *     "percent_wint": 5000.00,
+ *     "commission_amount": 5000.00,
+ *     "commission_rate": 0,
+ *     "pay": 0
+ *   }
+ * ]
+ * @response 500 {"error": "Error al obtener las ventas de caja."}
+ */
     public function index()
     {
         try {
@@ -45,8 +67,32 @@ class CashierSaleController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Registra una nueva venta de producto desde la caja.
+ *
+ * Actualiza el stock del producto y registra trazabilidad.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam professional_id integer required ID del cajero(a). Example: 123
+ * @bodyParam product_store_id integer required ID del producto en almacén. Example: 456
+ * @bodyParam cant integer required Cantidad vendida. Example: 2
+ * @bodyParam nameProfessional string required Nombre del cajero(a) para trazabilidad. Example: Yasmany
+ *
+ * @response 201 {
+ *   "id": 124,
+ *   "branch_id": 5,
+ *   "professional_id": 123,
+ *   "product_store_id": 456,
+ *   "data": "2025-11-21 11:00:00",
+ *   "price": 20000.00,
+ *   "cant": 2,
+ *   "percent_wint": 6000.00,
+ *   "commission_amount": 6000.00,
+ *   "commission_rate": 0,
+ *   "pay": 0
+ * }
+ * @response 500 {"error": "Error al crear la venta de caja."}
+ */
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -110,8 +156,30 @@ class CashierSaleController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene las ventas de productos del día para un cajero(a) en una sucursal.
+ *
+ * - Si el usuario es **Administrador**, ve **todas** las ventas de la sucursal.
+ * - Si es **cajero(a)**, ve solo **sus propias** ventas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam professional_id integer required ID del cajero(a). Example: 123
+ *
+ * @response 201 {
+ *   "sales": [
+ *     {
+ *       "id": 123,
+ *       "price": 15000,
+ *       "sale_price": 7500,
+ *       "pay": 1,
+ *       "cant": 2,
+ *       "name": "Gel fijador",
+ *       "image_product": "products/gel.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"error": "Error al crear la venta de caja."}
+ */
     public function show(Request $request)
     {
         try {
@@ -156,6 +224,18 @@ class CashierSaleController extends Controller
         }
     }
 
+    /**
+ * Deniega una solicitud de eliminación de venta de caja.
+ *
+ * Restaura el estado de pago a `0` (pendiente) y notifica al cajero.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la venta. Example: 123
+ * @bodyParam professional_id integer required ID del administrador que deniega. Example: 100
+ *
+ * @response 200 {"msg": "Estado de la venta modificado correctamente"}
+ * @response 500 {"msg": "Error al hacer la solicitud de eliminar la venta"}
+ */
     public function cashiersale_denegar(Request $request)
     {
         try {
@@ -181,6 +261,20 @@ class CashierSaleController extends Controller
         }
     }
 
+    /**
+ * Solicita la eliminación de una venta de caja (requiere aprobación de administrador).
+ *
+ * Marca la venta con `pay = 3` y genera notificación.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la venta. Example: 123
+ * @bodyParam professional_id integer optional ID del cajero que hace la solicitud. Example: 124
+ * @bodyParam branch_id integer required ID de la sucursal (para notificación). Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero para trazabilidad. Example: Yasmany
+ *
+ * @response 200 {"msg": "Carro eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el carro"}
+ */
     public function destroy_solicitud(Request $request)
     {
         try {
@@ -222,8 +316,24 @@ class CashierSaleController extends Controller
     
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza los datos de una venta de caja existente.
+ *
+ * ⚠️ Solo para uso administrativo o corrección.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la venta. Example: 123
+ * @bodyParam branch_id integer required Nueva sucursal. Example: 6
+ * @bodyParam professional_id integer required Nuevo cajero. Example: 124
+ * @bodyParam product_store_id integer required Nuevo producto en almacén. Example: 457
+ * @bodyParam date string required Nueva fecha (Y-m-d). Example: 2025-11-20
+ * @bodyParam price number required Nuevo monto total. Example: 20000.00
+ * @bodyParam quantity integer required Nueva cantidad. Example: 3
+ * @bodyParam pay integer required Nuevo estado de pago (0: pendiente, 1: pagado, 3: solicitud eliminación). Example: 1
+ * @bodyParam percent_wint number required Nueva utilidad. Example: 7000.00
+ *
+ * @response 200 { ... }
+ * @response 500 {"error": "Error al actualizar la venta de caja."}
+ */
     public function update(Request $request)
     {
         try {
@@ -257,8 +367,17 @@ class CashierSaleController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una venta de caja y restaura el stock del producto.
+ *
+ * Solo se puede ejecutar después de **aprobar la solicitud de eliminación**.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la venta a eliminar. Example: 123
+ * @bodyParam professional_id integer required ID del cajero(a) que realiza la acción. Example: 124
+ *
+ * @response 200 {"msg": "Venta eliminada correctamente"}
+ * @response 500 {"error": "Error al eliminar la venta de caja."}
+ */
     public function destroy(Request $request)
     {
         try {

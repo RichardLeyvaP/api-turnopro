@@ -8,6 +8,26 @@ use Illuminate\Support\Facades\Log;
 
 class SurveyController extends Controller
 {
+
+    /**
+ * Obtiene la lista de todas las encuestas disponibles.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "surveys": [
+ *     {
+ *       "id": 1,
+ *       "name": "Satisfacción del cliente"
+ *     },
+ *     {
+ *       "id": 2,
+ *       "name": "Calidad del servicio"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function index()
     {
         try { 
@@ -17,6 +37,21 @@ class SurveyController extends Controller
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
+
+    /**
+ * Obtiene los detalles de una encuesta específica.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la encuesta. Example: 1
+ *
+ * @response 200 {
+ *   "rule": {
+ *     "id": 1,
+ *     "name": "Satisfacción del cliente"
+ *   }
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function show(Request $request)
     {
         try {
@@ -28,6 +63,16 @@ class SurveyController extends Controller
             return response()->json(['msg' => "Error interno del sistema"], 500);
         }
     }
+
+    /**
+ * Crea una nueva encuesta.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre de la encuesta. Example: Evaluación post-servicio
+ *
+ * @response 200 {"msg": "Encuesta insertada correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function store(Request $request)
     {
         try {
@@ -48,6 +93,16 @@ class SurveyController extends Controller
         }
     }
 
+    /**
+ * Actualiza una encuesta existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la encuesta. Example: 1
+ * @bodyParam name string required Nuevo nombre (máx. 50 caracteres). Example: Encuesta de satisfacción
+ *
+ * @response 200 {"msg": "Encuesta actualizada correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -68,6 +123,15 @@ class SurveyController extends Controller
         }
     }
 
+    /**
+ * Elimina una encuesta del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la encuesta. Example: 1
+ *
+ * @response 200 {"msg": "Encuesta eliminada correctamente"}
+ * @response 500 {"msg": "Error inerno del sistema"}
+ */
     public function destroy(Request $request)
     {
         try {

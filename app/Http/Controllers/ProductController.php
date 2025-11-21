@@ -13,6 +13,30 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+
+    /**
+ * Lista todos los productos con su categoría y marca de imagen con timestamp.
+ *
+ * La URL de la imagen incluye un timestamp (`?${now}`) para evitar caché del navegador.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "products": [
+ *     {
+ *       "id": 1,
+ *       "name": "Shampoo Reparador",
+ *       "reference": "SR-2025",
+ *       "image_product": "products/1.jpg?$2025-11-21 16:30:00",
+ *       "productcategory": {
+ *         "id": 3,
+ *         "name": "Cuidado Capilar"
+ *       }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los productos"}
+ */
     public function index()
     {
         try {             
@@ -28,6 +52,28 @@ class ProductController extends Controller
         }
     }
 
+    /**
+ * Crea un nuevo producto.
+ *
+ * Permite adjuntar una imagen opcional. Si no se adjunta, se usa `products/default.jpg`.
+ * Los campos `worker_discount` y `commission_rate` son opcionales (por defecto 0).
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre del producto. Min: 3 chars. Example: "Acondicionador"
+ * @bodyParam reference string required Referencia interna. Min: 3 chars. Example: "AC-001"
+ * @bodyParam code string required Código único. Example: "PRD001"
+ * @bodyParam description string optional Descripción del producto. Min: 3 chars. Example: "Hidrata el cabello"
+ * @bodyParam status_product string required Estado (ej. "En venta", "Agotado"). Example: "En venta"
+ * @bodyParam purchase_price number required Precio de compra. Example: 2500
+ * @bodyParam sale_price number optional Precio de venta. Example: 5000
+ * @bodyParam product_category_id integer required ID de la categoría. Example: 3
+ * @bodyParam worker_discount number optional Descuento para trabajadores (% o monto). Example: 10
+ * @bodyParam commission_rate number optional Porcentaje de comisión. Example: 5
+ * @bodyParam image_product file optional Imagen del producto (JPG/PNG).
+ *
+ * @response 200 {"msg": "Producto insertado correctamente"}
+ * @response 500 {"msg": "Error al insertar el producto"}
+ */
     public function store(Request $request)
     {
         try {
@@ -71,6 +117,27 @@ class ProductController extends Controller
         }
     }
 
+    /**
+ * Obtiene el producto más vendido por sucursal en una fecha específica.
+ *
+ * Incluye el top por sucursal y el top global de la empresa.
+ *
+ * @authenticated
+ * @queryParam Date date required Fecha de consulta (Y-m-d). Example: "2025-11-20"
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "nameBranch": "Sucursal Centro",
+ *       "nameProduct": "Shampoo Reparador",
+ *       "cantProduct": 25
+ *     }
+ *   ],
+ *   "Product": "Shampoo Reparador",
+ *   "cantProduct": 85
+ * }
+ * @response 500 {"msg": "[error]La branch no obtuvo ganancias en este dia"}
+ */
     public function product_mostSold_date(Request $request)
     {
         try {
@@ -105,6 +172,24 @@ class ProductController extends Controller
        }
     }
 
+    /**
+ * Lista productos ordenados por ventas del día actual.
+ *
+ * Si se envía `branch_id`, filtra por esa sucursal. Incluye ventas en órdenes y caja.
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal. Example: 3
+ *
+ * @response 200 [
+ *   {
+ *     "id": 1,
+ *     "name": "Shampoo Reparador",
+ *     "orders_count": 32,
+ *     "image_product": "products/1.jpg"
+ *   }
+ * ]
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function product_mostSold(Request $request)
     {
         try {
@@ -188,6 +273,26 @@ class ProductController extends Controller
        }
     }
 
+    /**
+ * Lista productos más vendidos en un rango de fechas.
+ *
+ * Soporta filtrado por sucursal. Incluye ventas de órdenes, caja y ventas directas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ * @queryParam startDate date optional Fecha de inicio (Y-m-d). Example: "2025-11-01"
+ * @queryParam endDate date optional Fecha de fin (Y-m-d). Example: "2025-11-30"
+ *
+ * @response 200 [
+ *   {
+ *     "id": 1,
+ *     "name": "Shampoo Reparador",
+ *     "orders_count": 120,
+ *     "image_product": "products/1.jpg"
+ *   }
+ * ]
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function product_mostSold_periodo(Request $request)
     {
         try {
@@ -272,6 +377,26 @@ class ProductController extends Controller
        }
     }
 
+    /**
+ * Lista productos con bajo stock (stock ≤ nivel de alerta).
+ *
+ * Si se envía `branch_id`, filtra por esa sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ *
+ * @response 200 [
+ *   {
+ *     "name": "Acondicionador",
+ *     "product_exit": 5,
+ *     "stock_depletion": 10,
+ *     "reference": "AC-001",
+ *     "code": "PRD002",
+ *     "store": "Av. Siempre Viva 123"
+ *   }
+ * ]
+ * @response 500 {"msg": "[error]La branch no obtuvo ganancias en este dia"}
+ */
     public function product_stock(Request $request)
     {
         try {
@@ -311,6 +436,23 @@ class ProductController extends Controller
        }
     }
 
+    /**
+ * Muestra los detalles de un producto específico.
+ *
+ * @authenticated
+ * @queryParam id integer required ID del producto. Example: 1
+ *
+ * @response 200 {
+ *   "product": {
+ *     "id": 1,
+ *     "name": "Shampoo Reparador",
+ *     "reference": "SR-2025",
+ *     "sale_price": 5000,
+ *     "product_category_id": 3
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar el producto"}
+ */
     public function show(Request $request)
     {
         try {
@@ -323,6 +465,20 @@ class ProductController extends Controller
         }
     }
 
+    /**
+ * Obtiene los 10 productos más vendidos en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "products": [
+ *     { "id": 1, "name": "Shampoo", "orders_count": 45 },
+ *     { "id": 2, "name": "Acondicionador", "orders_count": 38 }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar el producto"}
+ */
     public function but_product(Request $request)
     {
         try {
@@ -337,6 +493,29 @@ class ProductController extends Controller
         }
     }
 
+    /**
+ * Actualiza un producto existente.
+ *
+ * Permite reemplazar la imagen. Si el archivo anterior no es el predeterminado, se elimina del almacenamiento.
+ * Maneja `commission_rate` como `null` si se envía el string `"null"`.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del producto. Example: 1
+ * @bodyParam name string required Nombre. Min: 3. Example: "Shampoo Profesional"
+ * @bodyParam reference string required Referencia. Min: 3. Example: "SP-2025"
+ * @bodyParam code string required Código. Example: "PRD001"
+ * @bodyParam description string optional Descripción. Example: "Para todo tipo de cabello"
+ * @bodyParam status_product string required Estado. Example: "En venta"
+ * @bodyParam purchase_price number required Precio de compra. Example: 3000
+ * @bodyParam sale_price number optional Precio de venta. Example: 6000
+ * @bodyParam product_category_id integer required Categoría. Example: 3
+ * @bodyParam worker_discount number required Descuento trabajador. Example: 15
+ * @bodyParam commission_rate number optional Porcentaje de comisión. Example: 7
+ * @bodyParam image_product file optional Nueva imagen.
+ *
+ * @response 200 {"msg": "Producto actualizado correctamente"}
+ * @response 500 {"msg": "[error]Error al actualizar el producto"}
+ */
     public function update(Request $request)
     {
         try {
@@ -385,6 +564,18 @@ class ProductController extends Controller
         return response()->json(['msg' => $th->getMessage().'Error al actualizar el producto'], 500);
         }
     }
+
+    /**
+ * Elimina un producto.
+ *
+ * Si tiene una imagen personalizada (distinta de `products/default.jpg`), se elimina del almacenamiento.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del producto a eliminar. Example: 1
+ *
+ * @response 200 {"msg": "producto eliminado correctamente"}
+ * @response 500 {"msg": "Error al eliminar el producto"}
+ */
     public function destroy(Request $request)
     {
         try {

@@ -11,7 +11,7 @@ return [
 
     // The base URL displayed in the docs. If this is empty, Scribe will use the value of config('app.url') at generation time.
     // If you're using `laravel` type, you can set this to a dynamic string, like '{{ config("app.tenant_url") }}' to get a dynamic base URL.
-    'base_url' => 'https://api2.simplifies.cl/',
+    'base_url' => 'http://127.0.0.1:8000/',
 
     'routes' => [
         [
@@ -221,7 +221,7 @@ INTRO,
             Strategies\Headers\GetFromHeaderAttribute::class,
             Strategies\Headers\GetFromHeaderTag::class,
             [
-                'override',
+                'static_data',
                 [
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
@@ -242,14 +242,30 @@ INTRO,
             Strategies\Responses\UseResponseTag::class,
             Strategies\Responses\UseResponseFileTag::class,
             [
-                Strategies\Responses\ResponseCalls::class,
-                [
-                    'only' => ['GET *'],
-                    // Disable debug mode when generating response calls to avoid error stack traces in responses
-                    'config' => [
-                        'app.debug' => false,
-                    ],
-                ]
+                    Strategies\Responses\ResponseCalls::class,
+    [
+        'only' => ['GET *'],
+        'except' => [
+            'POST api/finance',
+            'POST api/finance-updated',
+            'POST api/professional',
+            'POST api/professional-update',
+            'POST api/product',
+            'POST api/product-update',
+            'POST api/comment',
+            'PUT api/comment',
+            'POST api/storeByReservationId',
+            'POST api/course-student-landing',
+            'GET api/branches-with-data',
+            'POST api/course-student',
+            'POST api/course-student-update',
+            'POST api/course-update',
+            'POST api/course',
+        ],
+        'config' => [
+            'app.debug' => false,
+        ],
+    ]
             ]
         ],
         'responseFields' => [

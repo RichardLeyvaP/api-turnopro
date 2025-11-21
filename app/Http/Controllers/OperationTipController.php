@@ -50,6 +50,32 @@ class OperationTipController extends Controller
         //
     }
 
+    /**
+ * Registra un pago de propinas a un cajero.
+ *
+ * Crea un registro de `OperationTip` y su correspondiente entrada en `Finance` como gasto.
+ * Opcionalmente vincula carros (`Car`) si se proporcionan `car_ids`.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ * @bodyParam professional_id integer required ID del cajero. Example: 10
+ * @bodyParam amount number required Monto total a pagar. Example: 1500
+ * @bodyParam coffe_percent number required Porcentaje destinado a café (ej. 10% del total). Example: 150
+ * @bodyParam type string required Tipo de operación. Example: "Pago Comision de Propinas"
+ * @bodyParam car_ids array optional Lista de IDs de carros relacionados. Example: [101, 102]
+ *
+ * @response 201 {
+ *   "id": 45,
+ *   "branch_id": 3,
+ *   "professional_id": 10,
+ *   "amount": 1500,
+ *   "type": "Pago Comision de Propinas",
+ *   "coffe_percent": 150,
+ *   "date": "2025-11-21T15:30:00.000000Z"
+ * }
+ * @response 400 {"error": "Error de validación: ..."}
+ * @response 500 {"error": "Ocurrió un error: ..."}
+ */
     public function store(Request $request)
     {
         try {
@@ -110,8 +136,37 @@ class OperationTipController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene el historial combinado de pagos de propinas y otros pagos para un profesional.
+ *
+ * Combina registros de `OperationTip` y `ProfessionalPayment` en una sola lista cronológica.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 [
+ *   {
+ *     "id": 45,
+ *     "professional_id": 10,
+ *     "date": "2025-11-21 15:30",
+ *     "type": "Pago Comision de Propinas",
+ *     "coffe_percent": 150.00,
+ *     "amount": 1500.00,
+ *     "car": 1
+ *   },
+ *   {
+ *     "id": 30,
+ *     "professional_id": 10,
+ *     "date": "2025-11-20 10:15",
+ *     "type": "Pago Servicios",
+ *     "coffe_percent": 0,
+ *     "amount": 8000.00,
+ *     "car": 0
+ *   }
+ * ]
+ * @response 400 {"error": "Error de validación: ..."}
+ * @response 500 {"error": "Ocurrió un error: ..."}
+ */
     public function show(Request $request)
     {
         try {
@@ -168,6 +223,29 @@ class OperationTipController extends Controller
         }
     }
 
+    /**
+ * Lista todos los pagos de propinas realizados en una sucursal.
+ *
+ * Incluye nombre completo e imagen del cajero.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 [
+ *   {
+ *     "id": 45,
+ *     "professional_id": 10,
+ *     "nameProfessional": "María López García",
+ *     "image_url": "professionals/10.jpg",
+ *     "date": "2025-11-21T15:30:00.000000Z",
+ *     "type": "Pago Comision de Propinas",
+ *     "coffe_percent": 150,
+ *     "amount": 1500.00
+ *   }
+ * ]
+ * @response 400 {"error": "Error de validación: ..."}
+ * @response 500 {"error": "Ocurrió un error: ..."}
+ */
     public function operation_tip_show(Request $request)
     {
         try {
@@ -204,6 +282,24 @@ class OperationTipController extends Controller
         }
     }
 
+    /**
+ * Obtiene pagos de propinas y otros en un rango de fechas.
+ *
+ * Combina `OperationTip` y `ProfessionalPayment` y agrega fila de totales.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam startDate date required Fecha de inicio (Y-m-d). Example: "2025-11-01"
+ * @queryParam endDate date required Fecha de fin (Y-m-d). Example: "2025-11-30"
+ *
+ * @response 200 [
+ *   { "date": "2025-11-21 15:30", "amount": 1500.00, "coffe_percent": 150.00, ... },
+ *   { "date": "Total", "amount": 9500.00, "coffe_percent": 150.00 }
+ * ]
+ * @response 400 {"error": "Error de validación: ..."}
+ * @response 500 {"error": "Ocurrió un error: ..."}
+ */
     public function operation_tip_periodo(Request $request)
     {
         try {
@@ -280,6 +376,22 @@ class OperationTipController extends Controller
         }
     }
 
+    /**
+ * Obtiene carros y ventas no pagadas al cajero para procesar pago.
+ *
+ * Incluye propinas pendientes, ventas de productos y otros pagos.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del cajero. Example: 10
+ *
+ * @response 200 {
+ *   "cars": [...],
+ *   "sales": [...],
+ *   "payments": { ... }
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function cashier_car_notpay(Request $request)
     {
         try {
@@ -388,6 +500,27 @@ class OperationTipController extends Controller
         }
     }
 
+    /**
+ * Calcula el desglose salarial completo de un cajero (sin pagar).
+ *
+ * Incluye propinas, adelantos, compras, retenciones y totales netos.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam professional_id integer required ID del cajero. Example: 10
+ * @queryParam charge string optional Cargo del profesional. Example: "Cajero (a)"
+ *
+ * @response 200 {
+ *   "total_tip_cashier": 1500,
+ *   "total_advance": 2000,
+ *   "salary": 30000,
+ *   "retention_salary": 3000,
+ *   "total": 42500,
+ *   "car_ids": [101, 102],
+ *   "sales_ids": [201, 202]
+ * }
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function cashier_car_salary_notpay(Request $request)
     {
         try {
@@ -449,7 +582,19 @@ class OperationTipController extends Controller
         //
     }
 
-
+    /**
+ * Elimina un pago de propinas o profesional.
+ *
+ * Si `type = 1`, elimina `OperationTip`; si `type = 2`, elimina `ProfessionalPayment`.
+ * Actualiza o elimina el registro financiero asociado.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID del pago. Example: 45
+ * @bodyParam type integer required 1 = OperationTip, 2 = ProfessionalPayment. Example: 1
+ *
+ * @response 200 {"message": "Pago de profesional eliminado correctamente"}
+ * @response 500 {"error": "Ocurrió un error: ..."}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -493,7 +638,27 @@ class OperationTipController extends Controller
         }
     }
 
-    //Métodos dashboard no Administrador
+    /**
+ * Calcula el resumen de pagos y comparativos mensuales para un profesional.
+ *
+ * Incluye datos del mes actual y anterior, así como adelantos y comisiones.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "payments": { ... },
+ *   "total_product_ant": 8000,
+ *   "total_product_act": 9500,
+ *   "total_tip_ant": 1200,
+ *   "total_tip_act": 1500,
+ *   "current_charged": 11000,
+ *   "previous_charged": 9200
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error interno al calcular los pagos"}
+ */
     public function calculate(Request $request)
     {
         // Validación de entrada
@@ -587,6 +752,27 @@ class OperationTipController extends Controller
         }
     }
 
+    /**
+ * Obtiene desglose detallado de comisiones por venta de productos en un mes.
+ *
+ * Requiere año y mes para filtrar.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam year integer required Año. Example: 2025
+ * @queryParam month integer required Mes (1–12). Example: 11
+ * @queryParam charge string optional Cargo del profesional. Example: "Cajero (a)"
+ *
+ * @response 200 {
+ *   "products": {
+ *     "commission_neto": 9500,
+ *     "details": [...]
+ *   }
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error interno del sistema"}
+ */
     public function professional_branch_products(Request $request)
     {
          // Validación de entrada
@@ -671,6 +857,27 @@ class OperationTipController extends Controller
         }
     }
 
+    /**
+ * Obtiene desglose detallado de pagos por propinas en un mes.
+ *
+ * Requiere año y mes para filtrar.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 10
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ * @queryParam year integer required Año. Example: 2025
+ * @queryParam month integer required Mes (1–12). Example: 11
+ * @queryParam charge string optional Cargo del profesional. Example: "Cajero (a)"
+ *
+ * @response 200 {
+ *   "tips": {
+ *     "tip_neto": 1500,
+ *     "details": [...]
+ *   }
+ * }
+ * @response 422 {"success": false, "message": "Error de validación", "errors": {...}}
+ * @response 500 {"success": false, "message": "Error interno del sistema"}
+ */
     public function professional_branch_tips(Request $request)
     {
         $validator = Validator::make($request->all(), [

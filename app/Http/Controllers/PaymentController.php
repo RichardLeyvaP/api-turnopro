@@ -51,10 +51,29 @@ class PaymentController extends Controller
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    
+   /**
+ * Registra el pago de un carro (reserva completada).
+ *
+ * Crea un registro de pago, actualiza el carro como pagado, registra ingresos en `Finance` y actualiza la caja.
+ *
+ * @authenticated
+ * @bodyParam car_id integer required ID del carro a pagar. Example: 123
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero(a). Example: Yasmany
+ * @bodyParam cash number optional Pago en efectivo. Example: 5000.00
+ * @bodyParam creditCard number optional Pago con tarjeta de crédito. Example: 3000.00
+ * @bodyParam debit number optional Pago con tarjeta de débito. Example: 2000.00
+ * @bodyParam transfer number optional Pago por transferencia. Example: 4000.00
+ * @bodyParam other number optional Otro método de pago. Example: 1000.00
+ * @bodyParam cardGift number optional Pago con tarjeta de regalo. Example: 2500.00
+ * @bodyParam tip number optional Propina. Example: 1000.00
+ * @bodyParam tipByCash string optional Método de pago de la propina ("Efectivo", "Débito", etc.). Example: Efectivo
+ * @bodyParam code string optional Código de tarjeta de regalo (si aplica). Example: aB3xK9mP
+ *
+ * @response 200 {"msg": "Pago realizado correctamente correctamente"}
+ * @response 200 {"msg": "El pago ya ha sido registrado para este carro."}
+ * @response 500 {"msg": "Error al realizar el pago"}
+ */
     public function update(Request $request)
     {
         try {
@@ -262,6 +281,28 @@ class PaymentController extends Controller
         }
     }
 
+    /**
+ * Registra el pago de productos vendidos desde la caja (ventas directas sin carro).
+ *
+ * Actualiza las ventas como pagadas, registra ingresos y actualiza la caja si hay efectivo.
+ *
+ * @authenticated
+ * @bodyParam professional_id integer required ID del cajero(a). Example: 123
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam nameProfessional string required Nombre del cajero(a). Example: Yasmany
+ * @bodyParam cash number optional Pago en efectivo. Example: 5000.00
+ * @bodyParam creditCard number optional Pago con tarjeta de crédito. Example: 3000.00
+ * @bodyParam debit number optional Pago con tarjeta de débito. Example: 2000.00
+ * @bodyParam transfer number optional Pago por transferencia. Example: 4000.00
+ * @bodyParam other number optional Otro método de pago. Example: 1000.00
+ * @bodyParam cardGift number optional Pago con tarjeta de regalo. Example: 2500.00
+ * @bodyParam tip number optional Propina. Example: 1000.00
+ * @bodyParam code string optional Código de tarjeta de regalo (si aplica). Example: aB3xK9mP
+ * @bodyParam ids array required IDs de las ventas de caja a pagar. Example: [456, 457]
+ *
+ * @response 200 {"msg": "Pago realizado correctamente correctamente"}
+ * @response 500 {"msg": "Error al realizar el pago"}
+ */
     public function product_sales(Request $request)
     {
         try {

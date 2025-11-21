@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Log;
 
 class BranchStoreController extends Controller
 {
+    /**
+ * Obtiene todas las sucursales con sus almacenes asignados.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branch": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "branchstores": [ ... ]
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los almacenes por sucursales"}
+ */
     public function index()
     {
         try {             
@@ -18,6 +34,16 @@ class BranchStoreController extends Controller
         }
     }
 
+    /**
+ * Asigna un almacén a una sucursal.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam store_id integer required ID del almacén. Example: 3
+ *
+ * @response 200 {"msg": "Almacén asignado correctamente a la sucursal"}
+ * @response 500 {"msg": "Error al asignar el producto a este almacén"}
+ */
     public function store(Request $request)
     {
         try {
@@ -36,6 +62,23 @@ class BranchStoreController extends Controller
         }
     }
 
+    /**
+ * Obtiene los almacenes asignados a una sucursal específica.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "stores": [
+ *     {
+ *       "id": 3,
+ *       "name": "Almacén Principal",
+ *       ...
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los productos"}
+ */
     public function show(Request $request)
     {
         try {             
@@ -51,6 +94,23 @@ class BranchStoreController extends Controller
         }
     }
 
+    /**
+ * Obtiene los almacenes que **NO están asignados** a una sucursal (para poder asignarlos).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "stores": [
+ *     {
+ *       "id": 4,
+ *       "name": "Almacén Secundario",
+ *       ...
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los productos"}
+ */
     public function show_notIn(Request $request)
     {
         try {             
@@ -69,6 +129,18 @@ class BranchStoreController extends Controller
         }
     }
 
+    /**
+ * Actualiza la asignación de almacenes en una sucursal (reemplaza por un único almacén).
+ *
+ * ⚠️ Este método usa `sync()`, lo que **elimina todas las asignaciones previas** y deja solo el `store_id` enviado.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam store_id integer required ID del almacén a asignar. Example: 3
+ *
+ * @response 200 {"msg": "Almacén actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el almacén en esta sucursal"}
+ */
     public function update(Request $request)
     {
         try {
@@ -86,6 +158,18 @@ class BranchStoreController extends Controller
         
     }
 
+    /**
+ * Actualiza la asignación de almacenes en una sucursal (reemplaza por un único almacén).
+ *
+ * ⚠️ Este método usa `sync()`, lo que **elimina todas las asignaciones previas** y deja solo el `store_id` enviado.
+ *
+ * @authenticated
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 5
+ * @bodyParam store_id integer required ID del almacén a asignar. Example: 3
+ *
+ * @response 200 {"msg": "Almacén actualizado correctamente"}
+ * @response 500 {"msg": "Error al actualizar el almacén en esta sucursal"}
+ */
     public function destroy(Request $request)
     {
         try {

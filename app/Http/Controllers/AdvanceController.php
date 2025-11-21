@@ -37,6 +37,35 @@ class AdvanceController extends Controller
         //
     }
 
+    /**
+ * Obtiene los adelantos pendientes del día actual en una sucursal.
+ *
+ * Muestra los adelantos:
+ * - Del día actual (cualquier estado)
+ * - Anteriores al día actual, pero con estado "Pendiente"
+ *
+ * @queryParam branch_id integer required ID de la sucursal. Example: 2
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "advances": [
+ *     {
+ *       "id": 1,
+ *       "data": "2025-11-20",
+ *       "type": "Adelanto",
+ *       "amount": 50000,
+ *       "status": "Pendiente",
+ *       "created_at": "2025-11-20T08:00:00.000000Z",
+ *       "branch": { "id": 2, "name": "Centro" },
+ *       "paid": 0,
+ *       "receipt": null,
+ *       "professionalName": "Juan Pérez",
+ *       "image": "professionals/juan.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 404 {"success": false, "message": "Sucursal no encontrada"}
+ */
     public function branchPendentAdvances(Request $request)
     {
         $userName = $request->user()->name;
@@ -98,6 +127,37 @@ class AdvanceController extends Controller
         }
     }
 
+    /**
+ * Obtiene el historial de adelantos en un rango de fechas.
+ *
+ * Si no se envían fechas, devuelve los últimos 3 meses.
+ * Incluye adelantos fuera del rango si están en estado "Pendiente" o "Aprobado".
+ *
+ * @queryParam branch_id integer required ID de la sucursal. Example: 2
+ * @queryParam professional_id integer optional ID del profesional. Example: 5
+ * @queryParam startDate date optional Fecha de inicio (YYYY-MM-DD). Example: 2025-11-01
+ * @queryParam endDate date optional Fecha de fin (YYYY-MM-DD). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "advances": [
+ *     {
+ *       "id": 1,
+ *       "data": "2025-11-20",
+ *       "type": "Adelanto",
+ *       "amount": 50000,
+ *       "status": "Pendiente",
+ *       "created_at": "2025-11-20T08:00:00.000000Z",
+ *       "branch": { "id": 2, "name": "Centro" },
+ *       "paid": 0,
+ *       "receipt": null,
+ *       "professionalName": "Juan Pérez",
+ *       "image": "professionals/juan.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 404 {"success": false, "message": "Sucursal o profesional no encontrado"}
+ */
     public function getAdvances(Request $request)
     {
         try {
@@ -184,8 +244,30 @@ class AdvanceController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Crea una nueva solicitud de adelanto.
+ *
+ * Solo se permite un adelanto por quincena (1-15 o 16-31).
+ *
+ * @bodyParam professional_id integer required ID del profesional. Example: 5
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 2
+ * @bodyParam amount integer required Monto del adelanto. Example: 50000
+ * @bodyParam data date optional Fecha de la solicitud (YYYY-MM-DD). Si no se envía, usa hoy. Example: 2025-11-20
+ *
+ * @response 201 {
+ *   "success": true,
+ *   "data": {
+ *     "id": 10,
+ *     "data": "2025-11-20",
+ *     "professional_id": 5,
+ *     "branch_id": 2,
+ *     "type": "Adelanto",
+ *     "amount": 50000,
+ *     "status": "Pendiente"
+ *   },
+ *   "message": "Advance creado exitosamente"
+ * }
+ * @response 200 {"success": false, "message": "Solo se permite un adelanto por quincena."}
+ */
     public function store(Request $request)
     {
         $userName = Auth::user()->name;
@@ -276,8 +358,27 @@ class AdvanceController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza el estado de un adelanto (usado por cajeros).
+ *
+ * Si el estado es "Pagado", verifica el efectivo disponible en la caja del día.
+ * - Si hay efectivo ? paga inmediatamente.
+ * - Si no hay ? cambia a "Aprobado" y notifica al profesional.
+ *
+ * @bodyParam id integer required ID del adelanto. Example: 10
+ * @bodyParam status string required Nuevo estado ("Aprobado", "Pagado", "Denegado"). Example: Pagado
+ * @bodyParam data date optional Fecha del pago (si aplica). Example: 2025-11-20
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "data": {
+ *     "id": 10,
+ *     "status": "Pagado",
+ *     "paid": 1
+ *   },
+ *   "message": "Tipo de advance actualizado exitosamente"
+ * }
+ * @response 400 {"success": false, "message": "Este adelanto ya fue pagado anteriormente"}
+ */
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -411,6 +512,23 @@ class AdvanceController extends Controller
         }
     }
 
+    /**
+ * Actualiza el monto de una solicitud de adelanto.
+ *
+ * Solo modifica el campo `amount`.
+ *
+ * @bodyParam id integer required ID del adelanto. Example: 10
+ * @bodyParam amount integer required Nuevo monto. Example: 75000
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "data": {
+ *     "id": 10,
+ *     "amount": 75000
+ *   },
+ *   "message": "Tipo de advance actualizado exitosamente"
+ * }
+ */
     public function update_amount(Request $request)
     {
         $user = Auth::user();
@@ -452,6 +570,26 @@ class AdvanceController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de un adelanto (usado por administradores).
+ *
+ * No valida el efectivo disponible. Permite subir comprobante de pago (`receipt`).
+ *
+ * @bodyParam id integer required ID del adelanto. Example: 10
+ * @bodyParam status string required Nuevo estado ("Aprobado", "Pagado", "Denegado"). Example: Pagado
+ * @bodyParam data date optional Fecha del pago. Example: 2025-11-20
+ * @bodyParam receipt file optional Archivo de comprobante (imagen o PDF).
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "data": {
+ *     "id": 10,
+ *     "status": "Pagado",
+ *     "receipt": "advances/10.jpg"
+ *   },
+ *   "message": "Tipo de advance actualizado exitosamente"
+ * }
+ */
     public function update_admin(Request $request)
     {
         $user = Auth::user();
@@ -551,8 +689,13 @@ class AdvanceController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina una solicitud de adelanto.
+ *
+ * @bodyParam id integer required ID del adelanto. Example: 10
+ *
+ * @response 200 {"msg": "Solicitud de Adelanto eliminada correctamente"}
+ * @response 500 {"msg": "Error al eliminar la solicitud de adelanto"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -568,6 +711,32 @@ class AdvanceController extends Controller
         }
     }
 
+    /**
+ * Obtiene datos combinados de adelantos, compras y pagos de un profesional en una sucursal.
+ *
+ * Útil para dashboards financieros del coordinador.
+ *
+ * @queryParam branch_id integer required ID de la sucursal. Example: 2
+ * @queryParam professional_id integer required ID del profesional. Example: 5
+ * @queryParam startDate date optional Fecha de inicio (YYYY-MM-DD). Example: 2025-11-01
+ * @queryParam endDate date optional Fecha de fin (YYYY-MM-DD). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "success": true,
+ *   "data": [...],
+ *   "payments": [...],
+ *   "products": [...],
+ *   "professionalEarnings": 150000,
+ *   "availableCash": 200000,
+ *   "totalNeto": 180000,
+ *   "totals": {
+ *     "totalAdvance": 50000,
+ *     "totalProduct": 30000,
+ *     "totalPayments": 150000
+ *   }
+ * }
+ * @response 404 {"success": false, "message": "Recurso no encontrado"}
+ */
     public function getCombinedData(Request $request)
     {
         try {

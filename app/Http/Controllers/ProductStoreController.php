@@ -19,6 +19,27 @@ class ProductStoreController extends Controller
 {
     use ProductExitTrait;
 
+    /**
+ * Lista todos los productos con existencia en almacenes (solo productos con stock > 0).
+ *
+ * Incluye datos del producto y del almacén.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "products": [
+ *     {
+ *       "id": 125,
+ *       "product_exit": 20,
+ *       "name": "Shampoo Reparador",
+ *       "reference": "SR-2025",
+ *       "direccionStore": "Av. Siempre Viva 123",
+ *       "sale_price": 5000
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los productos"}
+ */
     public function index()
     {
         try {
@@ -47,6 +68,19 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Obtiene listas básicas de almacenes y productos (sin filtro de negocio).
+ *
+ * Útil para formularios de asignación global.
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "stores": [{ "id": 5, "address": "Av. Siempre Viva 123" }],
+ *   "products": [{ "id": 1, "name": "Shampoo", "image_product": "products/1.jpg" }]
+ * }
+ * @response 500 {"msg": "Error al mostrar los stores y productos"}
+ */
     public function showStoresProductsold(Request $request)
     {
         try {
@@ -61,6 +95,22 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Obtiene almacenes, productos y sucursales filtrados por negocio.
+ *
+ * Si se envía `branch_id ≠ 0`, solo devuelve almacenes asociados a esa sucursal.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 1
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ *
+ * @response 200 {
+ *   "stores": [...],
+ *   "products": [...],
+ *   "branches": [...]
+ * }
+ * @response 500 {"msg": "Error al mostrar los stores y productos"}
+ */
     public function showStoresProducts(Request $request)
     {
         try {
@@ -87,6 +137,21 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Asigna o reabastece un producto en un almacén.
+ *
+ * Si ya existe la relación (aunque esté eliminada), la restaura o actualiza.
+ * Incrementa la existencia si el producto ya está presente.
+ *
+ * @authenticated
+ * @bodyParam product_id integer required ID del producto. Example: 1
+ * @bodyParam store_id integer required ID del almacén. Example: 5
+ * @bodyParam product_quantity number required Cantidad a asignar. Example: 30
+ * @bodyParam stock_depletion number optional Nivel de alerta de stock bajo. Example: 5
+ *
+ * @response 200 {"msg": "Producto asignado correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function store(Request $request)
     {        
         try {
@@ -135,6 +200,14 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista todos los productos con existencia en almacenes (versión duplicada de `index`).
+ *
+ * @authenticated
+ *
+ * @response 200 { "products": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function show(Request $request)
     {
         try {
@@ -163,6 +236,17 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista productos con existencia en almacenes asociados a una sucursal específica.
+ *
+ * Si `branch_id = 0`, devuelve todos los productos con stock.
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ *
+ * @response 200 { "products": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function show_branch(Request $request)
     {
         try {
@@ -219,6 +303,20 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista productos con existencia y estado "No en venta", con lógica especial de visibilidad por sucursal.
+ *
+ * Incluye productos de:
+ * - La sucursal indicada
+ * - La sucursal fija ID 20 (reservada)
+ * - Almacenes sin sucursal asignada
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal. Example: 3
+ *
+ * @response 200 { "products": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function show_branch_state(Request $request)
     {
         try {
@@ -321,6 +419,20 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Reduce la existencia de múltiples productos en almacén (usado en ventas).
+ *
+ * Crea un registro de movimiento y dispara notificaciones si el stock cae por debajo del umbral.
+ *
+ * @authenticated
+ * @bodyParam changes array required Lista de productos a descontar.
+ * @bodyParam changes.*.id integer required ID de `product_store`. Example: 125
+ * @bodyParam changes.*.quantity integer required Cantidad a restar. Example: 2
+ * @bodyParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {"success": true, "message": "Cantidades actualizadas correctamente."}
+ * @response 500 {"success": false, "message": "Hubo un error al actualizar las cantidades."}
+ */
     public function subtractProductExit(Request $request)
     {
         // Validar la solicitud
@@ -378,6 +490,16 @@ class ProductStoreController extends Controller
             ], 500);
         }
     }
+
+    /**
+ * Lista productos con existencia en almacenes asociados a una academia.
+ *
+ * @authenticated
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ *
+ * @response 200 { "products": [...] }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function academy_show(Request $request)
     {
         try {
@@ -411,6 +533,21 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista productos "En venta" con existencia en almacenes de una academia (solo para selección).
+ *
+ * Incluye nombre compuesto: "Producto (Almacén: Dirección)".
+ *
+ * @authenticated
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ *
+ * @response 200 {
+ *   "products": [
+ *     { "id": 125, "name": "Shampoo (Almacén: Av. Siempre Viva 123)", "image_product": "..." }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function products_academy_show(Request $request)
     {
         try {
@@ -435,6 +572,21 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista productos "En venta" con existencia en almacenes de una sucursal (para caja).
+ *
+ * Incluye nombre compuesto y precio de venta.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "products": [
+ *     { "id": 125, "name": "Shampoo (Almacén: Av. Siempre Viva 123)", "price": 5000 }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function product_show_web(Request $request)
     {
         try {
@@ -461,6 +613,26 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista productos "En venta" con existencia en una sucursal, incluyendo descuento para trabajadores.
+ *
+ * Calcula `worker_price` = `sale_price` × (1 − `worker_discount`/100).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "products": [
+ *     {
+ *       "id": 125,
+ *       "name": "Shampoo (Almacén: Av. Siempre Viva 123)",
+ *       "worker_discount": 10,
+ *       "worker_price": 4500
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar los productos", "error": "..."}
+ */
     public function product_show_worker(Request $request)
     {
         try {
@@ -499,7 +671,19 @@ class ProductStoreController extends Controller
         }
     }
 
-
+    /**
+ * Lista productos "En venta" con existencia en almacenes de una academia (solo nombre compuesto).
+ *
+ * @authenticated
+ * @queryParam enrollment_id integer required ID de la academia. Example: 4
+ *
+ * @response 200 {
+ *   "products": [
+ *     { "id": 125, "name": "Shampoo (Almacén: Av. Siempre Viva 123)" }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar los productos"}
+ */
     public function product_show_academy_web(Request $request)
     {
         try {
@@ -522,6 +706,22 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Obtiene productos de una categoría específica en una sucursal.
+ *
+ * Solo incluye productos con estado "En venta" y existencia > 0.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la categoría de producto. Example: 3
+ * @queryParam branch_id integer required ID de la sucursal. Example: 3
+ *
+ * @response 200 {
+ *   "category_products": [
+ *     { "id": 125, "name": "Shampoo", "sale_price": 5000, "product_exit": 20 }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar la categoría de producto"}
+ */
     public function category_products(Request $request)
     {
         try {
@@ -570,6 +770,20 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Actualiza la asignación de un producto a un almacén.
+ *
+ * Si no existe la relación, la crea. Si existe, la actualiza.
+ *
+ * @authenticated
+ * @bodyParam product_id integer required ID del producto. Example: 1
+ * @bodyParam store_id integer required ID del almacén. Example: 5
+ * @bodyParam product_quantity number required Nueva cantidad total. Example: 25
+ * @bodyParam stock_depletion number required Nuevo umbral de alerta. Example: 5
+ *
+ * @response 200 {"msg": "Asignación actualizada correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -597,6 +811,18 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Elimina una asignación de producto a almacén (pone stock en 0).
+ *
+ * No elimina el registro, solo deja `product_quantity` y `product_exit` en 0.
+ *
+ * @authenticated
+ * @bodyParam product_id integer required ID del producto. Example: 1
+ * @bodyParam store_id integer required ID del almacén. Example: 5
+ *
+ * @response 200 {"msg": "Operación realizada correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function destroy(Request $request)
     {
         
@@ -619,6 +845,23 @@ class ProductStoreController extends Controller
             return response()->json(['msg' => $th->getMessage() . 'Error interno del sistema'], 500);
         }
     }
+
+    /**
+ * Mueve una cantidad de producto de un almacén a otro.
+ *
+ * Registra el movimiento en `movement_products` y actualiza existencias en ambos almacenes.
+ *
+ * @authenticated
+ * @bodyParam product_id integer required ID del producto. Example: 1
+ * @bodyParam store_id integer required ID del almacén origen. Example: 5
+ * @bodyParam store_idM integer required ID del almacén destino. Example: 6
+ * @bodyParam product_quantity number required Cantidad a mover. Example: 5
+ * @bodyParam branch_id integer optional ID de la sucursal (para notificación). Example: 3
+ * @bodyParam professional_id integer optional ID del profesional que realiza el movimiento. Example: 10
+ *
+ * @response 200 {"msg": "Producto movido correctamente al almacén"}
+ * @response 500 {"msg": "[error]Error al mover el producto a este almacén"}
+ */
     public function move_product_store(Request $request)
     {
         try {
@@ -695,6 +938,29 @@ class ProductStoreController extends Controller
         }
     }
 
+    /**
+ * Lista los movimientos de productos entre almacenes.
+ *
+ * Filtra por año, mes (opcional) y sucursal (opcional).
+ *
+ * @authenticated
+ * @queryParam branch_id integer optional ID de la sucursal (0 = todas). Example: 3
+ * @queryParam year integer required Año. Example: 2025
+ * @queryParam mounth integer optional Mes (1–12). Example: 11
+ *
+ * @response 200 {
+ *   "movimientos": [
+ *     {
+ *       "storeOut": "Av. Siempre Viva 123",
+ *       "storeInt": "Calle Falsa 456",
+ *       "cant": 5,
+ *       "nameProduct": "Shampoo",
+ *       "nameProfessional": "Carlos Pérez"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mover el producto a este almacén"}
+ */
     public function movement_products(Request $request)
     {
         try {

@@ -26,6 +26,25 @@ class BranchController extends Controller
         $this->branchService = $branchService;
     }
     
+    /**
+ * Obtiene la lista de todas las sucursales (excluyendo la sucursal con ID 20).
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "id": 1,
+ *       "name": "Centro",
+ *       "phone": "+5359380373",
+ *       "address": "Calle Principal 123",
+ *       "business": { ... },
+ *       "businessType": { ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las sucursales"}
+ */
     public function index()
     {
         try {
@@ -34,6 +53,26 @@ class BranchController extends Controller
             return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
         }
     }
+
+    /**
+ * Obtiene la lista completa de sucursales (incluyendo la sucursal con ID 20).
+ *
+ * @authenticated
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "id": 20,
+ *       "name": "Academia",
+ *       "phone": "...",
+ *       "address": "...",
+ *       "business": { ... },
+ *       "businessType": { ... }
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las sucursales"}
+ */
     public function index_prueba()
     {
         try {
@@ -42,6 +81,22 @@ class BranchController extends Controller
               return response()->json(['msg' => "Error al mostrar las sucursales"], 500);
         }
     }
+
+    /**
+ * Obtiene los detalles de una sucursal específica, incluyendo sus profesionales.
+ *
+ * @authenticated
+ * @queryParam id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {
+ *   "branch": {
+ *     "id": 5,
+ *     "name": "Centro",
+ *     "professional": [ ... ]
+ *   }
+ * }
+ * @response 500 {"msg": "Error al mostrar la sucursal"}
+ */
     public function show(Request $request)
     {
         try {
@@ -54,6 +109,24 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Obtiene las sucursales asociadas a un negocio específico.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 3
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "image_data": "branches/5.jpg",
+ *       "address": "Calle Principal 123"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar la sucursal"}
+ */
     public function show_Business(Request $request)
     {
         try {
@@ -66,6 +139,28 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Obtiene las ganancias y productos/servicios más vendidos de una sucursal.
+ *
+ * Soporta tres modos:
+ * - Sin parámetros: datos del día actual.
+ * - Con `mes` y `year`: datos del mes/año.
+ * - Con `startDate` y `endDate`: rango de fechas.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam mes integer optional Mes (1-12). Example: 11
+ * @queryParam year integer optional Año. Example: 2025
+ * @queryParam startDate string optional Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string optional Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "services": [...],
+ *   "products": [...],
+ *   "total": 1250.00
+ * }
+ * @response 500 {"msg": "La branch no obtuvo ganancias en este dia"}
+ */
     public function branch_winner(Request $request)
     {
         try {
@@ -86,6 +181,21 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Similar a `branch_winner`, pero con datos resumidos para íconos (ej. dashboard).
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string optional Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string optional Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "most_sold_service": "Corte de cabello",
+ *   "most_sold_product": "Gel fijador",
+ *   "total_sales": 1250.00
+ * }
+ * @response 500 {"msg": "La branch no obtuvo ganancias en este dia"}
+ */
     public function branch_winner_icon(Request $request)
     {
         try {
@@ -103,6 +213,24 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Obtiene el desglose de ganancias por sucursal de un negocio.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 3
+ * @queryParam startDate string optional Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string optional Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "name": "Centro",
+ *       "total": 1250.00
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "La branch no obtuvo ganancias en este dia"}
+ */
     public function company_winner(Request $request)
     {
         try {
@@ -119,6 +247,26 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Obtiene el cierre de caja por sucursal de un negocio en un período.
+ *
+ * @authenticated
+ * @queryParam business_id integer required ID del negocio. Example: 3
+ * @queryParam startDate string optional Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string optional Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "name": "Centro",
+ *       "totalMount": 1250.00,
+ *       "totalService": 800.00,
+ *       "totalProduct": 300.00
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "La branch no obtuvo ganancias en este dia"}
+ */
     public function company_close_cars(Request $request)
     {
         try {
@@ -135,6 +283,24 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Obtiene las ganancias por profesional en una sucursal.
+ *
+ * @authenticated
+ * @queryParam branch_id integer required ID de la sucursal. Example: 5
+ * @queryParam startDate string optional Fecha de inicio (Y-m-d). Example: 2025-11-01
+ * @queryParam endDate string optional Fecha de fin (Y-m-d). Example: 2025-11-30
+ *
+ * @response 200 {
+ *   "professionals": [
+ *     {
+ *       "name": "Yasmany",
+ *       "total": 800.00
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "La branch no obtuvo ganancias en este dia"}
+ */
     public function branch_professionals_winner(Request $request)
     {
         try {
@@ -151,6 +317,24 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Obtiene las sucursales en las que trabaja un profesional.
+ *
+ * @authenticated
+ * @queryParam professional_id integer required ID del profesional. Example: 123
+ *
+ * @response 200 {
+ *   "branches": [
+ *     {
+ *       "id": 5,
+ *       "name": "Centro",
+ *       "phone": "+5359380373",
+ *       "address": "Calle Principal 123"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "Error al mostrar las branch"}
+ */
     public function branches_professional(Request $request)
     {
         try {
@@ -165,6 +349,22 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Registra una nueva sucursal.
+ *
+ * @authenticated
+ * @bodyParam name string required Nombre único de la sucursal. Example: Centro
+ * @bodyParam phone string required Teléfono. Example: +5359380373
+ * @bodyParam address string required Dirección. Example: Calle Principal 123
+ * @bodyParam business_id integer required ID del negocio. Example: 3
+ * @bodyParam business_type_id integer required ID del tipo de negocio. Example: 1
+ * @bodyParam useTechnical integer required 1 si usa técnicos capilares, 0 si no. Example: 1
+ * @bodyParam location string optional Coordenadas GPS (lat,lng). Example: -33.456789,-70.645678
+ * @bodyParam image_data file optional Imagen de la sucursal.
+ *
+ * @response 200 {"msg": "Sucursal insertada correctamente"}
+ * @response 500 {"msg": "Error al insertar la sucursal"}
+ */
     public function store(Request $request)
     {
         try {
@@ -199,6 +399,23 @@ class BranchController extends Controller
         }
     }
    
+    /**
+ * Actualiza los datos de una sucursal existente.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la sucursal. Example: 5
+ * @bodyParam name string required Nuevo nombre. Example: Centro Principal
+ * @bodyParam phone string required Nuevo teléfono. Example: +5351234567
+ * @bodyParam address string required Nueva dirección. Example: Avenida Siempre Viva 742
+ * @bodyParam business_id integer required ID del negocio. Example: 3
+ * @bodyParam business_type_id integer required ID del tipo de negocio. Example: 1
+ * @bodyParam useTechnical integer required 1 si usa técnicos capilares. Example: 1
+ * @bodyParam location string optional Nuevas coordenadas GPS. Example: -33.456789,-70.645678
+ * @bodyParam image_data file optional Nueva imagen de la sucursal.
+ *
+ * @response 200 {"msg": "Sucursal actualizada correctamente"}
+ * @response 500 {"msg": "Error interno del sistema"}
+ */
     public function update(Request $request)
     {
         try {
@@ -240,6 +457,15 @@ class BranchController extends Controller
         }
     }
 
+    /**
+ * Elimina una sucursal del sistema.
+ *
+ * @authenticated
+ * @bodyParam id integer required ID de la sucursal. Example: 5
+ *
+ * @response 200 {"msg": "Sucursal eliminada correctamente"}
+ * @response 500 {"msg": "Error al eliminar la sucursal"}
+ */
     public function destroy(Request $request)
     {
         try {
@@ -262,77 +488,77 @@ class BranchController extends Controller
     }
 
    public function getBranchesWithServicesAndProfessionals()
-{
-    try {
-        $branches = Branch::where('id', '!=', 20)->with([
-            'services' => function($query) {
-                $query->select(['services.id', 'services.name', 'services.price_service', 'services.image_service', 'services.service_comment']);
-            },
-            'professionals.branchServices.service' => function($query) {
-                $query->select(['services.id', 'services.name']);
-            },
-            'professionals' => function($query) {
-                $query->select(['professionals.id', 'professionals.name', 'professionals.email', 'professionals.phone', 'professionals.image_url']);
-            }
-        ])->select(['id', 'name', 'phone', 'address', 'image_data'])->get();
+    {
+        try {
+            $branches = Branch::where('id', '!=', 20)->with([
+                'services' => function($query) {
+                    $query->select(['services.id', 'services.name', 'services.price_service', 'services.image_service', 'services.service_comment']);
+                },
+                'professionals.branchServices.service' => function($query) {
+                    $query->select(['services.id', 'services.name']);
+                },
+                'professionals' => function($query) {
+                    $query->select(['professionals.id', 'professionals.name', 'professionals.email', 'professionals.phone', 'professionals.image_url']);
+                }
+            ])->select(['id', 'name', 'phone', 'address', 'image_data'])->get();
 
-        $mappedBranches = $branches->map(function($branch) {
-            return [
-                'sucursal' => [
-                    'id' => $branch->id,
-                    'nombre' => $branch->name,
-                    'telefono' => $branch->phone,
-                    'direccion' => $branch->address,
-                    'imagen' => $branch->image_data
-                ],
-                'servicios' => $branch->services->map(function($service) {
-                    return [
-                        'id' => $service->id,
-                        'nombre' => $service->name,
-                        'precio' => $service->price_service,
-                        'imagen' => $service->image_service,
-                        'comentario' => $service->service_comment
-                    ];
-                }),
-                'profesionales' => $branch->professionals
-                    ->filter(fn($professional) => $professional->branchServices->isNotEmpty())
-                    ->map(function($professional) {
+            $mappedBranches = $branches->map(function($branch) {
+                return [
+                    'sucursal' => [
+                        'id' => $branch->id,
+                        'nombre' => $branch->name,
+                        'telefono' => $branch->phone,
+                        'direccion' => $branch->address,
+                        'imagen' => $branch->image_data
+                    ],
+                    'servicios' => $branch->services->map(function($service) {
                         return [
-                            'id' => $professional->id,
-                            'nombre' => $professional->name,
-                            'email' => $professional->email,
-                            'telefono' => $professional->phone,
-                            'imagen' => $professional->image_url,
-                            'servicios_que_realiza' => $professional->branchServices
-                                ->map(fn($branchService) => [
-                                    'id' => $branchService->service->id,
-                                    'nombre' => $branchService->service->name
-                                ])
+                            'id' => $service->id,
+                            'nombre' => $service->name,
+                            'precio' => $service->price_service,
+                            'imagen' => $service->image_service,
+                            'comentario' => $service->service_comment
                         ];
-                    })->values()
-            ];
-        });
+                    }),
+                    'profesionales' => $branch->professionals
+                        ->filter(fn($professional) => $professional->branchServices->isNotEmpty())
+                        ->map(function($professional) {
+                            return [
+                                'id' => $professional->id,
+                                'nombre' => $professional->name,
+                                'email' => $professional->email,
+                                'telefono' => $professional->phone,
+                                'imagen' => $professional->image_url,
+                                'servicios_que_realiza' => $professional->branchServices
+                                    ->map(fn($branchService) => [
+                                        'id' => $branchService->service->id,
+                                        'nombre' => $branchService->service->name
+                                    ])
+                            ];
+                        })->values()
+                ];
+            });
 
-        // Generar PDF con opciones personalizadas como tú lo haces
-        $pdf = Pdf::setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'isPhpEnabled' => true,
-                'chroot' => storage_path()
-            ])
-            ->setPaper('a4', 'portrait')
-            ->loadView('mails.services_pdf', [
-                'branches' => $mappedBranches
-            ]);
+            // Generar PDF con opciones personalizadas como tú lo haces
+            $pdf = Pdf::setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled' => true,
+                    'isPhpEnabled' => true,
+                    'chroot' => storage_path()
+                ])
+                ->setPaper('a4', 'portrait')
+                ->loadView('mails.services_pdf', [
+                    'branches' => $mappedBranches
+                ]);
 
-        return $pdf->download('sucursales_servicios_profesionales.pdf');
+            return $pdf->download('sucursales_servicios_profesionales.pdf');
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al generar el PDF',
-            'error' => $e->getMessage()
-        ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 }

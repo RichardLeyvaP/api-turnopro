@@ -31,8 +31,20 @@ class CourseStudentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+ * Matricula un estudiante existente en un curso.
+ *
+ * Reduce en 1 los cupos disponibles del curso. No gestiona pagos ni archivos.
+ *
+ * @authenticated
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam student_id integer required ID del estudiante. Example: 12
+ * @bodyParam reservation_payment number optional Monto del pago de reservación. Example: 2000
+ * @bodyParam total_payment number optional Monto total pagado. Example: 12000
+ * @bodyParam enrollment_confirmed boolean optional Confirmación de matrícula. Example: 1
+ *
+ * @response 200 {"msg": "Estudiante matriculado correctamente al curso"}
+ * @response 500 {"msg": "[error]Error al matricular el estudiante al curso"}
+ */
     public function store(Request $request)
     {
         try {
@@ -58,16 +70,31 @@ class CourseStudentController extends Controller
         }
     }
 
-    #[Group('Landing', 'Endpoints de la landing')]
-    #[Endpoint('store_landing', 'Matricular estudiante al curso')]
-    #[BodyParam('course_id', 'numeric', required: true, example: '5', description:'id del curso')]
-    #[BodyParam('name', 'string', required: true, example: 'Pepe Rosales Mora', description:'nombre y apellido del estudiante')]
-    #[BodyParam('phone', 'string', required: true, example: '+56912345678', description:'teléfono del estudiante')]
-    #[BodyParam('email', 'email', required: true, example: 'ejemplo@gmail.com', description:'correo del estudiante')]
-    #[BodyParam('client_image', 'file', required: false, description:'imagen del estudiante')]
-    #[BodyParam('fie', 'file', required: false, description:'comprobante de pago')]
-    #[Response(['msg' => 'Estudiante matriculado correctamente al curso'], 200)]
-    #[Response(['msg' => 'Error al matricular el estudiante al curso'], 500)]
+    /**
+ * Matricula un **nuevo estudiante** desde la landing page.
+ *
+ * Crea al estudiante, genera un código único y QR, sube archivos (foto y comprobante),
+ * registra el pago en finanzas y reduce los cupos del curso.
+ * Requiere un `token_id` válido para autenticación de la landing.
+ *
+ * @group Landing
+ * @subgroup Endpoints de la landing
+ *
+ * @bodyParam token_id string required Token de seguridad de la landing. Example: "46s7ZFu650qBRGIdlNjpB8ZsbQqQYDxHliq7R0wZCrgHUIOZ88auQMIa8TSxOLUo"
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam name string required Nombre completo del estudiante. Example: "Pepe Rosales Mora"
+ * @bodyParam phone string required Teléfono del estudiante. Example: "+56912345678"
+ * @bodyParam email email required Correo electrónico. Example: "ejemplo@gmail.com"
+ * @bodyParam client_image file optional Foto del estudiante.
+ * @bodyParam file file optional Comprobante de pago.
+ * @bodyParam reservation_payment number optional Pago de reservación. Example: 2000
+ * @bodyParam total_payment number optional Pago total. Example: 12000
+ * @bodyParam enrollment_confirmed integer required Confirmación de matrícula (1 = sí, 0 = no). Example: 1
+ *
+ * @response 200 {"msg": "Estudiante matriculado correctamente al curso"}
+ * @response 403 {"msg": "Token inválido"}
+ * @response 500 {"msg": "[error]Error al matricular el estudiante al curso"}
+ */
     public function store_landing(Request $request)
     {
         $token_id = $request->input('token_id');
@@ -157,8 +184,35 @@ class CourseStudentController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+ * Obtiene todos los estudiantes inscritos en un curso con detalles de pago.
+ *
+ * Incluye campos adicionales desde la tabla pivote: `reservation_payment`, `total_payment`,
+ * `enrollment_confirmed`, `image_url`, `enabled`, `payment_status`, `amount_pay`.
+ *
+ * @authenticated
+ * @queryParam course_id integer required ID del curso. Example: 5
+ *
+ * @response 200 {
+ *   "students": [
+ *     {
+ *       "id": 12,
+ *       "name": "Pepe Rosales",
+ *       "email": "pepe@example.com",
+ *       "phone": "+56912345678",
+ *       "student_image": "students/12.jpg",
+ *       "course_id": 5,
+ *       "reservation_payment": 2000,
+ *       "total_payment": 12000,
+ *       "enrollment_confirmed": 1,
+ *       "image_url": "students/pagos/12-5.pdf",
+ *       "enabled": 1,
+ *       "payment_status": 2,
+ *       "amount_pay": 12000
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error al mostrar las estudiantes del curso"}
+ */
     public function show(Request $request)
     {
         try {
@@ -201,6 +255,25 @@ class CourseStudentController extends Controller
         }
     }
 
+    /**
+ * Lista estudiantes de un curso para selección en ventas de productos.
+ *
+ * Retorna solo `id`, `name` completo y `student_image`. Optimizado para interfaces de venta.
+ *
+ * @authenticated
+ * @queryParam course_id integer required ID del curso. Example: 5
+ *
+ * @response 200 {
+ *   "students": [
+ *     {
+ *       "id": 12,
+ *       "name": "Pepe Rosales Mora",
+ *       "student_image": "students/12.jpg"
+ *     }
+ *   ]
+ * }
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function course_students_product_show(Request $request)
     {
         try {
@@ -232,8 +305,21 @@ class CourseStudentController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * Actualiza los datos de matrícula y pago de un estudiante en un curso.
+ *
+ * Permite subir nuevo comprobante de pago. Actualiza o crea registro en finanzas si el monto cambia.
+ *
+ * @authenticated
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam student_id integer required ID del estudiante. Example: 12
+ * @bodyParam reservation_payment number optional Nuevo monto de reservación. Example: 2500
+ * @bodyParam total_payment number required Nuevo monto total pagado. Example: 12500
+ * @bodyParam enrollment_confirmed integer required Confirmación (1/0). Example: 1
+ * @bodyParam image_url file optional Nuevo comprobante de pago.
+ *
+ * @response 200 {"msg": "Estudiante actualizado correctamente"}
+ * @response 500 {"msg": "[error]Error al matricular el estudiante al curso"}
+ */
     public function update(Request $request, CourseStudent $courseStudent)
     {
         try {
@@ -301,6 +387,21 @@ class CourseStudentController extends Controller
         }
     }
 
+    /**
+ * Actualiza el estado de seguimiento de pagos del estudiante.
+ *
+ * Usado para gestionar estados como: pendiente, pagado, parcial, etc., y controlar accesos.
+ *
+ * @authenticated
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam student_id integer required ID del estudiante. Example: 12
+ * @bodyParam enabled integer optional Activa/desactiva al estudiante (1/0). Example: 1
+ * @bodyParam payment_status integer optional Estado del pago (1 = pendiente, 2 = pagado, etc.). Example: 2
+ * @bodyParam amount_pay number required Monto actual pagado. Example: 12000
+ *
+ * @response 200 {"msg": "Estado del Estudiante actualizado correctamente"}
+ * @response 500 {"msg": "[error]Error interno del sistema"}
+ */
     public function update2(Request $request)
     {
         try {
@@ -325,8 +426,18 @@ class CourseStudentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * Elimina la matrícula de un estudiante en un curso.
+ *
+ * Incrementa en 1 los cupos disponibles del curso.
+ * Si existe un comprobante de pago personalizado, se elimina del almacenamiento.
+ *
+ * @authenticated
+ * @bodyParam course_id integer required ID del curso. Example: 5
+ * @bodyParam student_id integer required ID del estudiante. Example: 12
+ *
+ * @response 200 {"msg": "Estudiante desmatriculado correctamente del curso"}
+ * @response 500 {"msg": "[error]Error al sacar al estudiante de este curso"}
+ */
     public function destroy(Request $request)
     {
         try {
