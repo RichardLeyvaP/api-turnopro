@@ -73,7 +73,7 @@ class RecordController extends Controller
 
                 $professional = Professional::find($data['professional_id']);
                 $charge = $professional->charge->name;
-                if($charge == 'Barbero' || $charge == 'Tecnico' || $charge == 'Barbero y Encargado'){
+                if($charge == 'Profesional' || $charge == 'Tecnico' || $charge == 'Profesional y Encargado'){
                             //return $user->professional->branchRules->where('branch_id', $request->branch_id);
                            $professionalRules = $professional->branchRules()
                             ->where('branch_id', $request->branch_id)

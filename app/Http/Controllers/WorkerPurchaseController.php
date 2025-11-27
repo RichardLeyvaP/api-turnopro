@@ -130,7 +130,7 @@ class WorkerPurchaseController extends Controller
                     $notification->professional_id = $workerPurchase->professional_id;
                     $notification->tittle = 'Solicitud de compra aprobada';
                     $notification->description = 'Compra del producto ' . $product->name. ' aprobada';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $workerPurchase->branch->notifications()->save($notification);
 
                     $trace = [
@@ -151,7 +151,7 @@ class WorkerPurchaseController extends Controller
                     $notification->professional_id = $workerPurchase->professional_id;
                     $notification->tittle = 'Solicitud de compra denegada';
                     $notification->description = 'Compra del producto ' . $product->name. ' denegada';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $workerPurchase->branch->notifications()->save($notification);
 
                     $trace = [

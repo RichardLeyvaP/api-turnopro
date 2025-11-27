@@ -1346,7 +1346,7 @@ class BranchService
         $amount = 0;
         $amountService = 0;
         $professionals = Professional::whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->get();
@@ -1449,7 +1449,7 @@ class BranchService
         $amount = 0;
         $amountService = 0;
         $professionals = Professional::whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->get();
@@ -1557,7 +1557,7 @@ class BranchService
         $amount = 0;
         $amountService = 0;
         $professionals = Professional::whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->get();
@@ -1662,7 +1662,7 @@ class BranchService
         $amount = 0;
         $amountService = 0;
         $professionals = Professional::whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->get();

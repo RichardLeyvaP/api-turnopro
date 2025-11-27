@@ -949,7 +949,7 @@ class BoxCloseController extends Controller
             $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
                 $query->where('branch_id', $branch->id);
             })->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
             })->select('id', 'name', 'image_url', 'retention')->get();
             foreach ($professionals as $professional) {
                 $bonus[] = $this->metaService->store_box_close($branch, $data['data'], $professional->id);
@@ -1051,7 +1051,7 @@ class BoxCloseController extends Controller
             $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
                 $query->where('branch_id', $branch->id);
             })->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
             })->select('id', 'name', 'image_url', 'retention')->get();
             foreach ($professionals as $professional) {
                 $bonus[] = $this->metaService->store_box_close($branch, $data['data'], $professional->id);
@@ -1552,7 +1552,7 @@ class BoxCloseController extends Controller
                 $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
                 })->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })->select('id', 'name', 'surname', 'retention')->get();
                 foreach ($professionals as $professional) {
                     $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
@@ -1828,7 +1828,7 @@ class BoxCloseController extends Controller
                 $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
                     $query->where('branch_id', $branch->id);
                 })->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })->select('id', 'name', 'surname', 'retention')->get();
                 foreach ($professionals as $professional) {
                     $cars = Car::whereHas('reservation', function ($query) use ($branch, $añoAnterior, $mesAnterior) {
@@ -2053,7 +2053,7 @@ class BoxCloseController extends Controller
                     $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
                         $query->where('branch_id', $branch->id);
                     })->whereHas('charge', function ($query) {
-                        $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                        $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                     })->select('id', 'name', 'image_url', 'retention')->get();
 
                     $bonus = [];
@@ -2281,7 +2281,7 @@ class BoxCloseController extends Controller
                     $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
                         $query->where('branch_id', $branch->id);
                     })->whereHas('charge', function ($query) {
-                        $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                        $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                     })->select('id', 'name', 'image_url', 'retention')->get();
 
                     $bonus = [];

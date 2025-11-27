@@ -1622,7 +1622,7 @@ class TailController extends Controller
                         $reservation->save();
                         //consulta para despues asignar la no convivencia
                         $professionalConv = Professional::find($data['professional_id']);
-                        if ($professionalConv->charge->name != 'Barbero y Encargado') {
+                        if ($professionalConv->charge->name != 'Profesional y Encargado') {
                             $branchrule = BranchRule::whereHas('rule', function ($query) use ($data) {
                                 $query->where('type', 'Tiempo');
                             })->where('branch_id', $data['branch_id'])->first();
@@ -1634,7 +1634,7 @@ class TailController extends Controller
                                 $notification->branch_id = $reservation->branch_id;
                                 $notification->tittle = 'Incumplimiento de convivencia';
                                 $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                                $notification->type = 'Barbero';
+                                $notification->type = 'Profesional';
                                 $notification->save();
                             }
                         }
@@ -1674,7 +1674,7 @@ class TailController extends Controller
                             $reservation->save();
                             //consulta para despues asignar la no convivencia
                             $professionalConv = Professional::find($data['professional_id']);
-                            if ($professionalConv->charge->name != 'Barbero y Encargado') {
+                            if ($professionalConv->charge->name != 'Profesional y Encargado') {
                                 $branchrule = BranchRule::whereHas('rule', function ($query) use ($data) {
                                     $query->where('type', 'Tiempo');
                                 })->where('branch_id', $data['branch_id'])->first();
@@ -1686,7 +1686,7 @@ class TailController extends Controller
                                     $notification->branch_id = $reservation->branch_id;
                                     $notification->tittle = 'Incumplimiento de convivencia';
                                     $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                                    $notification->type = 'Barbero';
+                                    $notification->type = 'Profesional';
                                     $notification->save();
                                 }
                             }
@@ -1697,7 +1697,7 @@ class TailController extends Controller
                             $reservation->timeClock = now();
                             $reservation->save();
                             $professionalConv = Professional::find($data['professional_id']);
-                            if ($professionalConv->charge->name != 'Barbero y Encargado') {
+                            if ($professionalConv->charge->name != 'Profesional y Encargado') {
                                 $branchrule = BranchRule::whereHas('rule', function ($query) use ($data) {
                                     $query->where('type', 'Tiempo');
                                 })->where('branch_id', $data['branch_id'])->first();
@@ -1709,7 +1709,7 @@ class TailController extends Controller
                                     $notification->branch_id = $reservation->branch_id;
                                     $notification->tittle = 'Incumplimiento de convivencia';
                                     $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                                    $notification->type = 'Barbero';
+                                    $notification->type = 'Profesional';
                                     $notification->save();
                                 }
                             }
@@ -1892,7 +1892,7 @@ class TailController extends Controller
         Log::info('Entra a actualizar la convivencia y registrar la notificación');
         Log::info($professional_id);
         $professionalConv = Professional::where('id', $professional_id)->first();
-        if ($professionalConv->charge->name != 'Barbero y Encargado') {
+        if ($professionalConv->charge->name != 'Profesional y Encargado') {
             $branchrule = BranchRule::whereHas('rule', function ($query) {
                     $query->where('type', 'Tiempo');
                 })
@@ -1913,7 +1913,7 @@ class TailController extends Controller
                 $notification->branch_id = $branchId;
                 $notification->tittle = 'Incumplimiento de convivencia';
                 $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
             }
             $branchProfessional = BranchProfessional::where('branch_id', $branchId)
@@ -1932,7 +1932,7 @@ class TailController extends Controller
         Log::info('Entra a actualizar la convivencia y registrar la notificación');
         Log::info($professional_id);
         $professionalConv = Professional::where('id', $professional_id)->first();
-        if ($professionalConv->charge->name != 'Barbero y Encargado') {
+        if ($professionalConv->charge->name != 'Profesional y Encargado') {
             $branchrule = BranchRule::whereHas('rule', function ($query) {
                     $query->where('type', 'Tiempo');
                 })
@@ -1954,7 +1954,7 @@ class TailController extends Controller
                 $notification->branch_id = $branchId;
                 $notification->tittle = 'Incumplimiento de convivencia';
                 $notification->description = 'Tu tiempo de espera de los 3 minutos para seleccionar al nuevo cliente en cola se ha agotado';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
             }
             $branchProfessional = BranchProfessional::where('branch_id', $branchId)
@@ -2054,7 +2054,7 @@ class TailController extends Controller
                     $notification->branch_id = $data['branch_id'];
                     $notification->tittle = 'Nuevo cliente en cola';
                     $notification->description = 'Tienes un nuevo cliente en cola';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $notification->save();
                     $reservation = Reservation::where()->first();
                     $reservation->timeClock = now();

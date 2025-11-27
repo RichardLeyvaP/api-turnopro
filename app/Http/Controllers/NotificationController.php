@@ -64,14 +64,14 @@ class NotificationController extends Controller
                 }])
                     ->where('branch_id', $data['branch_id'])
                     ->whereHas('professional.charge', function ($query) {
-                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                     })
                     ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 if (!$encargados->isEmpty()) {
                     foreach ($encargados as $encargado) {
                         $notification = new Notification();
@@ -153,14 +153,14 @@ class NotificationController extends Controller
                 }])
                     ->where('branch_id', $data['branch_id'])
                     ->whereHas('professional.charge', function ($query) {
-                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                     })
                     ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 if (!$encargados->isEmpty()) {
                     foreach ($encargados as $encargado) {
                         $notification = new Notification();
@@ -194,7 +194,7 @@ class NotificationController extends Controller
                         $branch->notifications()->save($notification);
                     }
                 }
-            } elseif ($data['type'] == 'Barbero') {
+            } elseif ($data['type'] == 'Profesional') {
                 $branchrule = BranchRule::whereHas('rule', function ($query) {
                     $query->where('type', 'Tiempo');
                 })
@@ -261,14 +261,14 @@ class NotificationController extends Controller
                 }])
                     ->where('branch_id', $data['branch_id'])
                     ->whereHas('professional.charge', function ($query) {
-                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                        $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                     })
                     ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
                 $groupedProfessionals = $professionals->groupBy('professional.charge.name');
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 if (!$encargados->isEmpty()) {
                     foreach ($encargados as $encargado) {
                         $notification = new Notification();
@@ -303,7 +303,7 @@ class NotificationController extends Controller
                     }
                 }
                 return response()->json(['msg' => 'Notifications creada correctamente'], 200);
-            } elseif ($data['type'] == 'Barbero') {
+            } elseif ($data['type'] == 'Profesional') {
                 $branchrule = BranchRule::whereHas('rule', function ($query) {
                     $query->where('type', 'Tiempo');
                 })

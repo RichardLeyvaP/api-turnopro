@@ -223,7 +223,7 @@ class BranchProfessionalController extends Controller
             $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
             })->select('id', 'name', 'surname', 'second_surname', 'image_url')->get();
        
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
@@ -253,8 +253,8 @@ class BranchProfessionalController extends Controller
                 });
             }, '=', count($services)) // ✅ Tiene exactamente los servicios solicitados
             ->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')
-                      ->orWhere('name', 'Barbero y Encargado');
+                $query->where('name', 'Profesional')
+                      ->orWhere('name', 'Profesional y Encargado');
             })
             ->with('branches') // sigue cargando todas las sucursales (para usar en map)
             ->select('id', 'name', 'surname', 'second_surname', 'image_url', 'state')
@@ -503,9 +503,9 @@ class BranchProfessionalController extends Controller
             $professionals = Professional::whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')
+                $query->where('name', 'Profesional')
                     ->orWhere('name', 'Tecnico')
-                    ->orWhere('name', 'Barbero y Encargado');
+                    ->orWhere('name', 'Profesional y Encargado');
             })->get();
             return response()->json(['professionals' => $professionals], 200, [], JSON_NUMERIC_CHECK);
         } catch (\Throwable $th) {
@@ -658,7 +658,7 @@ class BranchProfessionalController extends Controller
                 Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
             }
             elseif ($data['state'] == 2 || $data['state'] == 0) {
-                if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
+                if ($data['type'] == 'Profesional' || $data['type'] == 'Profesional y Encargado') {
                     $ProfessionalWorkPlace = ProfessionalWorkPlace::where('professional_id', $professional->id)->whereDate('data', Carbon::now())->whereHas('workplace', function ($query) use ($data) {
                         $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                     })->latest('created_at')->first();
@@ -737,7 +737,7 @@ class BranchProfessionalController extends Controller
                 $branch = Branch::find($data['branch_id']);
                 //if ($data['type'] == 'Ambos') {
                 /*$professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
-                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Profesional y Encargado');
                 })->get();*/
                 $professionals = BranchProfessional::with(['professional' => function($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
@@ -746,7 +746,7 @@ class BranchProfessionalController extends Controller
                 }])
                 ->where('branch_id', $data['branch_id'])
                 ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                 })
                 ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
@@ -755,7 +755,7 @@ class BranchProfessionalController extends Controller
                 // Extrae los IDs de los profesionales para cada cargo
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;
                 if ($data['state'] == 4) {
@@ -876,7 +876,7 @@ class BranchProfessionalController extends Controller
                 Notification::where('branch_id', $data['branch_id'])->where('state', 0)->where('stateApk', 'profesional'.$professional->id)->update(['state' => 1]);
             }
             elseif ($data['state'] == 2 || $data['state'] == 0) {
-                if ($data['type'] == 'Barbero' || $data['type'] == 'Barbero y Encargado') {
+                if ($data['type'] == 'Profesional' || $data['type'] == 'Profesional y Encargado') {
                     $ProfessionalWorkPlace = ProfessionalWorkPlace::with(['workplace' => function ($query) use ($data) {
                         $query->where('busy', 1)->where('branch_id', $data['branch_id']);
                     }])
@@ -967,7 +967,7 @@ class BranchProfessionalController extends Controller
                 $branch = Branch::find($data['branch_id']);
                 //if ($data['type'] == 'Ambos') {
                 /*$professionals = BranchProfessional::with('professional.charge')->where('branch_id', $data['branch_id'])->whereHas('professional.charge', function ($query) {
-                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Coordinador')->orWhere('name', 'Encargado')->orWhere('name', 'Profesional y Encargado');
                 })->get();*/
                 $professionals = BranchProfessional::with(['professional' => function($query) {
                     $query->select('id', 'charge_id'); // Especifica los campos necesarios
@@ -976,7 +976,7 @@ class BranchProfessionalController extends Controller
                 }])
                 ->where('branch_id', $data['branch_id'])
                 ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                 })
                 ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
@@ -985,7 +985,7 @@ class BranchProfessionalController extends Controller
                 // Extrae los IDs de los profesionales para cada cargo
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;
                 if ($data['state'] == 4) {

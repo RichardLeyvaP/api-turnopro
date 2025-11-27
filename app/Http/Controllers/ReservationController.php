@@ -304,7 +304,7 @@ class ReservationController extends Controller
                 $notification->branch_id = $data['branch_id'];
                 $notification->tittle = 'Nuevo cliente en cola';
                 $notification->description = 'Tienes un nuevo cliente en cola';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
             }
             if ($data['from_home'] == 0 && $data['select_professional'] == 0){
@@ -325,7 +325,7 @@ class ReservationController extends Controller
                     $notification->branch_id = $data['branch_id'];
                     $notification->tittle = 'Nuevo cliente en cola';
                     $notification->description = 'Tienes un nuevo cliente en cola';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $notification->save();
              }
             }
@@ -535,7 +535,7 @@ class ReservationController extends Controller
                 $notification->branch_id = $data['branch_id'];
                 $notification->tittle = 'Nuevo cliente en cola';
                 $notification->description = 'Tienes un nuevo cliente en cola';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
             }
             if ($data['from_home'] == 0 && $data['select_professional'] == 0){
@@ -556,7 +556,7 @@ class ReservationController extends Controller
                     $notification->branch_id = $data['branch_id'];
                     $notification->tittle = 'Nuevo cliente en cola';
                     $notification->description = 'Tienes un nuevo cliente en cola';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $notification->save();
              }
             }
@@ -788,7 +788,7 @@ class ReservationController extends Controller
                 $notification->branch_id = $data['branch_id'];
                 $notification->tittle = 'Nuevo cliente en cola';
                 $notification->description = 'Tienes un nuevo cliente en cola';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
             }
             if ($data['from_home'] == 0 && $data['select_professional'] == 0){
@@ -809,7 +809,7 @@ class ReservationController extends Controller
                     $notification->branch_id = $data['branch_id'];
                     $notification->tittle = 'Nuevo cliente en cola';
                     $notification->description = 'Tienes un nuevo cliente en cola';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $notification->save();
              }
             }
@@ -1001,7 +1001,7 @@ class ReservationController extends Controller
             $professionals = Professional::with('charge')->whereHas('branches', function ($query) use ($data) {
                 $query->where('branch_id', $data['branch_id']);
             })->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
             })->get();
             foreach ($professionals as $professional) {
                 $professionalDates[] = [
@@ -1427,7 +1427,7 @@ class ReservationController extends Controller
                 $notification->branch_id = $branch_id;
                 $notification->tittle = 'Nuevo cliente en cola';
                 $notification->description = 'Tienes un nuevo cliente en cola';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
 
                 return response()->json(4, 200, [], JSON_NUMERIC_CHECK);
@@ -1881,7 +1881,7 @@ class ReservationController extends Controller
                     $notification->tittle = 'Aceptada Eliminación de Cliente';
                     $notification->description = 'El cliente'.' '.$client->name.' '.'fue eliminado de su cola';
                     $notification->state = 3;
-                    $notification->type = 'Barbero';                     
+                    $notification->type = 'Profesional';                     
                     $notification->save();
                     Notification::where('branch_id', $branch_id)->where('state', 0)->where('stateApk', 'reservacion'.$data['id'])->update(['state' => 1]);
             return response()->json(['msg' => 'Reservacion eliminada correctamente'], 200);

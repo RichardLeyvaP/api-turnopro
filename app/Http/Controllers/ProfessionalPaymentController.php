@@ -873,7 +873,7 @@ class ProfessionalPaymentController extends Controller
                     $servAmount = 0;
                     $productAmount = 0; 
                 }
-                else if ($request->charge == 'Barbero' || $request->charge == 'Barbero y Encargado') 
+                else if ($request->charge == 'Profesional' || $request->charge == 'Profesional y Encargado') 
                 {
                     //pagado
                     $carPagado = Car::whereIn('professional_payment_id', $paymentIds)->get();

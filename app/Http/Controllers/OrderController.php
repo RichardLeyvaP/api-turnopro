@@ -401,7 +401,7 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Solicitud de Eliminación Rechazada';
                 $notification->description = 'Atención El producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminación';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
              }else {
                 Log::info("servicio");
@@ -415,7 +415,7 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Solicitud de Eliminación Rechazada';
                 $notification->description = 'Atención.. El servicio'.' '.$service->name.' '. 'del ciente'.' '.$client->name.' '.'no fue aprobado para su eliminación';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
              }
              //para las notificaciones de solicitud a 1
@@ -605,7 +605,7 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Producto';
                 $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
 
             }
@@ -639,7 +639,7 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
                 $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'seg'.'.'.$reservation->id;
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->state = 3;
                 $notification->save();
             }
@@ -711,7 +711,7 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Producto';
                 $notification->description = 'El Producto'.' '.$product->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado satisfactoriamente';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
 
             }
@@ -745,7 +745,7 @@ class OrderController extends Controller
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Servicio';
                 $notification->description = 'Servicio'.' '. $service->name.' '. 'del ciente'.' '.$client->name.' '.'fue eliminado, su reloj ahora tiene un tiempo de '.''.$timeClock1.' '.'seg'.'.'.$reservation->id;
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->state = 3;
                 $notification->save();
             }

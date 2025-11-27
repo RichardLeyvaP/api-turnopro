@@ -386,7 +386,7 @@ class AdvanceController extends Controller
                     $notification->professional_id = $advance->professional_id;
                     $notification->tittle = 'Adelanto Aprobado';
                     $notification->description = 'Adelanto de $' . $advance->amount . 'aprobado para pago en 24hrs correctamente';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $advance->branch->notifications()->save($notification);
 
                     $trace = [
@@ -470,7 +470,7 @@ class AdvanceController extends Controller
                 $notification->professional_id = $advance->professional_id;
                 $notification->tittle = 'Adelanto Aprobado';
                 $notification->description = 'Adelanto de $' . $advance->amount. 'aprobado para pago en 24hrs correctamente';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $advance->branch->notifications()->save($notification);
 
                 $trace = [
@@ -664,7 +664,7 @@ class AdvanceController extends Controller
                 $notification->professional_id = $advance->professional_id;
                 $notification->tittle = 'Solicitud de Adelanto Aprobada';
                 $notification->description = 'Solicitud de Adelanto de $' . $advance->amount . 'aprobada para pago en 24hrs correctamente';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $advance->branch->notifications()->save($notification);
             }
 

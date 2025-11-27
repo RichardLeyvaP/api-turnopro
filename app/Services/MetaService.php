@@ -64,7 +64,7 @@ class MetaService
         $professionals = Professional::whereHas('branches', function ($query) use ($branch) {
             $query->where('branch_id', $branch->id);
         })->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->select('id', 'name', 'image_url', 'retention')->get();
 
 
@@ -940,7 +940,7 @@ class MetaService
         $professionals = Professional::whereHas('branches', function ($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->select('id', 'name', 'image_url', 'retention')->get();
 
         Log::info('Profesionales:'.$professionals);

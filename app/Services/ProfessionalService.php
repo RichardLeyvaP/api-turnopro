@@ -93,8 +93,8 @@ class ProfessionalService
         })->first();
         Log::info($professionals);
         if ($professionals) {
-            if (($professionals->charge->name == 'Barbero') || ($professionals->charge->name == 'Tecnico') || ($professionals->charge->name == 'Encargado') || ($professionals->charge->name == 'Coordinador')  || ($professionals->charge->name == 'Barbero y Encargado')) {
-                if ($professionals->charge->name == 'Barbero') { //charge_id == 1
+            if (($professionals->charge->name == 'Profesional') || ($professionals->charge->name == 'Tecnico') || ($professionals->charge->name == 'Encargado') || ($professionals->charge->name == 'Coordinador')  || ($professionals->charge->name == 'Profesional y Encargado')) {
+                if ($professionals->charge->name == 'Profesional') { //charge_id == 1
                     $type = 2;
                     $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                     $professional_id = $professionals->id;
@@ -104,7 +104,7 @@ class ProfessionalService
                     $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                     $professional_id = $professionals->id;
                 }
-                if ($professionals->charge->name == 'Barbero y Encargado') { //charge_id == 7
+                if ($professionals->charge->name == 'Profesional y Encargado') { //charge_id == 7
                     $type = 3;
                     $name = $professionals->name . ' ' . $professionals->surname . ' ' . $professionals->second_surname;
                     $professional_id = $professionals->id;
@@ -269,7 +269,7 @@ class ProfessionalService
                 $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
             }, '=', count($services))
                 ->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })
                 ->whereIn('state', [1, 2])
                 ->join('branch_professional', function ($join) use ($branch_id) {
@@ -435,7 +435,7 @@ class ProfessionalService
                 $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
             }, '=', count($services))
                 ->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })
                 ->whereIn('state', [1, 2])
                 ->join('branch_professional', function ($join) use ($branch_id) {
@@ -679,7 +679,7 @@ class ProfessionalService
                     });
                 }, '=', count($services))
                 ->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })
                 /*->whereIn('state', [1, 2])*/
                 ->join('branch_professional', function ($join) use ($branch_id) {
@@ -908,7 +908,7 @@ class ProfessionalService
                     });
                 }, '=', count($services))
                 ->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })
                 ->whereIn('state', [1, 2])
                 ->join('branch_professional', function ($join) use ($branch_id) {
@@ -1625,7 +1625,7 @@ class ProfessionalService
                 $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
             }, '=', count($services))
                 ->whereHas('charge', function ($query) {
-                    $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                    $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
                 })
                 ->where('state', 1)
                 ->join('branch_professional', function ($join) use ($branch_id) {
@@ -1866,7 +1866,7 @@ class ProfessionalService
             $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
                 $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
             }, '=', count($services))->whereHas('charge', function ($query) {
-                $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+                $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
             })->get();
 
             foreach ($professionals as $professional) {
@@ -2100,7 +2100,7 @@ class ProfessionalService
         $professionals = Professional::whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->get();
 
 
@@ -2183,7 +2183,7 @@ class ProfessionalService
                 });
             }
         })->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero');
+            $query->where('name', 'Profesional');
         })->get();
         Log::info($professionals);
         $current_date = Carbon::now();
@@ -2285,7 +2285,7 @@ class ProfessionalService
     {
         Log::info('Obtener los cars');
         $fecha = Carbon::now();
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+        if ($data['charge'] == 'Profesional' || $data['charge'] == 'Profesional y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $fecha) {
                 $query->where('branch_id', $data['branch_id'])->whereDate('data', $fecha);
@@ -2416,7 +2416,7 @@ class ProfessionalService
     {
         Log::info('Obtener los cars');
         $fecha = Carbon::now();
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+        if ($data['charge'] == 'Profesional' || $data['charge'] == 'Profesional y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $fecha) {
                 $query->where('branch_id', $data['branch_id'])->whereDate('data', $fecha);
@@ -2549,7 +2549,7 @@ class ProfessionalService
      public function professionals_ganancias_branch_Periodo_ANTERIOR($data, $startDate, $endDate)
     {
         Log::info('Obtener los cars');
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+        if ($data['charge'] == 'Profesional' || $data['charge'] == 'Profesional y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
                 $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
@@ -2659,7 +2659,7 @@ class ProfessionalService
       public function professionals_ganancias_branch_Periodo($data, $startDate, $endDate)
     {
         Log::info('Obtener los cars');
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+        if ($data['charge'] == 'Profesional' || $data['charge'] == 'Profesional y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $startDate, $endDate) {
                 $query->where('branch_id', $data['branch_id'])->whereDate('data', '>=', $startDate)->whereDate('data', '<=', $endDate);
@@ -2772,7 +2772,7 @@ class ProfessionalService
        public function professionals_ganancias_branch_month_ANTERIOR($data, $mes, $year)
     {
         Log::info('Obtener los cars');
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+        if ($data['charge'] == 'Profesional' || $data['charge'] == 'Profesional y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $mes, $year) {
                 $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
@@ -2902,7 +2902,7 @@ class ProfessionalService
      public function professionals_ganancias_branch_month($data, $mes, $year)
     {
         Log::info('Obtener los cars');
-        if ($data['charge'] == 'Barbero' || $data['charge'] == 'Barbero y Encargado') {
+        if ($data['charge'] == 'Profesional' || $data['charge'] == 'Profesional y Encargado') {
             $professional = Professional::where('id', $data['professional_id'])->first();
             $cars = Car::whereHas('reservation', function ($query) use ($data, $mes, $year) {
                 $query->where('branch_id', $data['branch_id'])->whereMonth('data', $mes)->whereYear('data', $year);
@@ -3050,7 +3050,7 @@ class ProfessionalService
         })->whereHas('branchServiceProfessionals', function ($query) use ($branchService) {
             $query->whereIn('branch_service_id', $branchService);
         }, '=', count($branchService))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->where('state', 1)->join('branch_professional', function ($join) use ($branch_id) {
             $join->on('professionals.id', '=', 'branch_professional.professional_id')
                 ->where('branch_professional.branch_id', '=', $branch_id)
@@ -3219,7 +3219,7 @@ class ProfessionalService
         })->whereHas('branchServices', function ($query) use ($services, $branch_id) {
             $query->whereIn('service_id', $services)->where('branch_id', $branch_id);
         }, '=', count($services))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->where('state', 1)->join('branch_professional', function ($join) use ($branch_id) {
             $join->on('professionals.id', '=', 'branch_professional.professional_id')
                 ->where('branch_professional.branch_id', '=', $branch_id)
@@ -3395,7 +3395,7 @@ class ProfessionalService
         })->whereHas('branchServiceProfessionals', function ($query) use ($branchService) {
             $query->whereIn('branch_service_id', $branchService);
         }, '=', count($branchService))->whereHas('charge', function ($query) {
-            $query->where('name', 'Barbero')->orWhere('name', 'Barbero y Encargado');
+            $query->where('name', 'Profesional')->orWhere('name', 'Profesional y Encargado');
         })->where('state', 1)->join('branch_professional', function ($join) use ($branch_id) {
             $join->on('professionals.id', '=', 'branch_professional.professional_id')
                 ->where('branch_professional.branch_id', '=', $branch_id)

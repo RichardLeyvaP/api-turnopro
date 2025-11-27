@@ -1021,7 +1021,7 @@ class TailService
                 }])
                 ->where('branch_id', $branch->id)
                 ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                 })
                 ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
@@ -1030,7 +1030,7 @@ class TailService
                 // Extrae los IDs de los profesionales para cada cargo
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;               
                     $tittle = 'Solicitud de rechazo';
@@ -1186,7 +1186,7 @@ class TailService
                 }])
                 ->where('branch_id', $branch->id)
                 ->whereHas('professional.charge', function ($query) {
-                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Barbero y Encargado']);
+                    $query->whereIn('name', ['Coordinador', 'Encargado', 'Profesional y Encargado']);
                 })
                 ->get(['id', 'professional_id', 'branch_id']); // Especifica los campos necesarios de BranchProfessional
                 // Agrupa los profesionales por su cargo
@@ -1195,7 +1195,7 @@ class TailService
                 // Extrae los IDs de los profesionales para cada cargo
                 $encargados = $groupedProfessionals->has('Encargado') ? $groupedProfessionals->get('Encargado')->pluck('professional_id') : collect();
                 $coordinadors = $groupedProfessionals->has('Coordinador') ? $groupedProfessionals->get('Coordinador')->pluck('professional_id') : collect();
-                $barberoEncargados = $groupedProfessionals->has('Barbero y Encargado') ? $groupedProfessionals->get('Barbero y Encargado')->pluck('professional_id') : collect();
+                $barberoEncargados = $groupedProfessionals->has('Profesional y Encargado') ? $groupedProfessionals->get('Profesional y Encargado')->pluck('professional_id') : collect();
                 $charge = $professional->charge->name;
                 $charge = $charge == 'Tecnico' ? 'Técnico' : $charge;               
                     $tittle = 'Solicitud de rechazo';
@@ -1676,7 +1676,7 @@ class TailService
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Nuevo cliente en cola';
                 $notification->description = 'Tienes un nuevo cliente en cola';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
             DB::commit();
         } catch (\Exception $e) {
@@ -1793,7 +1793,7 @@ class TailService
                     $notification->branch_id = $reservation->branch_id;
                     $notification->tittle = 'Nuevo cliente en cola';
                     $notification->description = 'Tienes un nuevo cliente en cola';
-                    $notification->type = 'Barbero';
+                    $notification->type = 'Profesional';
                     $notification->save();
                 DB::commit();
             } catch (\Exception $e) {
@@ -1874,7 +1874,7 @@ class TailService
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Aceptada Eliminación de Cliente';
                 $notification->description = 'El cliente fue reasignado por el sistema';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->state = 3;
                 $notification->save();
             }
@@ -1895,7 +1895,7 @@ class TailService
                 $notification->branch_id = $reservation->branch_id;
                 $notification->tittle = 'Nuevo cliente en cola';
                 $notification->description = 'Tienes un nuevo cliente en cola';
-                $notification->type = 'Barbero';
+                $notification->type = 'Profesional';
                 $notification->save();
                 
                 
